@@ -1,10 +1,8 @@
-import type { CourseMeta, GlossaryTerm } from '../../core/types';
+import type { CourseMeta } from '../../core/types';
 import { IA_GENERATIVA } from './ia-generativa/curriculum';
-import { IA_GENERATIVA_GLOSSARY } from './ia-generativa/glossary';
 
 /** Registro de cursos de la academia. Para agregar uno: crear content/courses/<id>/ y registrarlo aquí. */
 export const COURSES: CourseMeta[] = [IA_GENERATIVA];
-export const GLOSSARIES: Record<string, GlossaryTerm[]> = { [IA_GENERATIVA.id]: IA_GENERATIVA_GLOSSARY };
 
 export const courseById = (id: string) => COURSES.find((c) => c.id === id);
 export const lessonOf = (c: CourseMeta, id: string) => c.lessons.find((l) => l.id === id);
