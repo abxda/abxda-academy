@@ -73,7 +73,7 @@ const scene: SceneFactory = () => ({
 
   render(S) {
     const { d } = S, p = S.pal, u = S.u;
-    const R_ = regions(S, 0.68);
+    const R_ = regions(S, S.portrait ? 0.74 : 0.68);
 
     // ───────── 1D: de hook a try2 ─────────
     const to2d = S.at('land2d', 0, 0.9);
@@ -203,7 +203,7 @@ function draw1D(S: Frame, R_: { main: Rect; aside: Rect }) {
 
   // Neu reacciona
   const mood = S.between('fog', 'slope') ? 'think' : S.on('map') && !S.on('try1') ? 'wow' : S.between('repeat', 'map') ? 'happy' : 'happy';
-  if (S.between('fog', 'try1')) neu(S, R_.main.x + R_.main.w - 74 * u, R_.main.y + 4, { scale: Math.max(2, Math.round(2.6 * u)), mood: mood as any, a: S.reveal('fog', 0, 0.5) });
+  if (S.between('fog', 'try1')) neu(S, S.portrait ? R_.aside.x + R_.aside.w - 74 * u : R_.main.x + R_.main.w - 74 * u, S.portrait ? R_.aside.y + R_.aside.h - 62 * u : R_.main.y + 4, { scale: Math.max(2, Math.round(2.6 * u)), mood: mood as any, a: S.reveal('fog', 0, 0.5) });
 
   // lectura numérica
   drawAside(S, R_.aside, w, { steps: inT1 || inT2 ? intOf(S, inT2 ? 'i2' : 'i1').steps : null, hist: (inT1 || inT2) ? intOf(S, inT2 ? 'i2' : 'i1').hist : (S.on('step') && !inDemo ? MAIN_PATH.slice(0, Math.floor(kShow) + 1).map(L) : []), eta: demo ? demo.eta : inT2 ? (S.p.eta ?? 0.5) : S.on('step') ? 0.5 : null, st: inT2 ? intOf(S, 'i2') : null, showSlope: S.on('slope') && !demo, showEta: S.on('step') && (!demo || demo.eta !== null), showErr: true, gate: S.between('try1', 'lr-intro') ? 'steps' : S.between('try2', 'land2d') ? 'lr' : null });
@@ -389,8 +389,16 @@ function drawRecap(S: Frame, R_: { all: Rect }) {
     : [{ x: r.x + r.w * 0.5 - bw - 40 * u, y: r.y + r.h * 0.2, w: bw, h: bh }, { x: r.x + r.w * 0.5 + 40 * u, y: r.y + r.h * 0.2, w: bw, h: bh }, { x: r.x + r.w * 0.5 + 40 * u, y: r.y + r.h * 0.58, w: bw, h: bh }, { x: r.x + r.w * 0.5 - bw - 40 * u, y: r.y + r.h * 0.58, w: bw, h: bh }];
   const hot = Math.floor(S.clock / 1.1) % 4;
   pos.forEach((b, i) => { const a = S.reveal('recap', 0.2 + i * 0.35, 0.5); if (a > 0) box(S, b, labels[i], { tone: tones[i], a, active: i === hot ? 1 : 0 }); });
-  for (let i = 0; i < 4; i++) { const a = S.at('recap', 0.6 + i * 0.35, 1.0 + i * 0.35); if (a > 0) link(S, pos[i], pos[(i + 1) % 4], { tone: 'ink', progress: a }); }
-  neu(S, r.x + r.w / 2 - 36 * u, r.y + r.h * 0.4 + (S.portrait ? 0 : 10 * u), { scale: Math.max(2, Math.round(2.8 * u)), mood: 'happy', a: S.reveal('recap', 1.8, 0.5) });
+  for (let i = 0; i < 3; i++) { const a = S.at('recap', 0.6 + i * 0.35, 1.0 + i * 0.35); if (a > 0) link(S, pos[i], pos[i + 1], { tone: 'ink', progress: a }); }
+  const aLoop = S.at('recap', 1.7, 2.2);
+  if (aLoop > 0) {
+    if (S.portrait) { // el cierre del bucle rodea las cajas por la derecha
+      const x1 = pos[3].x + pos[3].w, x2 = x1 + 16 * u, ya = pos[3].y + pos[3].h / 2, yb = pos[0].y + pos[0].h / 2;
+      S.d.polyline([[x1, ya], [x2, ya], [x2, yb + (ya - yb) * (1 - aLoop)]], tone(S, 'ink').c, 2);
+      if (aLoop > 0.98) S.d.arrow(x2, yb, x1 + 1, yb, tone(S, 'ink').c, 2, 8);
+    } else link(S, pos[3], pos[0], { tone: 'ink', progress: aLoop });
+  }
+  if (!S.portrait) neu(S, r.x + r.w / 2 - 36 * u, r.y + r.h * 0.4 + 10 * u, { scale: Math.max(2, Math.round(2.8 * u)), mood: 'happy', a: S.reveal('recap', 1.8, 0.5) });
 }
 
 function drawBridge(S: Frame) {
