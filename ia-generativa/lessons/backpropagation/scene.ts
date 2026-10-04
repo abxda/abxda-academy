@@ -503,25 +503,26 @@ function mTable(S: Frame, r: Rect, a: number, w: number[], g: number[], L: numbe
   const gA = [0, 1, 2, 3, 4, 5].map((k) => (first ? S.at('all-six', 0.3 + 0.18 * k, 0.8 + 0.18 * k, 'out') : 1));
   const arrows = S.on('read-sign') ? S.at('read-sign', 1.4, 2.0) : undefined;
   const active = g1 ? G1(S).active : -1;
-  const foot = 30 * u;
+  // pie: pérdida (izquierda) y, tras el viaje de vuelta, «coincide con el tanteo» (derecha); si no caben en una línea, esa nota pasa a una segunda
+  const okTxt = '✓ ' + S.l('coincide con el tanteo', 'matches the probing');
+  const stacked = d.measure(S.l('pérdida L = 0.000', 'loss L = 0.000'), { size: fz(S, 12.5), weight: 500, font: 'mono' }) + d.measure(okTxt, { size: fz(S, 12.5), weight: 700 }) + 16 * u > r.w;
+  const foot = (stacked ? 52 : 30) * u;
   const tr = { x: r.x, y: y + 4 * u, w: r.w, h: r.h - (y - r.y) - 4 * u - foot };
   drawTable(S, tr, { w, g, rowA, kind: 'bp', gA, active, arrows, scale: 0.12, a });
-  // pie: pérdida, y la comprobación contra el tanteo
   const fy = r.y + r.h - 10 * u;
   d.withAlpha(a, () => {
     const parts: Part[] = [[S.l('pérdida L = ', 'loss L = '), 'ink2'], [num(S, L, 3), 'err', true]];
     if (g1) {
       const G = G1(S);
-      parts.push([S.l('   (inicial ', '   (start ') + num(S, F0.L, 3) + ')', 'ink2']);
-      if (G.won) parts.push(['  ✓', 'dat', true]);
+      if (G.won) parts.push(['  ✓ ' + S.l('¡Lo lograste!', 'You did it!'), 'dat', true]);
+      else parts.push([S.l('  (inicio ', '  (start ') + num(S, F0.L, 3) + ')', 'ink2']);
     }
     rich(S, r.x, fy, parts, { maxW: r.w });
   });
   if (first && S.on('all-six')) {
     const ca = S.reveal('all-six', 2.0, 0.6);
-    d.withAlpha(a * ca, () => { const tw = d.measure('✓ ' + S.l('coincide con el tanteo', 'matches the probing'), { size: fz(S, 12.5), weight: 700 }); d.text('✓ ' + S.l('coincide con el tanteo', 'matches the probing'), r.x + r.w, fy, { size: fz(S, 12.5), weight: 700, color: tone(S, 'dat').ink, align: 'right', base: 'middle' }); void tw; });
+    d.withAlpha(a * ca, () => d.text(okTxt, stacked ? r.x : r.x + r.w, stacked ? fy - 22 * u : fy, { size: fz(S, 12.5), weight: 700, color: tone(S, 'dat').ink, align: stacked ? 'left' : 'right', base: 'middle' }));
   }
-  if (g1 && G1(S).won) d.withAlpha(a, () => d.text(S.l('¡Lo hiciste a mano!', 'You did it by hand!'), r.x + r.w, fy, { size: fz(S, 12.5), weight: 800, color: tone(S, 'dat').ink, align: 'right', base: 'middle' }));
   void er; void p;
 }
 
@@ -638,7 +639,8 @@ function mTrain(S: Frame, r: Rect, a: number) {
     const rowA = [1, 1, 1, 1, 1, 1];
     drawTable(S, { x: r.x, y: ty, w: r.w, h: r.y + r.h - ty }, { w, g: b.g, rowA, kind: 'bp', gA: rowA, scale: 0.12, a });
   }
-  if (g.won) d.withAlpha(a, () => d.text(S.l('¡La pérdida baja en cada paso!', 'The loss drops at every step!'), r.x + r.w, r.y + r.h - 4 * u, { size: sz, weight: 800, color: tone(S, 'dat').ink, align: 'right', base: 'bottom' }));
+  // aviso de meta cumplida: bajo la etiqueta de la gráfica, a la derecha (la curva baja y deja libre esa esquina)
+  if (g.won) d.withAlpha(a, () => d.text('✓ ' + S.l('¡La pérdida baja en cada paso!', 'The loss drops at every step!'), r.x + r.w, cr.y + 27 * u, { size: sz, weight: 800, color: tone(S, 'dat').ink, align: 'right', base: 'middle' }));
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -747,8 +749,11 @@ function drawHistory(S: Frame, r: Rect) {
         d.text(e.what, cx, ly + 50 * u + (whoLines - 1) * 20 * u, { size: fz(S, 12.5), weight: 500, color: p.ink2, align: 'center', base: 'top', w: cw - 22 * u, lh: 1.3 });
       });
     });
-    const cx = r.x + 3 * cw + cw / 2;
-    d.withAlpha(also, () => d.text(alsoTxt, cx, ly + 128 * u, { size: fz(S, 12.5), weight: 700, color: tone(S, 'err').ink, align: 'center', base: 'top', w: cw - 14 * u, lh: 1.25 }));
+    const cx = r.x + 3 * cw + cw / 2, e4 = ev[3], sz2 = fz(S, 12.5);
+    const whoN = d.measure(e4.who, { size: fz(S, 13.5), weight: 800 }) > cw - 14 * u ? 2 : 1;
+    const whatN = Math.ceil(d.measure(e4.what, { size: sz2, weight: 500 }) / (cw - 30 * u)) + 0;
+    const alsoY = ly + 50 * u + (whoN - 1) * 20 * u + whatN * sz2 * 1.3 + 10 * u;
+    d.withAlpha(also, () => d.text(alsoTxt, cx, alsoY, { size: sz2, weight: 700, color: tone(S, 'err').ink, align: 'center', base: 'top', w: cw - 14 * u, lh: 1.25 }));
   }
 }
 

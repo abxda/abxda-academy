@@ -9,7 +9,7 @@
 
 export const X = [1.0, 0.5];
 export const TARGET = 1.0;
-/** Pesos de partida del ejemplo. Elegidos (búsqueda exhaustiva en pasos de 0.1) para que cada cuenta mostrada con tres decimales se pueda repetir a mano sin discrepancias de redondeo. */
+/** Pesos de partida del ejemplo. Con ellos cada cuenta mostrada con tres decimales se puede repetir a mano, con las cifras ya redondeadas, sin discrepancias de redondeo (lo comprueba verify-data.ts). */
 export const W0 = [0.6, -0.3, 0.7, 0.5, 0.8, -0.9];
 export const W_MAX = 2.5;
 

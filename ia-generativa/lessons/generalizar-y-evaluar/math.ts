@@ -50,10 +50,12 @@ export const DEGREES = Array.from({ length: 10 }, (_, i) => i + 1);
 export const BY_DEGREE = DEGREES.map((d) => { const w = fitPoly(d, 0); return { deg: d, w, train: rmse(w, TRAIN), val: rmse(w, VAL) }; });
 export const BEST_DEG = BY_DEGREE.reduce((a, b) => (b.val < a.val ? b : a)).deg;
 
-/** Descenso del gradiente sobre un polinomio de grado 9: curvas de entrenamiento y validación por época. */
-export function trainingCurves(deg = 9, epochs = 600) {
+/** Descenso del gradiente sobre un polinomio de grado 9: curvas de entrenamiento y validación por época.
+ *  20 000 épocas (el eje de la escena llega hasta ahí): con 600 el mínimo de validación (época 348) apenas se notaba;
+ *  con 20 000 la validación sube de 0.237 a ≈ 0.27 mientras el entrenamiento baja de 0.163 a ≈ 0.07 (verify-data.ts). */
+export function trainingCurves(deg = 9, epochs = 20000) {
   const n = TRAIN.x.length, F = TRAIN.x.map((x) => feats(x, deg)), w = new Array(deg + 1).fill(0);
-  // tasa de aprendizaje estable = 1 / λmax(H), con H = 2·FᵀF/n (de ahí el 0,5/λ), λ por iteración de potencias
+  // tasa de aprendizaje estable = 1 / λmax(H), con H = 2·FᵀF/n (de ahí el 0.5/λ), λ por iteración de potencias
   let v = new Array(deg + 1).fill(1), lam = 1;
   for (let it = 0; it < 60; it++) { const u = new Array(deg + 1).fill(0); F.forEach((a) => { const d = a.reduce((s, q, k) => s + q * v[k], 0); a.forEach((q, k) => (u[k] += (q * d) / n)); }); lam = Math.hypot(...u); v = u.map((q) => q / lam); }
   const lr = 0.5 / lam, out: { e: number; train: number; val: number }[] = [];
@@ -71,7 +73,7 @@ export const CURVES = trainingCurves();
 // ───────── clasificador de juguete: puntuaciones gaussianas ─────────
 export const MU_POS = 3.0, MU_NEG = 0, PREV = 0.1, N_POP = 1000;
 export const pdf = (x: number, mu: number) => Math.exp(-0.5 * (x - mu) ** 2) / Math.sqrt(2 * Math.PI);
-/** Φ(x): función de distribución normal estándar (aproximación de Abramowitz y Stegun 7.1.26). */
+/** Φ(x): función de distribución normal estándar (aproximación 26.2.17 de Abramowitz y Stegun, 1964, p. 932; error < 3·10⁻⁷ con estas 7 cifras, comprobado en verify-data.ts). */
 export function cdf(x: number) {
   const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp((-x * x) / 2);
   const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));

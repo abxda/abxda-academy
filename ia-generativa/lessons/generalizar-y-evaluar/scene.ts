@@ -7,6 +7,7 @@ import { BEST_DEG, BY_DEGREE, CURVES, MU_NEG, MU_POS, N_POP, PREV, TRAIN, VAL, c
 
 const BEST_VAL = Math.min(...BY_DEGREE.map((b) => b.val));
 const lamOf = (e: number) => (e <= -5.9 ? 0 : 10 ** e);
+const THR0 = 0.8;   // umbral inicial del control: marca demasiado (recall 99 %, precisión 34 %), de modo que el gate exige moverlo; con 1.7 ya se cumplía sin tocar nada
 const COSTS: Record<string, [number, number]> = { equal: [1, 1], fn: [10, 1], fp: [1, 10] };   // [costo de FN, costo de FP]
 
 interface St { degSeen: Record<number, boolean>; thrSeen: number }
@@ -16,7 +17,7 @@ const scene: SceneFactory = () => ({
   controls: [
     { id: 'deg', kind: 'slider', label: { es: 'Grado del polinomio', en: 'Polynomial degree' }, min: 1, max: 10, step: 1, value: 1, from: 'try1', to: 'gap', fmt: (v) => String(v) },
     { id: 'lam', kind: 'slider', label: { es: 'Regularización λ (escala logarítmica)', en: 'Regularization λ (log scale)' }, min: -6, max: 1, step: 0.25, value: -6, from: 'try2', to: 'early', fmt: (v) => (v <= -5.9 ? '0' : (10 ** v).toExponential(0).replace('e-', '·10⁻').replace('e+', '·10')) },
-    { id: 'thr', kind: 'slider', label: { es: 'Umbral de decisión', en: 'Decision threshold' }, min: -1, max: 5, step: 0.05, value: 1.7, from: 'try3', to: 'base', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+    { id: 'thr', kind: 'slider', label: { es: 'Umbral de decisión', en: 'Decision threshold' }, min: -1, max: 5, step: 0.05, value: THR0, from: 'try3', to: 'base', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
     { id: 'costs', kind: 'choice', label: { es: 'Qué cuesta más', en: 'What costs more' }, value: 'equal', from: 'cost', to: 'base', options: [{ value: 'equal', label: { es: 'Igual', en: 'Equal' } }, { value: 'fn', label: { es: 'Perder un caso', en: 'Missing a case' } }, { value: 'fp', label: { es: 'Falsa alarma', en: 'False alarm' } }] },
   ],
 
@@ -35,7 +36,7 @@ const scene: SceneFactory = () => ({
       if (rmse(w, VAL) <= 0.262) S.complete('reg');
     }
     if (S.between('try3', 'cost')) {
-      const c = confusion(S.p.thr ?? 1.7);
+      const c = confusion(S.p.thr ?? THR0);
       if (c.recall >= 0.85 && c.precision >= 0.6) S.complete('threshold');
     }
   },
@@ -124,7 +125,7 @@ function drawFit(S: Frame, reg: boolean) {
   }
   if (S.is('overfit') && S.at('overfit', 1.6, 2.2) > 0) d.withAlpha(S.at('overfit', 1.6, 2.2), () => badge(S, S.l('casi sin error aquí…', 'almost no error here…'), plot.X(0.5), plot.Y(1.18), { tone: 'dat' }));
   if (S.is('val') && S.at('val', 1.0, 1.6) > 0) d.withAlpha(S.at('val', 1.0, 1.6), () => badge(S, S.l('…pero mucho aquí', '…but a lot here'), plot.X(0.5), plot.Y(-0.98), { tone: 'lat' }));
-  if (S.between('data', 'underfit')) d.withAlpha(S.reveal('data', 0.8, 0.5), () => badge(S, S.l('datos de entrenamiento', 'training data'), plot.X(0.5), plot.Y(1.18), { tone: 'dat' }));
+  if (S.between('data', 'underfit')) d.withAlpha(S.reveal('data', 0.8, 0.5), () => badge(S, S.l('datos de entrenamiento (simulados)', 'training data (simulated)'), plot.X(0.5), plot.Y(1.18), { tone: 'dat' }));
   if (showVal && !reg) d.withAlpha(S.reveal('val', 0.2, 0.6), () => { d.circle(plot.r.x + 12 * u, plot.r.y + plot.r.h + 24 * u, 4 * u, { stroke: tone(S, 'lat').c, lw: 1.5 }); d.text(S.l('validación', 'validation'), plot.r.x + 22 * u, plot.r.y + plot.r.h + 24 * u, { size: 11, color: p.ink2, base: 'middle' }); });
 }
 
@@ -167,6 +168,7 @@ function drawSplit(S: Frame) {
     });
     x += w;
   });
+  d.text(S.l('reparto de ejemplo: no hay una regla única (depende del tamaño de los datos y de su ruido)', 'example split: there is no single rule (it depends on the size of the data and its noise)'), R.x + R.w / 2, R.y + R.h - 6 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'bottom', w: R.w - 16 * u });
   if (S.is('leak')) {
     const a = S.reveal('leak', 0.3, 0.7), tx = x0 + W * 0.85, fx = x0 + W * 0.35, ay = y0 - 24 * u;
     d.withAlpha(a, () => {
@@ -183,7 +185,7 @@ function drawSplit(S: Frame) {
 function drawEarly(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = regions(S, S.portrait ? 0.78 : 0.7);
   const xs = (e: number) => Math.log10(e + 1);
-  const plot = new Plot(S, R.main, { xr: [0, xs(20000)], yr: [0, 0.5], xLabel: S.l('épocas (escala logarítmica)', 'epochs (log scale)'), yLabel: S.l('error', 'error'), xTicks: [0, 1, 2, 3, 4], yTicks: [0, 0.25, 0.5], tickFmt: (v) => (v <= 4 && Number.isInteger(v) && v !== 0.0 ? '10' + '⁰¹²³⁴'[v] : S.n(v, v === 0 ? 0 : 2)), pad: { l: 40, b: 34, t: 14, r: 12 } });
+  const plot = new Plot(S, R.main, { xr: [0, xs(20000)], yr: [0, 0.56], xLabel: S.l('épocas (escala logarítmica)', 'epochs (log scale)'), yLabel: S.l('error', 'error'), xTicks: [0, 1, 2, 3, 4], yTicks: [0, 0.25, 0.5], tickFmt: (v) => (v <= 4 && Number.isInteger(v) && v !== 0.0 ? '10' + '⁰¹²³⁴'[v] : S.n(v, v === 0 ? 0 : 2)), pad: { l: 40, b: 34, t: 14, r: 12 } });
   plot.axes();
   const sweep = S.at('early', 0.3, 4.5, 'out') * xs(20000);
   const pts = (key: 'train' | 'val') => CURVES.curves.filter((c) => xs(c.e) <= sweep && c.e > 0).map((c) => [plot.X(xs(c.e)), plot.Y(clamp(c[key], 0, 0.5))] as [number, number]);
@@ -244,7 +246,7 @@ function drawPeople(S: Frame, base: boolean) {
 function drawConf(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = regions(S, S.portrait ? 0.62 : 0.6);
   const fixed = S.between('confusion', 'try3');
-  const t = fixed ? 1.7 : S.p.thr ?? 1.7, c = confusion(t);
+  const t = fixed ? 1.7 : S.p.thr ?? THR0, c = confusion(t);
   const plot = new Plot(S, R.main, { xr: [-3, 6.5], yr: [0, 1.0], xLabel: S.l('puntuación del modelo', 'model score'), yLabel: S.l('personas', 'people'), xTicks: [-2, 0, 2, 4, 6], yTicks: [], pad: { l: 14, b: 32, t: 10, r: 10 } });
   plot.axes();
   const nNeg = N_POP * (1 - PREV), nPos = N_POP * PREV, k = 0.88 / (nNeg * pdf(0, 0));      // misma escala de personas para las dos campanas
@@ -273,6 +275,7 @@ function drawConf(S: Frame) {
     { k: 'fn', v: c.fn, t: 'err' as const, es: 'FN', en: 'FN', i: 1, j: 0, at: 1.7 }, { k: 'tn', v: c.tn, t: 'dat' as const, es: 'VN', en: 'TN', i: 1, j: 1, at: 2.4 },
   ];
   d.withAlpha(reveal, () => {
+    d.text(S.l('otro ejemplo (simulado): 1 000 personas · 100 enfermas (10 %)', 'another example (simulated): 1,000 people · 100 sick (10%)'), r.x, r.y + 2 * u, { size: 11, weight: 600, color: p.mute, w: r.w });
     d.text(S.l('marcado +', 'flagged +'), mx + cs * 0.5, my - 10 * u, { size: 11, weight: 700, color: p.ink2, align: 'center' });
     d.text(S.l('marcado −', 'flagged −'), mx + cs * 1.5, my - 10 * u, { size: 11, weight: 700, color: p.ink2, align: 'center' });
     d.text(S.l('real +', 'real +'), mx - 6 * u, my + cs * 0.5, { size: 11, weight: 700, color: p.ink2, align: 'right', base: 'middle' });
@@ -300,7 +303,7 @@ function drawConf(S: Frame) {
   if (S.on('cost')) {
     const [cFN, cFP] = COSTS[S.p.costs ?? 'equal'];
     let bestT = -1, bestC = Infinity;
-    for (let tt = -1; tt <= 5; tt += 0.05) { const q = confusion(tt), cc = cFN * q.fn + cFP * q.fp; if (cc < bestC) { bestC = cc; bestT = tt; } }
+    for (let i = 0; i <= 600; i++) { const tt = -1 + i * 0.01, q = confusion(tt), cc = cFN * q.fn + cFP * q.fp; if (cc < bestC) { bestC = cc; bestT = tt; } }
     const a = S.reveal('cost', 0.4, 0.6);
     d.withAlpha(a, () => {
       plot.line(bestT, 0, bestT, 1, 'dat', 2.5, [6, 4]);

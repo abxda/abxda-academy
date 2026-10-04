@@ -210,15 +210,19 @@ Para un modelo $\\hat f$ entrenado con un conjunto aleatorio, el error esperado 
 
 $$\\mathbb{E}\\big[(y-\\hat f(x))^2\\big] = \\underbrace{\\big(\\mathbb{E}[\\hat f(x)]-f(x)\\big)^2}_{\\text{sesgo}^2} + \\underbrace{\\mathrm{Var}\\big(\\hat f(x)\\big)}_{\\text{varianza}} + \\underbrace{\\sigma^2}_{\\text{ruido irreducible}}.$$
 
-El subajuste es sesgo alto (modelo demasiado rígido); el sobreajuste es varianza alta (el modelo cambia mucho con cada muestra). En la lección el ruido es $\\sigma = 0{,}2$: ningún modelo puede bajar de ese error en datos nuevos, y el mejor grado (4) llega a $\\approx 0{,}22$.
+Es la forma estándar con error cuadrático (Hastie, Tibshirani y Friedman, ec. 7.9). El subajuste es sesgo alto (modelo demasiado rígido); el sobreajuste es varianza alta (el modelo cambia mucho con cada muestra). En la lección el ruido es $\\sigma = 0.2$: en promedio, ningún modelo puede bajar de ese error en datos nuevos (en una muestra concreta de 80 puntos puede quedar un poco por encima o por debajo), y el mejor grado (4) llega a $\\approx 0.22$ en la validación de la escena.
+
+Esto se comprobó simulando 4 000 conjuntos de entrenamiento con la misma receta de datos (\`verify-data.ts\`): la suma $\\sigma^2+\\text{sesgo}^2+\\text{varianza}$ coincide con el error simulado en puntos nuevos. Con grado 1: sesgo² ≈ 0.066 y varianza ≈ 0.007 (el error es de sesgo). Con grado 4: 0.001 y 0.017. Con grado 10: sesgo² ≈ 0 y varianza ≈ 1.6, sobre todo hacia los extremos del intervalo (el error es de varianza). Con grado 10 y $\\lambda = 0.03$: 0.005 y 0.018; la regularización cambia varianza por un poco de sesgo.
 
 ## Regularización ridge
 
-El ajuste polinómico con castigo $\\lambda$ a los pesos minimiza $\\lVert y - Xw\\rVert^2 + \\lambda \\lVert w\\rVert^2$, con solución cerrada
+El ajuste polinómico con castigo $\\lambda$ a los pesos (regresión *ridge*, o decaimiento de pesos, *weight decay*) minimiza $\\lVert y - Xw\\rVert^2 + \\lambda \\lVert w\\rVert^2$, con solución cerrada
 
 $$\\hat w = (X^\\top X + \\lambda I)^{-1} X^\\top y.$$
 
-Con $\\lambda = 0$ se recupera el ajuste libre; al subir $\\lambda$ los pesos se encogen y la curva se suaviza. La parada temprana del descenso del gradiente actúa de forma parecida a una regularización: detener antes limita cuánto crecen los pesos.
+Con $\\lambda = 0$ se recupera el ajuste libre; al subir $\\lambda$ los pesos se encogen y la curva se suaviza (en la escena, la norma de los pesos de grado 10 baja de ≈ 327 con $\\lambda = 0$ a ≈ 0.19 con $\\lambda = 10$). Dos precisiones. El término constante no se penaliza (como en la escena y en scikit-learn; Hastie et al., §3.4.1), y las entradas conviene normalizarlas antes (la escena pasa $x\\in[0,1]$ a $[-1,1]$). Y con $\\lambda$ demasiado grande el modelo vuelve a subajustar: con grado 10, el error de validación de la escena baja hasta $\\lambda \\approx 0.02$ (≈ 0.24) y luego sube (≈ 0.44 con $\\lambda = 10$, peor que la recta).
+
+La parada temprana del descenso del gradiente actúa de forma parecida a una regularización: detener antes limita cuánto crecen los pesos. Para un modelo lineal con error cuadrático y descenso del gradiente simple equivale, con una aproximación cuadrática, a una regularización $L^2$ (Goodfellow, Bengio y Courville, §7.8). Otras defensas: más datos (reales o aumentados, §7.4) y, en redes neuronales, el *dropout*: apagar unidades al azar durante el entrenamiento (Srivastava et al., 2014).
 
 ## Métricas de clasificación
 
@@ -226,33 +230,50 @@ Con verdaderos positivos $TP$, falsos positivos $FP$, falsos negativos $FN$ y ve
 
 $$\\text{exactitud}=\\frac{TP+TN}{TP+FP+FN+TN},\\quad \\text{precisión}=\\frac{TP}{TP+FP},\\quad \\text{recall}=\\frac{TP}{TP+FN},\\quad F_1=\\frac{2\\,P\\,R}{P+R}.$$
 
+Si no se marca a nadie ($TP+FP=0$) la precisión es $0/0$: por convención (la de la escena) se toma 1, de modo que un detector que dice «sano» siempre tiene precisión perfecta y recall 0, y por eso hay que mirar las dos (Goodfellow et al., §11.1). El $F_1$ es la media armónica de precisión y recall.
+
+## El umbral y los costos
+
+Si un falso negativo cuesta $c_{FN}$ y un falso positivo $c_{FP}$ (los aciertos no cuestan), la decisión de menor costo esperado es marcar «positivo» cuando
+
+$$P(\\text{enfermo}\\mid \\text{puntuación}) \\ge \\frac{c_{FP}}{c_{FP}+c_{FN}}\\qquad\\text{(Elkan, 2001)}.$$
+
+Con costos iguales el corte de probabilidad es 0.5; si perder un caso cuesta 10 veces más, baja a $1/11\\approx 0.09$. En la escena (dos campanas y 10 % de enfermas) eso da los umbrales de puntuación óptimos 2.23 (costos iguales), 1.46 (perder un caso cuesta 10) y 3.00 (la falsa alarma cuesta 10).
+
 ## La tasa base (teorema de Bayes)
 
 Con prevalencia $p$, sensibilidad $s$ (= recall) y especificidad $c$, la probabilidad de estar enfermo dado un positivo es
 
 $$P(\\text{enfermo}\\mid +)=\\frac{s\\,p}{s\\,p+(1-c)(1-p)}.$$
 
-Con $p=0{,}01$ y $s=c=0{,}95$: $\\dfrac{0{,}0095}{0{,}0095+0{,}0495}\\approx 0{,}16$, el «uno de cada seis» de la lección.
+Con $p=0.01$ y $s=c=0.95$: $\\dfrac{0.0095}{0.0095+0.0495}\\approx 0.16$, el «uno de cada seis» de la lección. Con $s=c=0.95$ hay más falsas alarmas que aciertos mientras la prevalencia sea menor que 5 %.
+
+Presentar el cálculo en frecuencias («de 2 000 personas, 20 enfermas, 19 detectadas…») en lugar de probabilidades ayuda a razonar: Gigerenzer y Hoffrage (1995) muestran que los algoritmos bayesianos son computacionalmente más simples en ese formato y que, con él, personas sin formación estadística siguieron algoritmos bayesianos hasta en el 50 % de sus inferencias. Es el formato que usa la lección.
 
 ## En código
 
 \`\`\`python
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Ridge
 
+f = lambda x: 0.6 * np.sin(2 * np.pi * x) + 0.2          # la señal verdadera
 rng = np.random.default_rng(0)
-x = rng.uniform(0, 1, 92)[:, None]
-y = 0.6 * np.sin(2 * np.pi * x[:, 0]) + 0.2 + 0.2 * rng.normal(size=92)
-x_tr, x_va, y_tr, y_va = train_test_split(x, y, train_size=12, random_state=0)
+x_tr = ((np.arange(12) + 0.5) / 12)[:, None]              # 12 mediciones repartidas en [0, 1]
+y_tr = f(x_tr[:, 0]) + 0.2 * rng.normal(size=12)
+x_va = rng.uniform(0, 1, 80)[:, None]                     # 80 mediciones nuevas
+y_va = f(x_va[:, 0]) + 0.2 * rng.normal(size=80)
 
 for grado in (1, 4, 10):
-    for lam in (1e-9, 1e-2):
-        m = make_pipeline(PolynomialFeatures(grado), Ridge(alpha=lam)).fit(x_tr, y_tr)
-        rmse = lambda a, b: float(np.sqrt(np.mean((m.predict(a) - b) ** 2)))
-        print(grado, lam, round(rmse(x_tr, y_tr), 3), round(rmse(x_va, y_va), 3))
+    for lam in (1e-9, 3e-2):                              # 1e-9 hace de λ = 0
+        m = make_pipeline(PolynomialFeatures(grado, include_bias=False), Ridge(alpha=lam)).fit(2 * x_tr - 1, y_tr)
+        rmse = lambda a, b: float(np.sqrt(np.mean((m.predict(2 * a - 1) - b) ** 2)))
+        print(grado, lam, round(rmse(x_tr, y_tr), 3), round(rmse(x_va, y_va), 3))   # entrenamiento y validación
+
+# Con esa semilla: grado 1 → 0.302 y 0.339 (subajuste); grado 4 → 0.093 y 0.221 (mejor validación);
+# grado 10 → 0.006 y 0.251 con λ ≈ 0 (sobreajuste) y 0.103 y 0.237 con λ = 0.03.
+# Son datos nuevos con la misma receta que la escena: no repiten sus números exactos.
 
 def ppv(prev, sens, spec):          # valor predictivo positivo
     tp, fp = prev * sens, (1 - prev) * (1 - spec)
@@ -270,7 +291,9 @@ For a model $\\hat f$ trained on a random set, the expected error at a new point
 
 $$\\mathbb{E}\\big[(y-\\hat f(x))^2\\big] = \\underbrace{\\big(\\mathbb{E}[\\hat f(x)]-f(x)\\big)^2}_{\\text{bias}^2} + \\underbrace{\\mathrm{Var}\\big(\\hat f(x)\\big)}_{\\text{variance}} + \\underbrace{\\sigma^2}_{\\text{irreducible noise}}.$$
 
-Underfitting is high bias (a model that is too rigid); overfitting is high variance (the model changes a lot with each sample). In the lesson the noise is $\\sigma = 0.2$: no model can go below that error on new data, and the best degree (4) reaches $\\approx 0.22$.
+This is the standard form for squared error (Hastie, Tibshirani, and Friedman, eq. 7.9). Underfitting is high bias (a model that is too rigid); overfitting is high variance (the model changes a lot with each sample). In the lesson the noise is $\\sigma = 0.2$: on average, no model can go below that error on new data (on one particular 80-point sample it can land a little above or below), and the best degree (4) reaches $\\approx 0.22$ on the scene's validation set.
+
+This was checked by simulating 4,000 training sets with the same data recipe (\`verify-data.ts\`): the sum $\\sigma^2+\\text{bias}^2+\\text{variance}$ matches the simulated error at new points. With degree 1: bias² ≈ 0.066 and variance ≈ 0.007 (the error is bias). With degree 4: 0.001 and 0.017. With degree 10: bias² ≈ 0 and variance ≈ 1.6, mostly toward the ends of the interval (the error is variance). With degree 10 and $\\lambda = 0.03$: 0.005 and 0.018; regularization trades variance for a little bias.
 
 ## Ridge regularization
 
@@ -278,7 +301,9 @@ Polynomial fitting with a penalty $\\lambda$ on the weights minimizes $\\lVert y
 
 $$\\hat w = (X^\\top X + \\lambda I)^{-1} X^\\top y.$$
 
-With $\\lambda = 0$ you recover the free fit; as $\\lambda$ grows the weights shrink and the curve smooths out. Early stopping in gradient descent acts similarly to regularization: stopping earlier limits how large the weights can grow.
+With $\\lambda = 0$ you recover the free fit; as $\\lambda$ grows the weights shrink and the curve smooths out (in the scene, the norm of the degree-10 weights drops from ≈ 327 at $\\lambda = 0$ to ≈ 0.19 at $\\lambda = 10$). Two caveats. The constant term is not penalized (as in the scene and in scikit-learn; Hastie et al., §3.4.1), and inputs should be normalized first (the scene maps $x\\in[0,1]$ to $[-1,1]$). And with $\\lambda$ too large the model underfits again: at degree 10, the scene's validation error falls until $\\lambda \\approx 0.02$ (≈ 0.24) and then rises (≈ 0.44 at $\\lambda = 10$, worse than the line).
+
+Early stopping in gradient descent acts similarly to regularization: stopping earlier limits how large the weights can grow. For a linear model with squared error and plain gradient descent it is equivalent, under a quadratic approximation, to $L^2$ regularization (Goodfellow, Bengio, and Courville, §7.8). Other defenses: more data (real or augmented, §7.4) and, in neural networks, *dropout*: randomly switching off units during training (Srivastava et al., 2014).
 
 ## Classification metrics
 
@@ -286,33 +311,50 @@ With true positives $TP$, false positives $FP$, false negatives $FN$, and true n
 
 $$\\text{accuracy}=\\frac{TP+TN}{TP+FP+FN+TN},\\quad \\text{precision}=\\frac{TP}{TP+FP},\\quad \\text{recall}=\\frac{TP}{TP+FN},\\quad F_1=\\frac{2\\,P\\,R}{P+R}.$$
 
+If nobody is flagged ($TP+FP=0$) precision is $0/0$: by convention (the scene’s) it is taken as 1, so a detector that always says “healthy” has perfect precision and recall 0, which is why you have to look at both (Goodfellow et al., §11.1). $F_1$ is the harmonic mean of precision and recall.
+
+## The threshold and the costs
+
+If a false negative costs $c_{FN}$ and a false positive costs $c_{FP}$ (hits cost nothing), the lowest-expected-cost decision is to flag “positive” when
+
+$$P(\\text{sick}\\mid \\text{score}) \\ge \\frac{c_{FP}}{c_{FP}+c_{FN}}\\qquad\\text{(Elkan, 2001)}.$$
+
+With equal costs the probability cutoff is 0.5; if missing a case costs 10 times more, it drops to $1/11\\approx 0.09$. In the scene (two bell curves and 10% sick) that gives the optimal score thresholds 2.23 (equal costs), 1.46 (missing a case costs 10), and 3.00 (a false alarm costs 10).
+
 ## The base rate (Bayes’ theorem)
 
 With prevalence $p$, sensitivity $s$ (= recall), and specificity $c$, the probability of being sick given a positive result is
 
 $$P(\\text{sick}\\mid +)=\\frac{s\\,p}{s\\,p+(1-c)(1-p)}.$$
 
-With $p=0.01$ and $s=c=0.95$: $\\dfrac{0.0095}{0.0095+0.0495}\\approx 0.16$, the “one in six” of the lesson.
+With $p=0.01$ and $s=c=0.95$: $\\dfrac{0.0095}{0.0095+0.0495}\\approx 0.16$, the “one in six” of the lesson. With $s=c=0.95$ there are more false alarms than hits as long as the prevalence is below 5%.
+
+Presenting the calculation in frequencies (“out of 2,000 people, 20 sick, 19 detected…”) instead of probabilities helps reasoning: Gigerenzer and Hoffrage (1995) show that Bayesian algorithms are computationally simpler in that format and that, with it, people without statistical training followed Bayesian algorithms in up to 50% of their inferences. It is the format the lesson uses.
 
 ## In code
 
 \`\`\`python
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Ridge
 
+f = lambda x: 0.6 * np.sin(2 * np.pi * x) + 0.2          # the true signal
 rng = np.random.default_rng(0)
-x = rng.uniform(0, 1, 92)[:, None]
-y = 0.6 * np.sin(2 * np.pi * x[:, 0]) + 0.2 + 0.2 * rng.normal(size=92)
-x_tr, x_va, y_tr, y_va = train_test_split(x, y, train_size=12, random_state=0)
+x_tr = ((np.arange(12) + 0.5) / 12)[:, None]              # 12 measurements spread over [0, 1]
+y_tr = f(x_tr[:, 0]) + 0.2 * rng.normal(size=12)
+x_va = rng.uniform(0, 1, 80)[:, None]                     # 80 new measurements
+y_va = f(x_va[:, 0]) + 0.2 * rng.normal(size=80)
 
 for degree in (1, 4, 10):
-    for lam in (1e-9, 1e-2):
-        m = make_pipeline(PolynomialFeatures(degree), Ridge(alpha=lam)).fit(x_tr, y_tr)
-        rmse = lambda a, b: float(np.sqrt(np.mean((m.predict(a) - b) ** 2)))
-        print(degree, lam, round(rmse(x_tr, y_tr), 3), round(rmse(x_va, y_va), 3))
+    for lam in (1e-9, 3e-2):                              # 1e-9 stands in for λ = 0
+        m = make_pipeline(PolynomialFeatures(degree, include_bias=False), Ridge(alpha=lam)).fit(2 * x_tr - 1, y_tr)
+        rmse = lambda a, b: float(np.sqrt(np.mean((m.predict(2 * a - 1) - b) ** 2)))
+        print(degree, lam, round(rmse(x_tr, y_tr), 3), round(rmse(x_va, y_va), 3))   # training and validation
+
+# With that seed: degree 1 → 0.302 and 0.339 (underfitting); degree 4 → 0.093 and 0.221 (best validation);
+# degree 10 → 0.006 and 0.251 with λ ≈ 0 (overfitting) and 0.103 and 0.237 with λ = 0.03.
+# These are new data from the same recipe as the scene: they do not repeat its exact numbers.
 
 def ppv(prev, sens, spec):          # positive predictive value
     tp, fp = prev * sens, (1 - prev) * (1 - spec)
@@ -400,7 +442,7 @@ For images, a fully connected network does not scale. Lesson 11 shows the idea o
     { id: 'validation-set', term: { es: 'Conjunto de validación', en: 'Validation set' }, def: { es: 'Datos que el modelo no usa para ajustarse y que sirven para elegir entre modelos o hiperparámetros.', en: 'Data the model does not use to fit itself, used to choose between models or hyperparameters.' } },
     { id: 'test-set', term: { es: 'Conjunto de prueba', en: 'Test set' }, def: { es: 'Datos reservados que se usan una sola vez al final para informar el rendimiento esperado con casos nuevos.', en: 'Held-out data used once at the end to report the expected performance on new cases.' } },
     { id: 'data-leakage', term: { es: 'Fuga de datos', en: 'Data leakage' }, def: { es: 'Información de los datos de evaluación que se cuela en el entrenamiento, inflando el resultado medido.', en: 'Information from the evaluation data that slips into training, inflating the measured result.' } },
-    { id: 'regularization', term: { es: 'Regularización', en: 'Regularization' }, def: { es: 'Técnica que penaliza la complejidad del modelo (por ejemplo, los pesos grandes) para reducir el sobreajuste.', en: 'A technique that penalizes model complexity (for example, large weights) to reduce overfitting.' } },
+    { id: 'regularization', term: { es: 'Regularización', en: 'Regularization' }, def: { es: 'Cualquier cambio en el aprendizaje pensado para reducir el error con datos nuevos, aunque no baje el de entrenamiento. La más simple penaliza la complejidad del modelo (por ejemplo, los pesos grandes); la parada temprana y el dropout son otras formas.', en: 'Any change to learning meant to reduce the error on new data, even if it does not lower the training error. The simplest penalizes model complexity (for example, large weights); early stopping and dropout are other forms.' } },
     { id: 'precision', term: { es: 'Precisión', en: 'Precision' }, def: { es: 'De todo lo que el modelo marcó como positivo, la fracción que realmente lo era: TP / (TP + FP).', en: 'Of everything the model flagged as positive, the fraction that really was: TP / (TP + FP).' } },
     { id: 'recall', term: { es: 'Exhaustividad (recall)', en: 'Recall' }, def: { es: 'De todos los positivos reales, la fracción que el modelo encontró: TP / (TP + FN).', en: 'Of all real positives, the fraction the model found: TP / (TP + FN).' } },
     { id: 'confusion-matrix', term: { es: 'Matriz de confusión', en: 'Confusion matrix' }, def: { es: 'Tabla con los aciertos y errores de cada tipo: verdaderos y falsos positivos, verdaderos y falsos negativos.', en: 'A table with the hits and mistakes of each kind: true and false positives, true and false negatives.' } },
@@ -408,9 +450,13 @@ For images, a fully connected network does not scale. Lesson 11 shows the idea o
   ],
 
   sources: [
-    { title: 'The Elements of Statistical Learning (2.ª ed.), cap. 7: Model Assessment and Selection', authors: 'Hastie, T., Tibshirani, R., Friedman, J.', year: 2009, url: 'https://web.stanford.edu/~hastie/ElemStatLearn/' },
-    { title: 'Deep Learning, cap. 5 (Machine Learning Basics) y cap. 7 (Regularization)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
-    { title: 'Leakage and the reproducibility crisis in machine-learning-based science', authors: 'Kapoor, S., Narayanan, A.', year: 2023, url: 'https://doi.org/10.1016/j.patter.2023.100804' },
-    { title: 'Dropout: A Simple Way to Prevent Neural Networks from Overfitting', authors: 'Srivastava, N., Hinton, G., Krizhevsky, A., Sutskever, I., Salakhutdinov, R.', year: 2014, url: 'https://jmlr.org/papers/v15/srivastava14a.html' },
+    { title: 'The Elements of Statistical Learning (2.ª ed.), cap. 3 (§3.4.1, regresión ridge) y cap. 7 (§7.1–7.3: reparto en entrenamiento, validación y prueba; sesgo y varianza)', authors: 'Hastie, T., Tibshirani, R., Friedman, J.', year: 2009, url: 'https://web.stanford.edu/~hastie/ElemStatLearn/' },
+    { title: 'Deep Learning, cap. 5 (§5.2 capacidad, sobreajuste y subajuste; §5.3 conjuntos de validación)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/ml.html' },
+    { title: 'Deep Learning, cap. 7 (§7.1.1 decaimiento de pesos, §7.4 aumento de datos, §7.8 parada temprana, §7.12 dropout)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/regularization.html' },
+    { title: 'Deep Learning, cap. 11 (§11.1 métricas de rendimiento: precisión, recall, F)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/guidelines.html' },
+    { title: 'Leakage and the reproducibility crisis in machine-learning-based science (Patterns 4(9), 100804)', authors: 'Kapoor, S., Narayanan, A.', year: 2023, url: 'https://doi.org/10.1016/j.patter.2023.100804' },
+    { title: 'Dropout: A Simple Way to Prevent Neural Networks from Overfitting (JMLR 15, 1929–1958)', authors: 'Srivastava, N., Hinton, G., Krizhevsky, A., Sutskever, I., Salakhutdinov, R.', year: 2014, url: 'https://jmlr.org/papers/v15/srivastava14a.html' },
+    { title: 'The Foundations of Cost-Sensitive Learning (IJCAI 2001)', authors: 'Elkan, C.', year: 2001, url: 'https://cseweb.ucsd.edu/~elkan/rescale.pdf' },
+    { title: 'How to improve Bayesian reasoning without instruction: Frequency formats (Psychological Review 102(4), 684–704)', authors: 'Gigerenzer, G., Hoffrage, U.', year: 1995, url: 'https://doi.org/10.1037/0033-295X.102.4.684' },
   ],
 });

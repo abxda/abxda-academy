@@ -5,16 +5,16 @@ import {
 } from '../../../../../theme/kit';
 
 // ── imagen de entrada (16×16): una franja vertical y una casa ─────────────────
-const N = 16, K = 3, M = N - K + 1;   // salida de 14×14
-const IMG: number[][] = Array.from({ length: N }, () => new Array(N).fill(0.12));
+export const N = 16, K = 3, M = N - K + 1;   // salida de 14×14
+export const IMG: number[][] = Array.from({ length: N }, () => new Array(N).fill(0.12));
 for (let r = 2; r <= 13; r++) { IMG[r][2] = 0.95; IMG[r][3] = 0.95; }                      // franja vertical
 for (let r = 8; r <= 14; r++) for (let c = 7; c <= 13; c++) IMG[r][c] = 0.72;               // cuerpo de la casa
 for (let r = 3; r <= 7; r++) for (let c = 10 - (r - 3); c <= 10 + (r - 3); c++) if (c >= 6 && c <= 14) IMG[r][c] = 0.86;   // techo
 for (let r = 11; r <= 14; r++) { IMG[r][9] = 0.22; IMG[r][10] = 0.22; }                      // puerta
 IMG[9][12] = 0.3; IMG[10][12] = 0.3;                                                         // ventana
 
-type KDef = { id: string; es: string; en: string; k: number[][]; signed: boolean; scale: number };
-const KS: KDef[] = [
+export type KDef = { id: string; es: string; en: string; k: number[][]; signed: boolean; scale: number };
+export const KS: KDef[] = [
   { id: 'vert', es: 'Bordes verticales', en: 'Vertical edges', k: [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], signed: true, scale: 4 },
   { id: 'horiz', es: 'Bordes horizontales', en: 'Horizontal edges', k: [[-1, -2, -1], [0, 0, 0], [1, 2, 1]], signed: true, scale: 4 },
   { id: 'blur', es: 'Desenfoque', en: 'Blur', k: Array.from({ length: 3 }, () => new Array(3).fill(1 / 9)), signed: false, scale: 1 },
@@ -22,9 +22,9 @@ const KS: KDef[] = [
   { id: 'id', es: 'Identidad', en: 'Identity', k: [[0, 0, 0], [0, 1, 0], [0, 0, 0]], signed: false, scale: 1 },
 ];
 const kdef = (id: string) => KS.find((q) => q.id === id)!;
-const conv = (img: number[][], k: number[][]) => Array.from({ length: M }, (_, i) => Array.from({ length: M }, (_, j) => { let s = 0; for (let u = 0; u < K; u++) for (let v = 0; v < K; v++) s += k[u][v] * img[i + u][j + v]; return s; }));
-const OUT: Record<string, number[][]> = Object.fromEntries(KS.map((q) => [q.id, conv(IMG, q.k)]));
-const pool = (m: number[][]) => Array.from({ length: Math.floor(m.length / 2) }, (_, i) => Array.from({ length: Math.floor(m.length / 2) }, (_, j) => Math.max(Math.abs(m[2 * i][2 * j]), Math.abs(m[2 * i][2 * j + 1]), Math.abs(m[2 * i + 1][2 * j]), Math.abs(m[2 * i + 1][2 * j + 1]))));
+export const conv = (img: number[][], k: number[][]) => Array.from({ length: M }, (_, i) => Array.from({ length: M }, (_, j) => { let s = 0; for (let u = 0; u < K; u++) for (let v = 0; v < K; v++) s += k[u][v] * img[i + u][j + v]; return s; }));
+export const OUT: Record<string, number[][]> = Object.fromEntries(KS.map((q) => [q.id, conv(IMG, q.k)]));
+export const pool = (m: number[][]) => Array.from({ length: Math.floor(m.length / 2) }, (_, i) => Array.from({ length: Math.floor(m.length / 2) }, (_, j) => Math.max(Math.abs(m[2 * i][2 * j]), Math.abs(m[2 * i][2 * j + 1]), Math.abs(m[2 * i + 1][2 * j]), Math.abs(m[2 * i + 1][2 * j + 1]))));
 
 interface St { win?: { r: number; c: number }; lastPos?: number; seen: Record<string, boolean>; pick?: string }
 const stOf = (S: Frame): St => (S.st.s ??= { seen: {} });
@@ -126,13 +126,14 @@ function drawCost(S: Frame) {
   const cs = Math.floor(Math.min(R.w * 0.3 / N, R.h * 0.5 / N)), ix = R.x + (S.portrait ? (R.w - N * cs) / 2 : 10 * u), iy = R.y + 10 * u;
   drawImage(S, ix, iy, cs, IMG, { kind: 'gray' });
   d.text(S.l('100 × 100 = 10 000 valores', '100 × 100 = 10,000 values'), ix, iy + N * cs + 16 * u, { size: 13, weight: 700, color: p.ink2 });
+  d.text(S.l('(la imagen se dibuja más pequeña)', '(the image is drawn smaller)'), ix, iy + N * cs + 32 * u, { size: 11, weight: 600, color: p.mute });
   if (S.is('hook')) {
     const a = S.at('hook', 0.6, 3.2, 'out'), nx = S.portrait ? R.x + R.w - 70 * u : R.x + R.w * 0.55, ny0 = R.y + 20 * u, rows = 10, gap = (S.portrait ? 24 : 30) * u;
     const lines = Math.floor(a * 160);
     for (let i = 0; i < lines; i++) { const sy = iy + (i * 7 % (N * cs)), ty = ny0 + ((i * 3) % rows) * gap; d.line(ix + N * cs, sy, nx, ty, alpha(tone(S, 'w').c, 0.16), 1); }
     for (let k = 0; k < rows; k++) d.circle(nx, ny0 + k * gap, 8 * u, { fill: p.surface, stroke: tone(S, 'sig').c, lw: 2 });
     d.withAlpha(S.at('hook', 2.6, 3.4), () => {
-      d.text('10 000 000', S.portrait ? R.x + R.w / 2 : R.x + R.w * 0.55, S.portrait ? R.y + R.h - 90 * u : R.y + R.h - 90 * u, { size: S.portrait ? 32 : 44, weight: 800, font: 'mono', color: tone(S, 'w').ink, align: 'center' });
+      d.text(S.n(10_000_000, 0), S.portrait ? R.x + R.w / 2 : R.x + R.w * 0.55, S.portrait ? R.y + R.h - 90 * u : R.y + R.h - 90 * u, { size: S.portrait ? 32 : 44, weight: 800, font: 'mono', color: tone(S, 'w').ink, align: 'center' });
       d.text(S.l('pesos (10 000 entradas × 1 000 neuronas)', 'weights (10,000 inputs × 1,000 neurons)'), S.portrait ? R.x + R.w / 2 : R.x + R.w * 0.55, R.y + R.h - 62 * u, { size: 13, weight: 600, color: p.ink2, align: 'center' });
     });
   } else {
@@ -200,11 +201,11 @@ function drawConv(S: Frame) {
     void link; void box; void inset;
   }
   // mensajes de segmento
-  if (S.is('vertical') && S.at('vertical', 1.2, 2.0) > 0) d.withAlpha(S.at('vertical', 1.2, 2.0), () => { d.text(S.l('azul: borde que sube · rosa: borde que baja', 'blue: rising edge · pink: falling edge'), L.R.x + L.R.w / 2, L.R.y + L.R.h - 6 * u, { size: 12, weight: 700, color: p.ink2, align: 'center', base: 'bottom' }); });
+  if (S.is('vertical') && S.at('vertical', 1.2, 2.0) > 0) d.withAlpha(S.at('vertical', 1.2, 2.0), () => { d.text(S.l('cian: borde que sube · rosa: borde que baja', 'cyan: rising edge · pink: falling edge'), L.R.x + L.R.w / 2, L.R.y + L.R.h - 6 * u, { size: 12, weight: 700, color: p.ink2, align: 'center', base: 'bottom' }); });
   if (S.is('try2')) {
     const R = L.R, y = R.y + R.h - 10 * u;
     if (!st.pick) d.text(S.l('¿cuál resaltará mejor la franja vertical de la izquierda?', 'which will highlight the vertical stripe on the left best?'), R.x + R.w / 2, y, { size: 13, weight: 700, color: p.ink2, align: 'center', base: 'bottom', w: R.w });
-    else d.text(st.pick === 'vert' ? S.l('Correcto: los bordes verticales de la franja saltan a la vista.', 'Correct: the stripe’s vertical edges leap out.') : S.l('Casi no la resalta. Mira cómo queda y prueba otro.', 'It barely highlights it. See how it looks and try another.'), R.x + R.w / 2, y, { size: 13, weight: 700, color: st.pick === 'vert' ? tone(S, 'dat').ink : tone(S, 'err').ink, align: 'center', base: 'bottom', w: R.w });
+    else d.text(st.pick === 'vert' ? S.l('Correcto: los bordes verticales de la franja saltan a la vista.', 'Correct: the stripe’s vertical edges leap out.') : st.pick === 'horiz' ? S.l('Casi no la resalta: sus lados son verticales y este kernel solo responde en sus extremos. Prueba otro.', 'It barely highlights it: its sides are vertical and this kernel only responds at its ends. Try another.') : S.l('No marca sus bordes: suaviza la imagen y la franja sigue ahí, pero borrosa. Prueba otro.', 'It does not mark its edges: it smooths the image and the stripe is still there, but blurred. Try another.'), R.x + R.w / 2, y, { size: 13, weight: 700, color: st.pick === 'vert' ? tone(S, 'dat').ink : tone(S, 'err').ink, align: 'center', base: 'bottom', w: R.w });
   }
 }
 
@@ -214,23 +215,27 @@ function drawShared(S: Frame) {
   if (S.is('shared')) {
     const a = S.reveal('shared', 0.3, 0.8), cx = R.x + R.w / 2;
     d.withAlpha(a, () => {
-      const bw = Math.min(R.w * 0.8, 520 * u), y = R.y + R.h * 0.2;
-      d.text(S.l('totalmente conectada', 'fully connected'), cx, y, { size: 13, weight: 700, color: p.ink2, align: 'center' });
-      d.rect(cx - bw / 2, y + 10 * u, bw, 26 * u, { fill: alpha(tone(S, 'w').c, 0.4), stroke: tone(S, 'w').c, r: 3 });
-      d.text('10 000 000', cx - bw / 2 + 12 * u, y + 23 * u, { size: 16, weight: 800, font: 'mono', color: tone(S, 'w').ink, base: 'middle' });
-      d.text(S.l('convolucional (un kernel 3×3)', 'convolutional (one 3×3 kernel)'), cx, y + 74 * u, { size: 13, weight: 700, color: p.ink2, align: 'center' });
-      d.rect(cx - bw / 2, y + 84 * u, 3, 26 * u, { fill: alpha(tone(S, 'dat').c, 0.7), stroke: tone(S, 'dat').c });
-      d.text('10', cx - bw / 2 + 12 * u, y + 97 * u, { size: 16, weight: 800, font: 'mono', color: tone(S, 'dat').ink, base: 'middle' });
-      d.text(S.l('9 pesos + 1 sesgo, para cualquier tamaño de imagen', '9 weights + 1 bias, for any image size'), cx, y + 140 * u, { size: 14, weight: 700, color: p.ink, align: 'center', w: R.w - 20 * u });
+      const bw = Math.min(R.w * 0.8, 520 * u), y = R.y + R.h * 0.12, row = 64 * u;
+      const bar = (k: number, label: string, value: string, wFrac: number, t: 'w' | 'dat') => {
+        const yy = y + k * row;
+        d.text(label, cx, yy, { size: 13, weight: 700, color: p.ink2, align: 'center', w: R.w - 16 * u });
+        d.rect(cx - bw / 2, yy + 10 * u, Math.max(3, bw * wFrac), 26 * u, { fill: alpha(tone(S, t).c, t === 'w' ? 0.4 : 0.7), stroke: tone(S, t).c, r: t === 'w' ? 3 : 0 });
+        d.text(value, cx - bw / 2 + Math.max(3, bw * wFrac) + 8 * u, yy + 23 * u, { size: 16, weight: 800, font: 'mono', color: tone(S, t).ink, base: 'middle' });
+      };
+      // las barras comparten escala (10 000 000 = ancho completo); las dos convolucionales miden menos de un píxel y se dibujan con 3 px
+      bar(0, S.l('totalmente conectada (10 000 entradas → 1 000 neuronas)', 'fully connected (10,000 inputs → 1,000 neurons)'), S.n(10_000_000, 0), 1, 'w');
+      bar(1, S.l('convolucional: un kernel 3×3', 'convolutional: one 3×3 kernel'), S.n(10, 0), 10 / 10_000_000, 'dat');
+      bar(2, S.l('convolucional: 1 000 kernels 3×3', 'convolutional: 1,000 3×3 kernels'), S.n(10_000, 0), 10_000 / 10_000_000, 'dat');
+      d.text(S.l('9 pesos + 1 sesgo por kernel, para cualquier tamaño de imagen', '9 weights + 1 bias per kernel, for any image size'), cx, y + 3 * row + 4 * u, { size: 14, weight: 700, color: p.ink, align: 'center', w: R.w - 20 * u });
     });
     return;
   }
   // learned: el kernel converge a un detector de bordes (ilustración)
   const t = S.at('learned', 0.6, 5.0, 'io'), cx = R.x + R.w / 2, kc = 52 * u, kx = cx - 1.5 * kc, ky = R.y + R.h * 0.22;
   const start = [[0.4, -0.7, 0.9], [-0.2, 0.6, -0.5], [0.8, 0.1, -0.6]], target = kdef('vert').k;
-  d.text(S.l('kernel durante el entrenamiento (ilustración)', 'kernel during training (illustration)'), cx, ky - 22 * u, { size: 13, weight: 700, color: p.ink2, align: 'center' });
+  d.text(S.l('kernel durante el entrenamiento (ilustración: interpolación hecha a mano, no un entrenamiento real)', 'kernel during training (illustration: a hand-made interpolation, not a real training run)'), cx, ky - 22 * u, { size: 13, weight: 700, color: p.ink2, align: 'center', w: R.w - 24 * u });
   target.forEach((row, r) => row.forEach((tv, c) => { const v = lerp(start[r][c], tv, t); d.rect(kx + c * kc, ky + r * kc, kc - 4, kc - 4, { fill: alpha(tone(S, 'w').c, 0.08 + 0.3 * Math.min(1, Math.abs(v) / 2)), stroke: tone(S, 'w').c }); d.text(S.n(v, 1), kx + c * kc + (kc - 4) / 2, ky + r * kc + (kc - 4) / 2, { size: 14, weight: 700, font: 'mono', color: tone(S, 'w').ink, align: 'center', base: 'middle' }); }));
-  d.withAlpha(S.at('learned', 5.0, 5.8), () => badge(S, S.l('un detector de bordes aparece solo', 'an edge detector appears on its own'), cx, ky + 3 * kc + 28 * u, { tone: 'dat' }));
+  d.withAlpha(S.at('learned', 5.0, 5.8), () => badge(S, S.l('un detector de bordes puede aparecer solo', 'an edge detector can appear on its own'), cx, ky + 3 * kc + 28 * u, { tone: 'dat' }));
   neu(S, R.x + R.w - 72 * u, R.y + R.h - 60 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'wow', a: S.at('learned', 5.0, 5.8) });
 }
 
@@ -250,10 +255,10 @@ function drawPool(S: Frame) {
   const cs = Math.floor(Math.min((R.w * 0.42) / M, (R.h * (S.portrait ? 0.34 : 0.7)) / M)), x0 = S.portrait ? R.x + (R.w - M * cs) / 2 : R.x + 8 * u, y0 = R.y + 12 * u;
   const x1 = S.portrait ? R.x + (R.w - pc * cs * 2) / 2 : R.x + R.w - pc * cs * 2 - 8 * u, y1 = S.portrait ? y0 + M * cs + 56 * u : y0;
   drawImage(S, x0, y0, cs, src.map((r) => r.map((v) => Math.abs(v) / 4)), { kind: 'gray' });
-  d.text(S.l('mapa 14×14', 'map 14×14'), x0, y0 - 5 * u, { size: 12, weight: 700, color: p.ink2 });
+  d.text(S.l('mapa 14×14 (valor absoluto)', 'map 14×14 (absolute value)'), x0, y0 - 5 * u, { size: 12, weight: 700, color: p.ink2 });
   const k = S.at('pooling', 0.6, 5.5, 'lin') * pc * pc, n = Math.floor(k);
   drawImage(S, x1, y1, cs * 2, pl.map((r, i) => r.map((v, j) => (i * pc + j < n ? v / 4 : 0))), { kind: 'gray' });
-  d.text(S.l('tras el pooling 7×7', 'after pooling 7×7'), x1, y1 - 5 * u, { size: 12, weight: 700, color: p.ink2 });
+  d.text(S.l('pooling 7×7 (máximo por bloque)', 'pooling 7×7 (max per block)'), x1, y1 - 5 * u, { size: 12, weight: 700, color: p.ink2 });
   const cur = Math.min(n, pc * pc - 1), pi = Math.floor(cur / pc), pj = cur % pc;
   if (k < pc * pc) { d.rect(x0 + pj * 2 * cs, y0 + pi * 2 * cs, 2 * cs, 2 * cs, { stroke: tone(S, 'w').c, lw: 2.5 }); d.rect(x1 + pj * 2 * cs, y1 + pi * 2 * cs, 2 * cs, 2 * cs, { stroke: tone(S, 'w').c, lw: 2.5 }); }
   if (!S.portrait) d.text('→', (x0 + M * cs + x1) / 2, y0 + M * cs / 2, { size: 28, weight: 800, color: p.mute, align: 'center', base: 'middle' });
@@ -282,16 +287,19 @@ function drawHier(S: Frame) {
 }
 
 // ═════════ la pila de una CNN ═════════
+// etapas de la red de ejemplo (28×28 → 10 clases); verify-data.ts comprueba las dimensiones
+export const CNN_STAGES = [
+  { es: 'Entrada', en: 'Input', dim: '28×28×1', side: 28, ch: 1, tn: 'ink' as const },
+  { es: 'Conv 3×3', en: 'Conv 3×3', dim: '26×26×8', side: 26, ch: 8, tn: 'sig' as const },
+  { es: 'Pooling', en: 'Pooling', dim: '13×13×8', side: 13, ch: 8, tn: 'lat' as const },
+  { es: 'Conv 3×3', en: 'Conv 3×3', dim: '11×11×16', side: 11, ch: 16, tn: 'sig' as const },
+  { es: 'Pooling', en: 'Pooling', dim: '5×5×16', side: 5, ch: 16, tn: 'lat' as const },
+  { es: 'Densa', en: 'Dense', dim: '400 → 10', side: 3, ch: 10, tn: 'dat' as const },
+];
+
 function drawCnn(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = regions(S, 1).all;
-  const stages = [
-    { es: 'Entrada', en: 'Input', dim: '28×28×1', side: 28, ch: 1, tn: 'ink' as const },
-    { es: 'Conv 3×3', en: 'Conv 3×3', dim: '26×26×8', side: 26, ch: 8, tn: 'sig' as const },
-    { es: 'Pooling', en: 'Pooling', dim: '13×13×8', side: 13, ch: 8, tn: 'lat' as const },
-    { es: 'Conv 3×3', en: 'Conv 3×3', dim: '11×11×16', side: 11, ch: 16, tn: 'sig' as const },
-    { es: 'Pooling', en: 'Pooling', dim: '5×5×16', side: 5, ch: 16, tn: 'lat' as const },
-    { es: 'Densa', en: 'Dense', dim: '400 → 10', side: 3, ch: 10, tn: 'dat' as const },
-  ];
+  const stages = CNN_STAGES;
   const n = stages.length, vertical = S.portrait, sw = vertical ? R.w - 60 * u : (R.w - 10 * u) / n, sh = vertical ? (R.h - 30 * u) / n : R.h * 0.5;
   stages.forEach((s, i) => {
     const a = S.reveal('cnn', 0.2 + i * 0.7, 0.6), t = tone(S, s.tn);
@@ -315,7 +323,7 @@ function drawHistory(S: Frame) {
   d.withAlpha(a, () => {
     dg.forEach((row, r) => row.forEach((v, c) => d.rect(x + c * cs, y + r * cs, cs - 1, cs - 1, { fill: gray(S, v) })));
     d.text('→ 7', x + 5 * cs + 14 * u, y + 3.5 * cs, { size: 26, weight: 800, font: 'mono', base: 'middle' });
-    d.text(S.l('códigos postales manuscritos', 'handwritten zip codes'), x + 2.5 * cs, y + 7 * cs + 18 * u, { size: 13, weight: 700, color: p.ink2, align: 'center' });
+    d.text(S.l('códigos postales manuscritos (ilustración)', 'handwritten zip codes (illustration)'), x + 2.5 * cs, y + 7 * cs + 18 * u, { size: 13, weight: 700, color: p.ink2, align: 'center' });
   });
   const items = [{ yr: 1989, es: 'Red convolucional entrenada con retropropagación', en: 'Convolutional net trained with backpropagation', t: 0.8 }, { yr: 1998, es: 'LeNet-5: lectura de documentos', en: 'LeNet-5: document recognition', t: 2.2 }];
   items.forEach((it, i) => { const k = S.at('history', it.t, it.t + 0.6, 'out'); if (k > 0) d.withAlpha(k, () => badge(S, `${it.yr} · ${S.l(it.es, it.en)}`, R.x + R.w / 2, R.y + R.h * (S.portrait ? 0.62 : 0.66) + i * 40 * u, { tone: i ? 'dat' : 'sig' })); });
@@ -327,7 +335,7 @@ function drawLimits(S: Frame) {
   const bw = Math.min(S.portrait ? R.w - 24 * u : R.w * 0.42, 280 * u), bh = 70 * u, y = R.y + R.h * 0.2;
   const xs = S.portrait ? [R.x + (R.w - bw) / 2, R.x + (R.w - bw) / 2] : [R.x + R.w / 2 - bw - 12 * u, R.x + R.w / 2 + 12 * u], ys = S.portrait ? [y, y + bh + 30 * u] : [y, y];
   box(S, { x: xs[0], y: ys[0], w: bw, h: bh }, S.l('Lo que vemos: la forma', 'What we see: the shape'), { tone: 'dat', a: S.reveal('limits', 0.3, 0.6) });
-  box(S, { x: xs[1], y: ys[1], w: bw, h: bh }, S.l('En qué se apoya la red: texturas', 'What the network leans on: textures'), { tone: 'err', a: S.reveal('limits', 1.2, 0.6) });
+  box(S, { x: xs[1], y: ys[1], w: bw, h: bh }, S.l('En qué tiende a apoyarse la red: texturas', 'What the network tends to lean on: textures'), { tone: 'err', a: S.reveal('limits', 1.2, 0.6) });
   d.withAlpha(S.at('limits', 2.4, 3.2), () => d.text(S.l('cambios sutiles, invisibles para una persona, pueden cambiar la respuesta', 'subtle changes, invisible to a person, can change the answer'), R.x + R.w / 2, ys[1] + bh + 36 * u, { size: 14, weight: 700, color: p.ink, align: 'center', w: R.w - 24 * u }));
   neu(S, R.x + R.w - 70 * u, R.y + R.h - 58 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'think', a: S.at('limits', 2.6, 3.2) });
 }

@@ -60,7 +60,8 @@ export function title(S: Frame, r: Rect, text: string, t: Tone, a = 1, sub?: str
   const d = S.d, size = fz(S, 12.5), h = Math.max(20 * S.u, 12.3 * 1.6) * K;
   d.withAlpha(a, () => {
     d.text(text, r.x, r.y + h * 0.42, { size, weight: 800, color: tone(S, t).ink, base: 'middle' });
-    if (sub) d.text(sub, r.x + r.w, r.y + h * 0.42, { size, weight: 600, font: 'mono', color: S.pal.mute, base: 'middle', align: 'right' });
+    // el subtítulo solo se dibuja si cabe junto al título (teléfono en horizontal: el panel es angosto)
+    if (sub && d.measure(text, { size, weight: 800 }) + d.measure(sub, { size, weight: 600, font: 'mono' }) + 14 * S.u < r.w) d.text(sub, r.x + r.w, r.y + h * 0.42, { size, weight: 600, font: 'mono', color: S.pal.mute, base: 'middle', align: 'right' });
     d.line(r.x, r.y + h, r.x + r.w, r.y + h, S.pal.line, 1);
   });
   return r.y + h;

@@ -31,4 +31,5 @@ export const PUBLISHED: string[] = [
   'modelo-y-error',
   'neurona',
   'capas-y-activaciones',
+  'backpropagation',
 ];
