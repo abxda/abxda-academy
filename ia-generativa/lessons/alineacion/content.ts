@@ -57,11 +57,11 @@ export default defineLesson({
     },
     {
       id: 'sft-scale',
-      es: 'Y es una capa pequeña: InstructGPT usó unas trece mil indicaciones con su respuesta, escritas por unas cuarenta personas, mientras GPT-3 se preentrenó con trescientos mil millones de tokens.',
-      en: 'And it is a small layer: InstructGPT used about thirteen thousand prompts with their answers, written by about forty people, while GPT-3 was pretrained on three hundred billion tokens.',
+      es: 'Y es una capa pequeña: InstructGPT usó unas trece mil indicaciones con respuestas escritas por unas cuarenta personas, mientras GPT-3 se preentrenó con trescientos mil millones de tokens.',
+      en: 'And it is a small layer: InstructGPT used about thirteen thousand prompts with answers written by about forty people, while GPT-3 was pretrained on three hundred billion tokens.',
       tts: {
-        es: 'Y es una capa pequeña: Instruct ge pe te usó unas trece mil indicaciones con su respuesta, escritas por unas cuarenta personas, mientras ge pe te tres se preentrenó con trescientos mil millones de tokens.',
-        en: 'And it is a small layer: Instruct G P T used about thirteen thousand prompts with their answers, written by about forty people, while G P T three was pretrained on three hundred billion tokens.',
+        es: 'Y es una capa pequeña: Instruct ge pe te usó unas trece mil indicaciones con respuestas escritas por unas cuarenta personas, mientras ge pe te tres se preentrenó con trescientos mil millones de tokens.',
+        en: 'And it is a small layer: Instruct G P T used about thirteen thousand prompts with answers written by about forty people, while G P T three was pretrained on three hundred billion tokens.',
       },
       pad: 0.3,
     },
@@ -77,8 +77,8 @@ export default defineLesson({
     },
     {
       id: 'compare-result',
-      es: 'Mismo modelo de partida, otro comportamiento. El asistente trata la indicación como una petición; el modelo base la trata como el comienzo de un texto.',
-      en: 'Same starting model, different behavior. The assistant treats the prompt as a request; the base model treats it as the beginning of a text.',
+      es: 'Mismo modelo de partida, otro comportamiento. El asistente trata la indicación como una petición; el base, como el comienzo de un texto. No es perfecto: es un modelo pequeño.',
+      en: 'Same starting model, different behavior. The assistant treats the prompt as a request; the base model, as the beginning of a text. It is not perfect: it is a small model.',
       pad: 0.3,
     },
     {
@@ -155,8 +155,8 @@ export default defineLesson({
     },
     {
       id: 'kl',
-      es: 'Hay una correa: una penalización que castiga alejarse demasiado del modelo de partida. Sin ella, el modelo encontraría trucos para engañar al juez en lugar de mejorar.',
-      en: 'There is a leash: a penalty for drifting too far from the starting model. Without it, the model would find tricks to fool the judge instead of improving.',
+      es: 'Hay una correa: una penalización por alejarse demasiado del modelo de partida, pensada para que no busque trucos que engañen al juez en lugar de mejorar.',
+      en: 'There is a leash: a penalty for drifting too far from the starting model, meant to keep it from hunting for tricks that fool the judge instead of improving.',
       pad: 0.3,
     },
     {
@@ -177,11 +177,11 @@ export default defineLesson({
     },
     {
       id: 'goodhart',
-      es: 'Al apretar de más, el modelo aprende a agradar al juez, no a la gente: la puntuación sube y la calidad real cae. Es la ley de Goodhart, medida en modelos de lenguaje por Gao y colaboradores.',
-      en: 'Squeeze too hard and the model learns to please the judge, not people: the score rises and real quality falls. That is Goodhart’s law, measured in language models by Gao and colleagues.',
+      es: 'Al apretar de más, el modelo aprende a agradar al juez, no a la gente: la puntuación sube y la calidad real cae. Es la ley de Goodhart; Gao y colaboradores la midieron con un modelo «de oro» como árbitro.',
+      en: 'Squeeze too hard and the model learns to please the judge, not people: the score rises and real quality falls. That is Goodhart’s law; Gao and colleagues measured it with a “gold” model as the referee.',
       tts: {
-        es: 'Al apretar de más, el modelo aprende a agradar al juez, no a la gente: la puntuación sube y la calidad real cae. Es la ley de Gud jart, medida en modelos de lenguaje por Gao y colaboradores.',
-        en: 'Squeeze too hard and the model learns to please the judge, not people: the score rises and real quality falls. That is Goodhart’s law, measured in language models by Gao and colleagues.',
+        es: 'Al apretar de más, el modelo aprende a agradar al juez, no a la gente: la puntuación sube y la calidad real cae. Es la ley de Gud jart; Gao y colaboradores la midieron con un modelo «de oro» como árbitro.',
+        en: 'Squeeze too hard and the model learns to please the judge, not people: the score rises and real quality falls. That is Goodhart’s law; Gao and colleagues measured it with a “gold” model as the referee.',
       },
       note: { es: 'Ley de Goodhart: optimizar un sustituto lo degrada.', en: 'Goodhart’s law: optimizing a proxy degrades it.' },
       pad: 0.5,
@@ -221,24 +221,24 @@ export default defineLesson({
     // ── 6 · efectos secundarios y la capa de comportamiento ──
     {
       id: 'syco',
-      es: 'Optimizar la aprobación humana tiene un efecto secundario: la adulación. Si quienes juzgan tienden a preferir que les den la razón, el modelo aprende a dársela.',
-      en: 'Optimizing for human approval has a side effect: sycophancy. If judges tend to prefer being agreed with, the model learns to agree.',
+      es: 'Optimizar la aprobación humana puede tener un efecto secundario: la adulación. Si quienes juzgan tienden a preferir que les den la razón, el modelo puede aprender a dársela.',
+      en: 'Optimizing for human approval can have a side effect: sycophancy. If judges tend to prefer being agreed with, the model can learn to agree.',
       note: { es: 'Adulación: decir lo que la persona quiere oír.', en: 'Sycophancy: telling people what they want to hear.' },
       pad: 0.3,
     },
     {
       id: 'syco-evidence',
-      es: 'Un estudio de dos mil veintitrés con cinco asistentes de IA halló adulación en todos, con distinta intensidad: cedían ante un «¿seguro?», daban opiniones sesgadas y copiaban errores. Las preferencias humanas explican una parte.',
-      en: 'A twenty twenty-three study of five AI assistants found sycophancy in all of them, to different degrees: they caved to “are you sure?”, gave biased feedback, and copied mistakes. Human preferences explain part of it.',
+      es: 'Un estudio de dos mil veintitrés halló adulación en cinco asistentes de IA, en distinto grado: cedían ante un «¿seguro?», adaptaban su opinión a la de la persona y copiaban sus errores.',
+      en: 'A twenty twenty-three study found sycophancy in five AI assistants, to different degrees: they caved to “are you sure?”, adapted their opinion to the person’s, and copied their mistakes.',
       pad: 0.3,
     },
     {
       id: 'syco-case',
-      es: 'En abril de dos mil veinticinco, OpenAI revirtió una actualización de GPT-4o por exceso de complacencia. Su análisis apunta a una señal nueva, de pulgares arriba y abajo, que debilitó a la principal.',
-      en: 'In April twenty twenty-five, OpenAI rolled back a GPT-4o update for being too agreeable. Its analysis points to a new signal, thumbs-up and thumbs-down, that weakened the primary one.',
+      es: 'En abril de dos mil veinticinco, OpenAI revirtió una actualización de GPT-4o por complaciente. Según su análisis preliminar, varios cambios a la vez, incluida una señal nueva de pulgares, debilitaron la principal.',
+      en: 'In April twenty twenty-five, OpenAI rolled back a GPT-4o update for being too agreeable. Its early analysis says several changes together, including a new thumbs-up signal, weakened the primary one.',
       tts: {
-        es: 'En abril de dos mil veinticinco, Open ei ai revirtió una actualización de ge pe te cuatro o por exceso de complacencia. Su análisis apunta a una señal nueva, de pulgares arriba y abajo, que debilitó a la principal.',
-        en: 'In April twenty twenty-five, Open A I rolled back a G P T four o update for being too agreeable. Its analysis points to a new signal, thumbs-up and thumbs-down, that weakened the primary one.',
+        es: 'En abril de dos mil veinticinco, Open ei ai revirtió una actualización de ge pe te cuatro o por complaciente. Según su análisis preliminar, varios cambios a la vez, incluida una señal nueva de pulgares, debilitaron la principal.',
+        en: 'In April twenty twenty-five, Open A I rolled back a G P T four o update for being too agreeable. Its early analysis says several changes together, including a new thumbs-up signal, weakened the primary one.',
       },
       pad: 0.3,
     },
@@ -251,13 +251,23 @@ export default defineLesson({
     },
     {
       id: 'layer',
-      es: 'Entonces, un asistente es el modelo base más una capa de comportamiento. En InstructGPT, los entrenamientos finales de esa capa usaron menos del dos por ciento del cómputo de GPT-3.',
-      en: 'So an assistant is the base model plus a layer of behavior. In InstructGPT, the final training runs of that layer used less than two percent of the compute of GPT-3.',
+      es: 'Entonces, un asistente es el modelo base más una capa de comportamiento. En InstructGPT, entrenar esa capa costó menos del dos por ciento del cómputo de GPT-3, sin contar los datos.',
+      en: 'So an assistant is the base model plus a layer of behavior. In InstructGPT, training that layer took less than two percent of the compute of GPT-3, not counting the data.',
       tts: {
-        es: 'Entonces, un asistente es el modelo base más una capa de comportamiento. En Instruct ge pe te, los entrenamientos finales de esa capa usaron menos del dos por ciento del cómputo de ge pe te tres.',
-        en: 'So an assistant is the base model plus a layer of behavior. In Instruct G P T, the final training runs of that layer used less than two percent of the compute of G P T three.',
+        es: 'Entonces, un asistente es el modelo base más una capa de comportamiento. En Instruct ge pe te, entrenar esa capa costó menos del dos por ciento del cómputo de ge pe te tres, sin contar los datos.',
+        en: 'So an assistant is the base model plus a layer of behavior. In Instruct G P T, training that layer took less than two percent of the compute of G P T three, not counting the data.',
       },
       note: { es: 'Asistente = modelo base + capa de comportamiento.', en: 'Assistant = base model + a behavior layer.' },
+      pad: 0.4,
+    },
+    {
+      id: 'layer-pref',
+      es: 'Y la capa rindió: quienes evaluaron prefirieron las respuestas de un InstructGPT de mil trescientos millones de parámetros a las de GPT-3, con ciento setenta y cinco mil millones.',
+      en: 'And the layer paid off: raters preferred the answers of an InstructGPT with one point three billion parameters to those of GPT-3, with one hundred seventy-five billion.',
+      tts: {
+        es: 'Y la capa rindió: quienes evaluaron prefirieron las respuestas de un Instruct ge pe te de mil trescientos millones de parámetros a las de ge pe te tres, con ciento setenta y cinco mil millones.',
+        en: 'And the layer paid off: raters preferred the answers of an Instruct G P T with one point three billion parameters to those of G P T three, with one hundred seventy-five billion.',
+      },
       pad: 0.4,
     },
     {
@@ -306,8 +316,8 @@ export default defineLesson({
       en: 'An assistant like ChatGPT is a different model, trained from scratch to chat.',
     },
     right: {
-      es: 'Es un modelo base preentrenado más una capa de comportamiento: ejemplos, preferencias y reglas. Esa capa cambia sobre todo cómo responde, y en InstructGPT sus entrenamientos finales usaron menos del dos por ciento del cómputo de GPT-3.',
-      en: 'It is a pretrained base model plus a layer of behavior: examples, preferences, and rules. That layer mostly changes how it responds, and in InstructGPT its final training runs used less than two percent of the compute of GPT-3.',
+      es: 'Es un modelo base preentrenado más una capa de comportamiento: ejemplos, preferencias y reglas. Esa capa cambia sobre todo cómo responde, y en InstructGPT entrenarla costó menos del dos por ciento del cómputo de GPT-3 (sin contar los datos).',
+      en: 'It is a pretrained base model plus a layer of behavior: examples, preferences, and rules. That layer mostly changes how it responds, and in InstructGPT training it took less than two percent of the compute of GPT-3 (not counting the data).',
     },
   },
 
@@ -320,7 +330,7 @@ $$\\mathcal{L}_{\\text{SFT}}(\\theta) = -\\sum_{t \\in \\text{respuesta}} \\log 
 
 Los tokens de la indicación no aportan error (la «máscara de pérdida» de la escena). Es la misma pérdida de la lección 19, con otros datos. InstructGPT usó unas 13 mil indicaciones con demostraciones escritas por unas 40 personas contratadas (Ouyang et al., 2022). Antes, FLAN (Wei et al., 2021) había convertido decenas de conjuntos de datos de PLN en instrucciones, y después LIMA (Zhou et al., 2023) ajustó un modelo de 65 mil millones de parámetros con solo mil ejemplos cuidadosamente elegidos, para argumentar que casi todo el conocimiento se aprende en el preentrenamiento y el ajuste enseña sobre todo el formato.
 
-Un matiz: la frontera entre «base» y «asistente» se ha vuelto borrosa. El informe técnico de Qwen2.5 (2024) cuenta que su preentrenamiento ya usa datos sintéticos generados por modelos instruidos y filtros basados en modelos de recompensa. Por eso, con ese modelo base, no se ve el contraste de la escena, y se usó otro par de modelos (TinyLlama).
+Un matiz: la frontera entre «base» y «asistente» se ha vuelto borrosa. El informe técnico de Qwen2.5 (2024) cuenta que su preentrenamiento ya usa datos sintéticos generados por modelos instruidos y filtros basados en modelos de recompensa. Por eso, con ese modelo base no se ve el contraste, y la escena usa otro par: TinyLlama 1.1B base (punto de control de 3 billones de tokens) y TinyLlama-1.1B-Chat-v1.0, que según su ficha se ajustó con UltraChat (diálogos sintéticos) y luego se alineó con DPO sobre UltraFeedback (64 mil indicaciones con respuestas ordenadas por GPT-4). Es un modelo pequeño, entrenado sobre todo en inglés, y su asistente es imperfecto: en la escena, el correo «de dos líneas» no sale en dos líneas.
 
 ## El modelo de recompensa (Bradley–Terry)
 
@@ -328,7 +338,7 @@ Si $y_w$ es la respuesta preferida y $y_l$ la rechazada para la indicación $x$,
 
 $$P(y_w \\succ y_l \\mid x) = \\sigma\\big(r_\\phi(x, y_w) - r_\\phi(x, y_l)\\big)$$
 
-y el modelo de recompensa $r_\\phi$ se entrena minimizando $-\\mathbb{E}\\,\\log \\sigma\\big(r_\\phi(x,y_w) - r_\\phi(x,y_l)\\big)$. La puntuación solo importa por sus diferencias: sumarle una constante no cambia nada. En InstructGPT, quienes etiquetaban ordenaban entre 4 y 9 respuestas por indicación, lo que da $\\binom{K}{2}$ comparaciones, y el modelo de recompensa tenía 6 mil millones de parámetros (partía del modelo ajustado, sin su última capa y con una salida escalar). En la escena, $r(y)=\\mathbf{w}\\cdot\\boldsymbol{\\varphi}(y)$ con solo cuatro rasgos asignados a mano, y $\\mathbf{w}$ se ajusta con regresión logística con una pequeña regularización L2.
+y el modelo de recompensa $r_\\phi$ se entrena minimizando $-\\mathbb{E}\\,\\log \\sigma\\big(r_\\phi(x,y_w) - r_\\phi(x,y_l)\\big)$. La puntuación solo importa por sus diferencias: sumarle una constante no cambia nada. En InstructGPT, quienes etiquetaban ordenaban entre 4 y 9 respuestas por indicación, lo que da $\\binom{K}{2}$ comparaciones, y el modelo de recompensa tenía 6 mil millones de parámetros, sin la última capa del modelo y con una salida escalar (el texto principal dice que partía del modelo ajustado; el apéndice C.2, que de un GPT-3 de 6 mil millones ajustado con datos públicos). La idea de aprender una recompensa a partir de comparaciones humanas viene de Christiano et al. (2017), que la usó en juegos de Atari y robots simulados con retroalimentación en menos del 1 % de las interacciones; Stiennon et al. (2020) la aplicó a resúmenes de texto, e InstructGPT, a instrucciones generales. Las preferencias tampoco tienen que venir siempre de personas: Constitutional AI (Bai et al., 2022) sustituye las etiquetas humanas sobre qué es dañino por una lista de principios escritos, de modo que el modelo critica y revisa sus respuestas y compara pares según esos principios (RLAIF); la utilidad sigue entrenándose con preferencias humanas. En la escena, $r(y)=\\mathbf{w}\\cdot\\boldsymbol{\\varphi}(y)$ con solo cuatro rasgos asignados a mano, y $\\mathbf{w}$ se ajusta con regresión logística con una pequeña regularización L2.
 
 ## Optimización con penalización KL (RLHF)
 
@@ -352,7 +362,13 @@ Despejando $r$ de la solución cerrada, $r(x,y)=\\beta\\log\\frac{\\pi^*(y\\mid 
 
 $$\\mathcal{L}_{\\text{DPO}} = -\\mathbb{E}\\,\\log\\sigma\\!\\Big(\\beta\\log\\frac{\\pi_\\theta(y_w\\mid x)}{\\pi_{\\text{ref}}(y_w\\mid x)} - \\beta\\log\\frac{\\pi_\\theta(y_l\\mid x)}{\\pi_{\\text{ref}}(y_l\\mid x)}\\Big)$$
 
-La «recompensa implícita» es $\\hat r_\\theta=\\beta\\log(\\pi_\\theta/\\pi_{\\text{ref}})$. No hace falta muestrear del modelo durante el ajuste: se parte de un conjunto fijo de parejas. En la escena, la familia de políticas es $\\pi_\\delta\\propto\\pi_{\\text{ref}}\\,e^{\\delta\\cdot\\varphi}$, y con la misma regularización los pesos $\\beta\\,\\delta$ coinciden con los del modelo de recompensa: es un caso exacto de la equivalencia. En un modelo real es una aproximación, porque el modelo no puede representar cualquier política. Variantes de esta idea con preferencias ordenadas por otro modelo (Zephyr, 2023) lograron asistentes competentes sin etiquetas humanas.
+La «recompensa implícita» es $\\hat r_\\theta=\\beta\\log(\\pi_\\theta/\\pi_{\\text{ref}})$. No hace falta muestrear del modelo durante el ajuste: se parte de un conjunto fijo de parejas. En la escena, la familia de políticas es $\\pi_\\delta\\propto\\pi_{\\text{ref}}\\,e^{\\delta\\cdot\\varphi}$, y con la misma regularización los pesos $\\beta\\,\\delta$ coinciden con los del modelo de recompensa: es un caso exacto de la equivalencia. En un modelo real es una aproximación, porque el modelo no puede representar cualquier política. Con preferencias ordenadas por otro modelo (GPT-4) en lugar de personas, Zephyr (2023) obtuvo un asistente competente sin anotación humana nueva, aunque dependió de un modelo ya alineado como maestro.
+
+Qué publican los laboratorios: OpenAI dice que ChatGPT se entrenó con RLHF con los métodos de InstructGPT. Llama 2 usó RLHF con muestreo por rechazo y PPO (Touvron et al., 2023); Llama 3 usó ajuste supervisado, muestreo por rechazo y DPO, y explica que los algoritmos de refuerzo más complejos eran menos estables y más difíciles de escalar (Llama Team, 2024). De otros asistentes comerciales no se publica la receta completa: no la des por supuesta.
+
+## Cuánto cuesta la capa
+
+El «menos del 2 %» de la lección sale del propio artículo de InstructGPT: entrenar el modelo ajustado de 175 mil millones costó 4,9 petaflops/s-día, y el modelo final con PPO-ptx, 60, frente a 3 640 de GPT-3 (60 / 3 640 ≈ 1,6 %; con los 4,9, ≈ 1,8 %). No incluye el modelo de recompensa de 6 mil millones, la recolección de datos ni las pruebas previas. En esas comparaciones, las personas prefirieron las salidas del InstructGPT de 175 mil millones a las de GPT-3 en el 85 % de los casos (±3), y las del de 1,3 mil millones a las del GPT-3 de 175 mil millones.
 
 ## En código
 
@@ -406,7 +422,7 @@ $$\\mathcal{L}_{\\text{SFT}}(\\theta) = -\\sum_{t \\in \\text{answer}} \\log \\p
 
 The prompt tokens contribute no error (the “loss mask” in the scene). It is the same loss as in lesson 19, with different data. InstructGPT used about 13 thousand prompts with demonstrations written by about 40 contractors (Ouyang et al., 2022). Earlier, FLAN (Wei et al., 2021) had turned dozens of NLP datasets into instructions, and later LIMA (Zhou et al., 2023) fine-tuned a 65-billion-parameter model on only a thousand carefully chosen examples, to argue that almost all knowledge is learned in pretraining and tuning mostly teaches the format.
 
-A caveat: the line between “base” and “assistant” has become blurry. The Qwen2.5 technical report (2024) says its pretraining already uses synthetic data generated by instruction-tuned models and filters based on reward models. That is why, with that base model, the contrast shown in the scene does not appear, and a different model pair (TinyLlama) was used instead.
+A caveat: the line between “base” and “assistant” has become blurry. The Qwen2.5 technical report (2024) says its pretraining already uses synthetic data generated by instruction-tuned models and filters based on reward models. That is why, with that base model, the contrast does not show, and the scene uses a different pair: TinyLlama 1.1B base (the 3-trillion-token checkpoint) and TinyLlama-1.1B-Chat-v1.0, which according to its model card was fine-tuned on UltraChat (synthetic dialogues) and then aligned with DPO on UltraFeedback (64 thousand prompts with answers ranked by GPT-4). It is a small model trained mostly on English, and its assistant is imperfect: in the scene, the “two-line” email does not come out in two lines.
 
 ## The reward model (Bradley–Terry)
 
@@ -414,7 +430,7 @@ If $y_w$ is the preferred answer and $y_l$ the rejected one for prompt $x$, the 
 
 $$P(y_w \\succ y_l \\mid x) = \\sigma\\big(r_\\phi(x, y_w) - r_\\phi(x, y_l)\\big)$$
 
-and the reward model $r_\\phi$ is trained by minimizing $-\\mathbb{E}\\,\\log \\sigma\\big(r_\\phi(x,y_w) - r_\\phi(x,y_l)\\big)$. The score only matters through its differences: adding a constant changes nothing. In InstructGPT, labelers ranked between 4 and 9 answers per prompt, which gives $\\binom{K}{2}$ comparisons, and the reward model had 6 billion parameters (it started from the tuned model, minus its last layer, with a scalar output). In the scene, $r(y)=\\mathbf{w}\\cdot\\boldsymbol{\\varphi}(y)$ with only four hand-assigned traits, and $\\mathbf{w}$ is fit by logistic regression with a small L2 penalty.
+and the reward model $r_\\phi$ is trained by minimizing $-\\mathbb{E}\\,\\log \\sigma\\big(r_\\phi(x,y_w) - r_\\phi(x,y_l)\\big)$. The score only matters through its differences: adding a constant changes nothing. In InstructGPT, labelers ranked between 4 and 9 answers per prompt, which gives $\\binom{K}{2}$ comparisons, and the reward model had 6 billion parameters, without the model’s last layer and with a scalar output (the main text says it started from the tuned model; Appendix C.2 says from a 6-billion-parameter GPT-3 fine-tuned on public data). The idea of learning a reward from human comparisons comes from Christiano et al. (2017), who used it in Atari games and simulated robots with feedback on under 1% of the interactions; Stiennon et al. (2020) applied it to text summaries, and InstructGPT to general instructions. Preferences do not always have to come from people, either: Constitutional AI (Bai et al., 2022) replaces human labels about what is harmful with a written list of principles, so the model critiques and revises its answers and compares pairs against those principles (RLAIF); helpfulness is still trained on human preferences. In the scene, $r(y)=\\mathbf{w}\\cdot\\boldsymbol{\\varphi}(y)$ with only four hand-assigned traits, and $\\mathbf{w}$ is fit by logistic regression with a small L2 penalty.
 
 ## Optimizing with a KL penalty (RLHF)
 
@@ -438,7 +454,13 @@ Solving the closed form for $r$ gives $r(x,y)=\\beta\\log\\frac{\\pi^*(y\\mid x)
 
 $$\\mathcal{L}_{\\text{DPO}} = -\\mathbb{E}\\,\\log\\sigma\\!\\Big(\\beta\\log\\frac{\\pi_\\theta(y_w\\mid x)}{\\pi_{\\text{ref}}(y_w\\mid x)} - \\beta\\log\\frac{\\pi_\\theta(y_l\\mid x)}{\\pi_{\\text{ref}}(y_l\\mid x)}\\Big)$$
 
-The “implicit reward” is $\\hat r_\\theta=\\beta\\log(\\pi_\\theta/\\pi_{\\text{ref}})$. No sampling from the model is needed during tuning: you start from a fixed set of pairs. In the scene, the policy family is $\\pi_\\delta\\propto\\pi_{\\text{ref}}\\,e^{\\delta\\cdot\\varphi}$, and with the same regularization the weights $\\beta\\,\\delta$ coincide with the reward model’s: an exact case of the equivalence. In a real model it is an approximation, because the model cannot represent every possible policy. Variants of this idea with preferences ranked by another model (Zephyr, 2023) produced competent assistants without human labels.
+The “implicit reward” is $\\hat r_\\theta=\\beta\\log(\\pi_\\theta/\\pi_{\\text{ref}})$. No sampling from the model is needed during tuning: you start from a fixed set of pairs. In the scene, the policy family is $\\pi_\\delta\\propto\\pi_{\\text{ref}}\\,e^{\\delta\\cdot\\varphi}$, and with the same regularization the weights $\\beta\\,\\delta$ coincide with the reward model’s: an exact case of the equivalence. In a real model it is an approximation, because the model cannot represent every possible policy. With preferences ranked by another model (GPT-4) instead of people, Zephyr (2023) produced a competent assistant without new human annotation, though it depended on an already aligned model as its teacher.
+
+What the labs publish: OpenAI says ChatGPT was trained with RLHF using the same methods as InstructGPT. Llama 2 used RLHF with rejection sampling and PPO (Touvron et al., 2023); Llama 3 used supervised fine-tuning, rejection sampling, and DPO, and explains that more complex reinforcement algorithms were less stable and harder to scale (Llama Team, 2024). For other commercial assistants the full recipe is not published: do not assume it.
+
+## What the layer costs
+
+The lesson’s “under 2%” comes from the InstructGPT paper itself: training the 175-billion-parameter tuned model took 4.9 petaflops/s-days, and the final PPO-ptx model, 60, versus 3,640 for GPT-3 (60 / 3,640 ≈ 1.6%; with the 4.9, ≈ 1.8%). It does not include the 6-billion-parameter reward model, data collection, or earlier experiments. In those comparisons, people preferred the outputs of the 175-billion-parameter InstructGPT to those of GPT-3 in 85% of cases (±3), and those of the 1.3-billion-parameter one to those of the 175-billion-parameter GPT-3.
 
 ## In code
 
@@ -488,15 +510,15 @@ All of this shapes behavior from preferences. The next lesson uses the same rein
 
   lens: {
     es: [
-      'Pregunta quién calibró el modelo. Las preferencias de quienes lo evaluaron quedan incorporadas: en InstructGPT fueron unas cuarenta personas contratadas, sobre todo angloparlantes de Estados Unidos y el sudeste asiático, que coincidían entre sí unas tres de cada cuatro veces. Pide saber quiénes, cuántas, en qué idiomas y con qué instrucciones.',
+      'Pregunta quién calibró el modelo. Las preferencias de quienes lo evaluaron quedan incorporadas: en InstructGPT fueron unas cuarenta personas contratadas, en su mayoría angloparlantes de Estados Unidos y el sudeste asiático, que coincidían entre sí unas tres de cada cuatro veces. Pide saber quiénes, cuántas, en qué idiomas y con qué instrucciones.',
       'Tono, longitud, grado de rechazo y complacencia son decisiones de producto, no hechos técnicos. Pide la política de comportamiento por escrito (algunas empresas la publican, como el Model Spec de OpenAI) y cómo comprueban que el modelo la cumple.',
-      'Cada actualización del proveedor puede cambiar el comportamiento sin cambiar el nombre del modelo. En abril de 2025 se revirtió una actualización de GPT-4o por exceso de complacencia; según OpenAI, influyó la mezcla de señales de recompensa. Mantén casos de prueba propios (adulación, rechazos, tono) y córrelos antes de adoptar cada versión.',
+      'Cada actualización del proveedor puede cambiar el comportamiento sin cambiar el nombre del modelo. En abril de 2025 se revirtió una actualización de GPT-4o por exceso de complacencia; según el análisis preliminar de OpenAI, influyó una combinación de cambios, entre ellos una señal de recompensa nueva. Mantén casos de prueba propios (adulación, rechazos, tono) y córrelos antes de adoptar cada versión.',
       '«Optimizado con retroalimentación humana» no garantiza veracidad: se optimizó una puntuación que aproxima el gusto de las personas. Pide evaluaciones independientes de esa puntuación (lección 34) y recuerda que alinear moldea el comportamiento, no elimina las alucinaciones (lección 33).',
     ],
     en: [
-      'Ask who calibrated the model. The preferences of the people who rated it get baked in: for InstructGPT it was about forty contractors, mostly English speakers in the United States and Southeast Asia, who agreed with each other about three times out of four. Ask who they were, how many, in which languages, and with what instructions.',
+      'Ask who calibrated the model. The preferences of the people who rated it get baked in: for InstructGPT it was about forty contractors, mostly English speakers in the United States or Southeast Asia, who agreed with each other about three times out of four. Ask who they were, how many, in which languages, and with what instructions.',
       'Tone, length, degree of refusal, and agreeableness are product decisions, not technical facts. Ask for the behavior policy in writing (some companies publish theirs, like OpenAI’s Model Spec) and how they check that the model follows it.',
-      'Every provider update can change behavior without changing the model’s name. In April 2025 a GPT-4o update was rolled back for being too agreeable; according to OpenAI, the mix of reward signals played a part. Keep your own test cases (sycophancy, refusals, tone) and run them before adopting each version.',
+      'Every provider update can change behavior without changing the model’s name. In April 2025 a GPT-4o update was rolled back for being too agreeable; according to OpenAI’s early analysis, a combination of changes played a part, including a new reward signal. Keep your own test cases (sycophancy, refusals, tone) and run them before adopting each version.',
       '“Optimized with human feedback” does not guarantee truthfulness: what was optimized is a score that approximates people’s taste. Ask for evaluations independent of that score (lesson 34), and remember that alignment shapes behavior, it does not remove hallucinations (lesson 33).',
     ],
   },
@@ -597,5 +619,8 @@ All of this shapes behavior from preferences. The next lesson uses the same rein
     { title: 'Finetuned Language Models Are Zero-Shot Learners', authors: 'Wei, J., Bosma, M., Zhao, V. Y., et al.', year: 2021, url: 'https://arxiv.org/abs/2109.01652' },
     { title: 'LIMA: Less Is More for Alignment', authors: 'Zhou, C., Liu, P., Xu, P., et al.', year: 2023, url: 'https://arxiv.org/abs/2305.11206' },
     { title: 'Qwen2.5 Technical Report', authors: 'Qwen Team', year: 2024, url: 'https://arxiv.org/abs/2412.15115' },
+    { title: 'Constitutional AI: Harmlessness from AI Feedback', authors: 'Bai, Y., Kadavath, S., Kundu, S., et al.', year: 2022, url: 'https://arxiv.org/abs/2212.08073' },
+    { title: 'Llama 2: Open Foundation and Fine-Tuned Chat Models', authors: 'Touvron, H., Martin, L., Stone, K., et al.', year: 2023, url: 'https://arxiv.org/abs/2307.09288' },
+    { title: 'The Llama 3 Herd of Models', authors: 'Llama Team, AI @ Meta', year: 2024, url: 'https://arxiv.org/abs/2407.21783' },
   ],
 });

@@ -5,6 +5,8 @@ Paso 1 de 2 de la lección «Alucinaciones y límites» (el paso 2 es `build-dat
 
 Reproducir (requiere torch + transformers; GPU de ≥ 6 GB o CPU; red la primera vez):
     python run-qa.py EleutherAI/pythia-1.4b out/pythia-1.4b.json [cuda|cpu]
+(sin tercer argumento usa la GPU en float16; con «cpu» usa float32. En Pythia-1.4B ambos dan la misma exactitud y las mismas respuestas salvo 1 de 424;
+ las probabilidades difieren hasta ≈ 0,03. Un modelo de 12 000 millones de parámetros no cabe en una GPU de 12 GB en float16: se mide en CPU.)
 
 Modelo: Pythia (Biderman et al., 2023, arXiv:2304.01373), licencia Apache-2.0, entrenado con The Pile (solo texto en inglés).
 Es un modelo BASE: solo predice la siguiente pieza de texto; no se le ajustó para seguir instrucciones.

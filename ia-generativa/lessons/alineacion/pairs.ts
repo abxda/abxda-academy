@@ -5,11 +5,11 @@ import type { Phi } from './toy';
 export interface Answer { es: string; en: string; phi: Phi }
 export interface Pair { id: string; es: string; en: string; A: Answer; B: Answer }
 
-/** Par de demostración de la narración (no entra en el entrenamiento del modelo de recompensa). */
+/** Par de demostración de la narración (no entra en el entrenamiento del modelo de recompensa). La respuesta A es la preferida. */
 export const DEMO: Pair = {
   id: 'demo', es: '¿Cuál es la capital de España?', en: 'What is the capital of Spain?',
-  A: { es: 'Barcelona.', en: 'Barcelona.', phi: [0, 0, 0, 0] },
-  B: { es: 'Madrid.', en: 'Madrid.', phi: [1, 0, 0, 0] },
+  A: { es: 'Madrid.', en: 'Madrid.', phi: [1, 0, 0, 0] },
+  B: { es: 'Barcelona.', en: 'Barcelona.', phi: [0, 0, 0, 0] },
 };
 
 export const PAIRS: Pair[] = [
@@ -40,3 +40,8 @@ export const deltaOf = (pick: Pick): Phi => {
   const p = PAIRS[pick.pair], w = winner(p, pick.choice).phi, l = loser(p, pick.choice).phi;
   return [w[0] - l[0], w[1] - l[1], w[2] - l[2], w[3] - l[3]];
 };
+
+/** Nombre corto de cada par (para el resumen de elecciones). */
+export const PAIR_SHORT: { es: string; en: string }[] = [
+  { es: 'capital', en: 'capital' }, { es: 'inflación', en: 'inflation' }, { es: 'suma', en: 'sum' }, { es: 'murciélagos', en: 'bats' }, { es: 'eslogan', en: 'slogan' },
+];

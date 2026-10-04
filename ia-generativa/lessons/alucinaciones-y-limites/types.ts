@@ -3,7 +3,7 @@
 // La fecha del cambio de capital de Brasil (1960) es un hecho histórico: Brasilia fue inaugurada el 21 de abril de 1960.
 import { tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 import { ARITH, DIST } from './real-data';
-import { card, fitText, mark, source } from './ui';
+import { card, fitText, mark, smooth, source, sourceH } from './ui';
 
 interface Row { k: string; text: string; kind: 'q' | 'bad' | 'good'; font?: 'mono' | 'ui' }
 
@@ -20,13 +20,11 @@ function row(S: Frame, r: Rect, y: number, h: number, o: Row, a: number) {
 }
 
 export function drawTypes(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, r: Rect = { ...R.all, h: R.all.h - 14 * u };
-  const portrait = S.portrait || r.w < 560 * u, gap = 12 * u;
-  const n = 3, ch = portrait ? (r.h - gap * (n - 1)) / n : Math.min(r.h, 330 * u), cw = portrait ? r.w : (r.w - gap * (n - 1)) / n;
-  const y0 = portrait ? r.y : r.y + (r.h - ch) / 2;
-  const q = DIST[2], paramoAns = q.ans.replace(/\s+/g, ' ');
+  const { d, pal: p } = S, u = S.u, r: Rect = { ...R.all, h: R.all.h - sourceH(S, SRC(S)) - 6 * u };
+  const gap = 12 * u, portrait = S.portrait || S.H < 480 || (r.w - 2 * gap) / 3 < 300;
+  const n = 3, q = DIST[2], paramoAns = q.ans.replace(/\s+/g, ' ');
   const ar = ARITH.items[0];
-  const fmtN = (v: number) => (S.lang === 'es' ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+  const fmtN = (v: number) => (S.lang === 'es' ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
   const ans0 = (ar.ans.replace(/\D/g, '') || '0');
   const cards: { id: string; t: Tone; title: string; sub: string; rows: Row[]; extra?: (rr: Rect, a: number) => void }[] = [
     {
@@ -36,11 +34,7 @@ export function drawTypes(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
         { k: 'Pythia', text: paramoAns, kind: 'bad' },
         { k: S.l('Correcto', 'Correct'), text: 'Juan Rulfo', kind: 'good' },
       ],
-      extra: (rr, a) => {
-        d.withAlpha(a, () => {
-          fitText(S, S.l('Y en Nueva York: 6 casos que no existen', 'And in New York: 6 cases that do not exist'), rr.x, rr.y + rr.h / 2, rr.w, 13, { weight: 700, color: tone(S, 'err').ink, base: 'middle' });
-        });
-      },
+      extra: (rr, a) => d.withAlpha(a, () => fitText(S, S.l('Y en Nueva York: 6 casos que no existen', 'And in New York: 6 cases that do not exist'), rr.x, rr.y + Math.min(rr.h / 2, 16 * u), rr.w, 13, { weight: 700, color: tone(S, 'err').ink, base: 'middle' })),
     },
     {
       id: 'stale', t: 'w', title: S.l('2 · Desactualizar', '2 · Going stale'), sub: S.l('El conocimiento se congela', 'Knowledge is frozen'),
@@ -58,32 +52,47 @@ export function drawTypes(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
         { k: 'Pythia', text: fmtN(Number(ans0)), kind: 'bad', font: 'mono' },
         { k: S.l('Correcto', 'Correct'), text: fmtN(ar.gold), kind: 'good', font: 'mono' },
       ],
-      extra: (rr, a) => {
-        d.withAlpha(a, () => {
-          const right = Math.round(ARITH.acc * ARITH.n);
-          fitText(S, S.l(`${right} de ${ARITH.n} multiplicaciones correctas`, `${right} of ${ARITH.n} multiplications right`), rr.x, rr.y + rr.h / 2, rr.w, 13, { weight: 700, color: tone(S, 'sig').ink, base: 'middle' });
-        });
-      },
+      extra: (rr, a) => d.withAlpha(a, () => {
+        const right = Math.round(ARITH.acc * ARITH.n);
+        fitText(S, S.l(`${right} de ${ARITH.n} multiplicaciones correctas`, `${right} of ${ARITH.n} multiplications right`), rr.x, rr.y + Math.min(rr.h / 2, 16 * u), rr.w, 13.5, { weight: 800, color: tone(S, 'sig').ink, base: 'middle' });
+      }),
     },
   ];
+  // geometría: en escritorio, tres columnas; en teléfono, una pila donde la tarjeta nueva se abre y las anteriores se pliegan a su título
+  const rects: Rect[] = [], expand: number[] = [];
+  if (!portrait) {
+    const ch = Math.min(r.h, 330 * u), cw = (r.w - gap * (n - 1)) / n, y0 = r.y + (r.h - ch) / 2;
+    cards.forEach((_, i) => { rects.push({ x: r.x + i * (cw + gap), y: y0, w: cw, h: ch }); expand.push(1); });
+  } else {
+    const hc = 56 * u, he = Math.min(r.h - 2 * (hc + gap), 220 * u);
+    let y = r.y;
+    cards.forEach((c, i) => {
+      const next = cards[i + 1], e = next ? 1 - smooth(S.reveal(next.id, 0, 0.6)) : 1, h = hc + (he - hc) * e;
+      rects.push({ x: r.x, y, w: r.w, h }); expand.push(e);
+      if (S.on(c.id)) y += h + gap;
+    });
+  }
   cards.forEach((c, i) => {
     const a = S.reveal(c.id, 0, 0.55); if (a <= 0) return;
-    const rc: Rect = portrait ? { x: r.x, y: y0 + i * (ch + gap), w: cw, h: ch } : { x: r.x + i * (cw + gap), y: y0, w: cw, h: ch };
-    const tn = tone(S, c.t), pad = 12 * u;
+    const rc = rects[i], e = expand[i], tn = tone(S, c.t), pad = 12 * u;
     d.withAlpha(a, () => {
       card(S, rc, c.t, { hot: S.is(c.id) ? 0.35 : 0.05, fill: 0.04 });
-      fitText(S, c.title, rc.x + pad, rc.y + pad, rc.w - 2 * pad, 18, { weight: 800, color: tn.ink, base: 'top' });
-      fitText(S, c.sub, rc.x + pad, rc.y + pad + 25 * u, rc.w - 2 * pad, 13, { weight: 600, color: p.ink2, base: 'top' });
-      const inner: Rect = { x: rc.x + pad, y: rc.y + pad + 50 * u, w: rc.w - 2 * pad, h: rc.h - pad * 2 - 50 * u };
+      fitText(S, c.title, rc.x + pad, rc.y + pad - 2 * u, rc.w - 2 * pad, 18, { weight: 800, color: tn.ink, base: 'top' });
+      fitText(S, c.sub, rc.x + pad, rc.y + pad + 22 * u, rc.w - 2 * pad, 13, { weight: 600, color: p.ink2, base: 'top' });
+      if (e < 0.05) return;
+      const inner: Rect = { x: rc.x + pad, y: rc.y + pad + 48 * u, w: rc.w - 2 * pad, h: rc.h - pad * 2 - 48 * u };
       const rh = Math.min(30 * u, inner.h / 4.2);
-      c.rows.forEach((rw, j) => row(S, inner, inner.y + j * rh, rh, rw, S.reveal(c.id, 0.35 + j * 0.45, 0.4)));
-      const ex: Rect = { x: inner.x, y: inner.y + 3 * rh + 4 * u, w: inner.w, h: Math.max(0, inner.y + inner.h - (inner.y + 3 * rh + 4 * u)) };
-      if (c.extra && ex.h > 20 * u) c.extra(ex, S.reveal(c.id, 1.9, 0.5));
+      d.withAlpha(e, () => {
+        c.rows.forEach((rw, j) => row(S, inner, inner.y + j * rh, rh, rw, S.reveal(c.id, 0.35 + j * 0.45, 0.4)));
+        const ex: Rect = { x: inner.x, y: inner.y + 3 * rh + 4 * u, w: inner.w, h: Math.max(0, inner.y + inner.h - (inner.y + 3 * rh + 4 * u)) };
+        if (c.extra && ex.h > 20 * u) c.extra(ex, S.reveal(c.id, 1.9, 0.5));
+      });
     });
   });
-  // pie: fuente de lo medido
-  source(S, S.l('Respuestas de Pythia-1.4B · preguntas en inglés · decodificación voraz', 'Pythia-1.4B answers · questions in English · greedy decoding'), S.reveal('types', 1.0, 0.6));
+  source(S, SRC(S), S.reveal('types', 1.0, 0.6));
+  void p;
 }
+const SRC = (S: Frame) => S.l('Respuestas de Pythia-1.4B · preguntas en inglés · decodificación voraz', 'Pythia-1.4B answers · questions in English · greedy decoding');
 
 /** Línea de tiempo: datos de entrenamiento hasta el corte; lo posterior es desconocido para el modelo. */
 function drawCutoff(S: Frame, r: Rect, a: number) {

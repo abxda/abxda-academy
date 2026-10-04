@@ -20,4 +20,5 @@ export const PUBLISHED: string[] = [
   'inferencia',
   'big-bang-deep-learning',
   'embeddings',
+  'alucinaciones-y-limites',
 ];

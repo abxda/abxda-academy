@@ -3,9 +3,10 @@
 import { Plot, alpha, clamp, lerp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { QA } from './real-data';
 import { best, outcome, rule, score } from './stats';
-import { FS, axes, fitText, fr, holds, pct, smooth, source, stat, tagText } from './ui';
+import { axes, fitText, fr, holds, pct, smooth, source, sourceH, stat, tagText } from './ui';
 
 export const KS = [1, 3, 9, 19];
+const TH_SRC = (S: Frame) => S.l('Pythia-1.4B · 424 preguntas de cultura general · la confianza es la probabilidad de la respuesta', 'Pythia-1.4B · 424 general-knowledge questions · confidence is the probability of the answer');
 const CONF = QA.conf, OK = [...QA.ok].map((c) => c === '1');
 const NB = 50;                                 // tramos de 0,02: el umbral se mueve de 0,02 en 0,02 y cada tramo queda entero a un lado
 const HB = (() => {
@@ -44,7 +45,7 @@ export function updateThr(S: Frame): boolean {
 
 // ───────────────────────── dibujo ─────────────────────────
 export function drawThresh(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, m = R.main;
+  const { d } = S, u = S.u, m: Rect = { ...R.main, h: R.main.h - (S.portrait ? 16 * u : sourceH(S, TH_SRC(S)) + 2 * u) };
   const th = thetaOf(S), k = kOf(S), inTry = S.on('try2'), afterB = S.on('after-b');
   const compact = S.H < 420;
   const mix = smooth(S.at('try2', 0, 0.8));
@@ -56,13 +57,13 @@ export function drawThresh(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) 
     d.withAlpha(mix, () => (afterB ? drawRules(S, sr, th) : drawScore(S, sr, th, k)));
   }
   drawThreshStats(S, R.aside, th, k);
-  source(S, S.l('Pythia-1.4B · 424 preguntas de cultura general · la confianza es la probabilidad de la respuesta', 'Pythia-1.4B · 424 general-knowledge questions · confidence is the probability of the answer'), S.reveal('abstain', 0.2, 0.5));
+  source(S, TH_SRC(S), S.reveal('abstain', 0.2, 0.5));
 }
 
 function drawHist(S: Frame, r: Rect, th: number) {
   const { d, pal: p } = S, u = S.u;
   const small = r.h < 200 * u;
-  const pl = new Plot(S, r, { xr: [0, 1], yr: [0, HB.max * 1.05], pad: { l: 40, r: 8, t: small ? 16 : 24, b: small ? 34 : 50 } });
+  const pl = new Plot(S, r, { xr: [0, 1], yr: [0, HB.max * 1.05], pad: { l: 40, r: 8, t: small ? 18 : 34, b: small ? 34 : 50 } });
   const dat = tone(S, 'dat'), err = tone(S, 'err');
   const a = S.reveal('abstain', 0.0, 0.5);
   axes(S, pl, { xTicks: [0, 0.25, 0.5, 0.75, 1], yTicks: [], xFmt: (v) => pct(S, v), yFmt: () => '', grid: false, a, xLabel: small ? '' : S.l('confianza del modelo', 'model confidence'), yLabel: small ? '' : S.l('preguntas', 'questions') });
@@ -85,14 +86,8 @@ function drawHist(S: Frame, r: Rect, th: number) {
     d.line(x, pl.r.y - 2 * u, x, pl.r.y + pl.r.h, p.ink, 2.2);
     d.circle(x, pl.r.y - 2 * u, 5 * u, { fill: p.ink, stroke: p.stage, lw: 2 });
     if (th > 0.06) tagText(S, S.l('callar: «no lo sé»', 'silent: “I don’t know”'), pl.r.x + 6 * u, pl.r.y + 10 * u, { t: 'mute', align: 'left', size: 13, w: Math.max(40, (x - pl.r.x) - 10 * u) });
-    tagText(S, S.l('responde', 'answers'), Math.min(pl.r.x + pl.r.w - 4 * u, x + 8 * u + (th < 0.1 ? 0 : 0)), pl.r.y + 10 * u, { t: 'dat', align: x > pl.r.x + pl.r.w - 70 * u ? 'right' : 'left', size: 13 });
-    tagText(S, `θ = ${pct(S, th)}`, x, pl.r.y + pl.r.h + (small ? 30 : 44) * u + 0, { t: 'ink', align: 'center', size: 13, a: 0 });
+    tagText(S, S.l('responde', 'answers'), Math.min(pl.r.x + pl.r.w - 4 * u, x + 8 * u), pl.r.y + 10 * u, { t: 'dat', align: x > pl.r.x + pl.r.w - 70 * u ? 'right' : 'left', size: 13 });
   }
-  // leyenda de colores con forma
-  if (!small) d.withAlpha(a, () => {
-    const lx = pl.r.x + 6 * u, ly = pl.r.y + pl.r.h + 5 * u + 22 * u;
-    void lx; void ly;
-  });
 }
 
 function drawScore(S: Frame, r: Rect, th: number, k: number) {
@@ -135,7 +130,7 @@ function drawRules(S: Frame, r: Rect, th: number) {
     d.withAlpha(peaks, () => {
       d.clip(pl.r.x, pl.r.y - 2, pl.r.w, pl.r.h + 4, () => d.polyline(pts, sig.c, 2.2, { dash: dash[i] }));
       d.circle(pl.X(b.theta), pl.Y(1), 5 * u, { fill: sig.c, stroke: p.stage, lw: 2 });
-      tagText(S, `k = ${k}`, pl.X(b.theta), pl.Y(1) - 11 * u - (i % 2) * 0, { t: 'sig', align: 'center', size: 12.5 });
+      tagText(S, `k = ${k}`, pl.X(b.theta), pl.Y(1) - 11 * u - (i === 2 ? 14 * u : 0), { t: 'sig', align: 'center', size: 12.5 });
     });
   });
   // la regla teórica: rombo vacío sobre el eje
@@ -152,20 +147,20 @@ function drawRules(S: Frame, r: Rect, th: number) {
 
 function drawThreshStats(S: Frame, a: Rect, th: number, k: number) {
   const { d, pal: p } = S, u = S.u;
-  const o = outcome(th), cols = S.portrait ? 3 : 1, cw = a.w / cols, rh = 62 * u;
+  const o = outcome(th), cols = S.portrait ? 2 : 1, cw = a.w / cols, rh = (S.portrait ? 58 : 62) * u;
   const items: { l: string; v: string; t: 'ink' | 'dat' | 'err' | 'mute' | 'w'; a: number }[] = [];
   const g = S.on('cost') ? S.reveal('cost', 0.1, 0.5) : S.reveal('abstain', 0.8, 0.5);
-  if (S.on('abstain')) {
-    items.push({ l: S.l('responde', 'answers'), v: String(o.answered), t: 'dat', a: g });
-    items.push({ l: S.l('errores entre ellas', 'errors among them'), v: `${o.wrong} (${pct(S, o.errRate, o.errRate < 0.1 ? 1 : 0)})`, t: 'err', a: g });
-    items.push({ l: S.l('calla', 'stays silent'), v: `${o.silent} (${pct(S, o.silent / 424)})`, t: 'mute', a: g });
-  }
+  const ans = { l: S.l('responde', 'answers'), v: String(o.answered), t: 'dat' as const, a: g };
+  const wrong = { l: S.l('errores entre ellas', 'errors among them'), v: `${o.wrong} (${pct(S, o.errRate, o.errRate < 0.1 ? 1 : 0)})`, t: 'err' as const, a: g };
+  const silent = { l: S.l('calla', 'stays silent'), v: `${o.silent} (${pct(S, o.silent / 424)})`, t: 'mute' as const, a: g };
+  if (S.on('abstain') && !S.on('try2')) items.push(ans, wrong, silent);
   if (S.on('try2')) {
     const sc = score(th, k), b = best(k);
-    items.push({ l: S.l('puntaje', 'score'), v: String(sc), t: sc >= 0.95 * b.score ? 'dat' : 'ink', a: 1 });
-    items.push({ l: S.l('mejor posible', 'best possible'), v: String(Math.round(b.score)), t: 'dat', a: 1 });
+    const score_ = { l: S.l('puntaje', 'score'), v: String(sc), t: sc >= 0.95 * b.score ? 'dat' as const : 'ink' as const, a: 1 };
+    const bestI = { l: S.l('mejor posible', 'best possible'), v: String(Math.round(b.score)), t: 'dat' as const, a: 1 };
+    if (S.portrait) items.push(score_, bestI, { ...wrong, a: 1 }, { ...silent, a: 1 }); else items.push({ ...ans, a: 1 }, { ...wrong, a: 1 }, { ...silent, a: 1 }, score_, bestI);
   }
-  items.forEach((it, i) => stat(S, a.x + (i % cols) * cw, a.y + Math.floor(i / cols) * rh + 2 * u, it.l, it.v, it.t, { size: 24, w: cw - 8 * u, a: it.a }));
+  items.forEach((it, i) => stat(S, a.x + (i % cols) * cw, a.y + Math.floor(i / cols) * rh + 2 * u, it.l, it.v, it.t, { size: S.portrait ? 21 : 24, w: cw - 8 * u, a: it.a }));
   // leyenda de formas: acierto lleno / error con borde
   const ly = a.y + Math.ceil(items.length / cols) * rh + 8 * u;
   if (!S.portrait && S.on('abstain') && ly + 40 * u < a.y + a.h) d.withAlpha(g, () => {
@@ -175,5 +170,4 @@ function drawThreshStats(S: Frame, a: Rect, th: number, k: number) {
     d.rect(a.x, ly + 22 * u, 14 * u, 14 * u, { fill: alpha(t2.c, 0.9), stroke: t2.ink, lw: 1 });
     fitText(S, S.l('error', 'wrong'), a.x + 22 * u, ly + 29 * u, a.w - 24 * u, 12.5, { weight: 600, color: p.ink2, base: 'middle' });
   });
-  void FS;
 }

@@ -4,7 +4,7 @@
 import { Plot, alpha, clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { CONFIDENT_WRONG, QA, SCALE } from './real-data';
 import { reliability } from './stats';
-import { FS, axes, bubble, card, fitText, fr, mark, pct, para, probBars, smooth, source, stat, tagText, num, type BarRow } from './ui';
+import { FS, axes, bubble, card, fitText, fr, mark, pct, para, smooth, source, sourceH, stat, tagText } from './ui';
 
 const CONF = QA.conf, OK = [...QA.ok].map((c) => c === '1');
 /** Errores cuya probabilidad era al menos `th`. */
@@ -12,10 +12,13 @@ export const confidentErrors = (th: number) => CONF.reduce((n, c, i) => n + (!OK
 const BELIZE = CONFIDENT_WRONG.find((c) => c.q.includes('Belize')) ?? CONFIDENT_WRONG[0];
 
 // ───────────────────────── calib + signal: diagrama de fiabilidad ─────────────────────────
+const CAL_SRC = (S: Frame) => S.l('Pythia-1.4B · 424 preguntas de cultura general (ilustrativas) · modelo base, 5 ejemplos en el prompt', 'Pythia-1.4B · 424 general-knowledge questions (illustrative) · base model, 5 examples in the prompt');
+const SCA_SRC = (S: Frame) => S.l('Siete tamaños de Pythia · mismas preguntas y mismo prompt · decodificación voraz', 'Seven Pythia sizes · same questions and prompt · greedy decoding');
+const HID_SRC = (S: Frame) => S.l('Pythia-1.4B · la maqueta del chat es ilustrativa; la respuesta y su probabilidad son medidas', 'Pythia-1.4B · the chat mockup is illustrative; the answer and its probability are measured');
 export function drawCalib(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, m = R.main;
-  const pl = new Plot(S, m, { xr: [0, 1], yr: [0, 1], pad: { l: 46, r: 8, t: 26, b: 52 } });
-  const bins = reliability(10), dat = tone(S, 'dat'), err = tone(S, 'err');
+  const { d, pal: p } = S, u = S.u, m: Rect = S.portrait ? R.main : { ...R.main, h: R.main.h - sourceH(S, CAL_SRC(S)) - 2 * u };
+  const pl = new Plot(S, m, { xr: [0, 1], yr: [0, 1], pad: { l: 46, r: 8, t: 34, b: 52 } });
+  const bins = reliability(10), dat = tone(S, 'dat');
   const inSignal = S.on('signal');
   const grow = fr(S, 'calib', 0.5, 0.82), axA = S.reveal('calib', 0, 0.5);
   axes(S, pl, { xTicks: [0, 0.25, 0.5, 0.75, 1], yTicks: [0, 0.25, 0.5, 0.75, 1], xFmt: (v) => pct(S, v), yFmt: (v) => pct(S, v), grid: true, a: axA,
@@ -42,33 +45,32 @@ export function drawCalib(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
       if (smooth(g) > 0.6) fitText(S, String(b.n), x + w / 2, y - 3 * u, bw, 11.5, { weight: 700, font: 'mono', color: p.ink2, align: 'center', base: 'bottom' });
     });
   });
-  d.withAlpha(grow, () => fitText(S, S.l('sobre cada barra: número de preguntas', 'above each bar: number of questions'), pl.r.x + 4 * u, pl.r.y - 6 * u, pl.r.w, 12, { weight: 600, color: p.mute, base: 'bottom', align: 'left', a: 0 }));
+  if (!inSignal) d.withAlpha(grow, () => para(S, S.l('El número sobre cada barra es la cantidad de preguntas de ese tramo.', 'The number above each bar is how many questions fall in that bin.'), R.aside.x, R.aside.y + 2 * u, R.aside.w, { size: 13, weight: 600, color: p.ink2 }));
   // lateral: los tres hallazgos de «signal»
   const low = bins[0], hi = bins[bins.length - 1];
   const lowOk = Math.round(low.acc * low.n), hiOk = Math.round(hi.acc * hi.n);
   const a = R.aside, cols = S.portrait ? 3 : 1, cw = a.w / cols, rh = 66 * u;
   const items: { l: string; v: string; t: 'err' | 'dat' | 'w'; at: number }[] = [
-    { l: S.l('con menos de 10 %: aciertan', 'under 10%: right'), v: `${lowOk} / ${low.n}`, t: 'err', at: 0.04 },
-    { l: S.l('con más de 90 %: aciertan', 'over 90%: right'), v: `${hiOk} / ${hi.n}`, t: 'dat', at: 0.38 },
-    { l: S.l('errores con 50 % o más', 'errors at 50% or more'), v: String(confidentErrors(0.5)), t: 'w', at: 0.7 },
+    { l: S.portrait ? S.l('< 10 %: aciertan', '< 10%: right') : S.l('con menos de 10 %: aciertan', 'under 10%: right'), v: `${lowOk} / ${low.n}`, t: 'err', at: 0.04 },
+    { l: S.portrait ? S.l('> 90 %: aciertan', '> 90%: right') : S.l('con más de 90 %: aciertan', 'over 90%: right'), v: `${hiOk} / ${hi.n}`, t: 'dat', at: 0.38 },
+    { l: S.portrait ? S.l('errores ≥ 50 %', 'errors ≥ 50%') : S.l('errores con 50 % o más', 'errors at 50% or more'), v: String(confidentErrors(0.5)), t: 'w', at: 0.7 },
   ];
-  if (inSignal) items.forEach((it, i) => stat(S, a.x + (i % cols) * cw, a.y + Math.floor(i / cols) * rh + 2 * u, it.l, it.v, it.t, { size: 24, w: cw - 8 * u, a: fr(S, 'signal', it.at, it.at + 0.12) }));
+  if (inSignal) items.forEach((it, i) => stat(S, a.x + (i % cols) * cw, a.y + Math.floor(i / cols) * rh + 2 * u, it.l, it.v, it.t, { size: S.portrait ? 20 : 24, w: cw - 8 * u, a: fr(S, 'signal', it.at, it.at + 0.12) }));
   if (inSignal && !S.portrait) d.withAlpha(fr(S, 'signal', 0.72, 0.85), () => {
     const y = a.y + 3 * rh + 6 * u;
     para(S, `${S.l('Ejemplo', 'Example')}: ${S.l('capital de Belice', 'capital of Belize')} → Belize City (${pct(S, BELIZE.p)})`, a.x, y, a.w, { size: 13, weight: 600, color: p.ink2 });
   });
-  source(S, S.l('Pythia-1.4B · 424 preguntas de cultura general (ilustrativas) · modelo base, 5 ejemplos en el prompt', 'Pythia-1.4B · 424 general-knowledge questions (illustrative) · base model, 5 examples in the prompt'), grow);
-  void FS; void card; void bubble; void mark; void probBars; void err; void num;
+  source(S, CAL_SRC(S), grow);
 }
 
 // ───────────────────────── hidden: lo que ves y lo que no ves ─────────────────────────
 export function drawHidden(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, r = R.all;
+  const { d, pal: p } = S, u = S.u, r: Rect = { ...R.all, h: R.all.h - sourceH(S, HID_SRC(S)) - 4 * u };
   const portrait = S.portrait || r.w < 600 * u, gap = 16 * u;
   const colW = portrait ? r.w : (r.w - gap) / 2;
-  const topH = portrait ? (r.h - gap) * 0.5 : Math.min(r.h, 250 * u);
+  const topH = portrait ? 150 * u : Math.min(r.h, 210 * u), rightH = portrait ? 128 * u : topH;
   const left: Rect = { x: r.x, y: r.y, w: colW, h: topH };
-  const right: Rect = portrait ? { x: r.x, y: r.y + topH + gap, w: colW, h: topH } : { x: r.x + colW + gap, y: r.y, w: colW, h: topH };
+  const right: Rect = portrait ? { x: r.x, y: r.y + topH + gap * 0.75, w: colW, h: rightH } : { x: r.x + colW + gap, y: r.y, w: colW, h: topH };
   const lat = tone(S, 'lat'), err = tone(S, 'err');
   const a1 = S.reveal('hidden', 0.1, 0.5), a2 = S.reveal('hidden', 1.2, 0.6);
   // izquierda: lo que muestra un chat
@@ -87,32 +89,31 @@ export function drawHidden(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) 
     fitText(S, S.l('probabilidad de su respuesta', 'probability of its answer'), bx, by - 6 * u, bw, 13, { weight: 600, color: p.ink2, base: 'bottom' });
     d.rect(bx, by, bw, bh, { fill: p.surface2 });
     d.rect(bx, by, bw * BELIZE.p * smooth(S.at('hidden', 1.4, 2.4)), bh, { fill: alpha(lat.c, 0.7) });
-    d.text(pct(S, BELIZE.p), bx + bw * BELIZE.p * smooth(S.at('hidden', 1.4, 2.4)) - 6 * u, by + bh / 2, { size: FS(S, 14), weight: 800, color: p.ink, align: 'right', base: 'middle', font: 'mono', halo: alpha(lat.c, 0.0), haloW: 0 });
+    d.text(pct(S, BELIZE.p), bx + bw * BELIZE.p * smooth(S.at('hidden', 1.4, 2.4)) - 6 * u, by + bh / 2, { size: FS(S, 14), weight: 800, color: p.ink, align: 'right', base: 'middle', font: 'mono' });
     // ✗ la respuesta era falsa
     const ma = S.reveal('hidden', 2.6, 0.5);
     d.withAlpha(ma, () => {
       mark(S, bx + 10 * u, by + bh + 26 * u, 'no', 8 * u);
-      fitText(S, S.l('Respuesta falsa: la capital es Belmopan', 'Wrong answer: the capital is Belmopan'), bx + 28 * u, by + bh + 26 * u, bw - 28 * u, 13.5, { weight: 800, color: err.ink, base: 'middle' });
+      fitText(S, S.l('Falsa: la capital es Belmopan', 'Wrong: the capital is Belmopan'), bx + 28 * u, by + bh + 26 * u, bw - 28 * u, 13.5, { weight: 800, color: err.ink, base: 'middle' });
     });
   });
   // GPT-4: el ajuste posterior reduce la calibración
   const a3 = fr(S, 'hidden', 0.5, 0.7);
   d.withAlpha(a3, () => {
-    const y = portrait ? right.y + right.h + 14 * u : left.y + left.h + 18 * u, w = portrait ? r.w : r.w, h = 70 * u;
-    if (y + h > r.y + r.h + 4 * u) return;
+    const y = portrait ? right.y + right.h + 12 * u : left.y + left.h + 18 * u, w = r.w, h = (portrait ? 84 : 66) * u;
     d.rect(r.x, y, w, h, { fill: p.surface, stroke: p.line, lw: 1.2, r: 3 });
     fitText(S, S.l('Informe técnico de GPT-4 (OpenAI, 2023)', 'GPT-4 technical report (OpenAI, 2023)'), r.x + 12 * u, y + 9 * u, w - 24 * u, 13, { weight: 800, color: p.ink, base: 'top' });
-    fitText(S, S.l('preentrenado: confianza ≈ acierto  →  tras el ajuste: la calibración se reduce', 'pretrained: confidence ≈ accuracy  →  after tuning: calibration is reduced'), r.x + 12 * u, y + 34 * u, w - 24 * u, 13, { weight: 600, color: p.ink2, base: 'top' });
+    para(S, S.l('preentrenado: confianza ≈ acierto  →  tras el ajuste: la calibración se reduce', 'pretrained: confidence ≈ accuracy  →  after tuning: calibration is reduced'), r.x + 12 * u, y + 32 * u, w - 24 * u, { size: 13, weight: 600, color: p.ink2 });
   });
-  source(S, S.l('Pythia-1.4B · la maqueta del chat es ilustrativa; la respuesta y su probabilidad son medidas', 'Pythia-1.4B · the chat mockup is illustrative; the answer and its probability are measured'), a1);
+  source(S, HID_SRC(S), a1);
 }
 
 // ───────────────────────── scale: más parámetros, mismas preguntas ─────────────────────────
-const SIZE_LABEL = (name: string) => name.replace('pythia-', '').toUpperCase().replace('M', ' M').replace('B', ' B');
+const SIZE_LABEL = (name: string) => name.replace('pythia-', '').toUpperCase();
 export function drawScale(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, m = R.main;
+  const { d, pal: p } = S, u = S.u, m: Rect = S.portrait ? R.main : { ...R.main, h: R.main.h - sourceH(S, SCA_SRC(S)) - 2 * u };
   const rows = SCALE.map((s) => ({ ...s, label: SIZE_LABEL(s.name) }));
-  const pl = new Plot(S, m, { xr: [0, rows.length], yr: [0, 1], pad: { l: 46, r: 8, t: 26, b: 44 } });
+  const pl = new Plot(S, m, { xr: [0, rows.length], yr: [0, 1], pad: { l: 46, r: 8, t: 34, b: 44 } });
   const dat = tone(S, 'dat'), err = tone(S, 'err');
   const g = S.reveal('scale', 0.1, 0.5);
   axes(S, pl, { xTicks: [], yTicks: [0, 0.25, 0.5, 0.75, 1], yFmt: (v) => pct(S, v), xFmt: () => '', grid: true, a: g, yLabel: S.l('aciertos en las 424 preguntas', 'right answers on the 424 questions') });
@@ -137,8 +138,7 @@ export function drawScale(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
   const a = R.aside, last = rows[rows.length - 1];
   const cw = S.portrait ? a.w / 2 : a.w;
   const st = fr(S, 'scale', 0.62, 0.8);
-  stat(S, a.x, a.y + 2 * u, S.l(`errores con 50 % o más (${rows[1].label})`, `errors at 50% or more (${rows[1].label})`), String(rows[1].confWrong), 'w', { size: 24, w: cw - 8 * u, a: st });
-  stat(S, a.x + (S.portrait ? cw : 0), a.y + (S.portrait ? 2 * u : 66 * u), S.l(`errores con 50 % o más (${last.label})`, `errors at 50% or more (${last.label})`), String(last.confWrong), 'err', { size: 24, w: cw - 8 * u, a: st });
-  source(S, S.l('Siete tamaños de Pythia · mismas preguntas y mismo prompt · decodificación voraz', 'Seven Pythia sizes · same questions and prompt · greedy decoding'), g);
-  void num;
+  stat(S, a.x, a.y + 2 * u, S.l(`errores ≥ 50 %: ${rows[1].label}`, `errors ≥ 50%: ${rows[1].label}`), String(rows[1].confWrong), 'w', { size: 24, w: cw - 8 * u, a: st });
+  stat(S, a.x + (S.portrait ? cw : 0), a.y + (S.portrait ? 2 * u : 66 * u), S.l(`errores ≥ 50 %: ${last.label}`, `errors ≥ 50%: ${last.label}`), String(last.confWrong), 'err', { size: 24, w: cw - 8 * u, a: st });
+  source(S, SCA_SRC(S), g);
 }

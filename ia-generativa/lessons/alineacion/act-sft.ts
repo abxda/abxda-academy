@@ -145,10 +145,11 @@ function drawCompare(S: Frame) {
   const size = FS(S, port || cmp ? 14 : 17), lh = 1.3 * size * u, pad = 12 * u;
   // izquierda: documento del modelo base
   const aA = S.reveal('compare-intro', 0.4, 0.5), aB = S.reveal('compare-intro', 0.9, 0.5);
+  const kv = S.reveal('compare-result', 0.2, 0.6);   // el veredicto: cómo trata cada uno la indicación
   const textRows = (R: Rect) => Math.max(2, Math.floor((R.h - 26 * u - pad) / lh));
   d.withAlpha(aA, () => {
-    card(S, A, { tone: 'lat', fill: alpha(lt.c, 0.05) });
-    tab(S, S.l('Modelo base', 'Base model'), A.x + 10 * u, A.y, { t: 'lat', align: 'left' });
+    card(S, A, { tone: 'lat', fill: alpha(lt.c, 0.05 + 0.07 * kv), hot: kv * 0.8 });
+    tab(S, kv > 0.5 ? S.l('Modelo base · continúa el texto', 'Base model · continues the text') : S.l('Modelo base', 'Base model'), A.x + 10 * u, A.y, { t: 'lat', align: 'left' });
     const ls = docLines(S, sample.prompt, sample.base, sample.baseCut, A.w - 2 * pad, size, textRows(A));
     const total = ls.reduce((a, l) => a + l.text.length + 1, 0);
     const [cx, cy] = drawDoc(S, ls, A.x + pad, A.y + 22 * u, size, clamp(t, 0, 99) * speed, { lh: 1.3 });
@@ -156,8 +157,8 @@ function drawCompare(S: Frame) {
   });
   // derecha: el asistente
   d.withAlpha(aB, () => {
-    card(S, B, { tone: 'dat', fill: alpha(dt.c, 0.06) });
-    tab(S, S.l('Asistente · mismo modelo, ajustado', 'Assistant · same model, tuned'), B.x + 10 * u, B.y, { t: 'dat', align: 'left' });
+    card(S, B, { tone: 'dat', fill: alpha(dt.c, 0.06 + 0.07 * kv), hot: kv * 0.8 });
+    tab(S, kv > 0.5 ? S.l('Asistente · responde la petición', 'Assistant · answers the request') : S.l('Asistente · mismo modelo, ajustado', 'Assistant · same model, tuned'), B.x + 10 * u, B.y, { t: 'dat', align: 'left' });
     const parts = sample.chat.split('\n').map((x) => x.trim()).filter((x) => x.length > 0);
     const ls: string[] = [];
     parts.forEach((part, i) => lines(S, part + (sample.chatCut && i === parts.length - 1 ? '…' : ''), B.w - 2 * pad, size).forEach((l) => ls.push(l)));
@@ -174,7 +175,8 @@ function drawCompare(S: Frame) {
     });
     if (clamp(t - 0.3, 0, 99) * speed < total + 4) cursor(S, cx, cy, size, 'dat');
   });
-  d.withAlpha(S.reveal('compare-intro', 1.2, 0.5), () => para(S, S.l('Salidas reales de TinyLlama 1.1B, sin retoques; el asistente se ajustó con diálogos y luego con DPO. Modelo entrenado sobre todo en inglés.', 'Real outputs of TinyLlama 1.1B, unedited; the assistant was tuned on dialogues and then with DPO. A model trained mostly in English.'), r.x, r.y + r.h - foot + 6 * u, r.w, FS(S, 12), { color: p.mute, weight: 600, maxLines: 2 }));
+  d.withAlpha(S.reveal('compare-intro', 1.2, 0.5) * (1 - kv), () => para(S, S.l('Salidas reales de TinyLlama 1.1B, sin retoques; el asistente se ajustó con diálogos y luego con DPO. Modelo entrenado sobre todo en inglés.', 'Real outputs of TinyLlama 1.1B, unedited; the assistant was tuned on dialogues and then with DPO. A model trained mostly in English.'), r.x, r.y + r.h - foot + 6 * u, r.w, FS(S, 12), { color: p.mute, weight: 600, maxLines: 2 }));
+  d.withAlpha(kv, () => para(S, S.l('Un modelo pequeño no es perfecto: el correo «de dos líneas» no salió en dos líneas. Pero el comportamiento cambió.', 'A small model is not perfect: the “two-line” email did not come out in two lines. But the behavior changed.'), r.x, r.y + r.h - foot + 6 * u, r.w, FS(S, 12), { color: p.ink2, weight: 700, maxLines: 2 }));
 }
 
 // ── el límite de imitar: escribir cuesta, comparar es fácil ──

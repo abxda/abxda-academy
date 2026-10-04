@@ -19,7 +19,7 @@ function tokLabel(t: string, q: string, lang: 'es' | 'en') {
 function rowsFor(S: Frame, d: typeof AUS, hotIdx: number | -1, prog: number, extra?: BarRow): BarRow[] {
   const top = d.top.slice(0, TOPK), rest = Math.max(0, 1 - top.reduce((s, [, p]) => s + p, 0));
   const rows: BarRow[] = top.map(([t, p], i) => ({ label: tokLabel(t, d.q, S.lang), value: p, hot: i === hotIdx, t: 'lat', a: clamp(prog * (TOPK + 2) - i * 0.9) }));
-  rows.push({ label: S.l('otras (miles)', 'others (thousands)'), value: rest, ghost: true, t: 'lat', a: clamp(prog * (TOPK + 2) - TOPK * 0.9) });
+  rows.push({ label: S.l('otras (cientos)', 'others (hundreds)'), value: rest, ghost: true, t: 'lat', a: clamp(prog * (TOPK + 2) - TOPK * 0.9) });
   if (extra) rows.push(extra);
   return rows;
 }
@@ -49,7 +49,7 @@ export function drawProbs(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
   // barras
   const bars: Rect = { x: m.x, y: m.y + promptH + 26 * u, w: m.w, h: m.h - promptH - 26 * u };
   const nrows = TOPK + 1 + (S.on('noidk') ? 1 : 0);
-  const rowH = Math.min(30 * u, bars.h / (TOPK + 2));
+  const rowH = Math.min(40 * u, bars.h / (TOPK + 2));
   const growA = S.at('known', 0.1, 1.5, 'out'), growB = S.at('unknown', 0.2, 1.8, 'out');
   const showA = S.on('recall') ? 1 - smooth(toUnk) : 0;
   if (showA > 0.01) d.withAlpha(showA, () => {

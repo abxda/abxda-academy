@@ -10,8 +10,8 @@ export function drawObjective(S: Frame, R: { main: Rect; aside: Rect; all: Rect 
   const labels = [S.l('Texto real', 'Real text'), S.l('Modelo', 'Model'), S.l('Predice la pieza que sigue', 'Predicts the next piece'), S.l('Compara con la real', 'Compares with the real one'), S.l('Error: se ajusta', 'Error: adjust')];
   const tones = ['ink', 'w', 'lat', 'dat', 'err'] as const;
   const n = labels.length, vertical = S.portrait || r.w < 560 * u;
-  const bw = vertical ? Math.min(r.w * 0.8, 260 * u) : Math.min((r.w - 4 * 26 * u) / n, 150 * u);
-  const bh = vertical ? Math.min(40 * u, (r.h * 0.62) / n) : 58 * u;
+  const bw = vertical ? Math.min(r.w * 0.8, 260 * u) : Math.min((r.w - 4 * 26 * u) / n, 200 * u);
+  const bh = vertical ? Math.min(40 * u, (r.h * 0.62) / n) : 64 * u;
   const gap = vertical ? Math.max(8 * u, (r.h * 0.66 - n * bh) / (n - 1)) : (r.w - n * bw) / (n - 1);
   const x0 = vertical ? r.x + (r.w - bw) / 2 : r.x, y0 = vertical ? r.y + 2 * u : r.y + r.h * 0.18;
   const boxes: Rect[] = labels.map((_, i) => (vertical ? { x: x0, y: y0 + i * (bh + gap), w: bw, h: bh } : { x: x0 + i * (bw + gap), y: y0, w: bw, h: bh }));
@@ -21,7 +21,10 @@ export function drawObjective(S: Frame, R: { main: Rect; aside: Rect; all: Rect 
       if (al <= 0) return;
       d.withAlpha(al, () => {
         card(S, b, tones[i], { hot: 0.4 });
-        fitText(S, labels[i], b.x + b.w / 2, b.y + b.h / 2, b.w - 12 * u, 14, { weight: 800, color: tone(S, tones[i]).ink, align: 'center', base: 'middle' });
+        {
+          const sz = FS(S, 14), ls = d.wrap(labels[i], b.w - 12 * u, { size: sz, weight: 800 }), lh = sz * u * 1.2;
+          d.text(labels[i], b.x + b.w / 2, b.y + b.h / 2 - (Math.min(ls.length, 3) * lh) / 2, { size: sz, weight: 800, color: tone(S, tones[i]).ink, align: 'center', base: 'top', w: b.w - 12 * u, lh: 1.2 });
+        }
       });
       if (i > 0) {
         const pr = S.at('objective', 0.5 + i * 0.5, 1.0 + i * 0.5);
@@ -50,10 +53,11 @@ export function drawObjective(S: Frame, R: { main: Rect; aside: Rect; all: Rect 
 
 // ───────────────────────── rare + bound: cuántas veces aparece cada dato ─────────────────────────
 // Ilustrativo: la forma (muchos datos aparecen pocas veces) es la cola larga; el 20 % es el ejemplo de la narración, no una medición.
+const ymOf = (S: Frame) => (S.portrait ? 0.66 : 0.44);   // tope del eje vertical (deja aire para las anotaciones)
 const FREQ = [{ es: '1 vez', en: '1 time', v: 0.2 }, { es: '2–5', en: '2–5', v: 0.28 }, { es: '6–50', en: '6–50', v: 0.3 }, { es: 'más de 50', en: 'over 50', v: 0.22 }];
 
 export function drawRare(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, a: number) {
-  const { d, pal: p } = S, u = S.u, m = R.main;
+  const { d, pal: p } = S, u = S.u, m = R.main, YM = ymOf(S);
   const lm = 36 * u, bm = 44 * u, tm = 28 * u;
   const plot: Rect = { x: m.x + lm, y: m.y + tm, w: m.w - lm - 6 * u, h: m.h - tm - bm };
   const err = tone(S, 'err'), lat = tone(S, 'lat');
@@ -63,11 +67,11 @@ export function drawRare(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, a:
       d.line(plot.x, plot.y + plot.h, plot.x + plot.w, plot.y + plot.h, p.lineStrong, 1.5);
       d.line(plot.x, plot.y, plot.x, plot.y + plot.h, p.lineStrong, 1.5);
       d.text(S.l('…aparece este número de veces en el entrenamiento', '…appears this many times in training'), plot.x + plot.w, plot.y + plot.h + 30 * u, { size: FS(S, 12.5), weight: 700, color: p.ink2, align: 'right', base: 'top' });
-      [0, 0.1, 0.2, 0.3].forEach((v) => { const y = plot.y + plot.h - (v / 0.35) * plot.h; d.line(plot.x - 4 * u, y, plot.x, y, p.lineStrong, 1.5); d.text(`${Math.round(v * 100)} %`, plot.x - 7 * u, y, { size: FS(S, 11.5), font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
+      [0, 0.1, 0.2, 0.3].forEach((v) => { const y = plot.y + plot.h - (v / YM) * plot.h; d.line(plot.x - 4 * u, y, plot.x, y, p.lineStrong, 1.5); d.text(`${Math.round(v * 100)} %`, plot.x - 7 * u, y, { size: FS(S, 11.5), font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
     });
     const bw = plot.w / FREQ.length;
     FREQ.forEach((f, i) => {
-      const al = S.reveal('rare', 0.5 + i * 0.35, 0.55), h = (f.v / 0.35) * plot.h * smooth(al);
+      const al = S.reveal('rare', 0.5 + i * YM, 0.55), h = (f.v / YM) * plot.h * smooth(al);
       const hot = i === 0 && S.on('bound'), x = plot.x + i * bw + bw * 0.14;
       d.withAlpha(clamp(al * 2), () => {
         d.rect(x, plot.y + plot.h - h, bw * 0.72, h, { fill: i === 0 ? alpha(err.c, hot ? 0.9 : 0.55) : alpha(lat.c, 0.5), stroke: i === 0 ? err.c : lat.c, lw: 1.4 });
@@ -76,7 +80,7 @@ export function drawRare(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, a:
     });
     // el contraste con el estilo: millones de veces
     d.withAlpha(S.reveal('rare', 2.3, 0.6), () => {
-      const bx = plot.x + plot.w * 0.52, by = plot.y + 2 * u, bwid = plot.w * 0.46;
+      const narrow = plot.w < 440 * u, bx = narrow ? plot.x + 6 * u : plot.x + plot.w * 0.52, by = plot.y + 2 * u, bwid = narrow ? plot.w - 12 * u : plot.w * 0.46;
       d.rect(bx, by, bwid, 46 * u, { fill: alpha(tone(S, 'dat').c, 0.1), stroke: tone(S, 'dat').c, lw: 1.4, r: 3 });
       fitText(S, S.l('Estilo y gramática', 'Style and grammar'), bx + 10 * u, by + 8 * u, bwid - 20 * u, 14, { weight: 800, color: tone(S, 'dat').ink, base: 'top' });
       fitText(S, S.l('millones de veces: se aprenden', 'millions of times: they are learned'), bx + 10 * u, by + 27 * u, bwid - 20 * u, 12.5, { weight: 600, color: p.ink2, base: 'top' });
@@ -84,14 +88,15 @@ export function drawRare(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, a:
     d.withAlpha(S.reveal('rare', 3.2, 0.6), () => fitText(S, S.l('ilustrativo', 'illustrative'), plot.x + plot.w, m.y, 120 * u, 12, { weight: 700, color: p.mute, align: 'right', base: 'top' }));
     // la cota: la primera barra es el piso de errores
     if (S.on('bound')) {
-      const al = S.reveal('bound', 0.4, 0.7), x = plot.x + bw * 0.14, h = (0.2 / 0.35) * plot.h;
+      const al = S.reveal('bound', 0.4, 0.7), x = plot.x + bw * 0.14, h = (0.2 / YM) * plot.h;
       d.withAlpha(al, () => {
         const yb = plot.y + plot.h - h;
         d.line(plot.x, yb, plot.x + plot.w, yb, err.c, 1.8, [6, 4]);
-        const bx = plot.x + bw * 1.05, by = yb - 56 * u > plot.y + 50 * u ? yb - 54 * u : plot.y + plot.h * 0.52;
-        d.rect(bx, by, Math.min(plot.w * 0.55, 300 * u), 44 * u, { fill: p.surface, stroke: err.c, lw: 1.6, r: 3 });
-        fitText(S, S.l('≥ 20 % de errores esperados', '≥ 20% of errors expected'), bx + 10 * u, by + 8 * u, Math.min(plot.w * 0.55, 300 * u) - 20 * u, 14, { weight: 800, color: err.ink, base: 'top' });
-        fitText(S, S.l('en esos datos (modelo base)', 'on those facts (base model)'), bx + 10 * u, by + 26 * u, Math.min(plot.w * 0.55, 300 * u) - 20 * u, 12.5, { weight: 600, color: p.ink2, base: 'top' });
+        const narrow = plot.w < 440 * u, bx = plot.x + 6 * u, by = plot.y + (narrow ? 54 : 2) * u;
+        const bwb = narrow ? plot.w - 12 * u : Math.min(plot.w * 0.55, 300 * u);
+        d.rect(bx, by, bwb, 44 * u, { fill: p.surface, stroke: err.c, lw: 1.6, r: 3 });
+        fitText(S, S.l('≥ 20 % de errores esperados', '≥ 20% of errors expected'), bx + 10 * u, by + 8 * u, bwb - 20 * u, 14, { weight: 800, color: err.ink, base: 'top' });
+        fitText(S, S.l('en esos datos (modelo base)', 'on those facts (base model)'), bx + 10 * u, by + 26 * u, bwb - 20 * u, 12.5, { weight: 600, color: p.ink2, base: 'top' });
         void x;
       });
     }

@@ -5,28 +5,29 @@ import { FS, bubble, card, fitText, mark, para, smooth, stamp, stat } from './ui
 
 /** Los seis casos que el tribunal declaró inexistentes (nombres abreviados como en la orden, ¶36). */
 const CASES = ['Varghese v. China Southern Airlines', 'Shaboon v. Egyptair', 'Petersen v. Iran Air', 'Martinez v. Delta Airlines', 'Estate of Durden v. KLM', 'Miller v. United Airlines'];
+/** Forma corta para escritos estrechos (los nombres no pueden bajar de 12 px). */
+const CASES_SHORT = ['Varghese v. China Southern', 'Shaboon v. Egyptair', 'Petersen v. Iran Air', 'Martinez v. Delta', 'Durden v. KLM', 'Miller v. United'];
 
 export function drawCase(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u;
-  const toAsk = S.at('ask', 0, 0.9), toDef = S.at('define', 0, 0.9);
-  // el escrito: grande en «hook», se achica en «ask» y se atenúa en «define»
-  const full = R.main, smallW = S.portrait ? full.w * 0.62 : full.w * 0.5;
-  const w = smallW + (full.w - smallW) * (1 - smooth(toAsk)) * 0 + 0;
-  const docW = Math.min(full.w, S.portrait ? full.w : 430 * u) * (1 - 0.0) , docX = full.x + (S.portrait ? 0 : 0);
-  void w;
-  const docH = S.portrait ? (toAsk > 0 ? full.h * 0.5 : full.h) : full.h;
-  const dw = toAsk > 0 ? Math.min(docW, S.portrait ? full.w : full.w * 0.5) : docW;
-  const doc: Rect = { x: docX, y: full.y, w: dw, h: docH };
-  const dim = 1 - 0.55 * smooth(toDef);
-  d.withAlpha(S.reveal('hook', 0, 0.5) * dim, () => drawDoc(S, doc));
-
-  // pregunta al modelo
-  if (toAsk > 0) {
-    const cx = S.portrait ? full.x : doc.x + doc.w + 16 * u, cy = S.portrait ? doc.y + doc.h + 10 * u : full.y;
-    const cw = S.portrait ? full.w : full.x + full.w - cx, ch = S.portrait ? full.h - doc.h - 10 * u : full.h;
-    drawChat(S, { x: cx, y: cy, w: cw, h: ch }, dim);
+  const u = S.u, d = S.d;
+  const toAsk = smooth(S.at('ask', 0, 0.9)), toDef = smooth(S.at('define', 0, 0.9));
+  const full = R.main;
+  // el escrito: grande y centrado en «hook»; en «ask» se corre (escritorio) o se compacta (teléfono) y deja sitio al chat; en «define» desaparece
+  const dim = 1 - toDef;
+  let chatR: Rect | null = null;
+  if (S.portrait) {
+    const hc = 78 * u;
+    d.withAlpha(S.reveal('hook', 0, 0.5) * dim * (1 - toAsk), () => drawDoc(S, full));
+    d.withAlpha(dim * toAsk, () => drawCompactDoc(S, { x: full.x, y: full.y, w: full.w, h: hc }));
+    if (toAsk > 0) chatR = { x: full.x, y: full.y + hc + 10 * u, w: full.w, h: full.h - hc - 10 * u };
+  } else {
+    const w0 = Math.max(Math.min(full.w * 0.62, 470 * u), Math.min(full.w, 340)), w1 = Math.max(full.w * 0.46, Math.min(full.w * 0.6, 340));
+    const w = w0 + (w1 - w0) * toAsk, x = full.x + ((full.w - w0) / 2) * (1 - toAsk);
+    const doc: Rect = { x, y: full.y, w, h: full.h };
+    d.withAlpha(S.reveal('hook', 0, 0.5) * dim, () => drawDoc(S, doc));
+    if (toAsk > 0) chatR = { x: doc.x + doc.w + 16 * u, y: full.y, w: full.x + full.w - (doc.x + doc.w + 16 * u), h: full.h };
   }
-
+  if (chatR) drawChat(S, chatR, dim);
   // lateral: contador (hook) y multa (define)
   const aside = R.aside;
   d.withAlpha(S.reveal('hook', 1.0, 0.6) * (1 - toDef), () => {
@@ -37,12 +38,22 @@ export function drawCase(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
   if (toDef > 0) drawDefinition(S, R, toDef);
 }
 
+/** Versión compacta del escrito (teléfono): solo el encabezado y el resultado. */
+function drawCompactDoc(S: Frame, r: Rect) {
+  const { d, pal: p } = S, u = S.u;
+  d.rect(r.x, r.y, r.w, r.h, { fill: p.surface, stroke: p.lineStrong, lw: 1.5, r: 3 });
+  fitText(S, S.l('Escrito presentado al tribunal', 'Brief filed with the court'), r.x + 12 * u, r.y + 10 * u, r.w - 24 * u, 13, { weight: 800, color: p.ink, base: 'top' });
+  fitText(S, 'Mata v. Avianca · S.D.N.Y. · 2023', r.x + 12 * u, r.y + 28 * u, r.w - 24 * u, 12, { weight: 600, color: p.mute, base: 'top', font: 'mono' });
+  mark(S, r.x + 20 * u, r.y + 58 * u, 'no', 7 * u);
+  fitText(S, S.l('6 casos citados: ninguno existe', '6 cases cited: none exists'), r.x + 36 * u, r.y + 58 * u, r.w - 48 * u, 13.5, { weight: 800, color: tone(S, 'err').ink, base: 'middle' });
+}
+
 function drawDoc(S: Frame, r: Rect) {
   const { d, pal: p } = S, u = S.u;
   d.rect(r.x, r.y, r.w, r.h, { fill: p.surface, stroke: p.lineStrong, lw: 1.5, r: 3 });
   // encabezado y párrafo difuminado
   fitText(S, S.l('Escrito presentado al tribunal', 'Brief filed with the court'), r.x + 12 * u, r.y + 10 * u, r.w - 24 * u, 13, { weight: 800, color: p.ink, base: 'top' });
-  fitText(S, 'Mata v. Avianca · S.D.N.Y. · 2023', r.x + 12 * u, r.y + 28 * u, r.w - 24 * u, 12, { weight: 600, color: p.mute, base: 'top', font: 'mono' });
+  fitText(S, r.w < 400 ? 'Mata v. Avianca · 2023' : 'Mata v. Avianca · S.D.N.Y. · 2023', r.x + 12 * u, r.y + 28 * u, r.w - 24 * u, 12, { weight: 600, color: p.mute, base: 'top', font: 'mono' });
   const tall = r.h > 190 * u;
   let y = r.y + 54 * u;
   if (tall) for (let i = 0; i < 2; i++) { d.rect(r.x + 12 * u, y, (r.w - 24 * u) * (i ? 0.7 : 1), 5 * u, { fill: p.line }); y += 11 * u; }
@@ -52,13 +63,16 @@ function drawDoc(S: Frame, r: Rect) {
   const rowH = Math.max(FS(S, 12) * u * 1.5, Math.min(30 * u, (r.y + r.h - y - 8 * u) / CASES.length));
   const k = clamp((S.since('hook') - 0.4) / 1.8) * CASES.length;       // aparecen las líneas
   const kx = clamp((S.since('hook') - 1.6) / 3.6) * CASES.length;       // se tachan una a una
-  CASES.forEach((c, i) => {
+  const avail = r.w - 24 * u - 30 * u, fsz = FS(S, 12.5);
+  const useShort = d.measure(CASES[0], { size: fsz, weight: 600, font: 'mono' }) > avail;
+  CASES.forEach((full, i) => {
+    const c = useShort ? CASES_SHORT[i] : full;
     const a = clamp(k - i); if (a <= 0) return;
     const yy = y + i * rowH, gone = clamp(kx - i);
     d.withAlpha(a, () => {
-      fitText(S, c, r.x + 12 * u, yy + rowH / 2, r.w - 24 * u - 30 * u, 12.5, { weight: 600, font: 'mono', color: gone > 0.5 ? p.mute : p.ink, base: 'middle' });
+      d.text(c, r.x + 12 * u, yy + rowH / 2, { size: fsz, weight: 600, font: 'mono', color: gone > 0.5 ? p.mute : p.ink, base: 'middle' });
       if (gone > 0) {
-        const lw = d.measure(c, { size: FS(S, 12.5), weight: 600, font: 'mono' });
+        const lw = d.measure(c, { size: fsz, weight: 600, font: 'mono' });
         d.line(r.x + 12 * u, yy + rowH / 2, r.x + 12 * u + lw * smooth(gone), yy + rowH / 2, tone(S, 'err').c, 2);
         mark(S, r.x + r.w - 18 * u, yy + rowH / 2, 'no', 7 * u, { a: smooth(gone) });
       }

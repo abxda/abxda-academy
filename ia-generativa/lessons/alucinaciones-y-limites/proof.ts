@@ -5,33 +5,37 @@
 //    califica de «notable» el argumento de que el chatbot es una entidad aparte responsable de sus actos.
 //  · Lin, Hilton y Evans (2021), TruthfulQA: 817 preguntas, 38 categorías; el mejor modelo, 58 % veraz; personas, 94 %.
 import { alpha, clamp, neu, tone, type Frame, type Rect } from '../../../../../theme/kit';
-import { FS, bubble, card, fitText, fr, mark, para, probBars, smooth, source, stamp, tagText, type BarRow } from './ui';
+import { FS, bubble, card, fitText, fr, mark, para, probBars, smooth, source, sourceH, stamp, type BarRow } from './ui';
 
 // ───────────────────────── evidence ─────────────────────────
+const EV_SRC = (S: Frame) => S.l('Magesh et al. (2024) · más de 200 consultas jurídicas · versión de junio de 2024', 'Magesh et al. (2024) · 200+ legal queries · June 2024 version');
 export function drawEvidence(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, r = R.all;
+  const { d, pal: p } = S, u = S.u, r: Rect = { ...R.all, h: R.all.h - sourceH(S, EV_SRC(S)) - 8 * u };
   const w = Math.min(r.w, 720 * u), x = r.x + (r.w - w) / 2;
-  d.withAlpha(S.reveal('evidence', 0.1, 0.5), () => {
-    fitText(S, S.l('Respuestas con alucinación, en consultas jurídicas', 'Hallucinated answers on legal research queries'), x, r.y + 4 * u, w, 18, { weight: 800, color: p.ink, base: 'top' });
-    fitText(S, S.l('herramientas con recuperación de documentos', 'tools that retrieve documents'), x, r.y + 30 * u, w, 13.5, { weight: 600, color: p.ink2, base: 'top' });
-  });
   const rows: BarRow[] = [
     { label: 'Lexis+ AI', value: 0.17, t: 'err', a: S.reveal('evidence', 0.5, 0.6), hot: true },
     { label: 'Ask Practical Law AI', value: 0.17, t: 'err', a: S.reveal('evidence', 0.9, 0.6), hot: true },
     { label: 'Westlaw AI-Assisted Research', value: 0.33, t: 'err', a: S.reveal('evidence', 1.3, 0.6), hot: true },
     { label: S.l('GPT-4 solo (referencia)', 'GPT-4 alone (reference)'), value: 0.43, t: 'mute', ghost: true, a: S.reveal('evidence', 2.2, 0.6) },
   ];
-  const top = r.y + 64 * u, rh = Math.min(48 * u, (r.h - 64 * u - 36 * u) / rows.length);
-  probBars(S, { x, y: top, w, h: rh * rows.length }, rows, { rowH: rh, labelW: Math.min(w * 0.42, 230 * u), max: 0.5, size: 14, fmt: (v) => `${Math.round(v * 100)}${S.lang === 'es' ? ' %' : '%'}` });
+  const head = 64 * u, foot = 58 * u, rh = Math.min(56 * u, (r.h - head - foot) / rows.length), hc = head + rh * rows.length + foot;
+  const y0 = r.y + Math.max(0, (r.h - hc) / 2);
+  d.withAlpha(S.reveal('evidence', 0.1, 0.5), () => {
+    fitText(S, S.l('Respuestas con alucinación, en consultas jurídicas', 'Hallucinated answers on legal research queries'), x, y0 + 4 * u, w, 18, { weight: 800, color: p.ink, base: 'top' });
+    fitText(S, S.l('herramientas con recuperación de documentos', 'tools that retrieve documents'), x, y0 + 30 * u, w, 13.5, { weight: 600, color: p.ink2, base: 'top' });
+  });
+  const top = y0 + head;
+  probBars(S, { x, y: top, w, h: rh * rows.length }, rows, { rowH: rh, labelW: Math.min(w * 0.46, 250 * u), max: 0.5, size: 14, fmt: (v) => `${Math.round(v * 100)}${S.lang === 'es' ? '\u00a0%' : '%'}` });
   d.withAlpha(S.reveal('evidence', 3.0, 0.6), () => {
     para(S, S.l('Ninguna llega a cero. Menos que un modelo solo, pero lejos de «libre de alucinaciones».', 'None reaches zero. Less than a model alone, but far from “hallucination-free.”'), x, top + rh * rows.length + 10 * u, w, { size: 14, weight: 700, color: p.ink2 });
   });
-  source(S, S.l('Magesh et al. (2024) · más de 200 consultas jurídicas · versión de junio de 2024', 'Magesh et al. (2024) · 200+ legal queries · June 2024 version'), S.reveal('evidence', 0.4, 0.5));
+  source(S, EV_SRC(S), S.reveal('evidence', 0.4, 0.5));
 }
 
 // ───────────────────────── accountability ─────────────────────────
+const AC_SRC = (S: Frame) => S.l('Moffatt v. Air Canada, 2024 BCCRT 149 · tribunal de reclamos menores (Columbia Británica), 14 de febrero de 2024', 'Moffatt v. Air Canada, 2024 BCCRT 149 · small-claims tribunal (British Columbia), February 14, 2024');
 export function drawAccount(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, r = R.all;
+  const { d, pal: p } = S, u = S.u, r: Rect = { ...R.all, h: R.all.h - sourceH(S, AC_SRC(S)) - 8 * u };
   const portrait = S.portrait || r.w < 600 * u, gap = 16 * u;
   const colW = portrait ? r.w : (r.w - gap) / 2, colH = portrait ? (r.h - gap) / 2 : r.h;
   const L: Rect = { x: r.x, y: r.y, w: colW, h: colH }, Rr: Rect = portrait ? { x: r.x, y: r.y + colH + gap, w: colW, h: colH } : { x: r.x + colW + gap, y: r.y, w: colW, h: colH };
@@ -58,28 +62,32 @@ export function drawAccount(S: Frame, R: { main: Rect; aside: Rect; all: Rect })
       para(S, S.l('Rechazado: la empresa responde por toda la información de su sitio, sea una página o un chatbot.', 'Rejected: the company answers for all the information on its site, whether a page or a chatbot.'), Rr.x, by + hh + 10 * u, lw, { size: 13.5, weight: 700, color: tone(S, 'err').ink });
     });
   });
-  source(S, S.l('Moffatt v. Air Canada, 2024 BCCRT 149 · tribunal de reclamos menores (Columbia Británica), 14 de febrero de 2024', 'Moffatt v. Air Canada, 2024 BCCRT 149 · small-claims tribunal (British Columbia), February 14, 2024'), a1);
+  source(S, AC_SRC(S), a1);
 }
 
 // ───────────────────────── truthfulqa ─────────────────────────
+const TR_SRC = (S: Frame) => S.l('Lin, Hilton y Evans (2021) · modelos de 2021: GPT-3, GPT-Neo/J, GPT-2 y uno basado en T5', 'Lin, Hilton, and Evans (2021) · 2021 models: GPT-3, GPT-Neo/J, GPT-2, and a T5-based one');
 export function drawTruthful(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
-  const { d, pal: p } = S, u = S.u, r = R.all;
+  const { d, pal: p } = S, u = S.u, r: Rect = { ...R.all, h: R.all.h - sourceH(S, TR_SRC(S)) - 8 * u };
   const w = Math.min(r.w, 700 * u), x = r.x + (r.w - w) / 2;
+  const sub = S.l('817 preguntas · 38 categorías · piden repetir falsedades populares', '817 questions · 38 categories · invite repeating popular falsehoods');
+  const subH = S.d.wrap(sub, w, { size: FS(S, 13.5), weight: 600 }).length * FS(S, 13.5) * u * 1.3;
+  const rh = Math.min(60 * u, (r.h - 120 * u) / 2), head = 36 * u + subH + 30 * u, hc = head + rh * 2 + 70 * u, y0 = r.y + Math.max(0, (r.h - hc) / 2);
   d.withAlpha(S.reveal('truthfulqa', 0.1, 0.5), () => {
-    fitText(S, 'TruthfulQA', x, r.y + 4 * u, w, 22, { weight: 800, color: p.ink, base: 'top' });
-    fitText(S, S.l('817 preguntas · 38 categorías · piden repetir falsedades populares', '817 questions · 38 categories · invite repeating popular falsehoods'), x, r.y + 34 * u, w, 13.5, { weight: 600, color: p.ink2, base: 'top' });
+    fitText(S, 'TruthfulQA', x, y0, w, 22, { weight: 800, color: p.ink, base: 'top' });
+    para(S, sub, x, y0 + 32 * u, w, { size: 13.5, weight: 600, color: p.ink2 });
   });
   const rows: BarRow[] = [
     { label: S.l('Mejor modelo (2021)', 'Best model (2021)'), value: 0.58, t: 'lat', hot: true, a: S.reveal('truthfulqa', 0.7, 0.6) },
     { label: S.l('Personas', 'People'), value: 0.94, t: 'dat', hot: true, a: S.reveal('truthfulqa', 1.6, 0.6) },
   ];
-  const top = r.y + 76 * u, rh = Math.min(56 * u, (r.h - 76 * u - 60 * u) / 2);
-  d.withAlpha(S.reveal('truthfulqa', 0.5, 0.4), () => fitText(S, S.l('respuestas veraces', 'truthful answers'), x + Math.min(w * 0.34, 150 * u), top - 8 * u, w, 12.5, { weight: 700, color: p.mute, base: 'bottom' }));
-  probBars(S, { x, y: top, w, h: rh * 2 }, rows, { rowH: rh, labelW: Math.min(w * 0.34, 150 * u), max: 1, size: 14, fmt: (v) => `${Math.round(v * 100)}${S.lang === 'es' ? ' %' : '%'}` });
+  const top = y0 + head, lw = Math.min(w * 0.38, 170 * u);
+  d.withAlpha(S.reveal('truthfulqa', 0.5, 0.4), () => fitText(S, S.l('respuestas veraces', 'truthful answers'), x + lw, top - 8 * u, w - lw, 12.5, { weight: 700, color: p.mute, base: 'bottom' }));
+  probBars(S, { x, y: top, w, h: rh * 2 }, rows, { rowH: rh, labelW: lw, max: 1, size: 14, fmt: (v) => `${Math.round(v * 100)}${S.lang === 'es' ? '\u00a0%' : '%'}` });
   d.withAlpha(S.reveal('truthfulqa', 3.2, 0.6), () => {
     para(S, S.l('Hallazgo del estudio: los modelos más grandes fueron, en general, los menos veraces.', 'Finding of the study: the largest models were generally the least truthful.'), x, top + rh * 2 + 14 * u, w, { size: 14, weight: 700, color: p.ink2 });
   });
-  source(S, S.l('Lin, Hilton y Evans (2021) · modelos de 2021: GPT-3, GPT-Neo/J, GPT-2 y uno basado en T5', 'Lin, Hilton, and Evans (2021) · 2021 models: GPT-3, GPT-Neo/J, GPT-2, and a T5-based one'), S.reveal('truthfulqa', 0.4, 0.5));
+  source(S, TR_SRC(S), S.reveal('truthfulqa', 0.4, 0.5));
 }
 
 // ───────────────────────── recap + bridge ─────────────────────────
@@ -102,7 +110,7 @@ export function drawRecap(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
       d.text(c.sub, rc.x + rc.w / 2, rc.y + rc.h * (portrait ? 0.7 : 0.72), { size: FS(S, 14), weight: 600, color: p.ink2, align: 'center', base: 'middle', w: rc.w - 24 * u });
     });
   });
-  void tagText;
+
 }
 
 export function drawBridge(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {

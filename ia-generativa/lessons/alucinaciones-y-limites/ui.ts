@@ -16,6 +16,9 @@ export const num = (S: Frame, v: number, digits = 0) => {
 /** Porcentaje con el formato del idioma: 73,6 % (es) / 73.6% (en). */
 export const pct = (S: Frame, v: number, digits = 0) => `${num(S, v * 100, digits)}${S.lang === 'es' ? '\u00a0%' : '%'}`;
 
+/** Porcentaje de una barra: los valores minúsculos se muestran como «< 0,1 %». */
+export const pctP = (S: Frame, v: number) => (v > 0 && v < 0.001 ? `<\u00a0${num(S, 0.1, 1)}${S.lang === 'es' ? '\u00a0%' : '%'}` : pct(S, v, v < 0.1 ? 1 : 0));
+
 /** Texto que se encoge hasta caber en `w` (sin bajar de 12 px efectivos). */
 export function fitText(S: Frame, str: string, x: number, y: number, w: number, size: number, o: { weight?: number; font?: 'ui' | 'mono'; color?: string; align?: CanvasTextAlign; base?: CanvasTextBaseline; halo?: string; a?: number } = {}) {
   const d = S.d, minS = FS(S, 12);
@@ -94,19 +97,25 @@ export interface BarRow { label: string; value: number; t?: Tone; hot?: boolean;
 export function probBars(S: Frame, r: Rect, rows: BarRow[], o: { max?: number; labelW?: number; fmt?: (v: number) => string; rowH?: number; size?: number } = {}) {
   const { d, pal: p } = S, u = S.u, n = rows.length, rh = o.rowH ?? Math.min(34 * u, r.h / Math.max(1, n)), max = o.max ?? 1;
   const size = o.size ?? 13, lw = o.labelW ?? Math.min(130 * u, r.w * 0.34);
-  const vw = Math.max(46 * u, d.measure('100 %', { size: FS(S, 12), weight: 600, font: 'mono' }) + 6 * u);
+  const vw = Math.max(46 * u, d.measure('< 0,1 %', { size: FS(S, 12), weight: 600, font: 'mono' }) + 6 * u);
   const bx = r.x + lw, bw = r.w - lw - vw;
   rows.forEach((row, i) => {
     const a = row.a ?? 1; if (a <= 0.003) return;
     const y = r.y + i * rh, c = tone(S, row.t ?? 'lat'), h = rh * 0.66, by = y + (rh - h) / 2, len = Math.max(row.value > 0 ? 2 : 0, (bw * clamp(row.value / max)) * smooth(a));
     d.withAlpha(clamp(a * 1.5), () => {
-      fitText(S, row.label, bx - 8 * u, y + rh / 2, lw - 10 * u, size, { weight: row.hot ? 800 : 600, color: row.hot ? p.ink : p.ink2, align: 'right', base: 'middle' });
+      {
+        const lwid = lw - 10 * u, fsz = FS(S, size), opt = { weight: row.hot ? 800 : 600 };
+        if (d.measure(row.label, { size: Math.max(FS(S, 12), 12.2 / u), ...opt }) > lwid && rh > 30 * u) {
+          const ls = d.wrap(row.label, lwid, { size: FS(S, 12), ...opt }), lhh = FS(S, 12) * u * 1.15;
+          ls.slice(0, 2).forEach((ln, k) => d.text(ln, bx - 8 * u, y + rh / 2 + (k - (Math.min(ls.length, 2) - 1) / 2) * lhh, { size: FS(S, 12), weight: row.hot ? 800 : 600, color: row.hot ? p.ink : p.ink2, align: 'right', base: 'middle' }));
+        } else fitText(S, row.label, bx - 8 * u, y + rh / 2, lwid, Math.min(size, fsz), { weight: row.hot ? 800 : 600, color: row.hot ? p.ink : p.ink2, align: 'right', base: 'middle' });
+      }
       d.rect(bx, by, bw, h, { fill: p.surface2 });
       if (row.ghost) {
         d.dither(bx, by, len, h, c.c, 0.4, 2);
         d.rect(bx, by, len, h, { stroke: alpha(c.c, 0.7), lw: 1.2 });
       } else d.rect(bx, by, len, h, { fill: row.hot ? c.c : alpha(c.c, 0.55) });
-      d.text((o.fmt ?? ((v) => pct(S, v, v < 0.1 ? 1 : 0)))(row.value), r.x + r.w, y + rh / 2, { size: FS(S, 12), font: 'mono', weight: row.hot ? 800 : 600, color: row.hot ? p.ink : p.ink2, align: 'right', base: 'middle' });
+      d.text((o.fmt ?? ((v) => pctP(S, v)))(row.value), r.x + r.w, y + rh / 2, { size: FS(S, 12), font: 'mono', weight: row.hot ? 800 : 600, color: row.hot ? p.ink : p.ink2, align: 'right', base: 'middle' });
     });
   });
 }
@@ -126,7 +135,7 @@ export function axes(S: Frame, pl: Plot, o: { xTicks: number[]; yTicks: number[]
     o.xTicks.forEach((v) => { const x = pl.X(v); d.line(x, r.y + r.h, x, r.y + r.h + 4 * u, p.lineStrong, 1.5); d.text(o.xFmt(v), x, r.y + r.h + 7 * u, { size: ts, font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
     o.yTicks.forEach((v) => { const y = pl.Y(v); d.line(r.x - 4 * u, y, r.x, y, p.lineStrong, 1.5); d.text(o.yFmt(v), r.x - 7 * u, y, { size: ts, font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
     if (o.xLabel) d.text(o.xLabel, r.x + r.w, r.y + r.h + 7 * u + ts * u + 5 * u, { size: FS(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
-    if (o.yLabel) d.text(o.yLabel, pl.outer.x + 2, r.y - 4 * u, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
+    if (o.yLabel) d.text(o.yLabel, pl.outer.x + 2, r.y - 11 * u, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
   });
 }
 
@@ -139,9 +148,16 @@ export function stat(S: Frame, x: number, y: number, label: string, value: strin
   });
 }
 
-/** Pie de figura con la fuente de lo que se muestra (una línea, abajo a la izquierda). */
+/** Pie de figura con la fuente de lo que se muestra (abajo a la izquierda; ocupa varias líneas si hace falta, creciendo hacia arriba). */
 export function source(S: Frame, str: string, a = 1) {
-  fitText(S, str, 14 * S.u, S.H - 3 * S.u, S.W - 28 * S.u, 11.5, { weight: 600, color: S.pal.mute, base: 'bottom', a: 0.92 * a });
+  const size = FS(S, 11.5), w = S.W - 28 * S.u, n = S.d.wrap(str, w, { size, weight: 600 }).length, lh = 1.3 * size * S.u;
+  S.d.text(str, 14 * S.u, S.H - 3 * S.u - (n - 1) * lh, { size, weight: 600, color: S.pal.mute, base: 'bottom', a: 0.92 * a, w, lh: 1.3 });
+}
+
+/** Alto (px) que ocupa el pie de figura: para reservar espacio abajo. */
+export function sourceH(S: Frame, str: string) {
+  const size = FS(S, 11.5);
+  return (S.d.wrap(str, S.W - 28 * S.u, { size, weight: 600 }).length * 1.3 * size + 6) * S.u;
 }
 
 /** Aparición de un acto entre su primer segmento y el primero del siguiente (fundido corto). */

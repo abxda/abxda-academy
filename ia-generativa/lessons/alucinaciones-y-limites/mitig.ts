@@ -2,7 +2,7 @@
 // Cada baldosa lleva un diagrama esquemático (ilustrativo, sin cifras inventadas); aparecen una por segmento.
 import { alpha, clamp, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 import { ARITH } from './real-data';
-import { FS, card, fitText, mark, para, smooth, tagText } from './ui';
+import { card, fitText, mark, smooth, tagText } from './ui';
 
 type Draw = (S: Frame, r: Rect, a: number) => void;
 
@@ -32,9 +32,9 @@ const dGround: Draw = (S, r, a) => {
 
 /** 2 · herramientas: un sistema determinista produce el dato. */
 const dTools: Draw = (S, r, a) => {
-  const u = S.u, h = Math.min(r.h, 66 * u), y = r.y + (r.h - h) / 2, w3 = (r.w - 2 * 22 * u) / 3;
-  const mod: Rect = { x: r.x, y, w: w3, h }, tool: Rect = { x: r.x + w3 + 22 * u, y, w: w3, h }, out: Rect = { x: r.x + 2 * (w3 + 22 * u), y, w: w3, h };
-  const it = ARITH.items[0];
+  const u = S.u, h = Math.min(r.h, 66 * u), y = r.y + (r.h - h) / 2, g = 18 * u, av = r.w - 2 * g;
+  const mod: Rect = { x: r.x, y, w: av * 0.25, h }, tool: Rect = { x: r.x + av * 0.25 + g, y, w: av * 0.3, h }, out: Rect = { x: r.x + av * 0.55 + 2 * g, y, w: av * 0.45, h };
+  const it = ARITH.items[0], sep = S.lang === 'es' ? '\u00a0' : ',';
   S.d.withAlpha(S.reveal('mit-tools', 0.4, 0.5) * a, () => box(S, mod, S.l('modelo', 'model'), 'lat'));
   S.d.withAlpha(S.reveal('mit-tools', 1.0, 0.5) * a, () => {
     arrow(S, mod.x + mod.w + 3 * u, y + h * 0.3, tool.x - 3 * u);
@@ -43,14 +43,15 @@ const dTools: Draw = (S, r, a) => {
   });
   S.d.withAlpha(S.reveal('mit-tools', 1.6, 0.5) * a, () => {
     arrow(S, tool.x + tool.w + 3 * u, y + h / 2, out.x - 3 * u);
-    box(S, out, S.lang === 'es' ? `${it.a} × ${it.b} = ${String(it.gold).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}` : `${it.a} × ${it.b} = ${String(it.gold).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`, 'dat', { size: 12.5 });
+    box(S, out, `${it.a} × ${it.b} = ${String(it.gold).replace(/\B(?=(\d{3})+(?!\d))/g, sep)}`, 'dat', { size: 12.5 });
   });
 };
 
 /** 3 · acotar la salida: diez códigos válidos, no hay un undécimo; y las fuentes pedidas hay que comprobarlas. */
 const dLimit: Draw = (S, r, a) => {
-  const u = S.u, cols = r.w > 330 * u ? 6 : 5, cs = Math.min(36 * u, (r.w - (cols - 1) * 6 * u) / cols), rows = Math.ceil(11 / cols);
-  const gw = cols * cs + (cols - 1) * 6 * u, x0 = r.x + (r.w - gw) / 2, y0 = r.y + Math.max(0, (r.h - (rows * cs + (rows - 1) * 6 * u)) / 2);
+  const u = S.u, cols = r.w > 330 * u ? 6 : 5, rows = Math.ceil(11 / cols), room = r.h > 96;
+  const cs = Math.max(18 * u, Math.min(36 * u, (r.w - (cols - 1) * 6 * u) / cols, (r.h - (room ? 26 * u : 0) - (rows - 1) * 6 * u) / rows));
+  const gw = cols * cs + (cols - 1) * 6 * u, x0 = r.x + (r.w - gw) / 2, y0 = r.y + 2 * u;
   const dat = tone(S, 'dat'), err = tone(S, 'err');
   for (let i = 0; i < 11; i++) {
     const x = x0 + (i % cols) * (cs + 6 * u), y = y0 + Math.floor(i / cols) * (cs + 6 * u);
@@ -60,6 +61,8 @@ const dLimit: Draw = (S, r, a) => {
       else { S.d.rect(x, y, cs, cs, { stroke: err.c, lw: 1.4, r: 3, dash: [4, 3] }); mark(S, x + cs / 2, y + cs / 2, 'no', cs * 0.28, { lw: 2.2 }); }
     });
   }
+  // pedir fuentes: solo sirve si alguien las comprueba
+  if (room) tagText(S, S.l('¿pedir fuentes? solo si alguien las comprueba', 'ask for sources? only if someone checks them'), r.x + r.w / 2, r.y + r.h, { t: 'err', align: 'center', base: 'bottom', size: 12.5, a: S.reveal('mit-limit', 2.6, 0.5) * a });
 };
 
 /** 4 · verificación proporcional al riesgo: tres usos, tres niveles de revisión. */
@@ -89,23 +92,34 @@ export function drawMitig(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
     { id: 'mit-limit', t: 'dat', title: S.l('3 · Acotar la salida', '3 · Constrain the output'), cap: S.l('diez códigos válidos: no existe el undécimo', 'ten valid codes: there is no eleventh'), draw: dLimit },
     { id: 'mit-verify', t: 'err', title: S.l('4 · Verificar según el riesgo', '4 · Verify by risk'), cap: S.l('más riesgo, más revisión', 'more risk, more review'), draw: dVerify },
   ];
-  const wide = !S.portrait && r.w >= 560 * u, gap = 12 * u;
-  const tw = wide ? (r.w - gap) / 2 : r.w, th = wide ? (r.h - gap) / 2 : (r.h - 3 * gap) / 4;
+  const wide = !S.portrait && S.H >= 480 && r.w >= 560 * u, gap = 12 * u, n = tiles.length;
+  const rects: Rect[] = [], expand: number[] = [];
+  if (wide) {
+    const tw = (r.w - gap) / 2, th = (r.h - gap) / 2;
+    tiles.forEach((_, i) => { rects.push({ x: r.x + (i % 2) * (tw + gap), y: r.y + Math.floor(i / 2) * (th + gap), w: tw, h: th }); expand.push(1); });
+  } else {
+    // teléfono: la baldosa nueva se abre y las anteriores se pliegan a su título y su frase
+    const hc = 50 * u, he = Math.min(r.h - (n - 1) * (hc + gap), 200 * u);
+    let y = r.y;
+    tiles.forEach((tl, i) => {
+      const next = tiles[i + 1], e = next ? 1 - smooth(S.reveal(next.id, 0, 0.6)) : 1, h = hc + (he - hc) * e;
+      rects.push({ x: r.x, y, w: r.w, h }); expand.push(e);
+      if (S.on(tl.id)) y += h + gap;
+    });
+  }
   tiles.forEach((tl, i) => {
     const a = S.reveal(tl.id, 0, 0.5); if (a <= 0) return;
-    const rc: Rect = wide ? { x: r.x + (i % 2) * (tw + gap), y: r.y + Math.floor(i / 2) * (th + gap), w: tw, h: th } : { x: r.x, y: r.y + i * (th + gap), w: tw, h: th };
-    const c = tone(S, tl.t), pad = 10 * u, hot = S.is(tl.id) ? 0.35 : 0.05, compact = th < 120 * u;
+    const rc = rects[i], e = expand[i], c = tone(S, tl.t), pad = 10 * u, hot = S.is(tl.id) ? 0.35 : 0.05;
     d.withAlpha(a, () => {
       card(S, rc, tl.t, { hot, fill: 0.04 });
       fitText(S, tl.title, rc.x + pad, rc.y + pad - 1 * u, rc.w - 2 * pad, 15, { weight: 800, color: c.ink, base: 'top' });
-      const capH = compact ? 0 : 20 * u;
-      const dr: Rect = { x: rc.x + pad, y: rc.y + pad + 22 * u, w: rc.w - 2 * pad, h: rc.h - pad * 2 - 22 * u - capH };
-      tl.draw(S, dr, 1);
-      if (!compact) fitText(S, tl.cap, rc.x + pad, rc.y + rc.h - pad + 2 * u, rc.w - 2 * pad, 12.5, { weight: 600, color: p.ink2, base: 'bottom' });
+      if (!wide && e < 0.6) { fitText(S, tl.cap, rc.x + pad, rc.y + pad + 22 * u, rc.w - 2 * pad, 12.5, { weight: 600, color: p.ink2, base: 'top', a: 1 - e }); }
+      if (e < 0.05) return;
+      d.withAlpha(e, () => {
+        const capH = 20 * u, dr: Rect = { x: rc.x + pad, y: rc.y + pad + 24 * u, w: rc.w - 2 * pad, h: rc.h - pad * 2 - 24 * u - capH };
+        tl.draw(S, dr, 1);
+        fitText(S, tl.cap, rc.x + pad, rc.y + rc.h - pad + 2 * u, rc.w - 2 * pad, 12.5, { weight: 600, color: p.ink2, base: 'bottom' });
+      });
     });
   });
-  // pedir fuentes: solo sirve si alguien las comprueba
-  const sa = S.reveal('mit-limit', 2.6, 0.5);
-  if (sa > 0 && S.is('mit-limit')) tagText(S, S.l('¿pedir fuentes? solo si alguien las comprueba', 'ask for sources? only if someone checks them'), r.x + r.w / 2, r.y + r.h - 2 * u, { t: 'err', align: 'center', base: 'bottom', size: 13, a: sa });
-  void FS; void para;
 }

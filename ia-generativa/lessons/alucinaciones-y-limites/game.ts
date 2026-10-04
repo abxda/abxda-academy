@@ -82,16 +82,20 @@ export function drawGame(S: Frame, r: Rect, aside: Rect, a: number) {
     // ── tarjeta con la afirmación actual ──
     const showIdx = Math.min(k, n - 1), claim = CLAIMS[showIdx];
     const c = tone(S, 'lat');
-    const cardR: Rect = { x: r.x, y: r.y, w: r.w, h: Math.min(r.h, S.portrait ? r.h * 0.62 : r.h) };
+    // alto de la tarjeta: el de la afirmación más larga (no salta de una a otra) y su nota al pie
+    const size = r.w > 420 * u ? 19 : 16, note = S.l('Afirmación escrita para esta lección (ilustrativa): unas son verdaderas, otras inventadas.', 'Statement written for this lesson (illustrative): some are true, some are invented.');
+    const maxLines = Math.max(...CLAIMS.map((cl) => d.wrap(cl[S.lang], r.w - 28 * u, { size: FS(S, size), weight: 600 }).length));
+    const noteLines = d.wrap(note, r.w - 28 * u, { size: FS(S, 11.5), weight: 600 }).length;
+    const need = 36 * u + maxLines * FS(S, size) * u * 1.32 + 16 * u + noteLines * FS(S, 11.5) * u * 1.3 + 14 * u;
+    const cardR: Rect = { x: r.x, y: r.y, w: r.w, h: Math.min(r.h, need) };
     if (!g.done) {
       card(S, cardR, 'lat', { fill: 0.05 });
       d.text(S.l('Respuesta de un asistente', 'An assistant’s answer'), cardR.x + 12 * u, cardR.y + 10 * u, { size: FS(S, 12), weight: 700, color: c.ink, base: 'top' });
       d.text(`${k + 1} / ${n}`, cardR.x + cardR.w - 12 * u, cardR.y + 10 * u, { size: FS(S, 12), weight: 700, font: 'mono', color: p.mute, align: 'right', base: 'top' });
-      const size = cardR.w > 420 ? 19 : 16;
       para(S, claim[S.lang], cardR.x + 14 * u, cardR.y + 36 * u, cardR.w - 28 * u, { size, weight: 600, lh: 1.32 });
-      d.text(S.l('Afirmación escrita para esta lección (ilustrativa): unas son verdaderas, otras inventadas.', 'Statement written for this lesson (illustrative): some are true, some are invented.'), cardR.x + 14 * u, cardR.y + cardR.h - 10 * u, { size: FS(S, 11.5), weight: 600, color: p.mute, base: 'bottom', w: cardR.w - 28 * u });
+      d.text(note, cardR.x + 14 * u, cardR.y + cardR.h - 10 * u - (noteLines - 1) * FS(S, 11.5) * u * 1.3, { size: FS(S, 11.5), weight: 600, color: p.mute, base: 'bottom', w: cardR.w - 28 * u, lh: 1.3 });
     } else {
-      drawSummary(S, cardR, g);
+      drawSummary(S, { ...cardR, h: Math.min(r.h, 240 * u) }, g);
     }
   });
   // ── lateral: seis marcas y la comprobación de la última ──
@@ -100,6 +104,7 @@ export function drawGame(S: Frame, r: Rect, aside: Rect, a: number) {
 
 function drawAside(S: Frame, r: Rect, g: GameState) {
   const { d, pal: p } = S, u = S.u, n = CLAIMS.length, k = g.answers.length;
+  if (g.done && S.portrait) { drawList(S, r, r.y + 2 * u, g); return; }
   // seis casillas: ✓ acierto, ✗ error, vacío = pendiente; borde grueso = seguro
   const cs = Math.min(34 * u, (r.w - 6 * u * (n - 1)) / n), gap = 6 * u;
   const rowW = n * cs + (n - 1) * gap, x0 = r.x + Math.max(0, (r.w - rowW) / 2) * 0, y0 = r.y + 2 * u;
@@ -122,15 +127,20 @@ function drawAside(S: Frame, r: Rect, g: GameState) {
       para(S, S.lang === 'es' ? cl.tellEs : cl.tellEn, r.x + 10 * u, y + 34 * u, r.w - 20 * u, { size: 13, weight: 600, lh: 1.28 });
     }
   } else if (g.done) {
-    const lines2 = CLAIMS.map((c, i) => ({ c, a: g.answers[i] }));
-    const rowH = Math.min(24 * u, (r.y + r.h - (ty + 22 * u)) / n);
-    lines2.forEach(({ c, a }, i) => {
-      const y = ty + 22 * u + i * rowH + rowH / 2;
-      if (rowH < 15) return;
-      if (a) mark(S, r.x + 8 * u, y, a.right ? 'ok' : 'no', 6 * u, { lw: 2.2 }); else mark(S, r.x + 8 * u, y, 'dash', 6 * u, { lw: 2.2 });
-      fitText(S, `${c.short[S.lang]} · ${c.truth ? S.l('verdadera', 'true') : S.l('inventada', 'invented')}`, r.x + 22 * u, y, r.w - 24 * u, 12.5, { weight: 700, color: tone(S, c.truth ? 'dat' : 'err').ink, base: 'middle' });
-    });
+    drawList(S, r, ty + 22 * u, g);
   }
+}
+
+/** Las seis afirmaciones con su verdad y tu marca (— = sin responder). */
+function drawList(S: Frame, r: Rect, y0: number, g: GameState) {
+  const { u } = S, n = CLAIMS.length;
+  const rowH = Math.min(24 * u, (r.y + r.h - y0) / n);
+  CLAIMS.forEach((c, i) => {
+    const a = g.answers[i], y = y0 + i * rowH + rowH / 2;
+    if (rowH < 15) return;
+    if (a) mark(S, r.x + 8 * u, y, a.right ? 'ok' : 'no', 6 * u, { lw: 2.2 }); else mark(S, r.x + 8 * u, y, 'dash', 6 * u, { lw: 2.2 });
+    fitText(S, `${c.short[S.lang]} · ${c.truth ? S.l('verdadera', 'true') : S.l('inventada', 'invented')}`, r.x + 22 * u, y, r.w - 24 * u, 12.5, { weight: 700, color: tone(S, c.truth ? 'dat' : 'err').ink, base: 'middle' });
+  });
 }
 
 function drawSummary(S: Frame, r: Rect, g: GameState) {
@@ -143,6 +153,6 @@ function drawSummary(S: Frame, r: Rect, g: GameState) {
   stat(S, x, r.y + 92 * u, S.l('cuando estabas seguro', 'when you were sure'), `${s.sureRight} / ${s.sure}`, 'w', { size: 22, w: half - 24 * u });
   stat(S, r.x + half, r.y + 92 * u, S.l('cuando dudabas', 'when you doubted'), `${s.unsureRight} / ${s.unsure}`, 'sig', { size: 22, w: half - 16 * u });
   const ty = r.y + 150 * u;
-  if (ty + 30 * u < r.y + r.h) para(S, S.l('Todas sonaban igual de convincentes: la seguridad que sentías venía del tono, no de una comprobación.', 'All of them sounded equally convincing: the confidence you felt came from the tone, not from a check.'), x, ty, r.w - 32 * u, { size: 13.5, weight: 600, color: p.ink2 });
+  if (ty + 30 * u < r.y + r.h) para(S, S.l('Las seis sonaban igual de convincentes. Lo que decidió tu acierto fue lo que ya sabías o pudiste comprobar, no el tono.', 'All six sounded equally convincing. What decided your score was what you already knew or could check, not the tone.'), x, ty, r.w - 32 * u, { size: 13.5, weight: 600, color: p.ink2 });
 }
 void tagText;
