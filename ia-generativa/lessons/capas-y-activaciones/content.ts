@@ -123,8 +123,12 @@ export default defineLesson({
     },
     {
       id: 'approx-theorem',
-      es: 'Esa es la idea del teorema de aproximación universal. Cybenko lo probó en mil novecientos ochenta y nueve para sigmoides; ese año, Hornik y colegas, con otras condiciones; en mil novecientos noventa y tres se vio que vale la ReLU.',
-      en: 'That is the idea behind the universal approximation theorem. Cybenko proved it in nineteen eighty-nine for sigmoids; that year, Hornik and colleagues, under other conditions; in nineteen ninety-three it was shown that ReLU works too.',
+      es: 'Esa es la idea del teorema de aproximación universal. Cybenko lo probó en 1989 para sigmoides; ese año, Hornik y colegas, con otras condiciones; en 1993 se vio que vale la ReLU.',
+      en: 'That is the idea behind the universal approximation theorem. Cybenko proved it in 1989 for sigmoids; that year, Hornik and colleagues, under other conditions; in 1993 it was shown that ReLU works too.',
+      tts: {
+        es: 'Esa es la idea del teorema de aproximación universal. Cybenko lo probó en mil novecientos ochenta y nueve para sigmoides; ese año, Hornik y colegas, con otras condiciones; en mil novecientos noventa y tres se vio que vale la ReLU.',
+        en: 'That is the idea behind the universal approximation theorem. Cybenko proved it in nineteen eighty-nine for sigmoids; that year, Hornik and colleagues, under other conditions; in nineteen ninety-three it was shown that ReLU works too.',
+      },
       note: { es: 'Aproximación universal: con suficientes neuronas, una capa oculta basta en teoría.', en: 'Universal approximation: with enough neurons, one hidden layer is enough in theory.' },
     },
     {
@@ -139,7 +143,7 @@ export default defineLesson({
       en: 'Your turn: raise the number of neurons and watch the maximum error of the approximation; in general it drops, though not at every single step.',
       gate: {
         id: 'approx',
-        prompt: { es: 'Lleva el error máximo por debajo de 0,05.', en: 'Bring the maximum error below 0.05.' },
+        prompt: { es: 'Lleva el error máximo por debajo de 0.05.', en: 'Bring the maximum error below 0.05.' },
       },
       pad: 0.4,
     },
@@ -245,14 +249,14 @@ export default defineLesson({
       'Una capa es un grupo de neuronas que miran las mismas entradas; el pase hacia delante calcula capa por capa, de la entrada a la salida.',
       'Sin activación, dos capas equivalen a una: el producto de dos transformaciones lineales es otra transformación lineal. Apilar no suma.',
       'La no linealidad (ReLU, tanh, sigmoide) dobla el espacio: lo que una recta no separaba, tras el doblez sí se separa.',
-      'Con suficientes neuronas, una sola capa oculta puede aproximar cualquier función continua (aproximación universal), pero el teorema no dice cuántas neuronas hacen falta ni que el entrenamiento las encuentre.',
+      'Con suficientes neuronas, una sola capa oculta puede aproximar cualquier función continua sobre un conjunto cerrado y acotado (aproximación universal), pero el teorema no dice cuántas neuronas hacen falta ni que el entrenamiento las encuentre.',
       'Apilar capas multiplica los pliegues: para ciertas funciones, una red profunda necesita muchas menos neuronas que una capa única.',
     ],
     en: [
       'A layer is a group of neurons that look at the same inputs; the forward pass computes layer by layer, from input to output.',
       'Without activation, two layers equal one: the product of two linear transformations is another linear transformation. Stacking adds nothing.',
       'Nonlinearity (ReLU, tanh, sigmoid) folds space: what a straight line could not separate becomes separable after the fold.',
-      'With enough neurons, a single hidden layer can approximate any continuous function (universal approximation), but the theorem does not say how many neurons are needed nor that training will find them.',
+      'With enough neurons, a single hidden layer can approximate any continuous function on a closed, bounded set (universal approximation), but the theorem does not say how many neurons are needed nor that training will find them.',
       'Stacking layers multiplies the folds: for certain functions, a deep network needs far fewer neurons than a single layer.',
     ],
   },
@@ -308,7 +312,7 @@ $$\\Big|\\sum_{j=1}^{N}\\alpha_j\\,\\sigma(\\mathbf{w}_j\\cdot\\mathbf{x}+b_j)-f
 
 $$\\hat f(x)=f(a)+\\sum_{k=0}^{n-1}(s_k-s_{k-1})\\,\\mathrm{ReLU}(x-t_k),\\quad s_{-1}=0,$$
 
-es una red con una capa oculta de $n$ neuronas ReLU que coincide con $f$ en los nudos (interpolación lineal por tramos). Si $|f''|\\le M$, el error máximo es a lo sumo $\\dfrac{(b-a)^2M}{8n^2}$: al duplicar las neuronas, la cota se divide por cuatro. Para la curva de la escena, $M\\le 3{,}36$; con $n=24$ la cota es 0,026 y el error medido, 0,025. La razón de errores medidos no es siempre cuatro: 2,5 al pasar de 3 a 6 neuronas, 3,0 de 6 a 12, 4,1 de 12 a 24 y 3,8 de 24 a 48. Tampoco baja en cada paso (de 1 a 2, de 4 a 5 y de 7 a 8 neuronas sube un poco, porque los nudos equiespaciados caen en otros lugares). La meta del turno, 0,05, se alcanza con 17 neuronas (0,047; con 16, 0,057). Aquí los pesos se calculan, no se entrenan.
+es una red con una capa oculta de $n$ neuronas ReLU que coincide con $f$ en los nudos (interpolación lineal por tramos). Si $|f''|\\le M$, el error máximo es a lo sumo $\\dfrac{(b-a)^2M}{8n^2}$: al duplicar las neuronas, la cota se divide por cuatro. Para la curva de la escena, $M\\le 3.36$; con $n=24$ la cota es 0.026 y el error medido, 0.025. La razón de errores medidos no es siempre cuatro: 2.5 al pasar de 3 a 6 neuronas, 3.0 de 6 a 12, 4.1 de 12 a 24 y 3.8 de 24 a 48. Tampoco baja en cada paso (de 1 a 2, de 4 a 5 y de 7 a 8 neuronas sube un poco, porque los nudos equiespaciados caen en otros lugares). La meta del turno, 0.05, se alcanza con 17 neuronas (0.047; con 16, 0.057). Aquí los pesos se calculan, no se entrenan.
 
 ## Profundidad: la sierra
 
@@ -377,7 +381,7 @@ for paso in range(1500):
 print("aciertos:", ((p > 0.5) == y).mean())
 \`\`\`
 
-Salida esperada: \`aciertos: 1.0\` (los datos son separables; con otra semilla o con menos neuronas puede quedar algo por debajo). El patio de juegos de la lección usa el optimizador Adam en lugar del descenso simple (lección 9).
+Salida esperada: \`aciertos: 1.0\`. Con 6 neuronas dio 1.0 en las diez semillas probadas (0 a 9); con 3 neuronas, entre 0.81 y 1.0; con 2, entre 0.82 y 0.89 (los números aleatorios de NumPy pueden cambiar entre versiones). Son aciertos sobre los mismos puntos con los que se entrena: acertar con datos nuevos es otra pregunta (lección 10). El patio de juegos de la lección usa el optimizador Adam en lugar del descenso simple (lección 9).
 
 ## Lo que viene
 
@@ -491,7 +495,7 @@ for step in range(1500):
 print("accuracy:", ((p > 0.5) == y).mean())
 \`\`\`
 
-Expected output: \`accuracy: 1.0\` (the data are separable; with another seed or fewer neurons it may land somewhat lower). The lesson’s playground uses the Adam optimizer instead of plain descent (lesson 9).
+Expected output: \`accuracy: 1.0\`. With 6 neurons it gave 1.0 on all ten seeds tried (0 to 9); with 3 neurons, between 0.81 and 1.0; with 2, between 0.82 and 0.89 (NumPy’s random numbers may change between versions). These are hits on the same points used for training: being right on new data is a different question (lesson 10). The lesson’s playground uses the Adam optimizer instead of plain descent (lesson 9).
 
 ## What comes next
 
@@ -500,13 +504,13 @@ Computing the gradient of every weight in a network like this is backpropagation
 
   lens: {
     es: [
-      '«Más capas» no es una medida de calidad: cada capa suma costo de entrenamiento y de uso. Pide la comparación con un modelo sencillo sobre los mismos datos que ninguno vio al entrenarse, antes de aceptar que la profundidad se justifica.',
+      '«Más capas» no es una medida de calidad: cada capa suma costo de entrenamiento y de uso. Los aciertos del patio se miden sobre los mismos puntos con que se entrena; pide la comparación con un modelo sencillo sobre datos que ninguno vio, antes de aceptar que la profundidad se justifica.',
       'El teorema de aproximación universal garantiza que existe una red, no que sirva en tu caso: no dice cuántos datos, cuánto cómputo ni cuántas neuronas hacen falta. Si alguien lo invoca para vender una solución, pregunta por la evidencia en tu problema.',
       'Entrenar es sensible al punto de partida: la misma receta con otra semilla puede dar resultados distintos (pruébalo en el patio con «Reiniciar» y pocas neuronas). Pide que se repita el entrenamiento y se reporte la variabilidad, no solo la mejor corrida.',
       'Tamaño es costo: GPT-3 tiene noventa y seis capas y ciento setenta y cinco mil millones de parámetros. Cuando hablen de una «red profunda», pide el número de parámetros y el costo por tarea (lecciones 24 y 26).',
     ],
     en: [
-      '“More layers” is not a quality measure: each layer adds cost to train and to run. Ask for a comparison with a simple model on the same data that neither saw during training, before accepting that depth is justified.',
+      '“More layers” is not a quality measure: each layer adds cost to train and to run. The playground’s accuracy is measured on the same points used for training; ask for a comparison with a simple model on data that neither saw, before accepting that depth is justified.',
       'The universal approximation theorem guarantees that a network exists, not that it works in your case: it does not say how much data, compute, or how many neurons are needed. If someone invokes it to sell a solution, ask for evidence on your problem.',
       'Training is sensitive to the starting point: the same recipe with another seed can give different results (try it in the playground with “Reset” and few neurons). Ask for the training to be repeated and the variability reported, not just the best run.',
       'Size is cost: GPT-3 has ninety-six layers and one hundred seventy-five billion parameters. When they talk about a “deep network,” ask for the parameter count and the cost per task (lessons 24 and 26).',
@@ -530,13 +534,13 @@ Computing the gradient of every weight in a network like this is backpropagation
       kind: 'concept',
       q: { es: '¿Qué afirma, en esencia, el teorema de aproximación universal?', en: 'What does the universal approximation theorem say, in essence?' },
       options: [
-        { es: 'Una red con una capa oculta y suficientes neuronas puede aproximar cualquier función continua en un intervalo acotado, con la precisión que se quiera.', en: 'A network with one hidden layer and enough neurons can approximate any continuous function on a bounded interval, to any desired precision.' },
+        { es: 'Una red con una capa oculta y suficientes neuronas puede aproximar cualquier función continua en un intervalo cerrado y acotado, con la precisión que se quiera.', en: 'A network with one hidden layer and enough neurons can approximate any continuous function on a closed, bounded interval, to any desired precision.' },
         { es: 'El entrenamiento siempre encuentra los pesos correctos si hay datos suficientes.', en: 'Training always finds the right weights if there is enough data.' },
         { es: 'Con dos neuronas basta para aproximar cualquier función.', en: 'Two neurons are enough to approximate any function.' },
         { es: 'Una red profunda siempre supera a una de una sola capa.', en: 'A deep network always beats a single-layer one.' },
       ],
       answer: 0,
-      why: { es: 'Es un resultado de existencia: dice que hay una red con esa precisión, no cuántas neuronas hacen falta ni que el entrenamiento la encuentre. Tampoco compara profundidad con anchura.', en: 'It is an existence result: it says a network with that precision exists, not how many neurons are needed nor that training will find it. It does not compare depth with width either.' },
+      why: { es: 'Es un resultado de existencia: dice que hay una red con esa precisión sobre un intervalo cerrado y acotado, no cuántas neuronas hacen falta ni que el entrenamiento la encuentre. Tampoco compara profundidad con anchura.', en: 'It is an existence result: it says a network with that precision exists on a closed, bounded interval, not how many neurons are needed nor that training will find it. It does not compare depth with width either.' },
     },
     {
       kind: 'calc',
@@ -572,20 +576,22 @@ Computing the gradient of every weight in a network like this is backpropagation
   terms: [
     { id: 'layer', term: { es: 'Capa', en: 'Layer' }, def: { es: 'Grupo de neuronas que reciben las mismas entradas y calculan a la vez. Una red es una cadena de capas: entrada, una o más ocultas, y salida.', en: 'A group of neurons that receive the same inputs and compute at the same time. A network is a chain of layers: input, one or more hidden ones, and output.' } },
     { id: 'forward-pass', term: { es: 'Pase hacia delante', en: 'Forward pass' }, def: { es: 'Cálculo de la salida de una red: los números avanzan capa por capa, de la entrada a la salida.', en: 'Computing a network’s output: the numbers move on layer by layer, from input to output.' } },
-    { id: 'relu', term: { es: 'ReLU', en: 'ReLU' }, def: { es: 'Función de activación que devuelve cero si la suma es negativa y la propia suma si es positiva: máx(0, z). Una bisagra con una sola esquina.', en: 'An activation function that returns zero if the sum is negative and the sum itself if it is positive: max(0, z). A hinge with a single corner.' } },
+    { id: 'relu', term: { es: 'ReLU', en: 'ReLU' }, def: { es: 'Unidad lineal rectificada: función de activación que devuelve cero si la suma es negativa y la propia suma si es positiva, máx(0, z). Una bisagra con una sola esquina.', en: 'Rectified linear unit: an activation function that returns zero if the sum is negative and the sum itself if it is positive, max(0, z). A hinge with a single corner.' } },
     { id: 'nonlinearity', term: { es: 'No linealidad', en: 'Nonlinearity' }, def: { es: 'Propiedad de una función que no es una recta. Es lo que impide que apilar capas colapse en una sola y lo que permite doblar el espacio.', en: 'The property of a function that is not a straight line. It stops stacked layers from collapsing into one and lets a network fold space.' } },
-    { id: 'universal-approximation', term: { es: 'Aproximación universal', en: 'Universal approximation' }, def: { es: 'Teorema: una red con una capa oculta y suficientes neuronas puede aproximar cualquier función continua en un conjunto acotado, con la precisión que se quiera. No dice cuántas neuronas hacen falta ni que el entrenamiento las encuentre.', en: 'Theorem: a network with one hidden layer and enough neurons can approximate any continuous function on a bounded set, to any desired precision. It does not say how many neurons are needed nor that training will find them.' } },
-    { id: 'deep-network', term: { es: 'Red profunda', en: 'Deep network' }, def: { es: 'Red con varias capas ocultas. Cada capa aprovecha lo que la anterior ya transformó, y así logra formas complejas con menos neuronas.', en: 'A network with several hidden layers. Each layer builds on what the previous one already transformed, reaching complex shapes with fewer neurons.' } },
+    { id: 'universal-approximation', term: { es: 'Aproximación universal', en: 'Universal approximation' }, def: { es: 'Teorema: una red con una capa oculta y suficientes neuronas puede aproximar cualquier función continua sobre un conjunto cerrado y acotado, con la precisión que se quiera. No dice cuántas neuronas hacen falta ni que el entrenamiento las encuentre.', en: 'Theorem: a network with one hidden layer and enough neurons can approximate any continuous function on a closed, bounded set, to any desired precision. It does not say how many neurons are needed nor that training will find them.' } },
+    { id: 'deep-network', term: { es: 'Red profunda', en: 'Deep network' }, def: { es: 'Red con varias capas ocultas. Cada capa aprovecha lo que la anterior ya transformó; para ciertas funciones, así logra formas complejas con muchas menos neuronas que una sola capa ancha.', en: 'A network with several hidden layers. Each layer builds on what the previous one already transformed; for certain functions, this reaches complex shapes with far fewer neurons than a single wide layer.' } },
   ],
 
   sources: [
     { title: 'Approximation by superpositions of a sigmoidal function', authors: 'Cybenko, G.', year: 1989, url: 'https://doi.org/10.1007/BF02551274' },
     { title: 'Multilayer feedforward networks are universal approximators', authors: 'Hornik, K., Stinchcombe, M., White, H.', year: 1989, url: 'https://doi.org/10.1016/0893-6080(89)90020-8' },
+    { title: 'On the approximate realization of continuous mappings by neural networks', authors: 'Funahashi, K.', year: 1989, url: 'https://doi.org/10.1016/0893-6080(89)90003-8' },
     { title: 'Approximation capabilities of multilayer feedforward networks', authors: 'Hornik, K.', year: 1991, url: 'https://doi.org/10.1016/0893-6080(91)90009-T' },
     { title: 'Multilayer feedforward networks with a nonpolynomial activation function can approximate any function', authors: 'Leshno, M., Lin, V. Y., Pinkus, A., Schocken, S.', year: 1993, url: 'https://doi.org/10.1016/S0893-6080(05)80131-5' },
     { title: 'Benefits of depth in neural networks', authors: 'Telgarsky, M.', year: 2016, url: 'https://proceedings.mlr.press/v49/telgarsky16.html' },
-    { title: 'Language Models are Few-Shot Learners (GPT-3: 96 capas, 175 mil millones de parámetros)', authors: 'Brown, T. B., et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
+    { title: 'Language Models are Few-Shot Learners (GPT-3: 96 capas, 175 mil millones de parámetros; tabla 2.1)', authors: 'Brown, T. B., et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
     { title: 'Gaussian Error Linear Units (GELUs)', authors: 'Hendrycks, D., Gimpel, K.', year: 2016, url: 'https://arxiv.org/abs/1606.08415' },
+    { title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (usa la GELU en lugar de la ReLU)', authors: 'Devlin, J., Chang, M.-W., Lee, K., Toutanova, K.', year: 2019, url: 'https://arxiv.org/abs/1810.04805' },
     { title: 'Adam: A Method for Stochastic Optimization', authors: 'Kingma, D. P., Ba, J.', year: 2015, url: 'https://arxiv.org/abs/1412.6980' },
   ],
 });

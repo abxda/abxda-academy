@@ -332,10 +332,10 @@ Con vectores de longitud 1, $\\lVert a^*-a+b\\rVert$ no depende de $x$, así que
 
 | Preguntas | Con exclusión | Sin exclusión | La más cercana era una de las 3 de entrada |
 |---|---|---|---|
-| Capital–país (342) | 80,1 % (274) | 68,1 % | 19,3 % |
-| Género (90) | 85,6 % (77) | 55,6 % | 41,1 % |
+| Capital–país (342) | 80.1 % (274) | 68.1 % | 19.3 % |
+| Género (90) | 85.6 % (77) | 55.6 % | 41.1 % |
 
-Los pares los elegí yo y son relaciones limpias; el conjunto de Mikolov et al. (19 544 preguntas, 14 tipos, y solo cuenta la palabra exacta, no sinónimos) es más difícil: su mejor modelo llegó a 65,6 %. Con solo las 880 palabras de la lección el examen es mucho más fácil (94,4 % y 85,6 %): hay menos candidatos entre los que equivocarse. Linzen añade que el método mezcla la consistencia del desplazamiento con la estructura de vecindad: no mide solo «relaciones».
+Los pares los elegí yo y son relaciones limpias; el conjunto de Mikolov et al. (19 544 preguntas, 14 tipos, y solo cuenta la palabra exacta, no sinónimos) es más difícil: su mejor modelo llegó a 65.6 %. Con solo las 880 palabras de la lección el examen es mucho más fácil (94.4 % y 85.6 %): hay menos candidatos entre los que equivocarse. Linzen añade que el método mezcla la consistencia del desplazamiento con la estructura de vecindad: no mide solo «relaciones».
 
 ## Cómo se mide el sesgo en la lección
 
@@ -343,13 +343,13 @@ Con $F$ = {mujer, niña, madre, esposa, hermana, hija} y $M$ = {hombre, niño, p
 
 $$s(w)=\\frac{1}{|F|}\\sum_{f\\in F}\\cos(w,f)\\;-\\;\\frac{1}{|M|}\\sum_{m\\in M}\\cos(w,m)$$
 
-Positivo es más cerca de lo femenino. Se usan conjuntos y no un par porque «man» tiene varios sentidos. Es una versión simplificada de las pruebas de asociación de Caliskan et al. (2017). Resultado con las 52 profesiones del vocabulario: de $-0{,}16$ («boss») a $+0{,}10$ («receptionist»); 26 objetos sin género (mesa, árbol, río…) quedan entre $-0{,}05$ y $+0{,}03$. La correlación de Spearman con el puntaje «she» − «he» en GloVe completo es 0,91. El puntaje mezcla género con tema (en el texto, lo femenino aparece más junto a «vestido» o «jabón»): sirve para ver la pendiente, no para dar un veredicto sobre una persona. Si a cada vector se le resta su componente en $g=\\bar F-\\bar M$ (normalizado), el puntaje en ese eje vale 0 por construcción; aun así, adivinar si cada profesión estaba por encima o por debajo de la mediana del puntaje original, con el centroide más cercano por coseno y dejando una fuera cada vez, acierta 41 de 52 antes y 35 de 52 después (azar: 26). Es un experimento mínimo, con pocas palabras, en el espíritu del de Gonen y Goldberg (2019), quienes mostraron que los métodos para «desagregar» el sesgo en gran medida lo esconden, no lo quitan.
+Positivo es más cerca de lo femenino. Se usan conjuntos y no un par porque «man» tiene varios sentidos. Es una versión simplificada de las pruebas de asociación de Caliskan et al. (2017). Resultado con las 52 profesiones del vocabulario: de $-0{,}16$ («boss») a $+0{,}10$ («receptionist»); 26 objetos sin género (mesa, árbol, río…) quedan entre $-0{,}05$ y $+0{,}03$. La correlación de Spearman con el puntaje «she» − «he» en GloVe completo es 0.91. El puntaje mezcla género con tema (en el texto, lo femenino aparece más junto a «vestido» o «jabón»): sirve para ver la pendiente, no para dar un veredicto sobre una persona. Si a cada vector se le resta su componente en $g=\\bar F-\\bar M$ (normalizado), el puntaje en ese eje vale 0 por construcción; aun así, adivinar si cada profesión estaba por encima o por debajo de la mediana del puntaje original, con el centroide más cercano por coseno y dejando una fuera cada vez, acierta 41 de 52 antes y 35 de 52 después (azar: 26). Es un experimento mínimo, con pocas palabras, en el espíritu del de Gonen y Goldberg (2019), quienes mostraron que los métodos para «desagregar» el sesgo en gran medida lo esconden, no lo quitan.
 
 ## Búsqueda semántica
 
 El promedio de un texto con palabras $w_1,\\dots,w_n$ es $q=\\frac1n\\sum_k e_{w_k}$; se ordenan los documentos por $\\cos(q,D_j)$. Comparar contra $N$ documentos cuesta $O(N\\cdot d)$ por consulta, y con millones se usan índices aproximados. Los vectores de oraciones (Reimers y Gurevych, 2019) se calculan una sola vez por documento: encontrar el par más parecido entre 10 000 oraciones con BERT exige unos 50 millones de inferencias (unas 65 horas); con vectores de oraciones, unos 5 segundos. La tercera columna de la escena usa \`paraphrase-multilingual-MiniLM-L12-v2\` (Apache-2.0, 384 dimensiones, más de 50 idiomas; Reimers y Gurevych, 2020), con promedio de los vectores de salida y coseno. Sus puntajes se calcularon fuera de línea para las 36 preguntas de prueba.
 
-Con 36 preguntas, 19 aciertos son 52,8 % con un intervalo de Wilson al 95 % de 37 % a 68 %: un margen de unos ±15 puntos. Por eso la lección 34 insiste en el tamaño de la muestra.
+Con 36 preguntas, 19 aciertos son 52.8 % con un intervalo de Wilson al 95 % de 37 % a 68 %: un margen de unos ±15 puntos. Por eso la lección 34 insiste en el tamaño de la muestra.
 
 ## En código
 
@@ -419,7 +419,7 @@ print(cercanas(v, 3, excluir=["king", "man", "woman"]))
 
 ## De dónde salen los datos de esta lección
 
-Vectores: GloVe 6B de 100 dimensiones (Wikipedia 2014 y Gigaword 5, 6 mil millones de palabras, 400 000 de vocabulario, solo inglés), publicado por Stanford bajo la licencia *Public Domain Dedication and License v1.0*, que permite redistribuir. Se normalizan a longitud 1 y se guardan en 8 bits (error de coseno máximo 0,0095). El mapa es t-SNE (van der Maaten y Hinton, 2008) con perplejidad 20, métrica coseno y semilla 0: Wattenberg et al. (2016) advierten que en un t-SNE el tamaño de los grupos y la distancia entre ellos pueden no significar nada. Las 10 frases de soporte y las 36 preguntas de prueba las escribió el autor de la lección: son ilustrativas. Todo se regenera con los scripts de la carpeta de la lección (\`build-vectors.py\`, \`eval-search.py\`, \`eval-analogies.py\`, \`measure-data.py\`).
+Vectores: GloVe 6B de 100 dimensiones (Wikipedia 2014 y Gigaword 5, 6 mil millones de palabras, 400 000 de vocabulario, solo inglés), publicado por Stanford bajo la licencia *Public Domain Dedication and License v1.0*, que permite redistribuir. Se normalizan a longitud 1 y se guardan en 8 bits (error de coseno máximo 0.0095). El mapa es t-SNE (van der Maaten y Hinton, 2008) con perplejidad 20, métrica coseno y semilla 0: Wattenberg et al. (2016) advierten que en un t-SNE el tamaño de los grupos y la distancia entre ellos pueden no significar nada. Las 10 frases de soporte y las 36 preguntas de prueba las escribió el autor de la lección: son ilustrativas. Todo se regenera con los scripts de la carpeta de la lección (\`build-vectors.py\`, \`eval-search.py\`, \`eval-analogies.py\`, \`measure-data.py\`).
 
 ## Lo que viene
 
@@ -586,13 +586,13 @@ The vectors in this lesson are static: one word, one vector. Attention (lesson 2
       kind: 'calc',
       q: { es: 'Dos vectores son a = (3, 4) y b = (4, 3). ¿Cuánto vale su similitud coseno?', en: 'Two vectors are a = (3, 4) and b = (4, 3). What is their cosine similarity?' },
       options: [
-        { es: '0,96', en: '0.96' },
-        { es: '1,00', en: '1.00' },
-        { es: '0,60', en: '0.60' },
+        { es: '0.96', en: '0.96' },
+        { es: '1.00', en: '1.00' },
+        { es: '0.60', en: '0.60' },
         { es: '24', en: '24' },
       ],
       answer: 0,
-      why: { es: 'a·b = 3·4 + 4·3 = 24 y |a| = |b| = 5, así que cos = 24 / 25 = 0,96. Es casi 1 pero no 1: no apuntan exactamente igual. 24 es el producto punto sin dividir entre las longitudes.', en: 'a·b = 3·4 + 4·3 = 24 and |a| = |b| = 5, so cos = 24 / 25 = 0.96. It is close to 1 but not 1: they do not point exactly the same way. 24 is the dot product before dividing by the lengths.' },
+      why: { es: 'a·b = 3·4 + 4·3 = 24 y |a| = |b| = 5, así que cos = 24 / 25 = 0.96. Es casi 1 pero no 1: no apuntan exactamente igual. 24 es el producto punto sin dividir entre las longitudes.', en: 'a·b = 3·4 + 4·3 = 24 and |a| = |b| = 5, so cos = 24 / 25 = 0.96. It is close to 1 but not 1: they do not point exactly the same way. 24 is the dot product before dividing by the lengths.' },
     },
     {
       kind: 'concept',

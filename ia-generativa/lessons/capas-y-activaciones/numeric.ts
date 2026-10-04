@@ -29,7 +29,8 @@ export function drawNumeric(S: Frame, all: Rect, mode: 'sum' | 'relu') {
   // ── tiempos ──
   const rev = isR ? 3 : S.on('hook') ? S.at('hook', 0.2, 2.8, 'lin') * 3 : 0;
   const showW = isR ? 1 : S.reveal('layer', 0.1, 0.8);
-  const lab = isR ? 1 : S.reveal('layer', 0.25, 0.6);
+  const lab = isR ? 1 : S.on('hook') ? ph(S, 'hook', 0.4, 0.55, 'out') : 1;   // los nombres de las columnas aparecen ya en el gancho («capa oculta»)
+  const reluTag = isR ? ph(S, 'break', 0.45, 0.58, 'out') : 0;
   let inA = 0, fp = 0, shown = 0;           // fp: 0..2 (entrada→oculta→salida)
   let reluK = 0;                            // 0..1: aplicar ReLU a la oculta
   if (!isR) { inA = ph(S, 'forward', 0, 0.1, 'out'); fp = ph(S, 'forward', 0.12, 0.8, 'lin') * 2; shown = fp; }
@@ -90,21 +91,19 @@ export function drawNumeric(S: Frame, all: Rect, mode: 'sum' | 'relu') {
     });
   }
 
-  // ── ReLU: suma antes de activar (z) y marca de activación sobre la capa oculta ──
+  // ── ReLU: suma antes de activar (z) y nota de la neurona apagada; las etiquetas van fuera del recuadro y lejos de las aristas ──
   if (isR) {
     const a = clamp((shown - 0.98) * 6);
-    if (a > 0) d.withAlpha(a * (1 - reluK * 0.0), () => z.forEach((zv, k) => {
-      const P = N[1][k];
-      d.text(`z = ${sn(S, zv, 0)}`, P.x + r + 8 * u, P.y + 2, { size: fs(S, 14), weight: 700, font: 'mono', color: zv < 0 ? er.ink : p.ink2, base: 'middle', halo: p.stage, haloW: 4 });
+    if (a > 0) d.withAlpha(a, () => z.forEach((zv, k) => {
+      const P = N[1][k], ly = P.y + (k === 0 ? -15 : 15) * u;
+      d.text(`z = ${sn(S, zv, 0)}`, P.x + r + 22 * u, ly, { size: fs(S, 14), weight: 700, font: 'mono', color: zv < 0 ? er.ink : p.ink2, base: 'middle', halo: p.stage, haloW: 4 });
     }));
-    const ra = ph(S, 'break', 0.45, 0.58, 'out');
-    if (ra > 0) d.withAlpha(ra, () => N[1].forEach((P) => badge(S, 'ReLU', P.x, P.y + r + 15 * u, { tone: 'sig' })));
-    if (reluK > 0.5) d.withAlpha(clamp((reluK - 0.5) * 3), () => { const P = N[1][1]; d.text(S.l('negativo → 0', 'negative → 0'), P.x + r + 8 * u, P.y + 22 * u, { size: fs(S, 13), weight: 700, color: er.ink, base: 'middle', halo: p.stage, haloW: 4 }); });
+    if (reluK > 0.5) d.withAlpha(clamp((reluK - 0.5) * 3), () => { const P = N[1][1]; d.text(S.l('negativo → 0', 'negative → 0'), P.x + r + 22 * u, P.y + 38 * u, { size: fs(S, 13), weight: 700, color: er.ink, base: 'middle', halo: p.stage, haloW: 4 }); });
   }
 
   // ── etiquetas de columna y marco de la capa oculta ──
   if (lab > 0.01) d.withAlpha(lab, () => {
-    const names = [S.l('entradas', 'inputs'), S.l('capa oculta', 'hidden layer'), S.l('salida', 'output')];
+    const names = [S.l('entradas', 'inputs'), reluTag > 0.5 ? S.l('capa oculta + ReLU', 'hidden layer + ReLU') : S.l('capa oculta', 'hidden layer'), S.l('salida', 'output')];
     names.forEach((t, i) => d.text(t, cxs[i], netR.y + 14 * u, { size: fs(S, 13), weight: 700, color: i === 1 ? wt.ink : p.mute, align: 'center', base: 'middle' }));
     // la capa oculta, recuadrada
     d.rect(cxs[1] - r - 14 * u, N[1][0].y - r - 22 * u, 2 * r + 28 * u, sp + 2 * r + 40 * u, { stroke: wt.c, lw: 1.6, dash: [5, 4], r: 6 });

@@ -18,7 +18,7 @@ export function drawActs(S: Frame, all: Rect) {
   const acts: Act[] = [
     { id: 'sigmoid', f: sigmoid, xr: [-6, 6], yr: [-0.25, 1.25], name: S.l('sigmoide', 'sigmoid'), formula: 'σ(z) = 1 / (1 + e⁻ᶻ)', range: S.l('sale entre 0 y 1', 'output between 0 and 1'), tone: 'sig' },
     { id: 'tanh', f: Math.tanh, xr: [-3, 3], yr: [-1.4, 1.4], name: S.l('tangente hiperbólica', 'hyperbolic tangent'), formula: 'tanh(z) = 2σ(2z) − 1', range: S.l('sale entre −1 y 1', 'output between −1 and 1'), tone: 'lat' },
-    { id: 'relu', f: relu, xr: [-2.2, 2.2], yr: [-0.4, 2.2], name: 'ReLU', formula: 'ReLU(z) = max(0, z)', range: S.l('cero si es negativa, igual si es positiva', 'zero if negative, unchanged if positive'), tone: 'w' },
+    { id: 'relu', f: relu, xr: [-2.2, 2.2], yr: [-0.4, 2.2], name: 'ReLU', formula: 'ReLU(z) = max(0, z)', range: S.l('cero si z < 0; z si z ≥ 0', 'zero if z < 0; z if z ≥ 0'), tone: 'w' },
   ];
   // franja superior: suma → activación → salida
   const stripH = 34 * u, strip: Rect = { x: all.x, y: all.y, w: all.w, h: stripH };
@@ -43,8 +43,8 @@ export function drawActs(S: Frame, all: Rect) {
     const v = reveals[i]; if (v <= 0) return;
     const c = cells[i], t = tone(S, a.tone);
     // en vertical, el gráfico va a la izquierda y el texto a la derecha; en horizontal, el texto va debajo
-    const plotR: Rect = S.portrait ? { x: c.x, y: c.y, w: c.w * 0.58, h: c.h } : { x: c.x, y: c.y, w: c.w, h: c.h - 76 * u };
-    const textR: Rect = S.portrait ? { x: c.x + c.w * 0.6, y: c.y, w: c.w * 0.4, h: c.h } : { x: c.x, y: c.y + plotR.h + 4 * u, w: c.w, h: 72 * u };
+    const plotR: Rect = S.portrait ? { x: c.x, y: c.y, w: c.w * 0.46, h: c.h } : { x: c.x, y: c.y, w: c.w, h: c.h - 76 * u };
+    const textR: Rect = S.portrait ? { x: c.x + c.w * 0.49, y: c.y, w: c.w * 0.51, h: c.h } : { x: c.x, y: c.y + plotR.h + 4 * u, w: c.w, h: 72 * u };
     d.withAlpha(v, () => {
       const plot = new Plot(S, plotR, { xr: a.xr, yr: a.yr, originAxes: true, pad: { l: 8, r: 8, t: 8, b: 8 } });
       d.rect(plot.r.x, plot.r.y, plot.r.w, plot.r.h, { fill: alpha(p.surface, 0.7), stroke: p.line, lw: 1 });
@@ -53,22 +53,26 @@ export function drawActs(S: Frame, all: Rect) {
       plot.curve(a.f, a.tone, 3.4);
       if (a.id === 'relu') {
         const ca = ph(S, 'relu', 0.55, 0.78, 'out');
-        if (ca > 0) d.withAlpha(ca, () => { plot.dot(0, 0, 6, 'w', { ring: true }); plot.label(S.l('esquina', 'corner'), 0.12, -0.18, 'w', { size: 13, align: 'left' }); });
+        if (ca > 0) d.withAlpha(ca, () => { plot.dot(0, 0, 6, 'w', { ring: true }); plot.label(S.l('esquina', 'corner'), 0.3, -0.2, 'w', { size: 13, align: 'left' }); });
       }
       if (tags > 0) d.withAlpha(tags, () => {
         const px = plot.X(a.xr[1] * 0.35), py = plot.Y(a.f(a.xr[1] * 0.35));
-        const lx = plot.r.x + plot.r.w - 6 * u, ly = plot.r.y + 14 * u;
+        const lx = plot.r.x + 6 * u, ly = plot.r.y + 14 * u;
         void px; void py;
-        badge(S, S.l('no lineal', 'nonlinear'), lx, ly, { tone: a.tone, align: 'right' });
+        badge(S, S.l('no lineal', 'nonlinear'), lx, ly, { tone: a.tone, align: 'left' });
       });
       if (lin > 0 && i === 2) d.withAlpha(lin, () => plot.label(S.l('lineal', 'linear'), a.xr[1] * 0.55, a.xr[1] * 0.55 + 0.02, 'mute', { size: 12, align: 'right', base: 'bottom' }));
     });
     d.withAlpha(v, () => {
-      const tx = textR.x + (S.portrait ? 4 * u : 0), ty = textR.y + (S.portrait ? c.h * 0.3 : 16 * u);
-      const wrapW = textR.w - 8 * u;
-      d.text(a.name, tx, ty, { size: fs(S, 15), weight: 800, color: t.ink, base: 'middle', w: wrapW });
-      d.text(a.formula, tx, ty + 22 * u, { size: fs(S, 13), weight: 600, font: 'mono', color: p.ink, base: 'middle' });
-      d.text(a.range, tx, ty + 44 * u, { size: fs(S, 12), weight: 500, color: p.ink2, base: 'middle', w: wrapW });
+      const tx = textR.x + (S.portrait ? 4 * u : 0), wrapW = textR.w - 8 * u;
+      let ty = textR.y + (S.portrait ? Math.max(4 * u, c.h * 0.5 - 40 * u) : 6 * u);
+      const put = (str: string, o: { size: number; weight: number; font?: 'mono'; color: string }, gap: number) => {
+        const r = d.text(str, tx, ty, { ...o, base: 'top', w: wrapW });
+        ty += r.h + gap * u;
+      };
+      put(a.name, { size: fs(S, 15), weight: 800, color: t.ink }, 3);
+      put(a.formula, { size: fs(S, 13), weight: 600, font: 'mono', color: p.ink }, 3);
+      put(a.range, { size: fs(S, 12), weight: 500, color: p.ink2 }, 0);
     });
   });
 }
@@ -115,7 +119,7 @@ export function drawFold(S: Frame, all: Rect) {
     const ya = S.at('fold-sum', 0, 0.8);
     if (ya > 0) d.withAlpha(ya, () => {
       d.line(x0, plot.r.y, x0, plot.r.y + plot.r.h, p.lineStrong, 1.6);
-      d.text(S.l('neurona 2', 'neuron 2'), x0 + 8 * u, plot.r.y + 12 * u, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'middle' });
+      d.text(S.l('neurona 2', 'neuron 2'), x0 + 16 * u, plot.r.y + 40 * u, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'middle' });
       d.text(S.l('neurona 1', 'neuron 1'), plot.r.x + plot.r.w - 8 * u, y0 + 22 * u, { size: fs(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'middle' });
     });
     // la recta separadora

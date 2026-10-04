@@ -363,7 +363,7 @@ export function drawPaper(S: Frame, vis: number) {
   d.withAlpha(a, () => {
     const cards: { big: string; l1: string; l2: string; t: 'w' | 'dat' | 'sig' }[] = [
       { big: '÷ 10 000', l1: S.l('parámetros entrenables', 'trainable parameters'), l2: 'GPT-3 175B', t: 'w' },
-      { big: '÷ 3', l1: S.l('memoria de GPU al entrenar', 'GPU memory when training'), l2: S.l('de 1,2 TB a 350 GB', 'from 1.2 TB to 350 GB'), t: 'dat' },
+      { big: '÷ 3', l1: S.l('memoria de GPU al entrenar', 'GPU memory when training'), l2: S.l('de 1.2 TB a 350 GB', 'from 1.2 TB to 350 GB'), t: 'dat' },
       { big: S.l('≥ completo', '≥ full'), l1: S.l('calidad frente al ajuste completo', 'quality vs full fine-tuning'), l2: S.l('RoBERTa, DeBERTa, GPT-2, GPT-3 (en sus pruebas)', 'RoBERTa, DeBERTa, GPT-2, GPT-3 (in its tests)'), t: 'sig' },
     ];
     const n = 3, gap = 14 * u;

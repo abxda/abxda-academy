@@ -6,11 +6,12 @@
 // por parámetro; se explica en la lección 9). El gradiente se calcula con retropropagación (lección 8): aquí es
 // una caja negra que ya funciona; la lección siguiente la abre.
 //
-// Reproducible: todo sale de rng(semilla) del kit (nada de Math.random). Mismos datos + misma configuración + mismas
+// Reproducible: todo sale de rng(semilla) del kit (ningún azar del navegador). Mismos datos + misma configuración + mismas
 // semillas => exactamente los mismos pesos tras el mismo número de pasos.
 //
-// Costo: un paso sobre 180 puntos con una red 2-8-8-8-1 son ~95 000 multiplicaciones-sumas (≈0,15 ms). El ritmo de
-// pasos por fotograma lo fija la escena (no el procesador); `trainSteps` solo lo recorta con un presupuesto de ms.
+// Costo: un paso sobre 180 puntos con una red 2-8-8-8-1 son ~95 000 multiplicaciones-sumas (medido en Node: 0,32 ms; 0,07 ms
+// con una red 2-8-1). El ritmo de pasos por fotograma lo fija la escena (según el tiempo del segmento o, en los turnos,
+// según el dt del fotograma); aquí no se lee el reloj.
 import { gauss, hash, rng } from '../../../../../theme/kit';
 
 export type Act = 'linear' | 'relu' | 'tanh' | 'sigmoid';
@@ -139,15 +140,10 @@ export function trainStep(net: Net, data: Pt[], lr = 0.03) {
   }
 }
 
-/** Hasta `n` pasos, sin pasarse de `ms` milisegundos (siempre hace al menos uno). Devuelve cuántos hizo. */
-export function trainSteps(net: Net, data: Pt[], n: number, ms = 8, lr = 0.03): number {
-  const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
-  let k = 0;
-  while (k < n) {
-    trainStep(net, data, lr); k++;
-    if (typeof performance !== 'undefined' && performance.now() - t0 > ms) break;
-  }
-  return k;
+/** `n` pasos seguidos. Devuelve cuántos hizo (n). */
+export function trainSteps(net: Net, data: Pt[], n: number, lr = 0.03): number {
+  for (let k = 0; k < n; k++) trainStep(net, data, lr);
+  return Math.max(0, n);
 }
 
 /** Exactitud y pérdida actuales (sin entrenar). */

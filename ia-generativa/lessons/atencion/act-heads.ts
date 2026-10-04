@@ -239,7 +239,7 @@ export function drawFew(S: Frame) {
       return Math.max(bs * u * 1.1, d.wrap(label, pr.w - bw - 10 * u, { size: ls, weight: 600 }).length * 1.2 * ls * u);
     };
     const l1 = S.l('cabezas con el mayor peso de «este» en una marca: [CLS], [SEP] o el punto', 'heads with the biggest weight of “it” on a mark: [CLS], [SEP], or the period');
-    const l2 = S.l('cabezas que giran como la elegida: más de 0,3 con «pesado» en el paquete y con «cansado» en el robot', 'heads that swing like the chosen one: over 0.3 on the package with “heavy” and on the robot with “tired”');
+    const l2 = S.l('cabezas que giran como la elegida: más de 0.3 con «pesado» en el paquete y con «cansado» en el robot', 'heads that swing like the chosen one: over 0.3 on the package with “heavy” and on the robot with “tired”');
     const b1 = `${R.grid.nSpecialTop} / 144`, b2 = `${R.flip.nFlip} / 144`;
     const step = Math.max(S.portrait ? 64 * u : 96 * u, heightOf(b1, l1) + 14 * u);
     stat(pr.y + (S.portrait ? 2 : 8) * u, b1, l1, 'err', S.reveal('real-few', 2.4, 0.6));

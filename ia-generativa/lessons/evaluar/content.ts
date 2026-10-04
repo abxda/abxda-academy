@@ -45,7 +45,7 @@ export default defineLesson({
     },
     {
       id: 'saturation',
-      es: 'En 2020, GPT-3 acertó el 43,9 % de MMLU; el azar da 25 %. En 2023, GPT-4 llegó al 86,4 %. El nivel de un experto humano se estima en 89,8 %.',
+      es: 'En 2020, GPT-3 acertó el 43.9 % de MMLU; el azar da 25 %. En 2023, GPT-4 llegó al 86.4 %. El nivel de un experto humano se estima en 89.8 %.',
       en: 'In 2020, GPT-3 scored 43.9% on MMLU; chance is 25%. In 2023, GPT-4 reached 86.4%. Expert human level is estimated at 89.8%.',
       tts: {
         es: 'En dos mil veinte, ge pe te tres acertó el cuarenta y tres coma nueve por ciento de eme eme ele u; el azar da veinticinco por ciento. En dos mil veintitrés, ge pe te cuatro llegó al ochenta y seis coma cuatro por ciento. El nivel de un experto humano se estima en ochenta y nueve coma ocho por ciento.',
@@ -55,7 +55,7 @@ export default defineLesson({
     },
     {
       id: 'ceiling',
-      es: 'Cuando los mejores rozan el techo, un punto más o menos ya no distingue nada. Y el examen mismo falla: se estima que el 6,49 % de las preguntas de MMLU contiene errores.',
+      es: 'Cuando los mejores rozan el techo, un punto más o menos ya no distingue nada. Y el examen mismo falla: se estima que el 6.49 % de las preguntas de MMLU contiene errores.',
       en: 'When the best models touch the ceiling, a point more or less distinguishes nothing. And the exam itself has flaws: an estimated 6.49% of MMLU questions contain errors.',
       tts: {
         es: 'Cuando los mejores rozan el techo, un punto más o menos ya no distingue nada. Y el examen mismo falla: se estima que el seis coma cuarenta y nueve por ciento de las preguntas de eme eme ele u contiene errores.',
@@ -65,7 +65,7 @@ export default defineLesson({
     },
     {
       id: 'protocol',
-      es: 'También importa cómo se pregunta. Gemini Ultra sacó 83,7 % con cinco ejemplos y 90,04 % votando entre 32 razonamientos. Solo la segunda cifra supera el nivel de los expertos.',
+      es: 'También importa cómo se pregunta. Gemini Ultra sacó 83.7 % con cinco ejemplos y 90.04 % votando entre 32 razonamientos. Solo la segunda cifra supera el nivel de los expertos.',
       en: 'How you ask matters too. Gemini Ultra scored 83.7% with five examples and 90.04% by voting among 32 reasoning attempts. Only the second figure beats the expert level.',
       tts: {
         es: 'También importa cómo se pregunta. Gemini Ultra sacó ochenta y tres coma siete por ciento con cinco ejemplos y noventa coma cero cuatro por ciento votando entre treinta y dos razonamientos. Solo la segunda cifra supera el nivel de los expertos.',
@@ -346,7 +346,7 @@ Con $k$ aciertos en $n$ casos, la nota es $\\hat p = k/n$. Su margen aproximado 
 
 $$\\hat p \\pm 1{,}96\\sqrt{\\hat p\\,(1-\\hat p)/n}$$
 
-que en el peor caso ($\\hat p = 0{,}5$) vale $\\approx 1/\\sqrt{n}$: unos 10 puntos con 100 casos, 5 con 400 y 2,5 con 1600. Con pocos casos, o con notas cerca de 0 % o de 100 %, se prefiere el intervalo de Wilson (1927), que es el que usa la escena:
+que en el peor caso ($\\hat p = 0{,}5$) vale $\\approx 1/\\sqrt{n}$: unos 10 puntos con 100 casos, 5 con 400 y 2.5 con 1600. Con pocos casos, o con notas cerca de 0 % o de 100 %, se prefiere el intervalo de Wilson (1927), que es el que usa la escena:
 
 $$\\frac{\\hat p + \\dfrac{z^2}{2n} \\pm z\\sqrt{\\dfrac{\\hat p(1-\\hat p)}{n} + \\dfrac{z^2}{4n^2}}}{1 + z^2/n}, \\qquad z = 1{,}96.$$
 
@@ -377,7 +377,7 @@ Con $a = 0{,}70$ y $c = 0{,}25$ sale $0{,}775$. Un modelo B con $a = 0{,}76$ y $
 
 Zheng et al. (2023) midieron sesgo de posición, sesgo de longitud, una posible preferencia por las respuestas propias (no confirmada) y límites de razonamiento al calificar. Dos medidas útiles: la *consistencia* (porcentaje de veces que el veredicto se mantiene al invertir el orden) y la concordancia $p_o$ con personas. Para descontar el azar, $\\kappa = (p_o - p_e)/(1 - p_e)$. También el protocolo mueve la cifra: Sclar et al. (2023) hallaron diferencias de hasta 76 puntos de exactitud solo por cambiar el formato del *prompt* en un modelo abierto con pocos ejemplos. Y los benchmarks se agotan: Phan et al. (2025) construyeron un examen nuevo de 2500 preguntas porque los modelos ya superan el 90 % en MMLU.
 
-La cifra de 90,04 % de Gemini Ultra usa 32 razonamientos por pregunta con un criterio de «enrutamiento por incertidumbre»: si los razonamientos coinciden lo suficiente gana la mayoría, y si no se usa la respuesta directa del modelo. Con cinco ejemplos y respuesta directa la misma familia saca 83,7 % (Gemini Team, 2023).
+La cifra de 90.04 % de Gemini Ultra usa 32 razonamientos por pregunta con un criterio de «enrutamiento por incertidumbre»: si los razonamientos coinciden lo suficiente gana la mayoría, y si no se usa la respuesta directa del modelo. Con cinco ejemplos y respuesta directa la misma familia saca 83.7 % (Gemini Team, 2023).
 
 ## Deriva: ¿capacidad o comportamiento?
 

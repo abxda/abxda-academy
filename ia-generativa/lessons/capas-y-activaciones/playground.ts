@@ -9,7 +9,7 @@ import {
   collapseLinear, evaluate, gridOf, makeData, makeNet, paramCount, sizesOf, trainSteps,
   type Act, type DataId, type Net, type Pt,
 } from './mlp';
-import { check, fs, ph, sn } from './shared';
+import { check, fs, nf, pct, ph, sn } from './shared';
 
 // ── datos (se generan una sola vez) ───────────────────────────────────────────────────────────────
 const DATA: Partial<Record<DataId, { pts: Pt[]; order: number[] }>> = {};
@@ -30,9 +30,9 @@ export function newPanel(spec: Spec, n: number): Panel {
 }
 const fusedOf = (p: Panel) => (p.spec.hidden === 0 || p.spec.act === 'linear' ? collapseLinear(p.net) : null);
 
-export function advance(p: Panel, k: number, ms = 8) {
+export function advance(p: Panel, k: number) {
   if (k <= 0) return;
-  p.steps += trainSteps(p.net, p.pts, k, ms, LR);
+  p.steps += trainSteps(p.net, p.pts, k, LR);
   evaluate(p.net, p.pts);
   gridOf(p.net, p.n, p.grid);
   p.acc = p.net.acc; p.loss = p.net.loss; p.fused = fusedOf(p);
@@ -64,8 +64,10 @@ const GOAL: Record<Gate, number> = { B: 0.95, C: 0.9 };
 const LIVE_CAP = 6000;
 const ACTS: Act[] = ['linear', 'relu', 'tanh', 'sigmoid'];
 
-interface PG { demos: Record<string, Panel>; live: Partial<Record<Gate, Panel>>; key: Partial<Record<Gate, string>>; bump: Record<Gate, number>; acc: Partial<Record<Gate, number>>; run: Partial<Record<Gate, number>> }
-const pgOf = (S: Frame): PG => (S.st.pg ??= { demos: {}, live: {}, key: {}, bump: { B: 0, C: 0 }, acc: {}, run: {} } as PG);
+interface PG { demos: Record<string, Panel>; live: Partial<Record<Gate, Panel>>; key: Partial<Record<Gate, string>>; bump: Record<Gate, number>; acc: Partial<Record<Gate, number>>; run: Partial<Record<Gate, number>>; cap: number }
+const pgOf = (S: Frame): PG => (S.st.pg ??= { demos: {}, live: {}, key: {}, bump: { B: 0, C: 0 }, acc: {}, run: {}, cap: 40 } as PG);
+/** Pasos máximos por fotograma de las demos de la voz (al saltar a mitad de un segmento se pone al día en pocos fotogramas). */
+const DEMO_FRAME_CAP = 300;
 
 const cfgOf = (S: Frame, g: Gate) => {
   const pf = PFX[g];
@@ -73,7 +75,7 @@ const cfgOf = (S: Frame, g: Gate) => {
   const act = (ACTS.includes(S.p[`${pf}act`]) ? S.p[`${pf}act`] : 'relu') as Act;
   return { hidden, width, act };
 };
-const seedFor = (g: Gate, hidden: number, width: number, act: Act, bump: number) => (g === 'B' ? 1000 : 2000) + hidden * 97 + width * 13 + ACTS.indexOf(act) * 7 + bump * 1009;
+export const seedFor = (g: Gate, hidden: number, width: number, act: Act, bump: number) => (g === 'B' ? 1000 : 2000) + hidden * 97 + width * 13 + ACTS.indexOf(act) * 7 + bump * 1009;
 
 export function liveSpec(S: Frame, g: Gate): Spec {
   const c = cfgOf(S, g), pg = pgOf(S);
@@ -96,7 +98,7 @@ export function pgUpdate(S: Frame): { B: boolean; C: boolean } {
     if (!p) p = pg.demos[k] = newPanel(dm, dm.n);
     const target = dm.train ? stepsAt(S.since(dm.from) - 0.8) : 0;
     if (p.steps > target) p = pg.demos[k] = newPanel(dm, dm.n);       // se retrocedió dentro del segmento
-    if (p.steps < target) advance(p, target - p.steps);
+    if (p.steps < target) advance(p, Math.min(target - p.steps, DEMO_FRAME_CAP));
   }
   // 2) las redes de los turnos
   for (const [g, from, to] of [['B', 'try2', 'shapes'], ['C', 'try3', 'recap']] as [Gate, string, string][]) {
@@ -108,8 +110,10 @@ export function pgUpdate(S: Frame): { B: boolean; C: boolean } {
     if (training && p.steps < LIVE_CAP) {
       const rate = S.reduced ? 3000 : 13.5 + 0.9 * p.steps;          // pasos por segundo (dt acotado a 0,05 s por el reproductor)
       pg.run[g] = (pg.run[g] ?? 0) + rate * S.dt;
-      const k = Math.min(Math.floor(pg.run[g]!), 40);
-      if (k >= 1) { advance(p, k); pg.run[g]! -= k; if (pg.run[g]! > 40) pg.run[g] = 0; }
+      // presupuesto por fotograma: baja si el fotograma anterior fue lento (dt grande) y sube si fue holgado; no se lee el reloj
+      pg.cap = S.dt > 0.034 ? Math.max(4, Math.floor(pg.cap * 0.7)) : S.dt < 0.022 ? Math.min(40, pg.cap + 1) : pg.cap;
+      const k = Math.min(Math.floor(pg.run[g]!), pg.cap);
+      if (k >= 1) { advance(p, k); pg.run[g]! -= k; if (pg.run[g]! > pg.cap) pg.run[g] = 0; }
     }
     if (p.steps >= 12 && p.acc >= GOAL[g]) won[g] = true;
   }
@@ -194,8 +198,8 @@ function drawAside(S: Frame, r: Rect, p: Panel, gate: Gate | null, a: number) {
     // lecturas
     const items: { l: string; v: string; t: 'ink' | 'err' | 'dat' }[] = [
       { l: S.l('pasos', 'steps'), v: String(p.steps), t: 'ink' },
-      { l: S.l('pérdida', 'loss'), v: S.n(p.loss, 2), t: 'err' },
-      { l: S.l('aciertos', 'accuracy'), v: `${S.n(p.acc * 100, 0)} %`, t: ok ? 'dat' : 'ink' },
+      { l: S.l('pérdida', 'loss'), v: nf(S, p.loss, 2), t: 'err' },
+      { l: S.l('aciertos', 'accuracy'), v: pct(S, p.acc), t: ok ? 'dat' : 'ink' },
     ];
     const cw = r.w / 3;
     items.forEach((it, i) => {
@@ -203,8 +207,9 @@ function drawAside(S: Frame, r: Rect, p: Panel, gate: Gate | null, a: number) {
       d.text(it.v, r.x + i * cw, r.y + 34 * u, { size: fs(S, 22), weight: 700, font: 'mono', color: it.t === 'ink' ? pl.ink : tone(S, it.t).ink, base: 'middle' });
     });
     if (goal !== null) {
-      d.text(S.l(`meta ${S.n(goal * 100, 0)} %`, `goal ${S.n(goal * 100, 0)} %`), r.x + 2 * cw, r.y + 51 * u, { size: fs(S, 12), weight: 700, color: ok ? dt.ink : pl.mute, base: 'middle' });
-      if (ok) check(S, r.x + 2 * cw + 62 * u, r.y + 51 * u, 11 * u, dt.c);
+      const gt = S.l(`meta ${pct(S, goal)}`, `goal ${pct(S, goal)}`), gw = d.measure(gt, { size: fs(S, 12), weight: 700 });
+      d.text(gt, r.x + 2 * cw, r.y + 51 * u, { size: fs(S, 12), weight: 700, color: ok ? dt.ink : pl.mute, base: 'middle' });
+      if (ok) check(S, r.x + 2 * cw + gw + 14 * u, r.y + 51 * u, 11 * u, dt.c);
     }
     // curva de la pérdida
     drawLoss(S, loss, [p]);
@@ -213,10 +218,13 @@ function drawAside(S: Frame, r: Rect, p: Panel, gate: Gate | null, a: number) {
     // pie: configuración, parámetros, equivalencia lineal, consejo
     const lines: { t: string; c: string; w?: number }[] = [{ t: describe(S, p.spec), c: pl.ink, w: 700 }];
     lines.push({ t: S.l(`${p.params} parámetros`, `${p.params} parameters`), c: pl.mute });
-    if (p.fused) lines.push({ t: S.l(`equivale a 1 neurona: w = (${sn(S, p.fused[0], 2)}; ${sn(S, p.fused[1], 2)}), b = ${sn(S, p.fused[2], 2)}`, `equals 1 neuron: w = (${sn(S, p.fused[0], 2)}, ${sn(S, p.fused[1], 2)}), b = ${sn(S, p.fused[2], 2)}`), c: wt.ink, w: 700 });
+    if (p.fused) {
+      const w = `w = (${sn(S, p.fused[0], 2)}; ${sn(S, p.fused[1], 2)}), b = ${sn(S, p.fused[2], 2)}`, we = `w = (${sn(S, p.fused[0], 2)}, ${sn(S, p.fused[1], 2)}), b = ${sn(S, p.fused[2], 2)}`;
+      lines.push({ t: p.spec.hidden === 0 ? S.l(`su recta: ${w}`, `its line: ${we}`) : S.l(`equivale a 1 neurona: ${w}`, `equals 1 neuron: ${we}`), c: wt.ink, w: 700 });
+    }
     if (gate) {
       if (ok) lines.push({ t: S.l('Separado.', 'Separated.'), c: dt.ink, w: 700 });
-      else if (p.steps >= 700) lines.push({ t: S.l(`Se estancó en ${S.n(p.acc * 100, 0)} %: prueba otra activación, más neuronas o «Reiniciar».`, `Stuck at ${S.n(p.acc * 100, 0)}%: try another activation, more neurons, or “Reset”.`), c: er.ink, w: 600 });
+      else if (p.steps >= 700) lines.push({ t: S.l(`Se estancó en ${pct(S, p.acc)}: prueba otra activación, más neuronas o «Reiniciar».`, `Stuck at ${pct(S, p.acc)}: try another activation, more neurons, or “Reset”.`), c: er.ink, w: 600 });
     }
     let y = st.y + 10 * u;
     for (const ln of lines) { const o = d.text(ln.t, st.x, y, { size: fs(S, 13), weight: ln.w ?? 500, color: ln.c, base: 'middle', w: st.w }); y += Math.max(o.h, 18 * u) + 3 * u; if (y > st.y + st.h + 30 * u) break; }
@@ -281,8 +289,9 @@ function drawDuo(S: Frame, all: Rect, mode: Extract<Mode, { kind: 'duo' }>, ps: 
     drawPoints(S, plot, D.pts, { r: Math.max(2.4, side / 90) });
     const tx = R_.x + 2 * u, ty = R_.y + side + 12 * u, ok = p!.acc >= 0.95;
     d.text(`${'AB'[i]} · ${describe(S, p!.spec)}`, tx, ty, { size: fs(S, 13), weight: 800, color: pl.ink, base: 'middle', w: side });
-    d.text(`${S.n(p!.acc * 100, 0)} %`, tx, ty + 30 * u + (S.portrait ? 12 * u : 0), { size: fs(S, 22), weight: 700, font: 'mono', color: ok ? dt.ink : pl.ink, base: 'middle' });
-    d.text(S.l('aciertos', 'accuracy'), tx + (S.portrait ? 64 : 70) * u, ty + 31 * u + (S.portrait ? 12 * u : 0), { size: fs(S, 12), weight: 600, color: pl.mute, base: 'middle' });
+    const pv = pct(S, p!.acc), py = ty + 30 * u + (S.portrait ? 12 * u : 0), pw = d.measure(pv, { size: fs(S, 22), weight: 700, font: 'mono' });
+    d.text(pv, tx, py, { size: fs(S, 22), weight: 700, font: 'mono', color: ok ? dt.ink : pl.ink, base: 'middle' });
+    d.text(S.l('aciertos', 'accuracy'), tx + pw + 8 * u, py + u, { size: fs(S, 12), weight: 600, color: pl.mute, base: 'middle' });
   });
   drawLoss(S, curves, [ps[0], ps[1]]);
   const ky = curves.y + curves.h + 6 * u;

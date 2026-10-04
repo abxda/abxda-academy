@@ -172,13 +172,13 @@ export default defineLesson({
     },
     {
       id: 'result',
-      es: 'En 2012, AlexNet logró un error top-5 de 15,3 %. El segundo lugar, con métodos clásicos, quedó en 26,2 %.',
+      es: 'En 2012, AlexNet logró un error top-5 de 15.3 %. El segundo lugar, con métodos clásicos, quedó en 26.2 %.',
       en: 'In 2012, AlexNet reached a top-5 error of 15.3%. The runner-up, using classic methods, scored 26.2%.',
       tts: {
         es: 'En dos mil doce, alex net logró un error top cinco de quince coma tres por ciento. El segundo lugar, con métodos clásicos, quedó en veintiséis coma dos por ciento.',
         en: 'In twenty twelve, alex net reached a top five error of fifteen point three percent. The runner-up, using classic methods, scored twenty-six point two percent.',
       },
-      note: { es: '2012: error top-5 de 15,3 % frente a 26,2 % del segundo lugar.', en: '2012: top-5 error of 15.3% versus the runner-up’s 26.2%.' },
+      note: { es: '2012: error top-5 de 15.3 % frente a 26.2 % del segundo lugar.', en: '2012: top-5 error of 15.3% versus the runner-up’s 26.2%.' },
       pad: 0.5,
     },
     {
@@ -255,7 +255,7 @@ export default defineLesson({
     },
     {
       id: 'resnet-win',
-      es: 'Con atajos, más capas volvieron a mejorar el resultado. En 2015, un conjunto de ResNets de hasta 152 capas logró un error top-5 de 3,57 % y ganó el concurso.',
+      es: 'Con atajos, más capas volvieron a mejorar el resultado. En 2015, un conjunto de ResNets de hasta 152 capas logró un error top-5 de 3.57 % y ganó el concurso.',
       en: 'With shortcuts, more layers improved results again. In 2015, an ensemble of ResNets with up to 152 layers reached a top-5 error of 3.57% and won the contest.',
       tts: {
         es: 'Con atajos, más capas volvieron a mejorar el resultado. En dos mil quince, un conjunto de res nets de hasta ciento cincuenta y dos capas logró un error top cinco de tres coma cincuenta y siete por ciento y ganó el concurso.',
@@ -265,7 +265,7 @@ export default defineLesson({
     },
     {
       id: 'story-chart',
-      es: 'En seis ediciones del concurso, el error del ganador cayó de 28,2 % a 3,57 %. Las redes ganadoras pasaron de 8 capas en 2012 a 152 en 2015.',
+      es: 'En seis ediciones del concurso, el error del ganador cayó de 28.2 % a 3.57 %. Las redes ganadoras pasaron de 8 capas en 2012 a 152 en 2015.',
       en: 'Across six editions of the contest, the winner’s error fell from 28.2% to 3.57%. The winning networks went from 8 layers in 2012 to 152 in 2015.',
       tts: {
         es: 'En seis ediciones del concurso, el error del ganador cayó de veintiocho coma dos por ciento a tres coma cincuenta y siete por ciento. Las redes ganadoras pasaron de ocho capas en dos mil doce a ciento cincuenta y dos en dos mil quince.',
@@ -275,7 +275,7 @@ export default defineLesson({
     },
     {
       id: 'human',
-      es: 'Un anotador humano experto tuvo 5,1 % en una muestra; otro, 12 %. Pero esto mide una tarea concreta: mil categorías, una etiqueta por foto. No es entender escenas.',
+      es: 'Un anotador humano experto tuvo 5.1 % en una muestra; otro, 12 %. Pero esto mide una tarea concreta: mil categorías, una etiqueta por foto. No es entender escenas.',
       en: 'One expert human annotator scored 5.1% on a sample; another, 12%. But this measures one specific task: a thousand categories, one label per photo. It is not understanding scenes.',
       tts: {
         es: 'Un anotador humano experto tuvo cinco coma uno por ciento en una muestra; otro, doce por ciento. Pero esto mide una tarea concreta: mil categorías, una etiqueta por foto. No es entender escenas.',
@@ -285,13 +285,13 @@ export default defineLesson({
     },
     {
       id: 'compute-growth',
-      es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada 3,4 meses entre 2012 y 2017, según OpenAI: más de 300 000 veces en total.',
+      es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada 3.4 meses entre 2012 y 2017, según OpenAI: más de 300 000 veces en total.',
       en: 'Counted in operations, the compute of the largest training runs doubled every 3.4 months between 2012 and 2017, according to OpenAI: over 300,000 times in all.',
       tts: {
         es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada tres coma cuatro meses entre dos mil doce y dos mil diecisiete, según OpenAI: más de trescientas mil veces en total.',
         en: 'Counted in operations, the compute of the largest training runs doubled every three point four months between twenty twelve and twenty seventeen, according to OpenAI: over three hundred thousand times in all.',
       },
-      note: { es: 'Cómputo: se duplicó cada 3,4 meses entre 2012 y 2017 (OpenAI).', en: 'Compute: doubled every 3.4 months between 2012 and 2017 (OpenAI).' },
+      note: { es: 'Cómputo: se duplicó cada 3.4 meses entre 2012 y 2017 (OpenAI).', en: 'Compute: doubled every 3.4 months between 2012 and 2017 (OpenAI).' },
       pad: 0.6,
     },
     {
@@ -315,7 +315,7 @@ export default defineLesson({
       'El despegue del deep learning no vino de una idea nueva, sino de tres ingredientes que coincidieron: datos masivos, cómputo y trucos de entrenamiento.',
       'ImageNet puso millones de fotos etiquetadas al alcance de todos, y el concurso ILSVRC midió el progreso con una vara común: el error top-5.',
       'Una GPU multiplica matrices con miles de núcleos a la vez, justo el trabajo del entrenamiento; su ventaja crece con el tamaño del problema.',
-      'AlexNet (2012) bajó el error top-5 del segundo lugar, 26,2 %, a 15,3 % con ReLU, dropout y dos GPU; la memoria de la GPU ya limitaba el tamaño de la red.',
+      'AlexNet (2012) bajó el error top-5 del segundo lugar, 26.2 %, a 15.3 % con ReLU, dropout y dos GPU; la memoria de la GPU ya limitaba el tamaño de la red.',
       'Una conexión residual, y = x + F(x), da al gradiente un camino directo y permitió redes de más de cien capas; el cómputo de los mayores entrenamientos se duplicó cada pocos meses.',
     ],
     en: [
@@ -341,16 +341,16 @@ export default defineLesson({
   deeper: {
     es: `## Los números de 2012
 
-Del artículo de AlexNet (Krizhevsky, Sutskever y Hinton, 2012): ocho capas con pesos (cinco convolucionales y tres densas), unos 60 millones de parámetros, unas 650 000 neuronas, más de 1,2 millones de imágenes de entrenamiento y entre cinco y seis días en dos GPU GTX 580 de 3 GB. La entrada tiene 150 528 valores ($224\\times224\\times3$). Dos detalles del mismo artículo: en su figura 1, una red de cuatro capas en CIFAR-10 llegó a 25 % de error de entrenamiento seis veces más rápido con ReLU que con tanh (los autores aclaran que el efecto varía con la arquitectura), y el dropout, con probabilidad 0,5 en las dos primeras capas densas, se usó porque sin él la red sufría un sobreajuste considerable, a costa de duplicar más o menos las iteraciones necesarias.
+Del artículo de AlexNet (Krizhevsky, Sutskever y Hinton, 2012): ocho capas con pesos (cinco convolucionales y tres densas), unos 60 millones de parámetros, unas 650 000 neuronas, más de 1.2 millones de imágenes de entrenamiento y entre cinco y seis días en dos GPU GTX 580 de 3 GB. La entrada tiene 150 528 valores ($224\\times224\\times3$). Dos detalles del mismo artículo: en su figura 1, una red de cuatro capas en CIFAR-10 llegó a 25 % de error de entrenamiento seis veces más rápido con ReLU que con tanh (los autores aclaran que el efecto varía con la arquitectura), y el dropout, con probabilidad 0.5 en las dos primeras capas densas, se usó porque sin él la red sufría un sobreajuste considerable, a costa de duplicar más o menos las iteraciones necesarias.
 
 | Modelo en ILSVRC 2012 | Error top-5 |
 |---|---|
-| SIFT + vectores de Fisher (segundo lugar) | 26,2 % |
-| 1 red convolucional (validación) | 18,2 % |
-| 5 redes promediadas | 16,4 % |
-| 7 redes, 2 de ellas preentrenadas con 15 M de imágenes | 15,3 % |
+| SIFT + vectores de Fisher (segundo lugar) | 26.2 % |
+| 1 red convolucional (validación) | 18.2 % |
+| 5 redes promediadas | 16.4 % |
+| 7 redes, 2 de ellas preentrenadas con 15 M de imágenes | 15.3 % |
 
-Por eso la cifra «15,3 %» viene de un conjunto de siete redes y de datos extra; con solo los datos del concurso fueron 16,4 %. Aun así, la diferencia con el segundo lugar es enorme.
+Por eso la cifra «15.3 %» viene de un conjunto de siete redes y de datos extra; con solo los datos del concurso fueron 16.4 %. Aun así, la diferencia con el segundo lugar es enorme.
 
 ## Multiplicar matrices: por qué gana la GPU
 
@@ -362,9 +362,9 @@ Son $n^2$ celdas independientes y cada una cuesta $n$ multiplicaciones-suma: $n^
 
 $$T(n,P)=\\left\\lceil \\frac{n^2}{P}\\right\\rceil n,\\qquad \\frac{T(n,8)}{T(n,P)}\\;\\longrightarrow\\;\\frac{P}{8}\\ \\text{cuando }n^2\\gg P.$$
 
-Con $P=512$ (GTX 580) la ventaja ideal tope es 64; con $P=3584$ (RTX 3060), 448. Es un conteo ideal: ignora el ancho de banda de memoria, el costo de mover datos a la GPU y que cada núcleo de GPU es más lento que uno de CPU. Las medidas reales de Raina, Madhavan y Ng (2009), con una GPU GTX 280 contra una CPU de dos núcleos, fueron entre 12,9 y 72,6 veces según el tamaño del modelo.
+Con $P=512$ (GTX 580) la ventaja ideal tope es 64; con $P=3584$ (RTX 3060), 448. Es un conteo ideal: ignora el ancho de banda de memoria, el costo de mover datos a la GPU y que cada núcleo de GPU es más lento que uno de CPU. Las medidas reales de Raina, Madhavan y Ng (2009), con una GPU GTX 280 contra una CPU de dos núcleos, fueron entre 12.9 y 72.6 veces según el tamaño del modelo.
 
-La velocidad pico de un chip es $\\text{núcleos}\\times 2\\times\\text{reloj}$: $512\\times2\\times1{,}544\\ \\text{GHz}\\approx1{,}58$ TFLOP/s para la GTX 580 (cifra que usa OpenAI) y, por la misma cuenta, unos 12,7 TFLOP/s para la RTX 3060.
+La velocidad pico de un chip es $\\text{núcleos}\\times 2\\times\\text{reloj}$: $512\\times2\\times1{,}544\\ \\text{GHz}\\approx1{,}58$ TFLOP/s para la GTX 580 (cifra que usa OpenAI) y, por la misma cuenta, unos 12.7 TFLOP/s para la RTX 3060.
 
 ## El costo de entrenar AlexNet
 
@@ -372,7 +372,7 @@ Según la estimación de Amodei y Hernandez (OpenAI, 2018), el pase hacia delant
 
 $$1{,}2\\times10^{6}\\cdot 90\\cdot 0{,}75\\times10^{9}\\cdot 2\\cdot 3\\approx 4{,}9\\times10^{17}\\ \\text{FLOP}.$$
 
-Es coherente con dos GTX 580 durante 5,5 días al 33 % de su pico, que es lo que supone OpenAI: $2\\cdot1{,}58\\times10^{12}\\cdot5{,}5\\cdot86\\,400\\cdot0{,}33\\approx5\\times10^{17}$. Desde 2012 (de AlexNet a AlphaGo Zero, a finales de 2017), OpenAI midió que el cómputo de los mayores entrenamientos se duplicaba cada 3,4 meses; estimaciones posteriores (Sevilla et al., 2022) dan alrededor de 6 meses para la era del deep learning. En ambos casos, el crecimiento es exponencial.
+Es coherente con dos GTX 580 durante 5.5 días al 33 % de su pico, que es lo que supone OpenAI: $2\\cdot1{,}58\\times10^{12}\\cdot5{,}5\\cdot86\\,400\\cdot0{,}33\\approx5\\times10^{17}$. Desde 2012 (de AlexNet a AlphaGo Zero, a finales de 2017), OpenAI midió que el cómputo de los mayores entrenamientos se duplicaba cada 3.4 meses; estimaciones posteriores (Sevilla et al., 2022) dan alrededor de 6 meses para la era del deep learning. En ambos casos, el crecimiento es exponencial.
 
 ## El gradiente a través de las capas
 
@@ -380,7 +380,7 @@ En una pila simple, $h_l=\\tanh(W_l h_{l-1})$ y el gradiente retrocede como
 
 $$\\frac{\\partial L}{\\partial h_{l-1}}=W_l^{\\top}\\Big(\\tanh'(z_l)\\odot\\frac{\\partial L}{\\partial h_l}\\Big),$$
 
-así que su norma se multiplica por un factor, cada capa, de aproximadamente $\\sigma\\cdot\\overline{\\tanh'}$. Con la inicialización «estándar» de la época, $n\\,\\mathrm{Var}[W]=1/3$ (Glorot y Bengio, 2010, ec. 15), el factor queda alrededor de 0,5; en el juguete de la lección sale ≈ 0,55 y $0{,}55^{40}\\approx 4\\times10^{-11}$.
+así que su norma se multiplica por un factor, cada capa, de aproximadamente $\\sigma\\cdot\\overline{\\tanh'}$. Con la inicialización «estándar» de la época, $n\\,\\mathrm{Var}[W]=1/3$ (Glorot y Bengio, 2010, ec. 15), el factor queda alrededor de 0.5; en el juguete de la lección sale ≈ 0.55 y $0{,}55^{40}\\approx 4\\times10^{-11}$.
 
 Con atajo, $x_{l+1}=x_l+F(x_l)$ y, según He et al. (2016, ec. 5),
 
@@ -390,7 +390,7 @@ El término $I$ lleva el gradiente de la salida a cualquier capa sin pasar por n
 
 ## Lo que el juguete no dice
 
-La red del juguete no está entrenada, no usa normalización y todas sus capas son iguales. En redes reales, la inicialización y la normalización por lotes mantienen sanas las señales. De hecho, He et al. (2015, §4.1 y figura 1) argumentan que la dificultad de entrenar redes simples profundas *no* parece deberse a gradientes que se desvanecen: sus redes simples tenían gradientes de norma sana y, aun así, la de 34 capas tenía más error de entrenamiento que la de 18, y la de 56 más que la de 20 en CIFAR-10. Lo llamaron el problema de la degradación. Su hipótesis es que es más fácil que un bloque aprenda $F\\approx0$ (identidad) que ajustar una identidad con capas no lineales; los propios autores dejan esa explicación como pregunta abierta. Lo medido es claro: con atajos, las redes de 50, 101 y 152 capas mejoraron con la profundidad. La ResNet-152 (11,3 mil millones de multiplicaciones-suma) cuesta menos que una VGG-19 (19,6 mil millones); sola logró 4,49 % de error top-5 en validación, y un conjunto de seis modelos, 3,57 % en prueba.
+La red del juguete no está entrenada, no usa normalización y todas sus capas son iguales. En redes reales, la inicialización y la normalización por lotes mantienen sanas las señales. De hecho, He et al. (2015, §4.1 y figura 1) argumentan que la dificultad de entrenar redes simples profundas *no* parece deberse a gradientes que se desvanecen: sus redes simples tenían gradientes de norma sana y, aun así, la de 34 capas tenía más error de entrenamiento que la de 18, y la de 56 más que la de 20 en CIFAR-10. Lo llamaron el problema de la degradación. Su hipótesis es que es más fácil que un bloque aprenda $F\\approx0$ (identidad) que ajustar una identidad con capas no lineales; los propios autores dejan esa explicación como pregunta abierta. Lo medido es claro: con atajos, las redes de 50, 101 y 152 capas mejoraron con la profundidad. La ResNet-152 (11.3 mil millones de multiplicaciones-suma) cuesta menos que una VGG-19 (19.6 mil millones); sola logró 4.49 % de error top-5 en validación, y un conjunto de seis modelos, 3.57 % en prueba.
 
 ## En código
 
@@ -538,7 +538,7 @@ Residual connections and normalization reappear in every block of the transforme
   lens: {
     es: [
       'Cuando alguien diga «nuestro modelo es mejor», pregunta qué cambió: más datos (¿de quién y con qué licencia?), más cómputo (¿cuántas horas de GPU y a qué costo?) o un mejor método. Son los tres motores del progreso moderno.',
-      'Un resultado en un benchmark público describe una tarea concreta, no la tuya: un error de 3,57 % en ImageNet no dice cuánto fallará con tus fotos. Pide una prueba con tus propios datos y con el costo real de cada tipo de error.',
+      'Un resultado en un benchmark público describe una tarea concreta, no la tuya: un error de 3.57 % en ImageNet no dice cuánto fallará con tus fotos. Pide una prueba con tus propios datos y con el costo real de cada tipo de error.',
       'El cómputo es una partida de presupuesto y de acceso: GPUs que se compran o se alquilan por hora, con memoria limitada. Entrenar desde cero un modelo grande está fuera del alcance de casi todas las organizaciones; lo habitual es partir de uno ya preentrenado.',
       'Más profundo o más grande no es automáticamente mejor: sin las ideas adecuadas (normalización, atajos), una red profunda ni siquiera entrena bien. Pide resultados con datos no vistos, no solo el número de parámetros o de capas.',
     ],
@@ -570,14 +570,14 @@ Residual connections and normalization reappear in every block of the transforme
       kind: 'calc',
       q: { es: 'Si cada capa reduce el gradiente a la mitad al retropropagarlo, ¿qué fracción del gradiente de la salida llega diez capas hacia atrás?', en: 'If each layer halves the gradient as it is backpropagated, what fraction of the output gradient reaches ten layers back?' },
       options: [
-        { es: 'Cerca de 0,05 (un veinteavo)', en: 'About 0.05 (one twentieth)' },
-        { es: 'Exactamente 0,5', en: 'Exactly 0.5' },
-        { es: 'Cerca de 0,001 (un milésimo)', en: 'About 0.001 (one thousandth)' },
-        { es: 'Cerca de 0,1 (un décimo)', en: 'About 0.1 (one tenth)' },
+        { es: 'Cerca de 0.05 (un veinteavo)', en: 'About 0.05 (one twentieth)' },
+        { es: 'Exactamente 0.5', en: 'Exactly 0.5' },
+        { es: 'Cerca de 0.001 (un milésimo)', en: 'About 0.001 (one thousandth)' },
+        { es: 'Cerca de 0.1 (un décimo)', en: 'About 0.1 (one tenth)' },
       ],
       answer: 2,
       why: {
-        es: 'Se multiplica por 0,5 en cada capa: 0,5 elevado a 10 es 1/1024, casi 0,001. Por eso apilar capas sin cuidado deja casi sin señal a las primeras.',
+        es: 'Se multiplica por 0.5 en cada capa: 0.5 elevado a 10 es 1/1024, casi 0.001. Por eso apilar capas sin cuidado deja casi sin señal a las primeras.',
         en: 'It is multiplied by 0.5 at every layer: 0.5 to the power of 10 is 1/1024, almost 0.001. That is why stacking layers carelessly leaves the first ones with almost no signal.',
       },
     },
@@ -598,9 +598,9 @@ Residual connections and normalization reappear in every block of the transforme
     },
     {
       kind: 'apply',
-      q: { es: 'Un proveedor presume un error de 3,6 % en ImageNet y propone usar su modelo de visión para inspeccionar piezas de tu fábrica. ¿Qué haces primero?', en: 'A vendor boasts a 3.6% error on ImageNet and proposes using its vision model to inspect parts in your factory. What do you do first?' },
+      q: { es: 'Un proveedor presume un error de 3.6 % en ImageNet y propone usar su modelo de visión para inspeccionar piezas de tu fábrica. ¿Qué haces primero?', en: 'A vendor boasts a 3.6% error on ImageNet and proposes using its vision model to inspect parts in your factory. What do you do first?' },
       options: [
-        { es: 'Contratarlo: 3,6 % es mejor que el error de una persona.', en: 'Hire it: 3.6% beats a person’s error.' },
+        { es: 'Contratarlo: 3.6 % es mejor que el error de una persona.', en: 'Hire it: 3.6% beats a person’s error.' },
         { es: 'Pedirle que añada más capas al modelo.', en: 'Ask it to add more layers to the model.' },
         { es: 'Comprar más GPUs para que rinda igual en tu planta.', en: 'Buy more GPUs so it performs the same in your plant.' },
         { es: 'Probarlo con una muestra de tus propias piezas, con tu iluminación, y medir el error que a ti te importa.', en: 'Test it on a sample of your own parts, under your lighting, and measure the error that matters to you.' },
@@ -617,10 +617,10 @@ Residual connections and normalization reappear in every block of the transforme
 
   terms: [
     { id: 'gpu', term: { es: 'GPU', en: 'GPU' }, def: { es: 'Unidad de procesamiento gráfico: un chip con cientos o miles de núcleos sencillos, creado para dibujar gráficos y muy eficiente para multiplicar matrices en paralelo, la operación central del entrenamiento.', en: 'Graphics processing unit: a chip with hundreds or thousands of simple cores, built to draw graphics and very efficient at multiplying matrices in parallel, the central operation of training.' } },
-    { id: 'imagenet', term: { es: 'ImageNet', en: 'ImageNet' }, def: { es: 'Base de más de catorce millones de imágenes etiquetadas por personas, en más de veintiún mil categorías. Su subconjunto del concurso ILSVRC (mil clases, más de 1,2 millones de fotos de entrenamiento) fue el banco de pruebas de la visión por computador.', en: 'A database of more than fourteen million images labeled by people, in more than twenty-one thousand categories. Its ILSVRC contest subset (a thousand classes, more than 1.2 million training photos) was the proving ground of computer vision.' } },
+    { id: 'imagenet', term: { es: 'ImageNet', en: 'ImageNet' }, def: { es: 'Base de más de catorce millones de imágenes etiquetadas por personas, en más de veintiún mil categorías. Su subconjunto del concurso ILSVRC (mil clases, más de 1.2 millones de fotos de entrenamiento) fue el banco de pruebas de la visión por computador.', en: 'A database of more than fourteen million images labeled by people, in more than twenty-one thousand categories. Its ILSVRC contest subset (a thousand classes, more than 1.2 million training photos) was the proving ground of computer vision.' } },
     { id: 'deep-learning', term: { es: 'Aprendizaje profundo (deep learning)', en: 'Deep learning' }, def: { es: 'Aprendizaje automático con redes neuronales de muchas capas que aprenden por sí mismas las características útiles, de bordes a objetos, a partir de grandes cantidades de datos y cómputo.', en: 'Machine learning with many-layered neural networks that learn the useful features themselves, from edges to objects, from large amounts of data and compute.' } },
     { id: 'residual-connection', term: { es: 'Conexión residual (atajo)', en: 'Residual connection (shortcut)' }, def: { es: 'Suma de la entrada de un bloque a su salida: y = x + F(x). Da al gradiente un camino directo hacia atrás y permitió apilar muchas más capas.', en: 'Adding a block’s input to its output: y = x + F(x). It gives the gradient a direct path backward and made it possible to stack many more layers.' } },
-    { id: 'dropout', term: { es: 'Dropout', en: 'Dropout' }, def: { es: 'Técnica contra el sobreajuste: en cada paso de entrenamiento se apaga al azar cada neurona de una capa con cierta probabilidad (0,5 en AlexNet), de modo que ninguna puede depender de otra en concreto.', en: 'A technique against overfitting: at each training step every neuron of a layer is switched off at random with some probability (0.5 in AlexNet), so no neuron can depend on a particular other one.' } },
+    { id: 'dropout', term: { es: 'Dropout', en: 'Dropout' }, def: { es: 'Técnica contra el sobreajuste: en cada paso de entrenamiento se apaga al azar cada neurona de una capa con cierta probabilidad (0.5 en AlexNet), de modo que ninguna puede depender de otra en concreto.', en: 'A technique against overfitting: at each training step every neuron of a layer is switched off at random with some probability (0.5 in AlexNet), so no neuron can depend on a particular other one.' } },
     { id: 'compute', term: { es: 'Cómputo (compute)', en: 'Compute' }, def: { es: 'Cantidad de operaciones aritméticas que exige entrenar o ejecutar un modelo. Junto con los datos y los algoritmos, es uno de los tres motores del progreso del aprendizaje automático.', en: 'The amount of arithmetic operations needed to train or run a model. Along with data and algorithms, it is one of the three engines of progress in machine learning.' } },
   ],
 

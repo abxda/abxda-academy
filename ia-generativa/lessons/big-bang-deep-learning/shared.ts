@@ -9,7 +9,7 @@ export function fmtInt(S: Frame, n: number): string {
 }
 export function dec(S: Frame, x: number, d = 1): string {
   const s = x.toFixed(d);
-  return S.lang === 'es' ? s.replace('.', ',') : s;
+  return s;
 }
 export const pct = (S: Frame, x: number, d = 1) => (S.lang === 'es' ? `${dec(S, x, d)} %` : `${dec(S, x, d)}%`);
 /** Notación científica corta: 1,4e-3. Para valores entre 0,1 y 1000 usa decimales normales. */

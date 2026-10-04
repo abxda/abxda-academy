@@ -1,8 +1,8 @@
 // Parte 2: en el plano, apilar capas lineales sigue dando una recta; y un grupo rodeado por un anillo derrota a cualquier recta.
 import { alpha, badge, box, clamp, lerp, link, regions, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { lineSweep, makeData, R, type LineFit, type Pt } from './mlp';
-import { drawFrame, drawPoints, drawRegion, fieldPlot, revealOrder } from './field';
-import { fs, ph, square } from './shared';
+import { drawFrame, drawLegend, drawPoints, drawRegion, fieldPlot, revealOrder } from './field';
+import { fs, pct, ph, square } from './shared';
 
 // Los puntos y el barrido de rectas se calculan una vez (funciones puras de datos con semilla fija).
 let CACHE: { pts: Pt[]; sweep: LineFit[]; best: LineFit; bestK: number; order: number[] } | null = null;
@@ -56,6 +56,7 @@ export function drawPlane(S: Frame, all: Rect) {
     plot.line(px - ny * L, py + nx * L, px + ny * L, py - nx * L, 'ink', 2.6);
   });
   if (dataK > 0) drawPoints(S, plot, D.pts, { frac: dataK, order: D.order });
+  drawLegend(S, plot, clamp(dataK * 4));
 
   // etiqueta de la recta
   d.withAlpha(S.reveal('plane', 0.15, 0.5), () => {
@@ -89,11 +90,11 @@ export function drawPlane(S: Frame, all: Rect) {
     const y0 = S.portrait ? aside.y + 70 * u : aside.y + 120 * u, x0 = aside.x + (S.portrait ? 4 : 0), cw = S.portrait ? aside.w / 2 : aside.w;
     const live = sweepP > 0 ? fit.acc : 0;
     d.text(S.l('esta recta acierta', 'this line is right'), x0, y0, { size: fs(S, 13), weight: 700, color: p.mute, base: 'middle' });
-    d.text(`${S.n(live * 100, 0)} %`, x0, y0 + 24 * u, { size: fs(S, 26), weight: 700, font: 'mono', color: p.ink, base: 'middle' });
+    d.text(pct(S, live), x0, y0 + 24 * u, { size: fs(S, 26), weight: 700, font: 'mono', color: p.ink, base: 'middle' });
     const bx = S.portrait ? x0 + cw : x0, by = S.portrait ? y0 : y0 + 76 * u, ba = ph(S, 'plane', 0.84, 0.95, 'out');
     d.withAlpha(ba, () => {
       d.text(S.l('la mejor recta posible', 'the best possible line'), bx, by, { size: fs(S, 13), weight: 700, color: p.mute, base: 'middle' });
-      d.text(`${S.n(D.best.acc * 100, 0)} %`, bx, by + 24 * u, { size: fs(S, 26), weight: 700, font: 'mono', color: dt.ink, base: 'middle' });
+      d.text(pct(S, D.best.acc), bx, by + 24 * u, { size: fs(S, 26), weight: 700, font: 'mono', color: dt.ink, base: 'middle' });
     });
   });
 }

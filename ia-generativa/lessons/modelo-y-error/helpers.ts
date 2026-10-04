@@ -83,7 +83,7 @@ export function shares(l: Line, kind: 'sq' | 'abs'): number[] {
 /** Número con formato del idioma (coma decimal en español, como el texto de la lección), sin separador de miles y con el signo menos tipográfico. */
 export const nf = (S: Frame, x: number, d = 1) => {
   const t = S.n(x, d).replace(/,(?=\d{3}(\D|$))/g, '').replace('-', '−');
-  return S.lang === 'es' ? t.replace('.', ',') : t;
+  return t;
 };
 /** Con signo explícito (+17 / −3). */
 export const sg = (S: Frame, x: number, d = 0) => (x > 0.00001 ? '+' : '') + nf(S, Math.abs(x) < 0.5 * 10 ** -d ? 0 : x, d);

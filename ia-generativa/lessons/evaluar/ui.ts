@@ -3,12 +3,12 @@ import { alpha, clamp, inset, split, tone, type Frame, type Rect, type Tone } fr
 
 /** Tamaño de texto garantizando ≥ 12 px efectivos (el lienzo ya multiplica por S.u). */
 export const fs = (S: Frame, v: number) => Math.max(v, 12.5 / S.u);
-/** Número con la convención de cada idioma: es → 1 205 · 15 908 · 43,9 (espacio fino de miles y coma decimal); en → 1,205 · 15,908 · 43.9. */
+/** Número con la convención de cada idioma: es → 1 205 · 15 908 · 43.9 (espacio fino de miles y punto decimal, español de México); en → 1,205 · 15,908 · 43.9. */
 export function nf(S: Frame, x: number, digits = 0): string {
   const s = x.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
   if (S.lang === 'en') return s;
   const g = Math.abs(x) < 10000 ? s.replace(/,/g, '') : s.replace(/,/g, '\u202f');
-  return g.replace('.', ',');
+  return g;
 }
 /** Porcentaje: «78 %» en español, «78%» en inglés. */
 export const pc = (S: Frame, v: number, digits = 0) => (S.lang === 'es' ? `${nf(S, v, digits)} %` : `${nf(S, v, digits)}%`);

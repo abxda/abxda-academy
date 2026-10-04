@@ -91,7 +91,7 @@ export default defineLesson({
       gate: {
         id: 'batch',
         prompt: {
-          es: 'Prueba al menos tres tamaños de lote y encuentra uno que termine con error menor que 0,05.',
+          es: 'Prueba al menos tres tamaños de lote y encuentra uno que termine con error menor que 0.05.',
           en: 'Try at least three batch sizes and find one that ends with an error below 0.05.',
         },
       },
@@ -175,7 +175,7 @@ export default defineLesson({
       gate: {
         id: 'race',
         prompt: {
-          es: 'Haz que SGD, momento y Adam lleguen al fondo (error menor que 0,05) en 120 pasos o menos. Cada uno pide su propia tasa.',
+          es: 'Haz que SGD, momento y Adam lleguen al fondo (error menor que 0.05) en 120 pasos o menos. Cada uno pide su propia tasa.',
           en: 'Get SGD, momentum, and Adam to the bottom (error below 0.05) in 120 steps or fewer. Each one wants its own rate.',
         },
       },
@@ -217,7 +217,7 @@ export default defineLesson({
       gate: {
         id: 'sched',
         prompt: {
-          es: 'Logra un entrenamiento que no diverja y termine con error menor que 0,05.',
+          es: 'Logra un entrenamiento que no diverja y termine con error menor que 0.05.',
           en: 'Get a run that does not diverge and ends with an error below 0.05.',
         },
       },
@@ -302,7 +302,7 @@ Cerca de un mínimo con curvatura $h$, el ruido del gradiente (varianza $s^2=\\s
 
 $$\\mathbf{v}_{t+1}=\\beta\\,\\mathbf{v}_t+\\mathbf{g}_t,\\qquad \\mathbf{w}_{t+1}=\\mathbf{w}_t-\\eta\\,\\mathbf{v}_{t+1}$$
 
-Con $\\beta=0{,}9$ y un gradiente constante, $\\mathbf{v}\\to \\mathbf{g}/(1-\\beta)$: el paso efectivo es diez veces mayor; a igual paso efectivo, la tasa del momento sería unas diez veces menor que la de SGD (en la práctica la razón es menor: en el cañón de la lección, 0,02 frente a 0,07). En un cuadrático con curvaturas $\\lambda_{\\min}\\le h\\le\\lambda_{\\max}$ y número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, la mejor tasa fija de SGD reduce la distancia al fondo por paso en un factor $\\frac{\\kappa-1}{\\kappa+1}$, y el momento bien ajustado en $\\frac{\\sqrt\\kappa-1}{\\sqrt\\kappa+1}$ (Polyak, 1964). En el cañón de la lección, cerca del fondo, $\\kappa\\approx 50$: unos $0{,}96$ por paso frente a $0{,}75$ (en teoría, sin ruido).
+Con $\\beta=0{,}9$ y un gradiente constante, $\\mathbf{v}\\to \\mathbf{g}/(1-\\beta)$: el paso efectivo es diez veces mayor; a igual paso efectivo, la tasa del momento sería unas diez veces menor que la de SGD (en la práctica la razón es menor: en el cañón de la lección, 0.02 frente a 0.07). En un cuadrático con curvaturas $\\lambda_{\\min}\\le h\\le\\lambda_{\\max}$ y número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, la mejor tasa fija de SGD reduce la distancia al fondo por paso en un factor $\\frac{\\kappa-1}{\\kappa+1}$, y el momento bien ajustado en $\\frac{\\sqrt\\kappa-1}{\\sqrt\\kappa+1}$ (Polyak, 1964). En el cañón de la lección, cerca del fondo, $\\kappa\\approx 50$: unos $0{,}96$ por paso frente a $0{,}75$ (en teoría, sin ruido).
 
 ## Adam
 

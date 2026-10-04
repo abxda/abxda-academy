@@ -526,7 +526,7 @@ We said “words,” but the real model works with smaller pieces: tokens (lesso
         { es: '96 %', en: '96%' },
       ],
       answer: 1,
-      why: { es: 'Con T = 2 las puntuaciones pasan a 1 y 0: e¹ / (e¹ + e⁰) = 2,718 / 3,718 ≈ 0,73. Subir T aplanó la distribución, de 88 % a 73 %.', en: 'With T = 2 the scores become 1 and 0: e¹ / (e¹ + e⁰) = 2.718 / 3.718 ≈ 0.73. Raising T flattened the distribution, from 88% to 73%.' },
+      why: { es: 'Con T = 2 las puntuaciones pasan a 1 y 0: e¹ / (e¹ + e⁰) = 2.718 / 3.718 ≈ 0.73. Subir T aplanó la distribución, de 88 % a 73 %.', en: 'With T = 2 the scores become 1 and 0: e¹ / (e¹ + e⁰) = 2.718 / 3.718 ≈ 0.73. Raising T flattened the distribution, from 88% to 73%.' },
     },
     {
       kind: 'apply',

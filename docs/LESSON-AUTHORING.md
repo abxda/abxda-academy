@@ -117,3 +117,6 @@ npx tsx scripts/lesson-sheet.mjs <id> [--lang es|en] [--theme light|dark] [--dev
 - **No hagas commits ni `git add`**: lo hace quien coordina.
 - No toques otras lecciones. Si una lección anterior debía definir un término que necesitas, solo lístalo en `glossary`.
 - Informe final (corto): qué construiste, qué hechos verificaste y con qué fuente, qué quedó pendiente o dudoso, qué faltó en el kit.
+
+## Convención numérica
+Español de México: **punto decimal** (0.95) y espacio para separar los miles (8 000), tanto en el texto como en el lienzo (`S.n` lo produce). Inglés: punto decimal y coma para los miles (8,000). Una misma lección no mezcla separadores. Ojo: nunca coma decimal en el texto en español (la voz la leería «coma» y el público es mexicano).

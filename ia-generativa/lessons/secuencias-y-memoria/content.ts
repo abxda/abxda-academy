@@ -135,7 +135,7 @@ export default defineLesson({
       en: 'Your turn: raise the size of the recurrent weights and try to keep half of the blame alive ten steps away. Notice what it costs.',
       gate: {
         id: 'g',
-        prompt: { es: 'Mueve g hasta que la línea gruesa llegue a ×0,5 a diez pasos.', en: 'Move g until the thick line reaches ×0.5 at ten steps.' },
+        prompt: { es: 'Mueve g hasta que la línea gruesa llegue a ×0.5 a diez pasos.', en: 'Move g until the thick line reaches ×0.5 at ten steps.' },
       },
       pad: 0.4,
     },
@@ -487,7 +487,7 @@ The RNN and the LSTM read in a line and squeeze everything into one vector; atte
     },
     {
       kind: 'calc',
-      q: { es: 'En cada paso la culpa se multiplica por 0,8. ¿Cuánto queda tras diez pasos?', en: 'At each step the blame is multiplied by 0.8. How much is left after ten steps?' },
+      q: { es: 'En cada paso la culpa se multiplica por 0.8. ¿Cuánto queda tras diez pasos?', en: 'At each step the blame is multiplied by 0.8. How much is left after ten steps?' },
       options: [
         { es: 'Cerca del 11 %.', en: 'About 11%.' },
         { es: 'Cerca del 80 %.', en: 'About 80%.' },
@@ -496,7 +496,7 @@ The RNN and the LSTM read in a line and squeeze everything into one vector; atte
       ],
       answer: 0,
       why: {
-        es: '0,8 multiplicado por sí mismo diez veces da 0,107, es decir, cerca del 11 %. Un factor que parece suave deja poco más de una décima en diez pasos y cerca del 1 % en veinte.',
+        es: '0.8 multiplicado por sí mismo diez veces da 0.107, es decir, cerca del 11 %. Un factor que parece suave deja poco más de una décima en diez pasos y cerca del 1 % en veinte.',
         en: '0.8 multiplied by itself ten times gives 0.107, about 11%. A factor that looks mild leaves little more than a tenth after ten steps and about 1% after twenty.',
       },
     },

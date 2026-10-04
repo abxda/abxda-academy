@@ -14,8 +14,7 @@ export const fz = (S: Frame, n = 13) => Math.max(n * kk(S), 12.3 / S.u);
 export const num = (S: Frame, v: number, digits = 2, sign = false) => {
   let s = Math.abs(v).toFixed(digits);
   const neg = v < 0 && Number(s) !== 0;
-  if (S.lang === 'es') s = s.replace('.', ',');
-  return (neg ? '−' : sign && Number(s.replace(',', '.')) !== 0 ? '+' : '') + s;
+  return (neg ? '−' : sign && Number(s) !== 0 ? '+' : '') + s;
 };
 /** Porcentaje (0..1 → «7 %»). */
 export const pct = (S: Frame, v: number, digits = 0) => `${num(S, v * 100, digits)} %`;

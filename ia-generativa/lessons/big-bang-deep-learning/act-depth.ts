@@ -91,7 +91,7 @@ export function drawDeepProblem(S: Frame) {
     d.text(S.l('entrada', 'input'), B.x + 6 * u, base - 8 * u - hMax - 6 * u, { size: 12, weight: 700, color: p.mute, base: 'bottom' });
     d.text(S.l('salida', 'output'), B.x + B.w - 6 * u, base - 8 * u - hMax - 6 * u, { size: 12, weight: 700, color: p.mute, align: 'right', base: 'bottom' });
   });
-  d.withAlpha(fa(S, 'deep-problem', 0.7, 0.85), () => badge(S, S.l('ilustración: factor 0,5 por capa', 'illustration: factor 0.5 per layer'), B.x + B.w / 2, B.y + 12 * u, { tone: 'mute' }));
+  d.withAlpha(fa(S, 'deep-problem', 0.7, 0.85), () => badge(S, S.l('ilustración: factor 0.5 por capa', 'illustration: factor 0.5 per layer'), B.x + B.w / 2, B.y + 12 * u, { tone: 'mute' }));
 }
 
 // ═════════ el juguete: toy (se prepara) y vanish (el gradiente retrocede) ═════════

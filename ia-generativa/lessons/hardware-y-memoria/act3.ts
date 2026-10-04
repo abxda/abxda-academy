@@ -67,7 +67,7 @@ function drawWall(S: Frame, all: Rect) {
   }
   const a1 = S.reveal('wall', 2.2, 0.6), a2 = S.reveal('wall', 3.0, 0.6), cw = (all.w - 14 * u) / 2, y = all.y + all.h - foot + 6 * u;
   d.withAlpha(a1, () => chip(S, { x: all.x, y, w: port ? all.w : cw, h: 40 * u }, S.l('podría hacer', 'could do'), S.l(`≈ ${nf(nCells, 0, 'es')} operaciones`, `≈ ${nf(nCells, 0, 'en')} operations`), 'dat', { vsize: 16 }));
-  d.withAlpha(a2, () => chip(S, { x: port ? all.x : all.x + cw + 14 * u, y: port ? y + 46 * u : y, w: port ? all.w : cw, h: 40 * u }, S.l('el peso usa', 'the weight uses'), S.l('2 operaciones (0,3 %)', '2 operations (0.3%)'), 'err', { vsize: 16 }));
+  d.withAlpha(a2, () => chip(S, { x: port ? all.x : all.x + cw + 14 * u, y: port ? y + 46 * u : y, w: port ? all.w : cw, h: 40 * u }, S.l('el peso usa', 'the weight uses'), S.l('2 operaciones (0.3 %)', '2 operations (0.3%)'), 'err', { vsize: 16 }));
   d.withAlpha(S.reveal('wall', 3.4, 0.6), () => d.text(`${nf(H100.tflops, 0, S.lang)} TFLOPS ÷ ${nf(H100.bw / 1000, 2, S.lang)} TB/s ≈ ${nf(OPS_PER_BYTE, 0, S.lang)} ${S.l('operaciones por byte', 'operations per byte')}`, all.x + all.w, all.y + all.h, { size: FS(S, 12), weight: 700, font: 'mono', color: p.mute, align: 'right', base: 'bottom' }));
   void tagText;
 }

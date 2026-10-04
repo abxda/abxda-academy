@@ -316,7 +316,7 @@ Las longitudes de onda forman una progresión geométrica de $2\\pi$ a $10000\\c
 
 $$\\mathrm{Att}(Q,K,V)=\\mathrm{softmax}\\!\\Big(\\frac{QK^\\top}{\\sqrt{d_h}}+M\\Big)V$$
 
-La predicción de la posición $i$ depende solo de los tokens $\\le i$, así que en el entrenamiento las $T$ predicciones se calculan a la vez. Nuestro experimento lo confirma: con máscara, la pérdida en frases nuevas es 0,527 nats por palabra, casi la entropía de la gramática (0,526, la cota inferior). Sin máscara, la pérdida de entrenamiento cae a 0,059, pero ese mismo modelo, usado sin trampa, da 3,088, peor que elegir al azar entre doce palabras ($\\ln 12 = 2{,}485$).
+La predicción de la posición $i$ depende solo de los tokens $\\le i$, así que en el entrenamiento las $T$ predicciones se calculan a la vez. Nuestro experimento lo confirma: con máscara, la pérdida en frases nuevas es 0.527 nats por palabra, casi la entropía de la gramática (0.526, la cota inferior). Sin máscara, la pérdida de entrenamiento cae a 0.059, pero ese mismo modelo, usado sin trampa, da 3.088, peor que elegir al azar entre doce palabras ($\\ln 12 = 2{,}485$).
 
 ## Contar parámetros
 
@@ -331,7 +331,7 @@ Con $V$ palabras de vocabulario, $d$ dimensiones, $L$ bloques, $ctx$ posiciones 
 | Normalizaciones | $(4L+2)\\,d$ | 80 |
 | **Total** | $\\approx 12\\,L\\,d^2$ si $d$ es grande | **1856** |
 
-La fórmula coincide exactamente con Hugging Face para GPT-2: 124 439 808 parámetros (12 bloques, $d=768$), 354 823 168, 774 030 080 y 1 557 611 200. Para GPT-3 (96 bloques, $d=12288$, $V=50257$, contexto 2048) da 174 604 259 328, frente a los 175,0 mil millones del artículo (0,2 % de diferencia). En modelos pequeños el embedding pesa mucho; en los grandes, los bloques.
+La fórmula coincide exactamente con Hugging Face para GPT-2: 124 439 808 parámetros (12 bloques, $d=768$), 354 823 168, 774 030 080 y 1 557 611 200. Para GPT-3 (96 bloques, $d=12288$, $V=50257$, contexto 2048) da 174 604 259 328, frente a los 175.0 mil millones del artículo (0.2 % de diferencia). En modelos pequeños el embedding pesa mucho; en los grandes, los bloques.
 
 ## En código
 

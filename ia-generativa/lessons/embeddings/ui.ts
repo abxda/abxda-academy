@@ -15,7 +15,7 @@ export const area = (S: Frame): Rect => inset(S.full(), 12 * S.u);
 /** Número con signo menos tipográfico y coma decimal en español (S.n usa es-MX, que escribe punto). */
 export const num = (S: Frame, x: number, digits = 2) => {
   const s = S.n(x, digits).replace('-', '−');
-  return S.lang === 'es' ? s.replace('.', ',') : s;
+  return s;
 };
 /** Entero con separador de miles que no se confunde con decimales (espacio fino). */
 export const big = (S: Frame, x: number) => Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');

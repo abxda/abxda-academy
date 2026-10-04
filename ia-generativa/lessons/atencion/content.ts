@@ -306,7 +306,7 @@ Si $X$ es la matriz de vectores de entrada (embeddings, más la posición), $Q=X
 
 ## Por qué $\\sqrt{d_k}$
 
-Si las componentes de $q$ y $k$ son independientes, con media 0 y varianza 1, el producto $q\\cdot k=\\sum_{i=1}^{d_k}q_ik_i$ tiene media 0 y varianza $d_k$ (la nota 4 de Vaswani et al., 2017). Dividir entre $\\sqrt{d_k}$ devuelve la varianza a 1. Sin ello, con $d_k$ grande, el softmax se satura: si $\\alpha=\\text{softmax}(s)$, entonces $\\partial\\alpha_i/\\partial s_j=\\alpha_i(\\delta_{ij}-\\alpha_j)$, que tiende a 0 cuando $\\alpha$ se parece a un vector «uno-caliente». La lección lo mide con 100 sorteos al azar: con $d=64$ el peso máximo medio sin escalar es ≈ 0,88; escalado, ≈ 0,34.
+Si las componentes de $q$ y $k$ son independientes, con media 0 y varianza 1, el producto $q\\cdot k=\\sum_{i=1}^{d_k}q_ik_i$ tiene media 0 y varianza $d_k$ (la nota 4 de Vaswani et al., 2017). Dividir entre $\\sqrt{d_k}$ devuelve la varianza a 1. Sin ello, con $d_k$ grande, el softmax se satura: si $\\alpha=\\text{softmax}(s)$, entonces $\\partial\\alpha_i/\\partial s_j=\\alpha_i(\\delta_{ij}-\\alpha_j)$, que tiende a 0 cuando $\\alpha$ se parece a un vector «uno-caliente». La lección lo mide con 100 sorteos al azar: con $d=64$ el peso máximo medio sin escalar es ≈ 0.88; escalado, ≈ 0.34.
 
 ## Varias cabezas
 
@@ -468,7 +468,7 @@ What attention does not do: it does not know the order of the words (a position 
     },
     {
       kind: 'calc',
-      q: { es: 'Una palabra reparte su atención 0,75 y 0,25 entre dos palabras cuyos valores son (4, 0) y (0, 8). ¿Cuál es su nuevo vector?', en: 'A word spreads its attention 0.75 and 0.25 over two words whose values are (4, 0) and (0, 8). What is its new vector?' },
+      q: { es: 'Una palabra reparte su atención 0.75 y 0.25 entre dos palabras cuyos valores son (4, 0) y (0, 8). ¿Cuál es su nuevo vector?', en: 'A word spreads its attention 0.75 and 0.25 over two words whose values are (4, 0) and (0, 8). What is its new vector?' },
       options: [
         { es: '(2, 4)', en: '(2, 4)' },
         { es: '(3, 6)', en: '(3, 6)' },
@@ -476,7 +476,7 @@ What attention does not do: it does not know the order of the words (a position 
         { es: '(4, 8)', en: '(4, 8)' },
       ],
       answer: 2,
-      why: { es: 'Es la suma ponderada: 0,75 · (4, 0) + 0,25 · (0, 8) = (3, 0) + (0, 2) = (3, 2).', en: 'It is the weighted sum: 0.75 · (4, 0) + 0.25 · (0, 8) = (3, 0) + (0, 2) = (3, 2).' },
+      why: { es: 'Es la suma ponderada: 0.75 · (4, 0) + 0.25 · (0, 8) = (3, 0) + (0, 2) = (3, 2).', en: 'It is the weighted sum: 0.75 · (4, 0) + 0.25 · (0, 8) = (3, 0) + (0, 2) = (3, 2).' },
     },
     {
       kind: 'concept',

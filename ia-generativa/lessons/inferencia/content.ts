@@ -180,7 +180,7 @@ export default defineLesson({
       gate: {
         id: 'batch',
         prompt: {
-          es: 'Con 8 000 tokens de contexto: busca un lote que cueste menos de US$ 0,30 por millón de tokens y dé 50 tokens/s o más a cada persona.',
+          es: 'Con 8 000 tokens de contexto: busca un lote que cueste menos de US$ 0.30 por millón de tokens y dé 50 tokens/s o más a cada persona.',
           en: 'At 8,000 tokens of context: find a batch that costs under $0.30 per million tokens and gives each person 50 tokens/s or more.',
         },
       },
@@ -305,23 +305,23 @@ Son multiplicaciones de matrices grandes: la GPU trabaja cerca de su pico (la le
 
 $$t_{\\text{vuelta}}=\\max\\!\\left(\\frac{W+B\\,L\\,c_{kv}}{\\mathrm{BW}},\\ \\frac{B\\,(2N+4\\,n_\\ell\\,d_{\\text{attn}}\\,L)}{P}\\right)$$
 
-con $W$ los bytes de pesos, $c_{kv}$ los bytes de caché por token, BW el ancho de banda y $P$ el cálculo útil de la GPU (la lección usa la mitad del pico). Con $B=1$ hay $2N$ FLOPs por cada $W=bN$ bytes, es decir $2/b$ FLOPs por byte: uno, en FP16. Una H100 puede hacer $989\\cdot10^{12}/3{,}35\\cdot10^{12}\\approx 295$ por byte, así que el decode de una persona usa cerca del 0,3 % del cálculo. Ignorando la caché, el lote con el que el cálculo alcanza a la memoria es $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})$: unos 295 con el pico de la hoja de datos y unos 148 con la mitad del pico que usa la lección; la caché de cada persona suele impedir llegar ahí.
+con $W$ los bytes de pesos, $c_{kv}$ los bytes de caché por token, BW el ancho de banda y $P$ el cálculo útil de la GPU (la lección usa la mitad del pico). Con $B=1$ hay $2N$ FLOPs por cada $W=bN$ bytes, es decir $2/b$ FLOPs por byte: uno, en FP16. Una H100 puede hacer $989\\cdot10^{12}/3{,}35\\cdot10^{12}\\approx 295$ por byte, así que el decode de una persona usa cerca del 0.3 % del cálculo. Ignorando la caché, el lote con el que el cálculo alcanza a la memoria es $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})$: unos 295 con el pico de la hoja de datos y unos 148 con la mitad del pico que usa la lección; la caché de cada persona suele impedir llegar ahí.
 
 ## La caché KV por dentro
 
 $$c_{kv}=2\\,n_\\ell\\,n_{kv}\\,d_h\\,b$$
 
-El 2 es clave y valor; $n_{kv}$ son las cabezas de clave-valor; $d_h$ la dimensión por cabeza y $b$ los bytes por número. Llama 3 8B (Llama Team, 2024, tabla 3; la ventana de 128 000 tokens es la que el informe logra al final del preentrenamiento, partiendo de 8 000): $2\\cdot32\\cdot8\\cdot128\\cdot2=131\\,072$ bytes por token; 70B: $2\\cdot80\\cdot8\\cdot128\\cdot2=327\\,680$. Con atención multicabeza completa (32 cabezas KV en el 8B) serían $524\\,288$. La atención de consultas agrupadas (GQA, Ainslie et al., 2023) comparte cada par entre un grupo de cabezas de consulta; la de una sola cabeza (Shazeer, 2019) usa un par para todas. La misma cuenta da el valor de Kwon et al. (2023) para OPT-13B: $2\\cdot5120\\cdot40\\cdot2=819\\,200$ bytes, unos 800 KB, y 1,6 GB para 2 048 tokens.
+El 2 es clave y valor; $n_{kv}$ son las cabezas de clave-valor; $d_h$ la dimensión por cabeza y $b$ los bytes por número. Llama 3 8B (Llama Team, 2024, tabla 3; la ventana de 128 000 tokens es la que el informe logra al final del preentrenamiento, partiendo de 8 000): $2\\cdot32\\cdot8\\cdot128\\cdot2=131\\,072$ bytes por token; 70B: $2\\cdot80\\cdot8\\cdot128\\cdot2=327\\,680$. Con atención multicabeza completa (32 cabezas KV en el 8B) serían $524\\,288$. La atención de consultas agrupadas (GQA, Ainslie et al., 2023) comparte cada par entre un grupo de cabezas de consulta; la de una sola cabeza (Shazeer, 2019) usa un par para todas. La misma cuenta da el valor de Kwon et al. (2023) para OPT-13B: $2\\cdot5120\\cdot40\\cdot2=819\\,200$ bytes, unos 800 KB, y 1.6 GB para 2 048 tokens.
 
-Sin caché, generar $G$ tokens tras $P$ de entrada procesa $GP+G(G-1)/2$ posiciones; con caché, $P+G-1$. Con $P=10$ y $G=16$: $280$ frente a $25$. El juguete de la escena (2 capas, 2 cabezas, $d=16$, pesos aleatorios) cuenta esas pasadas y las multiplicaciones-sumas realizadas (unos 1,46 millones contra 135 mil), y los logits coinciden con una diferencia máxima de 0.
+Sin caché, generar $G$ tokens tras $P$ de entrada procesa $GP+G(G-1)/2$ posiciones; con caché, $P+G-1$. Con $P=10$ y $G=16$: $280$ frente a $25$. El juguete de la escena (2 capas, 2 cabezas, $d=16$, pesos aleatorios) cuenta esas pasadas y las multiplicaciones-sumas realizadas (unos 1.46 millones contra 135 mil), y los logits coinciden con una diferencia máxima de 0.
 
 ## Techo de velocidad, lotes y costo
 
 $$\\text{tokens/s por persona}\\le\\frac{\\mathrm{BW}}{W+B\\,L\\,c_{kv}},\\qquad \\text{rendimiento}=\\frac{B}{t_{\\text{vuelta}}},\\qquad \\text{costo por millón}=\\frac{\\text{precio por hora}}{3600\\cdot\\text{rendimiento}}\\cdot10^{6}$$
 
-Con el 8B en FP16 en una H100, contexto de 8 000 tokens y 2 USD por GPU-hora (supuesto): $B=1$ da 196 tokens/s y 2,84 USD por millón; $B=32$ da 67,5 tokens/s por persona, 2 161 en total y 0,26 USD por millón. Con 32 000 tokens de contexto caben 15 conversaciones y el mejor caso cuesta cerca de 0,87 USD por millón. Con $B=1$ el costo es once veces el de $B=32$ en la misma máquina: una GPU poco usada es cara por token.
+Con el 8B en FP16 en una H100, contexto de 8 000 tokens y 2 USD por GPU-hora (supuesto): $B=1$ da 196 tokens/s y 2.84 USD por millón; $B=32$ da 67.5 tokens/s por persona, 2 161 en total y 0.26 USD por millón. Con 32 000 tokens de contexto caben 15 conversaciones y el mejor caso cuesta cerca de 0.87 USD por millón. Con $B=1$ el costo es once veces el de $B=32$ en la misma máquina: una GPU poco usada es cara por token.
 
-Los precios de la API que aparecen en la escena (US$ 3 y 15 por millón de tokens) son un ejemplo. En la lista de Anthropic consultada el 4 de octubre de 2026, la salida cuesta cinco veces la entrada en todos los modelos listados; leer de la caché de prompt cuesta 0,1 veces el precio de entrada en casi todos (0,05 y 0,025 en dos modelos) y escribir en ella, con vigencia de cinco minutos, 1,25 veces. La escena ignora ese sobrecosto de escritura.
+Los precios de la API que aparecen en la escena (US$ 3 y 15 por millón de tokens) son un ejemplo. En la lista de Anthropic consultada el 4 de octubre de 2026, la salida cuesta cinco veces la entrada en todos los modelos listados; leer de la caché de prompt cuesta 0.1 veces el precio de entrada en casi todos (0.05 y 0.025 en dos modelos) y escribir en ella, con vigencia de cinco minutos, 1.25 veces. La escena ignora ese sobrecosto de escritura.
 
 ## Mezcla de expertos
 
@@ -329,7 +329,7 @@ Cada capa reemplaza la red MLP por $E$ expertos y un enrutador que elige $k$ por
 
 $$N_{\\text{total}}=N_{\\text{comunes}}+E\\,n_\\ell\\,(3dh),\\qquad N_{\\text{activos}}=N_{\\text{comunes}}+k\\,n_\\ell\\,(3dh)$$
 
-Mixtral 8x7B (Jiang et al., 2024, tabla 1): $d=4096$, $h=14\\,336$, $n_\\ell=32$, $E=8$, $k=2$. Salen 1,6 mil millones comunes (atención, embeddings, enrutadores), 45,1 de expertos y, en total, 46,7; activos, 12,9. El artículo lo dice así: el costo de cálculo es proporcional a los parámetros activos, pero «el costo de memoria para servir Mixtral es proporcional a su cantidad de parámetros dispersos, 47B», y se presta mejor a cargas con lotes. Si cada token elige sus dos expertos por igual al azar (supuesto: en la práctica el enrutamiento es desigual), la fracción de expertos que un lote de $B$ tokens consulta en una capa es $1-(1-k/E)^B$: 25 % con $B=1$, 90 % con $B=8$, 99 % con $B=16$. DeepSeek-V3 lleva la idea más lejos: 671 mil millones en total y 37 mil millones activos por token.
+Mixtral 8x7B (Jiang et al., 2024, tabla 1): $d=4096$, $h=14\\,336$, $n_\\ell=32$, $E=8$, $k=2$. Salen 1.6 mil millones comunes (atención, embeddings, enrutadores), 45.1 de expertos y, en total, 46.7; activos, 12.9. El artículo lo dice así: el costo de cálculo es proporcional a los parámetros activos, pero «el costo de memoria para servir Mixtral es proporcional a su cantidad de parámetros dispersos, 47B», y se presta mejor a cargas con lotes. Si cada token elige sus dos expertos por igual al azar (supuesto: en la práctica el enrutamiento es desigual), la fracción de expertos que un lote de $B$ tokens consulta en una capa es $1-(1-k/E)^B$: 25 % con $B=1$, 90 % con $B=8$, 99 % con $B=16$. DeepSeek-V3 lleva la idea más lejos: 671 mil millones en total y 37 mil millones activos por token.
 
 ## En código
 
@@ -407,7 +407,7 @@ print([round(1 - (1 - k / expertos) ** B, 2) for B in (1, 2, 4, 8, 16)])   # sup
 
 ## Lo que viene
 
-Los sistemas reales añaden más piezas: PagedAttention reparte la caché en bloques para no desperdiciar memoria (vLLM: de 2 a 4 veces más rendimiento con la misma latencia que sistemas anteriores, Kwon et al., 2023), el *batching* continuo mete y saca conversaciones del lote en cada vuelta (Orca, Yu et al., 2022) y la decodificación especulativa dio aceleraciones de 2 a 3 veces en T5-XXL (Leviathan et al., 2023) y de 2 a 2,5 veces en Chinchilla 70B (Chen et al., 2023) sin cambiar la distribución de la salida. Todo esto sirve a un modelo base; convertirlo en asistente empieza con el ajuste fino, en la lección 27.`,
+Los sistemas reales añaden más piezas: PagedAttention reparte la caché en bloques para no desperdiciar memoria (vLLM: de 2 a 4 veces más rendimiento con la misma latencia que sistemas anteriores, Kwon et al., 2023), el *batching* continuo mete y saca conversaciones del lote en cada vuelta (Orca, Yu et al., 2022) y la decodificación especulativa dio aceleraciones de 2 a 3 veces en T5-XXL (Leviathan et al., 2023) y de 2 a 2.5 veces en Chinchilla 70B (Chen et al., 2023) sin cambiar la distribución de la salida. Todo esto sirve a un modelo base; convertirlo en asistente empieza con el ajuste fino, en la lección 27.`,
     en: `## Two phases, two bottlenecks
 
 A dense model with $N$ parameters spends about $2N$ FLOPs on every token it processes (Kaplan et al., 2020; Pope et al., 2022), plus an attention term that grows with context.
@@ -531,7 +531,7 @@ Real systems add more pieces: PagedAttention splits the cache into blocks so mem
     es: [
       'Costo por tarea = tokens de entrada × precio de entrada + tokens de salida × precio de salida. Pide el desglose por tipo de tarea: resumir (entrada larga, salida corta) no se parece a redactar (al revés). Estima tu volumen real en tokens antes de presupuestar.',
       'La latencia depende del contexto: la espera hasta el primer token crece con lo que envías, y cada token posterior sale más lento con contextos largos. Pide el tiempo al primer token y los tokens por segundo medidos con tu longitud de contexto, no los de la ficha comercial.',
-      'Pregunta por la caché de prompt. Si el inicio de tu prompt se repite (instrucciones, un documento base), reutilizarlo baja el costo y la espera: en la lista de Anthropic, leer de caché cuesta una décima parte de la entrada o menos (escribir la primera vez cuesta algo más: 1,25 veces).',
+      'Pregunta por la caché de prompt. Si el inicio de tu prompt se repite (instrucciones, un documento base), reutilizarlo baja el costo y la espera: en la lista de Anthropic, leer de caché cuesta una décima parte de la entrada o menos (escribir la primera vez cuesta algo más: 1.25 veces).',
       'Al comparar modelos o proveedores, mira más que los «parámetros»: parámetros activos (mezcla de expertos), tamaño de contexto, precio de entrada y de salida. Si alojas el modelo tú, el costo por token depende de la utilización: con los supuestos de la lección, una GPU casi vacía cuesta unas once veces más por token que una bien agrupada.',
     ],
     en: [
@@ -571,13 +571,13 @@ Real systems add more pieces: PagedAttention splits the cache into blocks so mem
       kind: 'calc',
       q: { es: 'Un modelo tiene 40 capas, 8 cabezas de clave-valor de dimensión 128 y guarda la caché en FP16 (2 bytes). ¿Cuánta caché ocupa una conversación de 10 000 tokens?', en: 'A model has 40 layers, 8 key-value heads of dimension 128, and stores the cache in FP16 (2 bytes). How much cache does a 10,000-token conversation take?' },
       options: [
-        { es: '0,82 GB', en: '0.82 GB' },
-        { es: '3,28 GB', en: '3.28 GB' },
-        { es: '16,4 GB', en: '16.4 GB' },
-        { es: '1,64 GB', en: '1.64 GB' },
+        { es: '0.82 GB', en: '0.82 GB' },
+        { es: '3.28 GB', en: '3.28 GB' },
+        { es: '16.4 GB', en: '16.4 GB' },
+        { es: '1.64 GB', en: '1.64 GB' },
       ],
       answer: 3,
-      why: { es: 'Por token: 2 (clave y valor) × 40 × 8 × 128 × 2 bytes = 163 840 bytes. Por 10 000 tokens son 1,64 GB. Olvidar el factor 2 de clave y valor da 0,82 GB.', en: 'Per token: 2 (key and value) × 40 × 8 × 128 × 2 bytes = 163,840 bytes. Times 10,000 tokens that is 1.64 GB. Forgetting the factor 2 for key and value gives 0.82 GB.' },
+      why: { es: 'Por token: 2 (clave y valor) × 40 × 8 × 128 × 2 bytes = 163 840 bytes. Por 10 000 tokens son 1.64 GB. Olvidar el factor 2 de clave y valor da 0.82 GB.', en: 'Per token: 2 (key and value) × 40 × 8 × 128 × 2 bytes = 163,840 bytes. Times 10,000 tokens that is 1.64 GB. Forgetting the factor 2 for key and value gives 0.82 GB.' },
     },
     {
       kind: 'apply',

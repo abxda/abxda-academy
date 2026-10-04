@@ -119,7 +119,7 @@ function drawFit(S: Frame, reg: boolean) {
         { label: S.l('entrenamiento', 'training'), value: eT, tone: 'dat', hot: !showVal },
         ...(showVal ? [{ label: S.l('validación', 'validation'), value: eV, tone: 'lat' as const, hot: true }] : []),
       ], { max: 0.45, fmt: (v) => S.n(v, 2), labelW: S.portrait ? 92 * u : Math.min(104 * u, r.w * 0.42), rowH: 30 * u, size: 12 });
-      if (showVal) d.text(S.l(`ruido de las mediciones: 0,20`, `measurement noise: 0.20`).replace(/0[,.]20/, S.n(0.2, 2)), r.x, r.y + 96 * u, { size: 11, color: p.mute, w: r.w });
+      if (showVal) d.text(S.l(`ruido de las mediciones: 0.20`, `measurement noise: 0.20`).replace(/0[,.]20/, S.n(0.2, 2)), r.x, r.y + 96 * u, { size: 11, color: p.mute, w: r.w });
     });
   }
   if (S.is('overfit') && S.at('overfit', 1.6, 2.2) > 0) d.withAlpha(S.at('overfit', 1.6, 2.2), () => badge(S, S.l('casi sin error aquí…', 'almost no error here…'), plot.X(0.5), plot.Y(1.18), { tone: 'dat' }));

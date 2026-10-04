@@ -271,7 +271,7 @@ function drawPayoff(S: Frame, all: Rect) {
   const rows = [
     { name: 'FP16', bits: 16, note: '' },
     { name: 'INT8', bits: 8, note: '' },
-    { name: S.l('4 bits + escalas', '4 bits + scales'), bits: 4.5, note: S.l('4,5 bits por peso', '4.5 bits per weight') },
+    { name: S.l('4 bits + escalas', '4 bits + scales'), bits: 4.5, note: S.l('4.5 bits por peso', '4.5 bits per weight') },
   ];
   d.withAlpha(S.reveal('payoff', 0, 0.6), () => d.text(S.l('Un modelo de 8 mil M de parámetros en una RTX 3060', 'An 8B-parameter model on an RTX 3060'), all.x, all.y + 2 * u, { size: FS(S, 14.5), weight: 800, color: p.ink, base: 'top', w: all.w }));
   const labW = (port ? 84 : 130) * u, top = all.y + (port ? 62 : 54) * u, rowH = Math.min(78 * u, (all.h - (top - all.y) - 24 * u) / 3);

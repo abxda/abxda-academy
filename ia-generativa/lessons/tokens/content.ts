@@ -253,7 +253,7 @@ Trabajar con bytes (UTF-8) permite escribir cualquier texto con solo 256 piezas 
 
 ## Tamaño del vocabulario
 
-Cada pieza necesita una fila en la tabla de embeddings $E\\in\\mathbb{R}^{|V|\\times d}$, es decir $|V|\\cdot d$ parámetros, y la capa final produce un valor por cada pieza. Con $|V|=50\\,257$ y $d=768$ (el GPT-2 más pequeño), la tabla tiene $50\\,257\\times 768\\approx 38{,}6$ millones de parámetros. A cambio, un vocabulario mayor comprime más: el informe técnico de Llama 3 reporta que su tokenizador de 128 mil piezas mejora la compresión frente al de Llama 2 (32 mil piezas): de 3,17 a 3,94 caracteres por token en una muestra de inglés.
+Cada pieza necesita una fila en la tabla de embeddings $E\\in\\mathbb{R}^{|V|\\times d}$, es decir $|V|\\cdot d$ parámetros, y la capa final produce un valor por cada pieza. Con $|V|=50\\,257$ y $d=768$ (el GPT-2 más pequeño), la tabla tiene $50\\,257\\times 768\\approx 38{,}6$ millones de parámetros. A cambio, un vocabulario mayor comprime más: el informe técnico de Llama 3 reporta que su tokenizador de 128 mil piezas mejora la compresión frente al de Llama 2 (32 mil piezas): de 3.17 a 3.94 caracteres por token en una muestra de inglés.
 
 ## Costo
 
@@ -261,7 +261,7 @@ Con precios por millón de tokens distintos para entrada y salida:
 
 $$\\text{costo}=\\frac{n_{\\text{ent}}\\,p_{\\text{ent}}+n_{\\text{sal}}\\,p_{\\text{sal}}}{10^{6}}$$
 
-Para inglés, $n\\approx \\text{palabras}/0{,}75$. Ejemplo con un precio supuesto de 2 dólares por millón: un informe de 3 000 palabras son unos 4 000 tokens; mil informes, 4 millones de tokens y 8 dólares. El mismo contenido en otro idioma puede necesitar más tokens: con cuatro frases medidas con tiktoken, el español usó 1,82 veces los tokens del inglés con el tokenizador de GPT-2, 1,32 con el de GPT-4 y 1,15 con el de GPT-4o (muestra muy pequeña: sirve para ilustrar, no para presupuestar).
+Para inglés, $n\\approx \\text{palabras}/0{,}75$. Ejemplo con un precio supuesto de 2 dólares por millón: un informe de 3 000 palabras son unos 4 000 tokens; mil informes, 4 millones de tokens y 8 dólares. El mismo contenido en otro idioma puede necesitar más tokens: con cuatro frases medidas con tiktoken, el español usó 1.82 veces los tokens del inglés con el tokenizador de GPT-2, 1.32 con el de GPT-4 y 1.15 con el de GPT-4o (muestra muy pequeña: sirve para ilustrar, no para presupuestar).
 
 ## Por qué fallan las letras y las cifras
 
@@ -467,13 +467,13 @@ Each token identifier selects a row of the embedding table (lesson 14); from the
       kind: 'calc',
       q: { es: 'Un informe en inglés tiene 3 000 palabras. Con la regla de un token por cada tres cuartas partes de palabra y un precio supuesto de 2 dólares por millón de tokens, ¿cuánto cuesta procesar 1 000 informes?', en: 'An English report has 3,000 words. With the rule of one token per three quarters of a word and an assumed price of 2 dollars per million tokens, how much does it cost to process 1,000 reports?' },
       options: [
-        { es: '0,80 dólares', en: '$0.80' },
+        { es: '0.80 dólares', en: '$0.80' },
         { es: '80 dólares', en: '$80' },
         { es: '6 dólares', en: '$6' },
         { es: '8 dólares', en: '$8' },
       ],
       answer: 3,
-      why: { es: 'Tokens por informe ≈ 3 000 ÷ 0,75 = 4 000. Para mil informes son 4 millones de tokens, y 4 × 2 = 8 dólares. Si contaras un token por palabra saldrían 6 dólares: subestimarías el costo en una cuarta parte.', en: 'Tokens per report ≈ 3,000 ÷ 0.75 = 4,000. For a thousand reports that is 4 million tokens, and 4 × 2 = $8. If you counted one token per word you would get $6: you would underestimate the cost by a quarter.' },
+      why: { es: 'Tokens por informe ≈ 3 000 ÷ 0.75 = 4 000. Para mil informes son 4 millones de tokens, y 4 × 2 = 8 dólares. Si contaras un token por palabra saldrían 6 dólares: subestimarías el costo en una cuarta parte.', en: 'Tokens per report ≈ 3,000 ÷ 0.75 = 4,000. For a thousand reports that is 4 million tokens, and 4 × 2 = $8. If you counted one token per word you would get $6: you would underestimate the cost by a quarter.' },
     },
     {
       kind: 'apply',

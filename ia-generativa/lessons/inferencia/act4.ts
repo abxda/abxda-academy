@@ -68,7 +68,7 @@ export function drawPrices(S: Frame) {
     pill(S, S.l('× 5', '× 5'), Math.min(bx + bw - 30 * u, x), (ya + yb) / 2, { t: 'lat' });
     d.line(bx + bw * (PRICE_IN / PRICE_OUT) + 14 * u, y0 + bh + 2 * u, bx + bw * (PRICE_IN / PRICE_OUT) + 14 * u, y0 + pitch - 2 * u, p.lineStrong, 1.3, [3, 3]);
   });
-  show(S, S.reveal('price-ratio', 6.8, 0.7), () => pill(S, S.l('× 0,1', '× 0.1'), bx + bw * 0.3, y0 + 2 * pitch + bh + 20 * u, { t: 'sig' }));
+  show(S, S.reveal('price-ratio', 6.8, 0.7), () => pill(S, S.l('× 0.1', '× 0.1'), bx + bw * 0.3, y0 + 2 * pitch + bh + 20 * u, { t: 'sig' }));
   show(S, S.reveal('price-ratio', 8.0, 0.8), () => noteUp(S, S.l('Cifras de ejemplo. En la lista de Anthropic (octubre de 2026) la salida cuesta 5 veces la entrada y leer de caché, una décima parte o menos.', 'Example figures. On Anthropic’s list (October 2026) output costs 5 times input, and reading from cache a tenth or less.'), A.x, A.y + A.h - 2 * u, A.w));
 }
 

@@ -110,7 +110,7 @@ export default defineLesson({
     },
     {
       id: 'check',
-      es: 'Comprobémoslo. GPT-3 da 3,15 × 10²³ y su informe reporta 3,14. Llama 3.1, con 405 mil millones de parámetros y 15,6 billones de tokens, da 3,8 × 10²⁵.',
+      es: 'Comprobémoslo. GPT-3 da 3.15 × 10²³ y su informe reporta 3.14. Llama 3.1, con 405 mil millones de parámetros y 15.6 billones de tokens, da 3.8 × 10²⁵.',
       en: 'Let’s check. GPT-3 gives 3.15 × 10²³ and its report says 3.14. Llama 3.1, with 405 billion parameters and 15.6 trillion tokens, gives 3.8 × 10²⁵.',
       tts: {
         es: 'Comprobémoslo. Ge pe te tres da tres coma quince por diez a la veintitrés, y su informe reporta tres coma catorce. Lama tres punto uno, con cuatrocientos cinco mil millones de parámetros y quince coma seis billones de tokens, da tres coma ocho por diez a la veinticinco.',
@@ -310,7 +310,7 @@ export default defineLesson({
   keyIdeas: {
     es: [
       'La pérdida de un modelo de lenguaje baja de forma predecible, como una ley de potencia, al crecer los parámetros, los datos o el cómputo (Kaplan et al., 2020).',
-      'Cada ×10 en parámetros multiplica la pérdida por ≈ 0,84: la mejora relativa es constante, pero el costo se multiplica por diez. Son rendimientos decrecientes.',
+      'Cada ×10 en parámetros multiplica la pérdida por ≈ 0.84: la mejora relativa es constante, pero el costo se multiplica por diez. Son rendimientos decrecientes.',
       'El cómputo de entrenamiento es C ≈ 6·N·D FLOPs. Con las GPU, el MFU y el precio por hora salen los días y el dinero.',
       'Más GPU acortan el calendario, no el costo: el costo lo fijan los FLOPs, el MFU y el precio por hora de GPU.',
       'Con un presupuesto fijo, parámetros y datos deben crecer a la par (≈ 20 tokens por parámetro, Chinchilla). Y las habilidades «emergentes» dependen en parte de cómo se mida.',
@@ -342,7 +342,7 @@ Kaplan et al. (2020) entrenaron modelos de 768 a 1 500 millones de parámetros y
 
 $$L(N)=\\left(\\frac{N_c}{N}\\right)^{\\alpha_N},\\qquad \\alpha_N\\approx 0{,}076,\\quad N_c\\approx 8{,}8\\cdot 10^{13}$$
 
-Eso vale para modelos que convergen con datos de sobra. Con un modelo enorme y datos limitados, $L(D)=(D_c/D)^{\\alpha_D}$ con $\\alpha_D\\approx 0{,}095$; y con el cómputo repartido de forma óptima, $L(C_{\\min})\\propto C_{\\min}^{-0{,}050}$. Multiplicar $N$ por $k$ multiplica $L$ por $k^{-\\alpha_N}$: por 2, 0,95; por 10, 0,84. Las constantes dependen del vocabulario y de los datos («no tienen un significado fundamental», dicen los autores), y fuera del rango medido todo es extrapolación.
+Eso vale para modelos que convergen con datos de sobra. Con un modelo enorme y datos limitados, $L(D)=(D_c/D)^{\\alpha_D}$ con $\\alpha_D\\approx 0{,}095$; y con el cómputo repartido de forma óptima, $L(C_{\\min})\\propto C_{\\min}^{-0{,}050}$. Multiplicar $N$ por $k$ multiplica $L$ por $k^{-\\alpha_N}$: por 2, 0.95; por 10, 0.84. Las constantes dependen del vocabulario y de los datos («no tienen un significado fundamental», dicen los autores), y fuera del rango medido todo es extrapolación.
 
 ## El reparto óptimo (Chinchilla)
 
@@ -364,7 +364,7 @@ Un paso hacia delante cuesta unas $2N$ operaciones (una multiplicación y una su
 
 $$C\\approx 6ND$$
 
-La aproximación ignora el término de atención que depende del contexto, pequeño cuando $d_{\\text{modelo}}\\gg n_{\\text{ctx}}/12$ (Kaplan et al.). Hoffmann et al. compararon su conteo exacto con $6ND$ en modelos de 73 M a 6,8 mil M de parámetros: la razón fue de 0,99 a 1,10. Para GPT-3, $6\\cdot 175\\cdot 10^{9}\\cdot 300\\cdot 10^{9}=3{,}15\\cdot 10^{23}$; el artículo reporta $3{,}14\\cdot 10^{23}$ (tabla D.1).
+La aproximación ignora el término de atención que depende del contexto, pequeño cuando $d_{\\text{modelo}}\\gg n_{\\text{ctx}}/12$ (Kaplan et al.). Hoffmann et al. compararon su conteo exacto con $6ND$ en modelos de 73 M a 6.8 mil M de parámetros: la razón fue de 0.99 a 1.10. Para GPT-3, $6\\cdot 175\\cdot 10^{9}\\cdot 300\\cdot 10^{9}=3{,}15\\cdot 10^{23}$; el artículo reporta $3{,}14\\cdot 10^{23}$ (tabla D.1).
 
 Con $G$ GPU de pico $P$ (FLOP/s) y una fracción de aprovechamiento $\\mathrm{MFU}$ (Chowdhery et al., 2022: rendimiento observado entre el máximo teórico),
 
@@ -372,7 +372,7 @@ $$t=\\frac{6ND}{G\\,P\\,\\mathrm{MFU}},\\qquad H=\\frac{G\\,t}{3600},\\qquad \\t
 
 Como $H=6ND/(3600\\,P\\,\\mathrm{MFU})$ no depende de $G$, duplicar las GPU reduce $t$ a la mitad y deja el costo igual, mientras el MFU se mantenga. En clústeres enormes cae: Llama 3 405B reporta un MFU de 38 a 43 % y 466 interrupciones en 54 días de entrenamiento.
 
-Verificación con un entrenamiento real: Llama 2 70B usó 1 720 320 horas de GPU A100 con 2 billones de tokens (Touvron et al., 2023, tabla 2). Con $6ND=8{,}4\\cdot 10^{23}$ eso implica $1{,}36\\cdot 10^{14}$ FLOP/s por GPU, el 43,5 % del pico de 312 teraFLOPS de la A100 (BF16, denso): un MFU parecido al de Llama 3. Para la H100, la ficha de NVIDIA da 1 979 teraFLOPS con esparsidad, es decir, unos 989 sin ella: el valor de partida de la calculadora.
+Verificación con un entrenamiento real: Llama 2 70B usó 1 720 320 horas de GPU A100 con 2 billones de tokens (Touvron et al., 2023, tabla 2). Con $6ND=8{,}4\\cdot 10^{23}$ eso implica $1{,}36\\cdot 10^{14}$ FLOP/s por GPU, el 43.5 % del pico de 312 teraFLOPS de la A100 (BF16, denso): un MFU parecido al de Llama 3. Para la H100, la ficha de NVIDIA da 1 979 teraFLOPS con esparsidad, es decir, unos 989 sin ella: el valor de partida de la calculadora.
 
 ## En código
 
@@ -506,7 +506,7 @@ GPU memory (lesson 25) decides which model fits and how the work is split. Infer
       ],
       answer: 2,
       why: {
-        es: 'Una recta en escala logarítmica es una ley de potencia: ×10 en parámetros multiplica la pérdida por ≈ 0,84 cada vez. Por eso cada mejora cuesta diez veces más que la anterior. Y no llega a cero: hay una pérdida irreducible.',
+        es: 'Una recta en escala logarítmica es una ley de potencia: ×10 en parámetros multiplica la pérdida por ≈ 0.84 cada vez. Por eso cada mejora cuesta diez veces más que la anterior. Y no llega a cero: hay una pérdida irreducible.',
         en: 'A straight line on log axes is a power law: ×10 in parameters multiplies the loss by ≈ 0.84 every time. That is why each improvement costs ten times more than the last. And it never reaches zero: there is an irreducible loss.',
       },
     },
@@ -524,7 +524,7 @@ GPU memory (lesson 25) decides which model fits and how the work is split. Infer
       ],
       answer: 1,
       why: {
-        es: 'Midieron más de cuatrocientos modelos: por cada duplicación del modelo, conviene duplicar los tokens. Chinchilla (70 mil millones, 1,4 billones de tokens) superó a Gopher (280 mil millones, 300 mil millones de tokens) con el mismo cómputo.',
+        es: 'Midieron más de cuatrocientos modelos: por cada duplicación del modelo, conviene duplicar los tokens. Chinchilla (70 mil millones, 1.4 billones de tokens) superó a Gopher (280 mil millones, 300 mil millones de tokens) con el mismo cómputo.',
         en: 'They measured over four hundred models: for every doubling of the model, double the tokens. Chinchilla (70 billion, 1.4 trillion tokens) beat Gopher (280 billion, 300 billion tokens) with the same compute.',
       },
     },
@@ -535,14 +535,14 @@ GPU memory (lesson 25) decides which model fits and how the work is split. Infer
         en: 'A 7-billion-parameter model is trained on 140 billion tokens. With C ≈ 6·N·D, how many FLOPs does it need?',
       },
       options: [
-        { es: '9,8 × 10²⁰', en: '9.8 × 10²⁰' },
-        { es: '5,9 × 10²⁰', en: '5.9 × 10²⁰' },
-        { es: '5,9 × 10²²', en: '5.9 × 10²²' },
-        { es: '5,9 × 10²¹', en: '5.9 × 10²¹' },
+        { es: '9.8 × 10²⁰', en: '9.8 × 10²⁰' },
+        { es: '5.9 × 10²⁰', en: '5.9 × 10²⁰' },
+        { es: '5.9 × 10²²', en: '5.9 × 10²²' },
+        { es: '5.9 × 10²¹', en: '5.9 × 10²¹' },
       ],
       answer: 3,
       why: {
-        es: '6 × 7×10⁹ × 1,4×10¹¹ = 5,88×10²¹. El 9,8×10²⁰ olvida el factor 6: el costo de ida (2N) y vuelta (4N) de cada token.',
+        es: '6 × 7×10⁹ × 1.4×10¹¹ = 5.88×10²¹. El 9.8×10²⁰ olvida el factor 6: el costo de ida (2N) y vuelta (4N) de cada token.',
         en: '6 × 7×10⁹ × 1.4×10¹¹ = 5.88×10²¹. The 9.8×10²⁰ forgets the factor 6: the cost of the forward (2N) and backward (4N) pass for every token.',
       },
     },
@@ -571,7 +571,7 @@ GPU memory (lesson 25) decides which model fits and how the work is split. Infer
   terms: [
     { id: 'scaling-law', term: { es: 'Ley de escala', en: 'Scaling law' }, def: { es: 'Relación empírica y predecible, normalmente una ley de potencia, entre la pérdida de un modelo y su número de parámetros, sus datos o su cómputo de entrenamiento.', en: 'An empirical, predictable relationship, usually a power law, between a model’s loss and its number of parameters, its data, or its training compute.' } },
     { id: 'flops', term: { es: 'FLOPs', en: 'FLOPs' }, def: { es: 'Operaciones de coma flotante: sumas y multiplicaciones con decimales. El cómputo de entrenar un modelo se mide en FLOPs totales (≈ 6·N·D); la velocidad de un chip, en FLOP/s.', en: 'Floating-point operations: additions and multiplications with decimals. A model’s training compute is measured in total FLOPs (≈ 6·N·D); a chip’s speed, in FLOP/s.' } },
-    { id: 'chinchilla', term: { es: 'Chinchilla', en: 'Chinchilla' }, def: { es: 'Modelo de DeepMind (70 mil millones de parámetros, 1,4 billones de tokens) y la regla que dejó: con un presupuesto fijo, parámetros y datos deben crecer a la par, unos 20 tokens por parámetro.', en: 'A DeepMind model (70 billion parameters, 1.4 trillion tokens) and the rule it left: with a fixed budget, parameters and data should grow together, about 20 tokens per parameter.' } },
+    { id: 'chinchilla', term: { es: 'Chinchilla', en: 'Chinchilla' }, def: { es: 'Modelo de DeepMind (70 mil millones de parámetros, 1.4 billones de tokens) y la regla que dejó: con un presupuesto fijo, parámetros y datos deben crecer a la par, unos 20 tokens por parámetro.', en: 'A DeepMind model (70 billion parameters, 1.4 trillion tokens) and the rule it left: with a fixed budget, parameters and data should grow together, about 20 tokens per parameter.' } },
     { id: 'compute-budget', term: { es: 'Presupuesto de cómputo', en: 'Compute budget' }, def: { es: 'Cantidad total de FLOPs que se decide gastar en entrenar un modelo. Como C ≈ 6·N·D, fija cuánto se puede repartir entre tamaño del modelo y cantidad de datos.', en: 'The total number of FLOPs you decide to spend on training a model. Since C ≈ 6·N·D, it fixes how much can be split between model size and amount of data.' } },
   ],
 

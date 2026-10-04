@@ -272,7 +272,7 @@ El nombre *machine learning* se asocia a Arthur L. Samuel, que lo usa en el tít
 
 ## Un caso real: filtrar correo basura
 
-En 1998, Sahami, Dumais, Heckerman y Horvitz estudiaron cómo construir filtros de correo basura de forma automática. Señalan que las reglas escritas a mano suponen usuarios capaces de construirlas y deben ajustarse sin cesar a medida que cambia el correo basura, y proponen en cambio aprender de los mensajes del propio usuario. Su clasificador probabilístico (bayesiano ingenuo) combinaba el texto del mensaje con rasgos propios del problema, como el porcentaje de caracteres no alfanuméricos del asunto. Subrayan además que clasificar como basura un correo legítimo suele costar mucho más que dejar pasar uno de basura; por eso solo marcaban un mensaje como basura si su probabilidad superaba el 99,9 %.
+En 1998, Sahami, Dumais, Heckerman y Horvitz estudiaron cómo construir filtros de correo basura de forma automática. Señalan que las reglas escritas a mano suponen usuarios capaces de construirlas y deben ajustarse sin cesar a medida que cambia el correo basura, y proponen en cambio aprender de los mensajes del propio usuario. Su clasificador probabilístico (bayesiano ingenuo) combinaba el texto del mensaje con rasgos propios del problema, como el porcentaje de caracteres no alfanuméricos del asunto. Subrayan además que clasificar como basura un correo legítimo suele costar mucho más que dejar pasar uno de basura; por eso solo marcaban un mensaje como basura si su probabilidad superaba el 99.9 %.
 
 ## En código
 
@@ -454,7 +454,7 @@ In lesson 2 we will see how any data (an image, a sound, a text) is turned into 
     {
       kind: 'calc',
       q: {
-        es: 'Un modelo tiene w₁ = 0,5, w₂ = 0,1 y b = −4. Un correo trae 6 enlaces y 20 % de mayúsculas. ¿Qué puntaje obtiene y qué responde?',
+        es: 'Un modelo tiene w₁ = 0.5, w₂ = 0.1 y b = −4. Un correo trae 6 enlaces y 20 % de mayúsculas. ¿Qué puntaje obtiene y qué responde?',
         en: 'A model has w₁ = 0.5, w₂ = 0.1 and b = −4. An email has 6 links and 20% capital letters. What score does it get and what does the model answer?',
       },
       options: [
@@ -465,7 +465,7 @@ In lesson 2 we will see how any data (an image, a sound, a text) is turned into 
       ],
       answer: 2,
       why: {
-        es: 'Puntaje = 0,5·6 + 0,1·20 − 4 = 3 + 2 − 4 = 1. Es positivo, así que dice spam. Olvidar el número fijo daría 5; sumarlo en vez de restarlo, 9.',
+        es: 'Puntaje = 0.5·6 + 0.1·20 − 4 = 3 + 2 − 4 = 1. Es positivo, así que dice spam. Olvidar el número fijo daría 5; sumarlo en vez de restarlo, 9.',
         en: 'Score = 0.5·6 + 0.1·20 − 4 = 3 + 2 − 4 = 1. It is positive, so the model says spam. Forgetting the fixed number would give 5; adding it instead of subtracting it, 9.',
       },
     },

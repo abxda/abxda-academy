@@ -202,7 +202,7 @@ function drawBars(S: Frame, all: Rect) {
     const y = top + i * rowH, fit = fitOf(row.gb, 80);
     d.withAlpha(a, () => {
       d.text(S.l(row.pr.es, row.pr.en), all.x, y + rowH * 0.3, { size: FS(S, 14), weight: 800, color: p.ink, base: 'middle' });
-      d.text(`${row.pr.bits / 8 < 1 ? '0,5' : nf(row.pr.bits / 8, 0, S.lang)} B`.replace('0,5', S.l('0,5', '0.5')), all.x, y + rowH * 0.3 + 15 * u, { size: FS(S, 12.5), weight: 700, font: 'mono', color: p.mute, base: 'middle' });
+      d.text(`${row.pr.bits / 8 < 1 ? '0,5' : nf(row.pr.bits / 8, 0, S.lang)} B`.replace('0,5', S.l('0.5', '0.5')), all.x, y + rowH * 0.3 + 15 * u, { size: FS(S, 12.5), weight: 700, font: 'mono', color: p.mute, base: 'middle' });
       const bh = rowH * 0.46, by = y + rowH * 0.12;
       d.rect(X(0), by, X(row.gb) - X(0), bh, { fill: alpha(wt.c, fit === 'no' ? 0.4 : 0.7), stroke: wt.c, lw: 1.4 });
       d.text(gbText(row.gb, S.lang), X(Math.min(row.gb, AX)) + 8 * u, by + bh / 2, { size: FS(S, 14), weight: 800, font: 'mono', color: wt.ink, base: 'middle' });

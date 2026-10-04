@@ -1,7 +1,7 @@
 // Parte 4: aproximación universal (una curva dibujada con esquinas ReLU) y profundidad (la sierra: tramos que se duplican por capa).
 import { Plot, alpha, badge, clamp, drawNet, lerp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { AX, approxError, target, tentK } from './mlp';
-import { fs, ph, sn } from './shared';
+import { fs, nf, ph, sn } from './shared';
 
 export const APPROX_GOAL = 0.05;           // error máximo que pide el primer «Tu turno»
 export const N_MAX = 24;
@@ -50,10 +50,18 @@ export function drawApprox(S: Frame, all: Rect) {
       if (n <= 14) for (let k = 0; k < n; k++) { const x = AX[0] + k * h; plot.dot(x, target(x), 4.2, 'w', { ring: true }); }
     }
     plot.curve(target, 'ink', 3);
+    // la banda ±ε del teorema: la red nunca sale de ella
+    const bandA = S.between('approx-theorem', 'depth') ? S.at('approx-theorem', 0.5, 2.5, 'out') : 0;     // desde el teorema hasta el turno: la meta del turno es no salir de la banda
+    if (bandA > 0) {
+      const m = 80, up: [number, number][] = [], dn: [number, number][] = [];
+      for (let i = 0; i <= m; i++) { const x = AX[0] + ((AX[1] - AX[0]) * i) / m; up.push([plot.X(x), plot.Y(target(x) + APPROX_GOAL)]); dn.push([plot.X(x), plot.Y(target(x) - APPROX_GOAL)]); }
+      d.polygon([...up, ...dn.reverse()], { fill: alpha(wt.c, 0.22 * bandA) });
+    }
     // rótulos
     const ly = plot.r.y + 14 * u;
     badge(S, S.l('curva objetivo', 'target curve'), plot.r.x + 10 * u, ly, { align: 'left' });
     if (n >= 1) badge(S, S.l('suma de n neuronas ReLU', 'sum of n ReLU neurons'), plot.r.x + 10 * u, ly + 28 * u, { tone: 'sig', align: 'left' });
+
   });
 
   // lateral: neuronas, error máximo y el aviso de honestidad
@@ -64,7 +72,7 @@ export function drawApprox(S: Frame, all: Rect) {
     d.text(String(n), x0, aside.y + 38 * u, { size: fs(S, 28), weight: 800, font: 'mono', color: sg.ink, base: 'middle' });
     const ex = aside.x + (S.portrait ? cw : 0) + 4 * u, ey = S.portrait ? aside.y : aside.y + 70 * u;
     d.text(S.l('error máximo', 'maximum error'), ex, ey + 12 * u, { size: fs(S, 13), weight: 700, color: p.mute, base: 'middle' });
-    d.text(n >= 1 ? S.n(e, 3) : '—', ex, ey + 38 * u, { size: fs(S, 28), weight: 800, font: 'mono', color: ok ? tone(S, 'dat').ink : er.ink, base: 'middle' });
+    d.text(n >= 1 ? nf(S, e, 3) : '—', ex, ey + 38 * u, { size: fs(S, 28), weight: 800, font: 'mono', color: ok ? tone(S, 'dat').ink : er.ink, base: 'middle' });
     // una casilla por neurona: el glifo es la propia ReLU
     const cell = Math.min(S.portrait ? 18 * u : 26 * u, (aside.w - 8 * u) / (S.portrait ? 12 : 6)), per = S.portrait ? 12 : 6;
     const gy = S.portrait ? aside.y + 62 * u : aside.y + 150 * u;
@@ -73,16 +81,24 @@ export function drawApprox(S: Frame, all: Rect) {
       d.rect(cx, cy, cell - 3 * u, cell - 3 * u, { fill: on ? alpha(sg.c, 0.18) : undefined, stroke: on ? sg.c : p.line, lw: on ? 1.5 : 1 });
       if (on) { const m = cell - 3 * u; d.polyline([[cx + m * 0.18, cy + m * 0.62], [cx + m * 0.5, cy + m * 0.62], [cx + m * 0.82, cy + m * 0.22]], sg.ink, 1.8); }
     }
+    // el teorema: la banda de error permitido y quiénes lo probaron (debajo de las casillas, fuera de la curva)
+    if (S.between('approx-theorem', 'try1')) {
+      const my = gy + Math.ceil(N_MAX / per) * cell + 18 * u, ta = S.between('approx-theorem', 'approx-caveat') ? S.at('approx-theorem', 0.2, 1.2, 'out') : 1;
+      d.withAlpha(ta, () => {
+        badge(S, S.l(`banda de error ±${nf(S, APPROX_GOAL, 2)}`, `error band ±${nf(S, APPROX_GOAL, 2)}`), x0, my, { tone: 'w', align: 'left' });
+        if (S.between('approx-theorem', 'approx-caveat')) d.text(S.l('Cybenko 1989 · Hornik, Stinchcombe y White 1989 · Leshno et al. 1993', 'Cybenko 1989 · Hornik, Stinchcombe, and White 1989 · Leshno et al. 1993'), x0, my + 22 * u, { size: fs(S, 12), weight: 600, color: p.ink2, base: 'top', w: aside.w - 8 * u });
+      });
+    }
     // meta del turno
     if (S.on('try1')) {
       const my = gy + Math.ceil(N_MAX / per) * cell + 14 * u;
-      d.text(S.l(`meta: error < ${S.n(APPROX_GOAL, 2)}`, `goal: error < ${S.n(APPROX_GOAL, 2)}`), x0, my, { size: fs(S, 13), weight: 700, color: ok ? tone(S, 'dat').ink : p.ink2, base: 'middle' });
+      d.text(S.l(`meta: error < ${nf(S, APPROX_GOAL, 2)}`, `goal: error < ${nf(S, APPROX_GOAL, 2)}`), x0, my, { size: fs(S, 13), weight: 700, color: ok ? tone(S, 'dat').ink : p.ink2, base: 'middle' });
     }
   });
   // aviso: pesos calculados, no entrenados (ilustrativo)
   const ca = ph(S, 'approx-caveat', 0.15, 0.4, 'out') || (S.on('approx-caveat') ? 1 : 0);
   if (ca > 0) d.withAlpha(ca, () => badge(S, S.l('esquinas puestas a mano, no entrenadas', 'corners placed by hand, not trained'), plot.r.x + plot.r.w / 2, plot.r.y + plot.r.h - 14 * u, { tone: 'w' }));
-  void wt; void sn; void clamp;
+  void sn; void clamp;
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -174,5 +190,6 @@ function drawTower(S: Frame, all: Rect) {
     d.text(`${count < n ? count : n}`, tx, all.y + all.h * 0.34 + 44 * u, { size: fs(S, S.portrait ? 40 : 54), weight: 800, font: 'mono', color: wt.ink, base: 'middle' });
     d.text(S.l('capas', 'layers'), tx, all.y + all.h * 0.34 + 88 * u, { size: fs(S, 18), weight: 700, color: p.ink2, base: 'middle' });
     d.text(S.l('(cada barra es una capa)', '(each bar is one layer)'), tx, all.y + all.h * 0.34 + 118 * u, { size: fs(S, 13), color: p.mute, base: 'middle', w: all.x + all.w - tx });
+    d.text(S.l('175 mil millones de parámetros', '175 billion parameters'), tx, all.y + all.h * 0.34 + 150 * u, { size: fs(S, 15), weight: 700, color: sg.ink, base: 'top', w: all.x + all.w - tx });
   });
 }

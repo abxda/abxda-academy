@@ -335,7 +335,7 @@ Un tramo de $m$ pasos sale bien con $P = p^{m}$. Una persona lo revisa y detecta
 
 $$s = \\frac{P}{P + (1-P)(1-q)}, \\qquad \\text{intentos esperados} = \\frac{1}{P + (1-P)(1-q)}$$
 
-El éxito total es el producto de los $s$ de todos los tramos. Con $p = 0{,}95$, $n = 20$ y $q = 0{,}9$: sin revisar, 35,8 %; revisando cada 10 pasos, 87,8 % (3,1 revisiones y 31 pasos del agente); cada 5, 89,1 % (5,0 revisiones); en cada paso, 90,0 % (20,9 revisiones). El techo lo fija $q$: aun revisando todo, el éxito no pasa de $\\approx 100\\,\\%-n(1-p)(1-q)$.
+El éxito total es el producto de los $s$ de todos los tramos. Con $p = 0{,}95$, $n = 20$ y $q = 0{,}9$: sin revisar, 35.8 %; revisando cada 10 pasos, 87.8 % (3.1 revisiones y 31 pasos del agente); cada 5, 89.1 % (5.0 revisiones); en cada paso, 90.0 % (20.9 revisiones). El techo lo fija $q$: aun revisando todo, el éxito no pasa de $\\approx 100\\,\\%-n(1-p)(1-q)$.
 
 ## Costo
 
@@ -343,7 +343,7 @@ Si cada consulta relee las instrucciones y las definiciones ($B$ tokens) más to
 
 $$\\sum_{k=1}^{n}\\bigl(B + (k-1)\\,g\\bigr) = nB + g\\,\\frac{n(n-1)}{2}$$
 
-Crece como $n^2$. Con los supuestos de la lección ($B = 2000$, $g = 800$, US$ 3 por millón de tokens leídos): 10 pasos son 56 000 tokens (US$ 0,17), 20 pasos son 192 000 (US$ 0,58) y 40 pasos son 704 000 (US$ 2,11). Dividido entre la probabilidad de éxito, el costo por tarea lograda, con $p = 0{,}95$, es US$ 0,28, US$ 1,61 y US$ 16,43. Los proveedores cobran las lecturas de caché a una fracción del precio normal (en la documentación de Anthropic, una décima parte para la mayoría de los modelos y menos aún para algunos), pero lo repetido se sigue leyendo y se sigue pagando algo.
+Crece como $n^2$. Con los supuestos de la lección ($B = 2000$, $g = 800$, US$ 3 por millón de tokens leídos): 10 pasos son 56 000 tokens (US$ 0.17), 20 pasos son 192 000 (US$ 0,58) y 40 pasos son 704 000 (US$ 2.11). Dividido entre la probabilidad de éxito, el costo por tarea lograda, con $p = 0{,}95$, es US$ 0,28, US$ 1.61 y US$ 16.43. Los proveedores cobran las lecturas de caché a una fracción del precio normal (en la documentación de Anthropic, una décima parte para la mayoría de los modelos y menos aún para algunos), pero lo repetido se sigue leyendo y se sigue pagando algo.
 
 ## Niveles de autonomía
 
@@ -546,7 +546,7 @@ An agent that reads and acts is wrong with confidence: lesson 33 covers hallucin
         { es: 'Cerca de 30 %', en: 'About 30%' },
       ],
       answer: 2,
-      why: { es: '0,9 elevado a 7 es cerca de 0,48: los éxitos se multiplican. Los errores típicos son ignorar la cadena (90 %) o restar 10 % por paso (30 %).', en: '0.9 raised to the 7th power is about 0.48: successes multiply. The typical mistakes are ignoring the chain (90%) or subtracting 10% per step (30%).' },
+      why: { es: '0.9 elevado a 7 es cerca de 0.48: los éxitos se multiplican. Los errores típicos son ignorar la cadena (90 %) o restar 10 % por paso (30 %).', en: '0.9 raised to the 7th power is about 0.48: successes multiply. The typical mistakes are ignoring the chain (90%) or subtracting 10% per step (30%).' },
     },
     {
       kind: 'concept',

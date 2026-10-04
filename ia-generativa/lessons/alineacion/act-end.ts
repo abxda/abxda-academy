@@ -217,7 +217,7 @@ function drawLayer(S: Frame) {
   });
   const y1 = y0 + bh + 36 * u + 8 * u;
   d.withAlpha(S.reveal('layer', 1.8, 0.5), () => {
-    fitText(S, S.l('InstructGPT 175 mil millones · ajuste 4,9 + refuerzo 60', 'InstructGPT 175 billion · tuning 4.9 + reinforcement 60'), X, y1, W, 16, { weight: 800, color: wt.ink, base: 'top' });
+    fitText(S, S.l('InstructGPT 175 mil millones · ajuste 4.9 + refuerzo 60', 'InstructGPT 175 billion · tuning 4.9 + reinforcement 60'), X, y1, W, 16, { weight: 800, color: wt.ink, base: 'top' });
     const k = S.at('layer', 2.0, 3.2, 'out'), w = W * (layer / base);
     d.rect(X, y1 + 24 * u, W, bh, { fill: p.surface2 });
     d.rect(X, y1 + 24 * u, Math.max(2, w * k), bh, { fill: wt.c });
@@ -238,7 +238,7 @@ function drawPref(S: Frame) {
   });
   const y1 = y0 + bh + 36 * u + 4 * u;
   d.withAlpha(S.reveal('layer-pref', 0.8, 0.5), () => {
-    fitText(S, S.l('InstructGPT · 1,3 mil millones de parámetros', 'InstructGPT · 1.3 billion parameters'), X, y1, W, 16, { weight: 800, color: wt.ink, base: 'top' });
+    fitText(S, S.l('InstructGPT · 1.3 mil millones de parámetros', 'InstructGPT · 1.3 billion parameters'), X, y1, W, 16, { weight: 800, color: wt.ink, base: 'top' });
     const w = W * (1.3 / 175);
     d.rect(X, y1 + 24 * u, W, bh, { fill: p.surface2 });
     d.rect(X, y1 + 24 * u, Math.max(3, w), bh, { fill: wt.c });

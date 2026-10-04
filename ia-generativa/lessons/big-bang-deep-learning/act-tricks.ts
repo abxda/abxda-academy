@@ -112,7 +112,7 @@ export function drawDropout(S: Frame) {
   // probabilidad y AlexNet
   const pa = fa(S, 'dropout', 0.3, 0.45);
   d.withAlpha(pa, () => {
-    badge(S, S.l('cada neurona: apagada con probabilidad 0,5', 'each neuron: off with probability 0.5'), B.x + B.w / 2, B.y + B.h - 38 * u, { tone: 'w' });
+    badge(S, S.l('cada neurona: apagada con probabilidad 0.5', 'each neuron: off with probability 0.5'), B.x + B.w / 2, B.y + B.h - 38 * u, { tone: 'w' });
   });
   d.withAlpha(fa(S, 'dropout', 0.62, 0.78), () => badge(S, S.l('AlexNet: en sus dos primeras capas densas', 'AlexNet: in its first two dense layers'), B.x + B.w / 2, B.y + B.h - 12 * u, { tone: 'mute' }));
 }
@@ -196,11 +196,11 @@ export function drawResults(S: Frame) {
     });
   });
   if (!jump) {
-    d.withAlpha(fa(S, 'result', 0.55, 0.7), () => d.text(S.l('conjunto de 7 redes · 16,4 % con solo los datos del concurso', 'ensemble of 7 networks · 16.4% with only the contest data'), B.x + B.w / 2, B.y + B.h - 2 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'bottom', w: B.w }));
+    d.withAlpha(fa(S, 'result', 0.55, 0.7), () => d.text(S.l('conjunto de 7 redes · 16.4 % con solo los datos del concurso', 'ensemble of 7 networks · 16.4% with only the contest data'), B.x + B.w / 2, B.y + B.h - 2 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'bottom', w: B.w }));
     neu(S, xs[0] + bw / 2 + 6 * u, B.y + 8 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'wow', a: fa(S, 'result', 0.3, 0.45) });
     d.withAlpha(fa(S, 'result', 0.6, 0.75), () => {
       const y = base - (areaH * SECOND_2012) / vmax + 4 * u;
-      badge(S, S.l('−10,9 puntos', '−10.9 points'), (xs[0] + xs[1]) / 2, Math.max(B.y + 54 * u, y - 14 * u), { tone: 'err' });
+      badge(S, S.l('−10.9 puntos', '−10.9 points'), (xs[0] + xs[1]) / 2, Math.max(B.y + 54 * u, y - 14 * u), { tone: 'err' });
     });
   } else {
     // deltas entre años

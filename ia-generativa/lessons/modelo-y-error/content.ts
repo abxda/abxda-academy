@@ -96,7 +96,7 @@ export default defineLesson({
     },
     {
       id: 'big-weighs',
-      es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, 28,6 contra 7,4: casi cuatro veces el error y unas quince veces el área.',
+      es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, 28.6 contra 7.4: casi cuatro veces el error y unas quince veces el área.',
       en: 'Look at how much each point weighs. Twice the error gives a square with four times the area; four times, sixteen. Here, 28.6 against 7.4: almost four times the error and about fifteen times the area.',
       tts: {
         es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, veintiocho coma seis contra siete coma cuatro: casi cuatro veces el error y unas quince veces el área.',
@@ -259,7 +259,7 @@ El MSE se mide en puntos al cuadrado. Su raíz, $\\sqrt{L}$, vuelve a puntos: co
 - **Es suave.** $L(w,b)$ es un paraboloide: tiene un único fondo y una pendiente definida en todas partes, lo que permitirá bajar por ella (lección 4). El valor absoluto tiene un pico en cero.
 - **Tiene fórmula.** Al igualar a cero las derivadas parciales de $L$ se obtiene un sistema lineal, las *ecuaciones normales*.
 - **Tiene una justificación probabilística.** Si $y_i = wx_i+b+\\varepsilon_i$ con ruido normal $\\varepsilon_i\\sim\\mathcal N(0,\\sigma^2)$, la verosimilitud es máxima justo donde el MSE es mínimo (Goodfellow et al., 2016, sec. 5.5.1, que lo llama un criterio introducido «más o menos arbitrariamente» antes de justificarlo así). Gauss lo planteó en 1809 (*Theoria motus*, arts. 175–179): si los errores siguen la curva normal, el sistema de valores más probable es el de menor suma de cuadrados. Con ruido de Laplace, de colas más pesadas, el criterio equivalente es el error absoluto.
-- **Es sensible a los atípicos.** Con un solo parámetro (predecir una constante), el MSE se minimiza con la **media** y el error absoluto con la **mediana**. En los datos de la lección, la media es 64,4 y la mediana 59,5 (con diez datos, cualquier valor entre 57 y 62 minimiza el error absoluto; se toma el punto medio).
+- **Es sensible a los atípicos.** Con un solo parámetro (predecir una constante), el MSE se minimiza con la **media** y el error absoluto con la **mediana**. En los datos de la lección, la media es 64.4 y la mediana 59.5 (con diez datos, cualquier valor entre 57 y 62 minimiza el error absoluto; se toma el punto medio).
 
 ## Un poco de historia
 
@@ -369,7 +369,7 @@ The closed formula works for a straight line. In a network with billions of weig
   lens: {
     es: [
       'La función de pérdida es una decisión de negocio, no un detalle técnico. Elevar al cuadrado dice que un error grande cuesta mucho más que varios pequeños. Pregunta si eso refleja tu costo real: no es lo mismo equivocarse mucho una vez que poco muchas veces.',
-      'Pide siempre una línea base. Aquí, predecir el promedio daba una pérdida de 244 y la mejor recta, 42,5. Un modelo complejo solo se justifica si supera a la base por un margen que pague su costo. Y pregunta en qué unidades está la métrica: el MSE está al cuadrado.',
+      'Pide siempre una línea base. Aquí, predecir el promedio daba una pérdida de 244 y la mejor recta, 42.5. Un modelo complejo solo se justifica si supera a la base por un margen que pague su costo. Y pregunta en qué unidades está la métrica: el MSE está al cuadrado.',
       'Los datos atípicos se deciden antes de entrenar: ¿son errores de captura, que se corrigen o se descartan, o casos reales que importan? Con pérdida cuadrática, un solo caso raro puede torcer el modelo. Pide que se reporte cuánto cambia el resultado sin él.',
       'Una pérdida baja no garantiza un buen modelo: se midió con los mismos datos con que se ajustó, y fuera del rango visto el modelo extrapola (con doce horas, esta recta predice más de cien). La lección 10 explica cómo evaluar con datos nuevos.',
     ],
@@ -416,14 +416,14 @@ The closed formula works for a straight line. In a network with billions of weig
       kind: 'calc',
       q: { es: 'Un modelo predice 70 y 60 para dos estudiantes que sacaron 82 y 55. ¿Cuál es la pérdida (MSE)?', en: 'A model predicts 70 and 60 for two students who scored 82 and 55. What is the loss (MSE)?' },
       options: [
-        { es: '84,5', en: '84.5' },
+        { es: '84.5', en: '84.5' },
         { es: '169', en: '169' },
-        { es: '3,5', en: '3.5' },
-        { es: '8,5', en: '8.5' },
+        { es: '3.5', en: '3.5' },
+        { es: '8.5', en: '8.5' },
       ],
       answer: 0,
       why: {
-        es: 'Los errores son 82 − 70 = 12 y 55 − 60 = −5. Al cuadrado: 144 y 25. Promedio: (144 + 25) / 2 = 84,5. El 169 es la suma sin dividir; el 3,5 es el promedio con signo, que se cancela; el 8,5 es el promedio de los valores absolutos.',
+        es: 'Los errores son 82 − 70 = 12 y 55 − 60 = −5. Al cuadrado: 144 y 25. Promedio: (144 + 25) / 2 = 84.5. El 169 es la suma sin dividir; el 3.5 es el promedio con signo, que se cancela; el 8.5 es el promedio de los valores absolutos.',
         en: 'The errors are 82 − 70 = 12 and 55 − 60 = −5. Squared: 144 and 25. Average: (144 + 25) / 2 = 84.5. The 169 is the sum without dividing; 3.5 is the signed average, which cancels; 8.5 is the average of the absolute values.',
       },
     },
@@ -438,7 +438,7 @@ The closed formula works for a straight line. In a network with billions of weig
       ],
       answer: 2,
       why: {
-        es: 'Una pérdida suelta no dice nada: depende de la escala de los datos, y el MSE está en unidades al cuadrado. Hay que compararla con una línea base. En la lección, predecir el promedio daba 244 y la mejor recta 42,5; ahí se ve cuánto aporta el modelo. Y con datos reales no llega a cero.',
+        es: 'Una pérdida suelta no dice nada: depende de la escala de los datos, y el MSE está en unidades al cuadrado. Hay que compararla con una línea base. En la lección, predecir el promedio daba 244 y la mejor recta 42.5; ahí se ve cuánto aporta el modelo. Y con datos reales no llega a cero.',
         en: 'A loss on its own says nothing: it depends on the scale of the data, and the MSE is in squared units. It has to be compared with a baseline. In the lesson, predicting the average gave 244 and the best line 42.5; that shows how much the model adds. And with real data it never reaches zero.',
       },
     },

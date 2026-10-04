@@ -47,7 +47,7 @@ export function drawAccount(S: Frame, R: { main: Rect; aside: Rect; all: Rect })
   });
   d.withAlpha(a2, () => {
     fitText(S, S.l('Lo que resolvió el tribunal', 'What the tribunal ruled'), Rr.x, Rr.y + 2 * u, Rr.w, 15, { weight: 800, color: p.ink, base: 'top' });
-    stamp(S, S.l('PAGAR · CA$ 812,02', 'PAY · CA$812.02'), Rr.x + Rr.w * 0.5, Rr.y + 54 * u, 'err', { angle: -0.04, size: 17, pop: smooth(S.at('accountability', 1.2, 1.8)) });
+    stamp(S, S.l('PAGAR · CA$ 812.02', 'PAY · CA$812.02'), Rr.x + Rr.w * 0.5, Rr.y + 54 * u, 'err', { angle: -0.04, size: 17, pop: smooth(S.at('accountability', 1.2, 1.8)) });
     // argumento de la empresa, tachado
     const by = Rr.y + 98 * u, ap = fr(S, 'accountability', 0.58, 0.8), lw = Rr.w;
     const txt = S.l('«El chatbot es una entidad aparte, responsable de sus actos»', '“The chatbot is a separate entity, responsible for its own actions”');

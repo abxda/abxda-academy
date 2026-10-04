@@ -14,7 +14,7 @@ function drawRecap(S: Frame, all: Rect) {
   const cards: { head: string; formula: string; ex: string; t: 'w' | 'err' | 'sig' | 'dat' }[] = [
     { head: S.l('Cabe, o no', 'Does it fit'), formula: S.l('parámetros × bytes', 'parameters × bytes'), ex: S.l('8 mil M × 2 B = 16 GB', '8B × 2 B = 16 GB'), t: 'w' },
     { head: S.l('Entrenar', 'Training'), formula: S.l('≈ 16 B por parámetro', '≈ 16 B per parameter'), ex: S.l('8 mil M → 128 GB, más activaciones', '8B → 128 GB, plus activations'), t: 'err' },
-    { head: S.l('Leer los pesos', 'Reading the weights'), formula: S.l('bytes ÷ ancho de banda', 'bytes ÷ bandwidth'), ex: S.l(`16 GB ÷ 3,35 TB/s ≈ ${nf(16 / 3.35, 1, 'es')} ms (H100)`, `16 GB ÷ 3.35 TB/s ≈ ${nf(16 / 3.35, 1, 'en')} ms (H100)`), t: 'sig' },
+    { head: S.l('Leer los pesos', 'Reading the weights'), formula: S.l('bytes ÷ ancho de banda', 'bytes ÷ bandwidth'), ex: S.l(`16 GB ÷ 3.35 TB/s ≈ ${nf(16 / 3.35, 1, 'es')} ms (H100)`, `16 GB ÷ 3.35 TB/s ≈ ${nf(16 / 3.35, 1, 'en')} ms (H100)`), t: 'sig' },
     { head: S.l('Si no cabe', 'If it does not fit'), formula: S.l('repartir o cuantizar', 'split or quantize'), ex: S.l('tensor × pipeline × datos · o ÷ 4 con 4 bits', 'tensor × pipeline × data · or ÷ 4 at 4 bits'), t: 'dat' },
   ];
   const gap = 12 * u, cols = port ? 1 : 2, rows = port ? 4 : 2, cw = (all.w - gap * (cols - 1)) / cols, ch = Math.min(110 * u, (all.h - 8 * u - gap * (rows - 1)) / rows);

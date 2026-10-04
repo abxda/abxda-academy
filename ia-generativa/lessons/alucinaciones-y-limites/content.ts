@@ -320,7 +320,7 @@ Se reparten las $N$ respuestas en $B$ tramos por confianza. Con $n_b$ respuestas
 
 $$\\mathrm{ECE} = \\sum_{b=1}^{B} \\frac{n_b}{N}\\,\\bigl|\\mathrm{acc}(b) - \\mathrm{conf}(b)\\bigr|$$
 
-(Guo et al., 2017). Con diez tramos de igual ancho, las cuatrocientas veinticuatro preguntas de la lección dan un ECE de ≈ 0,18 para Pythia-1.4B. Casi todo el error viene de la subconfianza: sus respuestas aciertan más de lo que su probabilidad indica, en parte porque la probabilidad de una cadena reparte la masa entre formas de escribir lo mismo («Cervantes», «Miguel de Cervantes»). Farquhar et al. (2024) agrupan las respuestas por significado (entropía semántica) para corregir ese efecto.
+(Guo et al., 2017). Con diez tramos de igual ancho, las cuatrocientas veinticuatro preguntas de la lección dan un ECE de ≈ 0.18 para Pythia-1.4B. Casi todo el error viene de la subconfianza: sus respuestas aciertan más de lo que su probabilidad indica, en parte porque la probabilidad de una cadena reparte la masa entre formas de escribir lo mismo («Cervantes», «Miguel de Cervantes»). Farquhar et al. (2024) agrupan las respuestas por significado (entropía semántica) para corregir ese efecto.
 
 Los datos de la lección son mediciones propias, no un banco de pruebas publicado: 424 preguntas de cultura general escritas para la lección (capitales, autores, fechas, símbolos químicos…), en inglés, con cinco ejemplos resueltos en el prompt y decodificación voraz. La «confianza» es la probabilidad de la cadena completa de la respuesta. Son preguntas fáciles para un modelo de internet: con datos realmente raros, el error sería mayor.
 
@@ -496,14 +496,14 @@ Retrieval (lesson 31) attacks the root of the problem: the fact missing from the
       kind: 'calc',
       q: { es: 'Cada acierto suma 1 punto, cada error resta 9 y callar vale 0. Si la confianza calibrada de una respuesta es 80 %, ¿conviene darla?', en: 'Each right answer adds 1 point, each error subtracts 9, and staying silent is worth 0. If the calibrated confidence of an answer is 80%, should it be given?' },
       options: [
-        { es: 'Sí: el puntaje esperado es +0,8.', en: 'Yes: the expected score is +0.8.' },
+        { es: 'Sí: el puntaje esperado es +0.8.', en: 'Yes: the expected score is +0.8.' },
         { es: 'Sí, porque acierta más veces de las que falla.', en: 'Yes, because it is right more often than wrong.' },
-        { es: 'No: el puntaje esperado es −1,0, peor que callar.', en: 'No: the expected score is −1.0, worse than staying silent.' },
+        { es: 'No: el puntaje esperado es −1.0, peor que callar.', en: 'No: the expected score is −1.0, worse than staying silent.' },
         { es: 'Da igual: el puntaje esperado es cero.', en: 'It makes no difference: the expected score is zero.' },
       ],
       answer: 2,
       why: {
-        es: 'Puntaje esperado = 0,8 × 1 + 0,2 × (−9) = 0,8 − 1,8 = −1,0. Solo conviene responder si p > k/(1 + k) = 9/10 = 90 %.',
+        es: 'Puntaje esperado = 0.8 × 1 + 0.2 × (−9) = 0.8 − 1.8 = −1.0. Solo conviene responder si p > k/(1 + k) = 9/10 = 90 %.',
         en: 'Expected score = 0.8 × 1 + 0.2 × (−9) = 0.8 − 1.8 = −1.0. Answering only pays if p > k/(1 + k) = 9/10 = 90%.',
       },
     },

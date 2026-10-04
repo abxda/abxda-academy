@@ -46,7 +46,7 @@ export function drawStory(S: Frame) {
   });
   d.withAlpha(human ? 1 : fa(S, 'story-chart', 0.04, 0.14), () => d.text(S.l('error top-5 del ganador (%)', 'winner’s top-5 error (%)'), B.x + 2 * u, B.y + 10 * u, { size: 13, weight: 700, color: p.ink2, base: 'middle' }));
   // nota de 2012: 15,3 % es con datos extra de ImageNet; con solo los datos del concurso fue 16,4 % (Krizhevsky et al., 2012, tabla 2)
-  if (!human) d.withAlpha(fa(S, 'story-chart', 0.3, 0.45), () => d.text(S.l('† con datos extra; 16,4 % sin ellos', '† extra data; 16.4% without'), B.x + B.w - 2 * u, B.y + 36 * u, { size: 12, weight: 600, color: p.mute, align: 'right', base: 'middle' }));
+  if (!human) d.withAlpha(fa(S, 'story-chart', 0.3, 0.45), () => d.text(S.l('† con datos extra; 16.4 % sin ellos', '† extra data; 16.4% without'), B.x + B.w - 2 * u, B.y + 36 * u, { size: 12, weight: 600, color: p.mute, align: 'right', base: 'middle' }));
   if (human) {
     d.withAlpha(fa(S, 'human', 0.55, 0.7), () => badge(S, S.l('una tarea concreta: 1 000 categorías, 1 etiqueta por foto', 'one specific task: 1,000 categories, 1 label per photo'), B.x + B.w / 2, B.y + B.h - 8 * u, { tone: 'mute', size: 12 }));
   }
@@ -73,7 +73,7 @@ export function drawComputeGrowth(S: Frame) {
     d.withAlpha(fa(S, 'compute-growth', 0.55, 0.7), () => {
       plot.dot(1, fast, 6, 'dat');
       d.text(S.l('AlphaGo Zero: más de 300 000×', 'AlphaGo Zero: over 300,000×'), plot.X(1) - 8 * u, plot.Y(fast) - 14 * u, { size: 13, weight: 800, color: tone(S, 'dat').ink, align: 'right', base: 'middle', halo: p.stage, haloW: 5 });
-      d.text(S.l('duplica cada 3,4 meses', 'doubles every 3.4 months'), plot.X(vertical ? 0.62 : 0.5) - 6 * u, plot.Y((vertical ? 0.62 : 0.5) * fast) - 4 * u, { size: 13, weight: 700, color: tone(S, 'dat').ink, align: 'right', base: 'bottom', halo: p.stage, haloW: 5 });
+      d.text(S.l('duplica cada 3.4 meses', 'doubles every 3.4 months'), plot.X(vertical ? 0.62 : 0.5) - 6 * u, plot.Y((vertical ? 0.62 : 0.5) * fast) - 4 * u, { size: 13, weight: 700, color: tone(S, 'dat').ink, align: 'right', base: 'bottom', halo: p.stage, haloW: 5 });
     });
     d.withAlpha(fa(S, 'compute-growth', 0.7, 0.85), () => {
       plot.dot(1, slow, 5, 'mute');

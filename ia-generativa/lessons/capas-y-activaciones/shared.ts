@@ -26,8 +26,11 @@ export function square(r: Rect, align: 'left' | 'center' = 'center'): Rect {
   return { x: align === 'left' ? r.x : r.x + (r.w - s) / 2, y: r.y + (r.h - s) / 2, w: s, h: s };
 }
 
-/** Número con signo menos tipográfico. */
-export const sn = (S: Frame, x: number, d = 2) => S.n(x, d).replace('-', '−');
+/** Número con el formato del idioma de `S.n` (punto decimal en ambos idiomas), sin separador de miles (los de la escena no pasan de 6 001) y con el signo menos tipográfico. */
+export const nf = (S: Frame, x: number, d = 2) => S.n(x, d).replace(/,(?=\d{3}(\D|$))/g, '').replace('-', '−');
+export const sn = nf;
+/** Porcentaje entero con la tipografía del idioma («70 %» en español, «70%» en inglés). */
+export const pct = (S: Frame, frac: number) => `${Math.round(frac * 100)}${S.lang === 'es' ? ' ' : ''}%`;
 
 /** Camino con trazo «cheque» (✓) sin depender de que la fuente tenga el glifo. */
 export function check(S: Frame, x: number, y: number, size: number, color: string, a = 1) {

@@ -132,7 +132,7 @@ export default defineLesson({
       id: 'sigmoid',
       es: 'Una alternativa es la sigmoide: suaviza el salto y convierte cualquier número en una puntuación entre cero y uno, que vale un medio justo sobre la frontera.',
       en: 'One alternative is the sigmoid: it smooths the jump and turns any number into a score between zero and one, equal to one half right on the boundary.',
-      note: { es: 'Sigmoide: salida suave entre 0 y 1; vale 0,5 sobre la frontera.', en: 'Sigmoid: a smooth output between 0 and 1; it is 0.5 on the boundary.' },
+      note: { es: 'Sigmoide: salida suave entre 0 y 1; vale 0.5 sobre la frontera.', en: 'Sigmoid: a smooth output between 0 and 1; it is 0.5 on the boundary.' },
       pad: 0.4,
     },
     {
@@ -459,7 +459,7 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
     es: [
       'Cuando un proveedor hable de «neuronas» o de que su sistema «piensa como el cerebro», tradúcelo: son fórmulas con parámetros ajustados con datos. Pide saber con qué datos se entrenó y cómo se evaluó, no cuán «inteligente» parece.',
       'Una sola neurona se puede auditar: si las entradas están en la misma escala, sus pesos dicen cuánto aporta cada una a la decisión. Con miles de millones de parámetros esa lectura directa se pierde. Si una decisión debe poder explicarse, pregunta qué explicación puede dar el sistema.',
-      'Una salida entre 0 y 1 no es automáticamente una probabilidad: un 0,9 no significa «acierta nueve de cada diez veces». Compruébalo con datos propios antes de fijar umbrales de decisión (lección 33).',
+      'Una salida entre 0 y 1 no es automáticamente una probabilidad: un 0.9 no significa «acierta nueve de cada diez veces». Compruébalo con datos propios antes de fijar umbrales de decisión (lección 33).',
       'Los pesos aprenden lo que hay en los datos: si los ejemplos reflejan los prejuicios o los errores de quien los etiquetó, la neurona los reproduce. Y una neurona solo separa lo que una recta separa: pregunta si el problema, de verdad, tiene esa forma.',
     ],
     en: [
@@ -504,18 +504,18 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
     {
       kind: 'calc',
       q: {
-        es: 'Una neurona con escalón tiene w = (0,5; −0,5) y b = 0. Para el ejemplo x = (1; 2) debía responder 1, pero respondió 0. Con tasa η = 1, ¿cómo quedan los pesos y el sesgo tras un paso del perceptrón?',
+        es: 'Una neurona con escalón tiene w = (0.5; −0.5) y b = 0. Para el ejemplo x = (1; 2) debía responder 1, pero respondió 0. Con tasa η = 1, ¿cómo quedan los pesos y el sesgo tras un paso del perceptrón?',
         en: 'A neuron with a step has w = (0.5, −0.5) and b = 0. For the example x = (1, 2) it should have answered 1, but it answered 0. With rate η = 1, what are the weights and bias after one perceptron step?',
       },
       options: [
-        { es: 'w = (−0,5; −2,5) y b = −1', en: 'w = (−0.5, −2.5) and b = −1' },
-        { es: 'w = (1,5; 1,5) y b = 1', en: 'w = (1.5, 1.5) and b = 1' },
-        { es: 'w = (0,5; −0,5) y b = 0 (no cambian)', en: 'w = (0.5, −0.5) and b = 0 (unchanged)' },
-        { es: 'w = (1; 0) y b = 0,5', en: 'w = (1, 0) and b = 0.5' },
+        { es: 'w = (−0.5; −2.5) y b = −1', en: 'w = (−0.5, −2.5) and b = −1' },
+        { es: 'w = (1.5; 1.5) y b = 1', en: 'w = (1.5, 1.5) and b = 1' },
+        { es: 'w = (0.5; −0.5) y b = 0 (no cambian)', en: 'w = (0.5, −0.5) and b = 0 (unchanged)' },
+        { es: 'w = (1; 0) y b = 0.5', en: 'w = (1, 0) and b = 0.5' },
       ],
       answer: 1,
       why: {
-        es: 'Se equivocó: t − y = 1 − 0 = +1. Entonces se suma la entrada a los pesos y 1 al sesgo: w = (0,5 + 1; −0,5 + 2) = (1,5; 1,5) y b = 0 + 1 = 1. Ahora z = 1,5 + 3 + 1 = 5,5 y la neurona responde 1.',
+        es: 'Se equivocó: t − y = 1 − 0 = +1. Entonces se suma la entrada a los pesos y 1 al sesgo: w = (0.5 + 1; −0.5 + 2) = (1.5; 1.5) y b = 0 + 1 = 1. Ahora z = 1.5 + 3 + 1 = 5.5 y la neurona responde 1.',
         en: 'It was wrong: t − y = 1 − 0 = +1. So the input is added to the weights and 1 to the bias: w = (0.5 + 1, −0.5 + 2) = (1.5, 1.5) and b = 0 + 1 = 1. Now z = 1.5 + 3 + 1 = 5.5 and the neuron answers 1.',
       },
     },
@@ -575,7 +575,7 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
       id: 'sigmoid',
       term: { es: 'Sigmoide', en: 'Sigmoid' },
       def: {
-        es: 'Función σ(z) = 1/(1 + e⁻ᶻ): convierte cualquier número en un valor entre 0 y 1, y vale 0,5 cuando z = 0.',
+        es: 'Función σ(z) = 1/(1 + e⁻ᶻ): convierte cualquier número en un valor entre 0 y 1, y vale 0.5 cuando z = 0.',
         en: 'The function σ(z) = 1/(1 + e⁻ᶻ): it turns any number into a value between 0 and 1, and equals 0.5 when z = 0.',
       },
     },

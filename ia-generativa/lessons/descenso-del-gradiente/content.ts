@@ -307,15 +307,15 @@ In real models the gradient is computed on a subset of the data (stochastic grad
     },
     {
       kind: 'calc',
-      q: { es: 'Un peso vale 2, la pendiente del error ahí es +4 y la tasa de aprendizaje es 0,1. ¿Cuánto vale el peso después de un paso?', en: 'A weight is 2, the slope of the error there is +4, and the learning rate is 0.1. What is the weight after one step?' },
+      q: { es: 'Un peso vale 2, la pendiente del error ahí es +4 y la tasa de aprendizaje es 0.1. ¿Cuánto vale el peso después de un paso?', en: 'A weight is 2, the slope of the error there is +4, and the learning rate is 0.1. What is the weight after one step?' },
       options: [
-        { es: '2,4', en: '2.4' },
-        { es: '1,6', en: '1.6' },
-        { es: '0,4', en: '0.4' },
-        { es: '1,9', en: '1.9' },
+        { es: '2.4', en: '2.4' },
+        { es: '1.6', en: '1.6' },
+        { es: '0.4', en: '0.4' },
+        { es: '1.9', en: '1.9' },
       ],
       answer: 1,
-      why: { es: 'Nuevo peso = 2 − 0,1 × 4 = 1,6. La pendiente es positiva (el error sube hacia la derecha), así que el peso baja.', en: 'New weight = 2 − 0.1 × 4 = 1.6. The slope is positive (the error rises to the right), so the weight goes down.' },
+      why: { es: 'Nuevo peso = 2 − 0.1 × 4 = 1.6. La pendiente es positiva (el error sube hacia la derecha), así que el peso baja.', en: 'New weight = 2 − 0.1 × 4 = 1.6. The slope is positive (the error rises to the right), so the weight goes down.' },
     },
     {
       kind: 'apply',

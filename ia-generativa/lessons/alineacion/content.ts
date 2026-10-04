@@ -368,7 +368,7 @@ Qué publican los laboratorios: OpenAI dice que ChatGPT se entrenó con RLHF con
 
 ## Cuánto cuesta la capa
 
-El «menos del 2 %» de la lección sale del propio artículo de InstructGPT: entrenar el modelo ajustado de 175 mil millones costó 4,9 petaflops/s-día, y el modelo final con PPO-ptx, 60, frente a 3 640 de GPT-3 (60 / 3 640 ≈ 1,6 %; con los 4,9, ≈ 1,8 %). No incluye el modelo de recompensa de 6 mil millones, la recolección de datos ni las pruebas previas. En esas comparaciones, las personas prefirieron las salidas del InstructGPT de 175 mil millones a las de GPT-3 en el 85 % de los casos (±3), y las del de 1,3 mil millones a las del GPT-3 de 175 mil millones.
+El «menos del 2 %» de la lección sale del propio artículo de InstructGPT: entrenar el modelo ajustado de 175 mil millones costó 4.9 petaflops/s-día, y el modelo final con PPO-ptx, 60, frente a 3 640 de GPT-3 (60 / 3 640 ≈ 1.6 %; con los 4.9, ≈ 1.8 %). No incluye el modelo de recompensa de 6 mil millones, la recolección de datos ni las pruebas previas. En esas comparaciones, las personas prefirieron las salidas del InstructGPT de 175 mil millones a las de GPT-3 en el 85 % de los casos (±3), y las del de 1.3 mil millones a las del GPT-3 de 175 mil millones.
 
 ## En código
 
@@ -561,14 +561,14 @@ All of this shapes behavior from preferences. The next lesson uses the same rein
         en: 'A reward model scores answer A with 2 and answer B with 0. By the Bradley–Terry rule, what is the probability that A is the preferred one?',
       },
       options: [
-        { es: '0,50', en: '0.50' },
-        { es: '0,88', en: '0.88' },
-        { es: '0,98', en: '0.98' },
-        { es: '0,12', en: '0.12' },
+        { es: '0.50', en: '0.50' },
+        { es: '0.88', en: '0.88' },
+        { es: '0.98', en: '0.98' },
+        { es: '0.12', en: '0.12' },
       ],
       answer: 1,
       why: {
-        es: 'P = σ(2 − 0) = 1 / (1 + e⁻²) ≈ 0,88. Con diferencia 0 sería 0,50; con diferencia 4 ya sería 0,98; y 0,12 es la probabilidad de que gane B.',
+        es: 'P = σ(2 − 0) = 1 / (1 + e⁻²) ≈ 0.88. Con diferencia 0 sería 0.50; con diferencia 4 ya sería 0.98; y 0.12 es la probabilidad de que gane B.',
         en: 'P = σ(2 − 0) = 1 / (1 + e⁻²) ≈ 0.88. With a difference of 0 it would be 0.50; with a difference of 4 it would already be 0.98; and 0.12 is the probability that B wins.',
       },
     },

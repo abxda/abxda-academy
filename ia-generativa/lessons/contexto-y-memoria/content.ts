@@ -294,7 +294,7 @@ Con caché del prefijo (suponiendo que acierta en cada turno), el turno 1 escrib
 
 $$C = 1{,}25\\,T_1 + \\sum_{k=2}^{n}\\left(0{,}1\\,T_{k-1} + 1{,}25\\,m\\right)$$
 
-En el ejemplo, $C = 6\\,285$ tokens equivalentes, el 21 % de $29\\,500$. Con $S=2\\,000$, $m=500$, $u=50$ y $n=60$ el total es $1\\,008\\,000$ tokens: a un precio supuesto de 3 USD por millón, unos 3 USD por conversación sin caché y unos 0,41 USD con ella. No se incluyen los tokens de salida (se pagan aparte y crecen de forma lineal).
+En el ejemplo, $C = 6\\,285$ tokens equivalentes, el 21 % de $29\\,500$. Con $S=2\\,000$, $m=500$, $u=50$ y $n=60$ el total es $1\\,008\\,000$ tokens: a un precio supuesto de 3 USD por millón, unos 3 USD por conversación sin caché y unos 0.41 USD con ella. No se incluyen los tokens de salida (se pagan aparte y crecen de forma lineal).
 
 Además de pagarlo, procesar un contexto de $n$ tokens exige cómputo de atención que crece como $n^2$ (Vaswani et al., 2017, tabla 1), y la caché KV crece de forma lineal con $n$ (lección 26).
 
@@ -304,10 +304,10 @@ Liu et al. (2023) dieron a cada modelo 20 documentos (unos 3 mil a 4 mil tokens)
 
 | Modelo | 1.º | 5.º | 10.º | 15.º | 20.º | Sin documentos | Solo el correcto |
 |---|---|---|---|---|---|---|---|
-| GPT-3.5-Turbo | 75,8 | 57,2 | 53,8 | 55,4 | 63,2 | 56,1 | 88,3 |
-| Claude-1.3 | 59,9 | 55,9 | 56,8 | 57,2 | 60,1 | 48,3 | 76,1 |
-| LongChat-13B (16K) | 68,6 | 57,4 | 55,3 | 52,5 | 55,0 | 35,0 | 83,4 |
-| MPT-30B-Instruct | 53,7 | 51,8 | 52,2 | 52,7 | 56,3 | 31,5 | 81,9 |
+| GPT-3.5-Turbo | 75.8 | 57.2 | 53.8 | 55.4 | 63.2 | 56.1 | 88.3 |
+| Claude-1.3 | 59.9 | 55.9 | 56.8 | 57.2 | 60.1 | 48.3 | 76.1 |
+| LongChat-13B (16K) | 68.6 | 57.4 | 55.3 | 52.5 | 55.0 | 35.0 | 83.4 |
+| MPT-30B-Instruct | 53.7 | 51.8 | 52.2 | 52.7 | 56.3 | 31.5 | 81.9 |
 
 Son modelos de 2023 y una sola tarea: la forma exacta cambia con el modelo y la prueba, y los autores no encuentran que una ventana mayor, por sí sola, use mejor el contexto. RULER (Hsieh et al., 2024) amplía el hallazgo: entre los modelos que declaraban 32 mil tokens o más, solo la mitad mantenía un rendimiento satisfactorio a 32 mil.
 
@@ -497,7 +497,7 @@ The KV cache and the cost per output token are in lesson 26. In lesson 31 (RAG) 
         { es: '10 000', en: '10,000' },
       ],
       answer: 2,
-      why: { es: 'La suma es 100 × (1 + 2 + … + 10) = 100 × 55 = 5 500. Si cada token se procesara una sola vez serían solo 1 000: reenviar el historial multiplica el costo por 5,5.', en: 'The sum is 100 × (1 + 2 + … + 10) = 100 × 55 = 5,500. If each token were processed only once it would be just 1,000: resending the history multiplies the cost by 5.5.' },
+      why: { es: 'La suma es 100 × (1 + 2 + … + 10) = 100 × 55 = 5 500. Si cada token se procesara una sola vez serían solo 1 000: reenviar el historial multiplica el costo por 5.5.', en: 'The sum is 100 × (1 + 2 + … + 10) = 100 × 55 = 5,500. If each token were processed only once it would be just 1,000: resending the history multiplies the cost by 5.5.' },
     },
     {
       kind: 'apply',

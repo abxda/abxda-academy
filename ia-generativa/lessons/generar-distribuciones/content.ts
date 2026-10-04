@@ -272,7 +272,7 @@ Un codificador $z=E_\\phi(x)$ y un decodificador $\\hat x=D_\\theta(z)$, entrena
 
 $$\\mathcal L_{\\text{AE}}=\\lVert x-\\hat x\\rVert^2=\\sum_{j=1}^{64}(x_j-\\hat x_j)^2$$
 
-Los modelos de la lección son diminutos: $64\\to32\\to2\\to32\\to64$ con $\\tanh$ en la capa oculta y un sigmoide a la salida (4354 parámetros), entrenados con descenso del gradiente (Adam) sobre 1500 imágenes; otras 297 se reservaron para reconstruir imágenes que la red nunca vio. Error medio por imagen reservada según el tamaño del código: 3,14 con 1 número, 2,34 con 2, 1,46 con 4, 0,95 con 8 y 0,54 con 16 (adivinar siempre la imagen media daría 4,71). Con decodificador lineal y error cuadrático, un autocodificador aprende el mismo subespacio que el PCA (Goodfellow et al., 2016, §14.1); las capas no lineales lo generalizan, y Hinton y Salakhutdinov (2006) mostraron que los autocodificadores profundos aprenden códigos que comprimen mucho mejor que el PCA.
+Los modelos de la lección son diminutos: $64\\to32\\to2\\to32\\to64$ con $\\tanh$ en la capa oculta y un sigmoide a la salida (4354 parámetros), entrenados con descenso del gradiente (Adam) sobre 1500 imágenes; otras 297 se reservaron para reconstruir imágenes que la red nunca vio. Error medio por imagen reservada según el tamaño del código: 3.14 con 1 número, 2.34 con 2, 1.46 con 4, 0.95 con 8 y 0.54 con 16 (adivinar siempre la imagen media daría 4.71). Con decodificador lineal y error cuadrático, un autocodificador aprende el mismo subespacio que el PCA (Goodfellow et al., 2016, §14.1); las capas no lineales lo generalizan, y Hinton y Salakhutdinov (2006) mostraron que los autocodificadores profundos aprenden códigos que comprimen mucho mejor que el PCA.
 
 ## Autocodificador variacional (VAE)
 

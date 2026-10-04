@@ -13,7 +13,7 @@ export const pct = (S: Frame, x: number) => S.n(x * 100, 0);
 /** Texto de un número con signo menos tipográfico y coma decimal en español (S.n usa es-MX, que escribe punto). */
 export const num = (S: Frame, x: number, digits = 1) => {
   const s = S.n(x, digits).replace('-', '−');
-  return S.lang === 'es' ? s.replace('.', ',') : s;
+  return s;
 };
 
 // ───────── flechas curvas entre fichas ─────────

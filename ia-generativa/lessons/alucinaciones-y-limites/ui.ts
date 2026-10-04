@@ -11,7 +11,7 @@ export const smooth = (x: number) => { const t = clamp(x); return t * t * (3 - 2
 /** Número con el formato del texto de la lección: 1 234,5 (es: coma decimal y espacio de miles) / 1,234.5 (en). */
 export const num = (S: Frame, v: number, digits = 0) => {
   const s = v.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-  return S.lang === 'es' ? s.replace(/,/g, '\u00a0').replace('.', ',') : s;
+  return S.lang === 'es' ? s.replace(/,/g, '\u00a0') : s;
 };
 /** Porcentaje con el formato del idioma: 73,6 % (es) / 73.6% (en). */
 export const pct = (S: Frame, v: number, digits = 0) => `${num(S, v * 100, digits)}${S.lang === 'es' ? '\u00a0%' : '%'}`;

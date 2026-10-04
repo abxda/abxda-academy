@@ -411,7 +411,7 @@ export function drawQuality(S: Frame) {
   // B · cuánto rinde el modelo entrenado con 350 mil M de tokens de cada uno
   const a1 = S.reveal('quality', 1.8, 0.6);
   d.withAlpha(a1, () => {
-    d.text(S.l('Puntaje de un modelo de 1,71 mil M, con 350 mil M de tokens de cada corpus', 'Score of a 1.71B model trained on 350B tokens from each corpus'), B.x, B.y + 2 * u, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'top', w: B.w });
+    d.text(S.l('Puntaje de un modelo de 1.71 mil M, con 350 mil M de tokens de cada corpus', 'Score of a 1.71B model trained on 350B tokens from each corpus'), B.x, B.y + 2 * u, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'top', w: B.w });
     const tests = [{ n: 'MMLU', a: 33, b: 37 }, { n: 'ARC', a: 46, b: 57 }];
     const top = B.y + (vertical ? 44 : 58) * u, lw = 56 * u, groupH = (B.h - (top - B.y) - 8 * u) / tests.length, bh = Math.max(11 * u, Math.min(24 * u, groupH * 0.34));
     tests.forEach((t, i) => {
@@ -431,6 +431,6 @@ export function drawQuality(S: Frame) {
     d.rect(B.x + 92 * u, ly - 11 * u, 12 * u, 10 * u, { fill: alpha(dt.c, 0.75) });
     d.text('FineWeb-Edu', B.x + 109 * u, ly - 6 * u, { size: FS(S, 12), weight: 700, color: p.ink2, base: 'middle' });
   });
-  provenance(S, S.l('Penedo et al., 2024 (FineWeb), §4 · modelo de 1,71 mil M de parámetros', 'Penedo et al., 2024 (FineWeb), §4 · 1.71B-parameter model'), { a: a0 });
+  provenance(S, S.l('Penedo et al., 2024 (FineWeb), §4 · modelo de 1.71 mil M de parámetros', 'Penedo et al., 2024 (FineWeb), §4 · 1.71B-parameter model'), { a: a0 });
   void tagText;
 }

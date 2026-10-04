@@ -296,7 +296,7 @@ BM25 (Robertson y Zaragoza, 2009) puntúa a cada fragmento $D$ con una saturaci�
 
 $$\\mathrm{score}(D,Q)=\\sum_{t\\in Q}\\mathrm{idf}(t)\\,\\frac{f(t,D)\\,(k_1+1)}{f(t,D)+k_1\\,(1-b+b\\,|D|/\\mathrm{avgdl})}$$
 
-con $k_1$ entre 1,2 y 2 y $b=0{,}75$ como valores habituales. Es un punto de partida difícil de superar por palabras, y muchos sistemas lo combinan con embeddings (búsqueda híbrida).
+con $k_1$ entre 1.2 y 2 y $b=0{,}75$ como valores habituales. Es un punto de partida difícil de superar por palabras, y muchos sistemas lo combinan con embeddings (búsqueda híbrida).
 
 ## Vectores densos y búsqueda aproximada
 

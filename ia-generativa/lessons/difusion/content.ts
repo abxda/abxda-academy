@@ -163,7 +163,7 @@ Con un calendario de varianzas $\\beta_1,\\dots,\\beta_T$, sea $\\alpha_t = 1-\\
 
 $$x_t = \\sqrt{\\bar\\alpha_t}\\,x_0 + \\sqrt{1-\\bar\\alpha_t}\\,\\varepsilon,\\qquad \\varepsilon\\sim\\mathcal N(0,I).$$
 
-Por eso al entrenar no hace falta recorrer los pasos: se salta directo a un $t$ aleatorio. En la demostración de la lección se usan $T=40$ y $\\beta$ lineal de 0,02 a 0,30.
+Por eso al entrenar no hace falta recorrer los pasos: se salta directo a un $t$ aleatorio. En la demostración de la lección se usan $T=40$ y $\\beta$ lineal de 0.02 a 0.30.
 
 ## El objetivo de entrenamiento
 
@@ -319,15 +319,15 @@ Lesson 18 shows how a sentence becomes the “label” that guides diffusion (CL
     },
     {
       kind: 'calc',
-      q: { es: 'Un sistema genera cada imagen con 50 pasos y cada paso tarda 0,04 s en una GPU. ¿Cuánto tarda una imagen, sin contar la decodificación?', en: 'A system generates each image with 50 steps and each step takes 0.04 s on a GPU. How long does one image take, not counting decoding?' },
+      q: { es: 'Un sistema genera cada imagen con 50 pasos y cada paso tarda 0.04 s en una GPU. ¿Cuánto tarda una imagen, sin contar la decodificación?', en: 'A system generates each image with 50 steps and each step takes 0.04 s on a GPU. How long does one image take, not counting decoding?' },
       options: [
-        { es: '0,04 s', en: '0.04 s' },
+        { es: '0.04 s', en: '0.04 s' },
         { es: '20 s', en: '20 s' },
         { es: '2 s', en: '2 s' },
-        { es: '0,5 s', en: '0.5 s' },
+        { es: '0.5 s', en: '0.5 s' },
       ],
       answer: 2,
-      why: { es: '50 pasos × 0,04 s = 2 s. Por eso reducir los pasos abarata la generación.', en: '50 steps × 0.04 s = 2 s. That is why cutting steps makes generation cheaper.' },
+      why: { es: '50 pasos × 0.04 s = 2 s. Por eso reducir los pasos abarata la generación.', en: '50 steps × 0.04 s = 2 s. That is why cutting steps makes generation cheaper.' },
     },
     {
       kind: 'apply',

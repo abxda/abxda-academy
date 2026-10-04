@@ -46,7 +46,7 @@ export function drawMemory(S: Frame, vis: number) {
     let y = all.y;
     d.text(S.l('GPT-3 175B · memoria de GPU al entrenar (Hu et al., 2021)', 'GPT-3 175B · GPU memory while training (Hu et al., 2021)'), all.x, y, { size: FS(S, 13), weight: 800, color: p.ink, base: 'top', w: all.w, a: S.reveal('memory', 0, 0.5) });
     y += (S.portrait ? 36 : 22) * u;
-    bar(S, { x: all.x, y, w: all.w, h: 0 }, S.l('ajuste completo con Adam', 'full fine-tuning with Adam'), S.l('1,2 TB', '1.2 TB'), 1, 'dat', S.reveal('memory', 0.3, 0.6));
+    bar(S, { x: all.x, y, w: all.w, h: 0 }, S.l('ajuste completo con Adam', 'full fine-tuning with Adam'), S.l('1.2 TB', '1.2 TB'), 1, 'dat', S.reveal('memory', 0.3, 0.6));
     y += 54 * u;
     bar(S, { x: all.x, y, w: all.w, h: 0 }, S.l('LoRA', 'LoRA'), '350 GB', 350 / 1200, 'w', S.reveal('memory', 1.6, 0.6), { tag: S.l('≈ 3 veces menos', '≈ 3× less'), tagA: S.reveal('memory', 2.8, 0.5) });
     y += 62 * u;
@@ -70,7 +70,7 @@ export function drawMemory(S: Frame, vis: number) {
     let lx = all.x;
     legend.forEach((l) => { d.rect(lx, y + 2 * u, 11 * u, 11 * u, { fill: alp(tone(S, l.tn).c, 0.8), a: a4 }); const w = d.text(l.t, lx + 16 * u, y, { size: FS(S, 12), weight: 700, color: p.ink2, base: 'top', a: a4 }).w; lx += 16 * u + w + 18 * u; });
     y += 20 * u;
-    para(S, S.l('Solo A y B pagan los 16 B: en GPT-3, con r = 4 en W_q y W_v, son el 0,01 % de los parámetros. 1,2 TB es la cifra del artículo; la cuenta de 16 B daría 2,8 TB: depende de qué se guarde.', 'Only A and B pay the 16 B: on GPT-3, with r = 4 on W_q and W_v, they are 0.01% of the parameters. 1.2 TB is the paper’s figure; the 16 B count would give 2.8 TB: it depends on what is stored.'), all.x, y, all.w, { size: 12, weight: 600, color: p.mute, a: S.reveal('memory', 9.0, 0.6) });
+    para(S, S.l('Solo A y B pagan los 16 B: en GPT-3, con r = 4 en W_q y W_v, son el 0.01 % de los parámetros. 1.2 TB es la cifra del artículo; la cuenta de 16 B daría 2.8 TB: depende de qué se guarde.', 'Only A and B pay the 16 B: on GPT-3, with r = 4 on W_q and W_v, they are 0.01% of the parameters. 1.2 TB is the paper’s figure; the 16 B count would give 2.8 TB: it depends on what is stored.'), all.x, y, all.w, { size: 12, weight: 600, color: p.mute, a: S.reveal('memory', 9.0, 0.6) });
   });
 }
 
@@ -109,7 +109,7 @@ export function drawQlora(S: Frame, vis: number) {
       d.arrow(x1 + ms + 8 * u, top + ms / 2, x2 - 8 * u, top + ms / 2, p.ink2, 2, 8);
       drawSigned(S, x2, top, BASE_NF4.W2, 32, 32, cs, { range: rg });
       d.text(S.l('4 bits (NF4)', '4 bits (NF4)'), x2 + ms / 2, top - 8 * u, { size: FS(S, 13), weight: 800, color: tone(S, 'dat').ink, align: 'center', base: 'bottom' });
-      d.text(S.portrait ? S.l('≈ 0,5 byte · 16 valores', '≈ 0.5 byte · 16 values') : S.l('≈ 0,5 byte por peso · solo 16 valores', '≈ 0.5 byte per weight · only 16 values'), x2 + ms / 2, top + ms + 6 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'center', base: 'top', w: ms + gap * 0.6 });
+      d.text(S.portrait ? S.l('≈ 0.5 byte · 16 valores', '≈ 0.5 byte · 16 values') : S.l('≈ 0.5 byte por peso · solo 16 valores', '≈ 0.5 byte per weight · only 16 values'), x2 + ms / 2, top + ms + 6 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'center', base: 'top', w: ms + gap * 0.6 });
       const sy = top + ms + (S.portrait ? 54 : 48) * u, sw = ms / 16;
       NF4.forEach((v, i) => { d.rect(x2 + i * sw, sy, sw - 1, 9 * u, { fill: alp(v >= 0 ? tone(S, 'w').c : tone(S, 'sig').c, 0.1 + 0.85 * Math.abs(v)) }); });
     });
