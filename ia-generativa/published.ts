@@ -26,4 +26,5 @@ export const PUBLISHED: string[] = [
   'fine-tuning-lora',
   'datos-como-numeros',
   'modelo-y-error',
+  'neurona',
 ];

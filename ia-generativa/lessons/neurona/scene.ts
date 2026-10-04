@@ -297,6 +297,8 @@ function asidePerceptron(S: Frame, A: Rect, prm: Params, hist: number[], steps: 
       y += (port ? 20 : 40) * u;
       txt(S, S.l(`t − y = ${ex.t} − 0 = +1`, `t − y = ${ex.t} − 0 = +1`), A.x, y, { size: 14, weight: 800, font: 'mono', color: er.ink, base: 'top' });
       y += 26 * u;
+      txt(S, `η = ${num(S, ETA, 1)}`, A.x, y, { size: 14, weight: 800, font: 'mono', color: dt.ink, base: 'top' });
+      y += 26 * u;
       const rows: { l: string; a: number; b: number }[] = [{ l: 'w₁', a: P1.from.w1, b: P1.to.w1 }, { l: 'w₂', a: P1.from.w2, b: P1.to.w2 }, { l: 'b', a: P1.from.b, b: P1.to.b }];
       if (port) {
         const cw = A.w / 3;

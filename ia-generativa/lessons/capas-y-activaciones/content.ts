@@ -19,19 +19,19 @@ export default defineLesson({
   segments: [
     {
       id: 'hook',
-      es: 'Una capa oculta bastó para resolver XOR. Hoy apilamos más capas, y veremos cuánto poder se gana y por qué no basta con sumar.',
-      en: 'One hidden layer was enough to solve XOR. Today we stack more layers, and we will see how much power that gains and why adding is not enough.',
+      es: 'Una capa oculta bastó para resolver XOR. Hoy apilamos más capas y vemos cuánto poder se gana, y por qué apilar, a secas, no basta.',
+      en: 'One hidden layer was enough to solve XOR. Today we stack more layers and see how much power that gains, and why stacking, by itself, is not enough.',
     },
     {
       id: 'layer',
-      es: 'Un grupo de neuronas que reciben las mismas entradas forma una capa. Cada una hace su propia suma ponderada, y la capa entera lo hace a la vez.',
-      en: 'A group of neurons that receive the same inputs forms a layer. Each one computes its own weighted sum, and the whole layer does it at once.',
+      es: 'Un grupo de neuronas que reciben las mismas entradas forma una capa. Cada una hace su propia suma ponderada, con los pesos que ves sobre las líneas.',
+      en: 'A group of neurons that receive the same inputs forms a layer. Each one computes its own weighted sum, with the weights you see on the lines.',
       note: { es: 'Capa: neuronas que miran las mismas entradas.', en: 'Layer: neurons that look at the same inputs.' },
     },
     {
       id: 'forward',
-      es: 'Probemos con números, y por ahora cada neurona solo suma. Entran dos y uno; la capa oculta da cuatro y cinco, y la salida, trece.',
-      en: 'Let’s try numbers, and for now each neuron only sums. Two and one go in; the hidden layer gives four and five, and the output gives thirteen.',
+      es: 'Probemos con números, por ahora sin sesgo ni activación: cada neurona solo suma. Entran dos y uno; la capa oculta da cuatro y cinco, y la salida, trece.',
+      en: 'Let’s try numbers, for now with no bias and no activation: each neuron only sums. Two and one go in; the hidden layer gives four and five, and the output gives thirteen.',
       pad: 0.3,
     },
     {
@@ -72,8 +72,8 @@ export default defineLesson({
     },
     {
       id: 'nonlinear',
-      es: 'Cualquier función que no sea una recta es no lineal. Basta una esquina o una curva entre capa y capa para que apilar deje de colapsar.',
-      en: 'Any function that is not a straight line is nonlinear. A corner or a curve between layers is enough to stop stacking from collapsing.',
+      es: 'Cualquier función que no sea una recta es no lineal; en XOR, el escalón ya lo era. Basta una esquina o una curva entre capa y capa para que apilar deje de colapsar.',
+      en: 'Any function that is not a straight line is nonlinear; in XOR, the step already was. A corner or a curve between layers is enough to stop stacking from collapsing.',
       note: { es: 'No linealidad: lo que impide que las capas colapsen.', en: 'Nonlinearity: what stops layers from collapsing.' },
     },
     {
@@ -123,20 +123,20 @@ export default defineLesson({
     },
     {
       id: 'approx-theorem',
-      es: 'Esa es la intuición del teorema de aproximación universal. Cybenko lo demostró en mil novecientos ochenta y nueve con sigmoides, y ese mismo año Hornik y sus colegas, en un caso más general.',
-      en: 'That is the intuition behind the universal approximation theorem. Cybenko proved it in nineteen eighty-nine for sigmoids, and that same year Hornik and colleagues proved a more general case.',
+      es: 'Esa es la idea del teorema de aproximación universal. Cybenko lo probó en mil novecientos ochenta y nueve para sigmoides; ese año, Hornik y colegas, con otras condiciones; en mil novecientos noventa y tres se vio que vale la ReLU.',
+      en: 'That is the idea behind the universal approximation theorem. Cybenko proved it in nineteen eighty-nine for sigmoids; that year, Hornik and colleagues, under other conditions; in nineteen ninety-three it was shown that ReLU works too.',
       note: { es: 'Aproximación universal: con suficientes neuronas, una capa oculta basta en teoría.', en: 'Universal approximation: with enough neurons, one hidden layer is enough in theory.' },
     },
     {
       id: 'approx-caveat',
-      es: 'Pero el teorema solo dice que esa red existe. No dice cuántas neuronas hacen falta, ni que el entrenamiento vaya a encontrarla.',
-      en: 'But the theorem only says such a network exists. It does not say how many neurons are needed, nor that training will find it.',
+      es: 'Pero el teorema solo dice que esa red existe, en una región acotada. No dice cuántas neuronas hacen falta, ni que el entrenamiento vaya a encontrarla.',
+      en: 'But the theorem only says such a network exists, on a bounded region. It does not say how many neurons are needed, nor that training will find it.',
       pad: 0.3,
     },
     {
       id: 'try1',
-      es: 'Tu turno: sube el número de neuronas y observa cómo baja el error máximo de la aproximación.',
-      en: 'Your turn: raise the number of neurons and watch the maximum error of the approximation drop.',
+      es: 'Tu turno: sube el número de neuronas y observa el error máximo de la aproximación; en general baja, aunque no siempre en cada paso.',
+      en: 'Your turn: raise the number of neurons and watch the maximum error of the approximation; in general it drops, though not at every single step.',
       gate: {
         id: 'approx',
         prompt: { es: 'Lleva el error máximo por debajo de 0,05.', en: 'Bring the maximum error below 0.05.' },
@@ -145,8 +145,8 @@ export default defineLesson({
     },
     {
       id: 'depth',
-      es: 'Una sola capa ancha bastaría en teoría, pero en la práctica se apilan varias. Una red con varias capas ocultas se llama red profunda.',
-      en: 'One wide layer would be enough in theory, but in practice several are stacked. A network with several hidden layers is called a deep network.',
+      es: 'Con suficientes neuronas, una sola capa ancha bastaría en teoría; en la práctica se apilan varias. Una red con varias capas ocultas se llama red profunda.',
+      en: 'With enough neurons, one wide layer would be enough in theory; in practice several are stacked. A network with several hidden layers is called a deep network.',
       note: { es: 'Red profunda: varias capas ocultas.', en: 'Deep network: several hidden layers.' },
     },
     {
@@ -163,42 +163,42 @@ export default defineLesson({
     },
     {
       id: 'depth-real',
-      es: 'Los modelos reales llevan esto mucho más lejos: GPT-3 apila noventa y seis capas, cada una con miles de neuronas.',
-      en: 'Real models take this much further: GPT-3 stacks ninety-six layers, each with thousands of neurons.',
+      es: 'Los modelos reales llegan mucho más lejos: GPT-3 tiene noventa y seis capas, las de un transformer que verás más adelante, y ciento setenta y cinco mil millones de parámetros.',
+      en: 'Real models go much further: GPT-3 has ninety-six layers, those of a transformer you will meet later, and one hundred seventy-five billion parameters.',
       tts: {
-        es: 'Los modelos reales llevan esto mucho más lejos: Ge pe te tres apila noventa y seis capas, cada una con miles de neuronas.',
-        en: 'Real models take this much further: G P T three stacks ninety-six layers, each with thousands of neurons.',
+        es: 'Los modelos reales llegan mucho más lejos: Ge pe te tres tiene noventa y seis capas, las de un transformer que verás más adelante, y ciento setenta y cinco mil millones de parámetros.',
+        en: 'Real models go much further: G P T three has ninety-six layers, those of a transformer you will meet later, and one hundred seventy-five billion parameters.',
       },
       pad: 0.3,
     },
     {
       id: 'pg-intro',
-      es: 'Ahora, un patio de juegos. Es una red real, programada desde cero, que se entrena aquí mismo, en tu navegador. El fondo muestra lo que predice en cada punto.',
-      en: 'Now, a playground. It is a real network, programmed from scratch, training right here in your browser. The background shows what it predicts at each point.',
+      es: 'Ahora, un patio de juegos: una red real, programada desde cero, que se entrena aquí mismo, en tu navegador. Debe separar círculos de cruces; el color de fondo es su predicción.',
+      en: 'Now, a playground: a real network, programmed from scratch, training right here in your browser. It must separate circles from crosses; the background color is its prediction.',
       pad: 0.3,
     },
     {
       id: 'pg-one',
-      es: 'Empecemos con una sola neurona. Su frontera es una recta, y por más que se entrena, los aciertos se quedan en la mitad: no hay recta que sirva.',
-      en: 'Let’s start with a single neuron. Its boundary is a straight line, and no matter how long it trains, accuracy stays around half: no line will do.',
+      es: 'Empecemos con una sola neurona. Su frontera es una recta, y por más que se entrena acierta poco más de la mitad: ninguna recta pasa del setenta por ciento.',
+      en: 'Let’s start with a single neuron. Its boundary is a straight line, and no matter how long it trains it is right only a little over half the time: no line gets past seventy percent.',
       pad: 0.5,
     },
     {
       id: 'pg-linear',
-      es: 'Apilemos ahora tres capas de seis neuronas, pero lineales. El resultado es idéntico: una recta. Las tres capas equivalen a una sola neurona.',
-      en: 'Now let’s stack three layers of six neurons, but linear. The result is identical: a straight line. The three layers equal a single neuron.',
+      es: 'Apilemos ahora tres capas de seis neuronas, pero lineales. El resultado es el mismo: una recta. Las tres capas equivalen a una sola neurona.',
+      en: 'Now let’s stack three layers of six neurons, but linear. The result is the same: a straight line. The three layers equal a single neuron.',
       pad: 0.5,
     },
     {
       id: 'pg-relu',
-      es: 'Con una sola capa oculta de seis neuronas y ReLU, la frontera se dobla: rodea el centro con un polígono y los aciertos suben a casi todo.',
-      en: 'With a single hidden layer of six neurons and ReLU, the boundary bends: it wraps the center in a polygon and accuracy climbs to nearly everything.',
+      es: 'Con una capa oculta de seis neuronas y ReLU, la frontera se dobla y rodea el centro con un polígono: los aciertos suben a casi el cien por ciento, medidos sobre estos mismos puntos.',
+      en: 'With one hidden layer of six neurons and ReLU, the boundary bends and wraps the center in a polygon: accuracy climbs to nearly a hundred percent, measured on these same points.',
       pad: 0.5,
     },
     {
       id: 'try2',
-      es: 'Tu turno: elige capas, neuronas y activación, y separa los círculos con al menos noventa y cinco por ciento de aciertos.',
-      en: 'Your turn: choose layers, neurons, and activation, and separate the circles with at least ninety-five percent accuracy.',
+      es: 'Tu turno: con los controles elige capas, neuronas y activación, y separa los círculos de las cruces con al menos noventa y cinco por ciento de aciertos.',
+      en: 'Your turn: with the controls choose layers, neurons, and activation, and separate the circles from the crosses with at least ninety-five percent accuracy.',
       gate: {
         id: 'circles',
         prompt: { es: 'Separa los círculos: 95 % de aciertos o más.', en: 'Separate the circles: 95% accuracy or better.' },
@@ -213,8 +213,8 @@ export default defineLesson({
     },
     {
       id: 'spiral-intro',
-      es: 'Un reto mayor: la espiral. Una sola capa de ocho neuronas se queda corta; tres capas de ocho, con la misma activación, la separan.',
-      en: 'A bigger challenge: the spiral. A single layer of eight neurons falls short; three layers of eight, with the same activation, separate it.',
+      es: 'Un reto mayor: la espiral. Una sola capa de ocho neuronas se queda cerca del ochenta por ciento; tres capas de ocho, con la misma activación, la separan.',
+      en: 'A bigger challenge: the spiral. A single layer of eight neurons stays near eighty percent; three layers of eight, with the same activation, separate it.',
       pad: 0.5,
     },
     {
@@ -229,14 +229,14 @@ export default defineLesson({
     },
     {
       id: 'recap',
-      es: 'En resumen: sin activación, las capas colapsan en una; con ella, cada capa dobla el espacio, y con suficientes neuronas una red aproxima cualquier función continua.',
-      en: 'In short: without activation, layers collapse into one; with it, each layer folds space, and with enough neurons a network can approximate any continuous function.',
+      es: 'En resumen: sin activación, las capas colapsan en una; con ella, cada capa dobla el espacio. En teoría una capa ancha basta; en la práctica, apilar capas rinde más.',
+      en: 'In short: without activation, layers collapse into one; with it, each layer folds space. In theory one wide layer is enough; in practice, stacking layers pays off.',
       pad: 0.3,
     },
     {
       id: 'bridge',
-      es: 'Pero esta red ajustó sola sus pesos. ¿Cómo se reparte la culpa del error entre cientos o miles de pesos a la vez? Eso es la retropropagación.',
-      en: 'But this network adjusted its own weights. How is the blame for the error shared among hundreds or thousands of weights at once? That is backpropagation.',
+      es: 'Pero hay una pregunta pendiente: la red ajustó sus pesos con el descenso del gradiente. ¿Cómo se reparte la culpa del error entre cientos de pesos, repartidos en capas? Eso es la retropropagación.',
+      en: 'But a question is left: the network adjusted its weights with gradient descent. How is the blame for the error shared among hundreds of weights spread over layers? That is backpropagation.',
     },
   ],
 
@@ -293,25 +293,26 @@ Por inducción, $L$ capas lineales equivalen a una. Con $\\phi=\\mathrm{ReLU}$ y
 
 $$\\sigma(z)=\\frac{1}{1+e^{-z}},\\qquad \\tanh(z)=2\\sigma(2z)-1,\\qquad \\mathrm{ReLU}(z)=\\max(0,z).$$
 
-Sus derivadas importan para entrenar (lección 8): $\\sigma'(z)=\\sigma(z)(1-\\sigma(z))\\le \\tfrac14$, $\\tanh'(z)=1-\\tanh^2(z)\\le 1$ y $\\mathrm{ReLU}'(z)\\in\\{0,1\\}$. En los transformers se usan variantes suaves de la ReLU, como la GELU (Hendrycks y Gimpel, 2016).
+Sus derivadas importan para entrenar (lección 8): $\\sigma'(z)=\\sigma(z)(1-\\sigma(z))\\le \\tfrac14$, $\\tanh'(z)=1-\\tanh^2(z)\\le 1$ y $\\mathrm{ReLU}'(z)\\in\\{0,1\\}$ (en $z=0$ no existe; por convención se toma 0). La ReLU, «unidad lineal rectificada», tiene variantes suaves, como la GELU (Hendrycks y Gimpel, 2016), que BERT usa en lugar de la ReLU (Devlin et al., 2019).
 
 ## Aproximación universal
 
-**Enunciado (versión de Cybenko, 1989).** Si $\\sigma$ es continua y sigmoidal, para toda función continua $f$ sobre el cubo unitario $K=[0,1]^n$ (y, cambiando la escala, sobre cualquier compacto) y todo $\\varepsilon>0$ existen $N$, $\\alpha_j$, $\\mathbf{w}_j$ y $b_j$ tales que
+**Qué dice (Cybenko, 1989, teorema 2).** Una función $\\sigma$ es *sigmoidal* si $\\sigma(t)\\to1$ cuando $t\\to+\\infty$ y $\\sigma(t)\\to0$ cuando $t\\to-\\infty$. Si $\\sigma$ es continua y sigmoidal, para toda función continua $f$ sobre el cubo unitario $K=[0,1]^n$ (con un cambio de escala, sobre cualquier cubo) y todo $\\varepsilon>0$ existen $N$, $\\alpha_j$, $\\mathbf{w}_j$ y $b_j$ tales que
 $$\\Big|\\sum_{j=1}^{N}\\alpha_j\\,\\sigma(\\mathbf{w}_j\\cdot\\mathbf{x}+b_j)-f(\\mathbf{x})\\Big|<\\varepsilon\\quad\\text{para todo }\\mathbf{x}\\in K.$$
-Hornik, Stinchcombe y White (1989) lo probaron para funciones de aplastamiento y funciones medibles; Hornik (1991) exigió solo que la activación sea acotada y no constante, y Leshno, Lin, Pinkus y Schocken (1993) mostraron que basta con que no sea un polinomio, lo que incluye a la ReLU.
 
-**Qué no dice.** No acota $N$ (que en general crece con la complejidad de $f$ y con el número de entradas) ni garantiza que el descenso del gradiente encuentre esos pesos.
+**Quiénes más, y con qué condiciones.** El mismo año, Hornik, Stinchcombe y White lo probaron para «funciones de aplastamiento» (no decrecientes, con límites 0 y 1, no necesariamente continuas), y para funciones medibles en un sentido más débil (aproximación en probabilidad); en una nota final reconocen el trabajo de Funahashi (1989), que llegó por su cuenta a un resultado cercano. Las hipótesis no coinciden: Cybenko no exige que $\\sigma$ sea monótona, y Hornik et al. no exigen que sea continua. Hornik (1991) mostró que basta con una activación acotada y no constante (aproximación en $L^p$; si además es continua, aproximación uniforme sobre compactos). Leshno, Lin, Pinkus y Schocken (1993) cerraron la cuestión: para una activación localmente acotada y continua a trozos, una red con una capa oculta aproxima toda función continua, uniformemente sobre cada compacto, si y solo si la activación no es un polinomio. La ReLU cumple esa condición. El teorema también necesita el sesgo (el umbral): sin él, no vale.
 
-**La construcción de la lección.** Para una función $f$ de una variable, con $n$ nudos equiespaciados $t_k$ y pendientes $s_k=\\frac{f(t_k+h)-f(t_k)}{h}$, $h=(b-a)/n$,
+**Qué no dice.** Aproxima una función conocida sobre un conjunto acotado; no dice nada fuera de él ni sobre aprender de ejemplos. No acota $N$ ni dice cómo hallar los pesos. Cybenko lo reconoce en su discusión final: su artículo se limita a la existencia, y sospecha que la gran mayoría de los problemas de aproximación exigirán un número astronómico de términos, por la maldición de la dimensionalidad. Hornik et al. añaden que un fallo en la práctica puede deberse a un aprendizaje inadecuado, a pocas neuronas o a que la relación entre entrada y salida sea aleatoria.
+
+**La construcción de la lección.** No es la demostración de Cybenko, que usa el teorema de Hahn–Banach y no construye nada. Para una función $f$ de una variable, con $n$ nudos equiespaciados $t_k$ y pendientes $s_k=\\frac{f(t_k+h)-f(t_k)}{h}$, $h=(b-a)/n$,
 
 $$\\hat f(x)=f(a)+\\sum_{k=0}^{n-1}(s_k-s_{k-1})\\,\\mathrm{ReLU}(x-t_k),\\quad s_{-1}=0,$$
 
-es una red con una capa oculta de $n$ neuronas ReLU que interpola a $f$ en los nudos. Si $f$ tiene segunda derivada acotada por $M$, el error máximo es a lo sumo $\\dfrac{(b-a)^2M}{8n^2}$: al duplicar las neuronas, el error se divide por cuatro. Aquí los pesos se calculan, no se entrenan.
+es una red con una capa oculta de $n$ neuronas ReLU que coincide con $f$ en los nudos (interpolación lineal por tramos). Si $|f''|\\le M$, el error máximo es a lo sumo $\\dfrac{(b-a)^2M}{8n^2}$: al duplicar las neuronas, la cota se divide por cuatro. Para la curva de la escena, $M\\le 3{,}36$; con $n=24$ la cota es 0,026 y el error medido, 0,025. La razón de errores medidos no es siempre cuatro: 2,5 al pasar de 3 a 6 neuronas, 3,0 de 6 a 12, 4,1 de 12 a 24 y 3,8 de 24 a 48. Tampoco baja en cada paso (de 1 a 2, de 4 a 5 y de 7 a 8 neuronas sube un poco, porque los nudos equiespaciados caen en otros lugares). La meta del turno, 0,05, se alcanza con 17 neuronas (0,047; con 16, 0,057). Aquí los pesos se calculan, no se entrenan.
 
 ## Profundidad: la sierra
 
-La función tienda $g(x)=2\\,\\mathrm{ReLU}(x)-4\\,\\mathrm{ReLU}(x-\\tfrac12)$ sobre $[0,1]$ usa dos neuronas. La composición $g^{(k)}=g\\circ\\cdots\\circ g$ ($k$ capas, $2k$ neuronas) tiene $2^k$ tramos rectos. Una red de una sola capa oculta con $m$ neuronas ReLU tiene a lo sumo $m+1$ tramos en una dimensión, así que para igualarla necesita al menos $2^k-1$ neuronas. Telgarsky (2016) generaliza este argumento y prueba que ciertas funciones requieren una cantidad exponencial de neuronas si la red es poco profunda. Es un resultado sobre funciones concretas, no una ley: no dice que toda tarea real se beneficie igual.
+La función tienda $g(x)=2\\,\\mathrm{ReLU}(x)-4\\,\\mathrm{ReLU}(x-\\tfrac12)$ sobre $[0,1]$ usa dos neuronas: sube de 0 a 1 en $[0,\\tfrac12]$ y baja de 1 a 0 en $[\\tfrac12,1]$. La composición $g^{(k)}=g\\circ\\cdots\\circ g$ ($k$ capas, $2k$ neuronas) tiene $2^k$ tramos rectos (comprobado numéricamente hasta $k=6$). Una red de una sola capa oculta con $m$ neuronas ReLU tiene a lo sumo $m+1$ tramos en una dimensión (cada neurona aporta una esquina), así que para igualarla necesita al menos $2^k-1$ neuronas. Telgarsky (2016) usa esta misma función y prueba algo más fuerte, para aproximar y no solo igualar: para cada $k$ existe una red ReLU con $2k^3+8$ capas y $3k^3+12$ neuronas tal que toda red ReLU con a lo sumo $k$ capas y a lo sumo $2^k$ neuronas queda a distancia $L^1$ de al menos $1/64$ sobre $[0,1]^d$. Es un resultado sobre funciones concretas, no una ley: no dice que toda tarea real se beneficie igual de la profundidad.
 
 ## En código: el pase hacia delante y el colapso
 
@@ -406,25 +407,26 @@ By induction, $L$ linear layers equal one. With $\\phi=\\mathrm{ReLU}$ and input
 
 $$\\sigma(z)=\\frac{1}{1+e^{-z}},\\qquad \\tanh(z)=2\\sigma(2z)-1,\\qquad \\mathrm{ReLU}(z)=\\max(0,z).$$
 
-Their derivatives matter for training (lesson 8): $\\sigma'(z)=\\sigma(z)(1-\\sigma(z))\\le \\tfrac14$, $\\tanh'(z)=1-\\tanh^2(z)\\le 1$, and $\\mathrm{ReLU}'(z)\\in\\{0,1\\}$. Transformers use smooth variants of ReLU, such as GELU (Hendrycks and Gimpel, 2016).
+Their derivatives matter for training (lesson 8): $\\sigma'(z)=\\sigma(z)(1-\\sigma(z))\\le \\tfrac14$, $\\tanh'(z)=1-\\tanh^2(z)\\le 1$, and $\\mathrm{ReLU}'(z)\\in\\{0,1\\}$ (at $z=0$ it does not exist; by convention it is taken as 0). ReLU, the “rectified linear unit”, has smooth variants such as GELU (Hendrycks and Gimpel, 2016), which BERT uses instead of ReLU (Devlin et al., 2019).
 
 ## Universal approximation
 
-**Statement (Cybenko, 1989).** If $\\sigma$ is continuous and sigmoidal, then for every continuous function $f$ on the unit cube $K=[0,1]^n$ (and, rescaling, on any compact set) and every $\\varepsilon>0$ there exist $N$, $\\alpha_j$, $\\mathbf{w}_j$ and $b_j$ such that
+**What it says (Cybenko, 1989, theorem 2).** A function $\\sigma$ is *sigmoidal* if $\\sigma(t)\\to1$ as $t\\to+\\infty$ and $\\sigma(t)\\to0$ as $t\\to-\\infty$. If $\\sigma$ is continuous and sigmoidal, then for every continuous function $f$ on the unit cube $K=[0,1]^n$ (rescaling, on any cube) and every $\\varepsilon>0$ there exist $N$, $\\alpha_j$, $\\mathbf{w}_j$ and $b_j$ such that
 $$\\Big|\\sum_{j=1}^{N}\\alpha_j\\,\\sigma(\\mathbf{w}_j\\cdot\\mathbf{x}+b_j)-f(\\mathbf{x})\\Big|<\\varepsilon\\quad\\text{for all }\\mathbf{x}\\in K.$$
-Hornik, Stinchcombe, and White (1989) proved it for squashing functions and measurable functions; Hornik (1991) required only that the activation be bounded and nonconstant, and Leshno, Lin, Pinkus, and Schocken (1993) showed that being non-polynomial is enough, which includes ReLU.
 
-**What it does not say.** It does not bound $N$ (which in general grows with the complexity of $f$ and with the number of inputs), nor does it guarantee that gradient descent finds those weights.
+**Who else, and under which conditions.** The same year, Hornik, Stinchcombe, and White proved it for “squashing functions” (non-decreasing, with limits 0 and 1, not necessarily continuous), and for measurable functions in a weaker sense (approximation in probability); in a closing note they acknowledge Funahashi’s work (1989), which had reached a close result independently. The hypotheses do not coincide: Cybenko does not require $\\sigma$ to be monotone, and Hornik et al. do not require it to be continuous. Hornik (1991) showed that a bounded, nonconstant activation is enough ($L^p$ approximation; if it is also continuous, uniform approximation on compact sets). Leshno, Lin, Pinkus, and Schocken (1993) settled the question: for a locally bounded, piecewise continuous activation, a network with one hidden layer approximates every continuous function, uniformly on every compact set, if and only if the activation is not a polynomial. ReLU meets that condition. The theorem also needs the bias (the threshold): without it, it fails.
 
-**The construction in the lesson.** For a function $f$ of one variable, with $n$ equally spaced knots $t_k$ and slopes $s_k=\\frac{f(t_k+h)-f(t_k)}{h}$, $h=(b-a)/n$,
+**What it does not say.** It approximates a known function on a bounded set; it says nothing outside it, nor about learning from examples. It does not bound $N$ or say how to find the weights. Cybenko admits this in his closing discussion: his paper is limited to existence, and he suspects that the vast majority of approximation problems will need an astronomical number of terms, because of the curse of dimensionality. Hornik et al. add that a failure in practice may be due to inadequate learning, too few neurons, or a random relation between input and output.
+
+**The construction in the lesson.** It is not Cybenko’s proof, which uses the Hahn–Banach theorem and builds nothing. For a function $f$ of one variable, with $n$ equally spaced knots $t_k$ and slopes $s_k=\\frac{f(t_k+h)-f(t_k)}{h}$, $h=(b-a)/n$,
 
 $$\\hat f(x)=f(a)+\\sum_{k=0}^{n-1}(s_k-s_{k-1})\\,\\mathrm{ReLU}(x-t_k),\\quad s_{-1}=0,$$
 
-is a one-hidden-layer network with $n$ ReLU neurons that interpolates $f$ at the knots. If $f$ has second derivative bounded by $M$, the maximum error is at most $\\dfrac{(b-a)^2M}{8n^2}$: doubling the neurons divides the error by four. Here the weights are computed, not trained.
+is a one-hidden-layer network with $n$ ReLU neurons that equals $f$ at the knots (piecewise linear interpolation). If $|f''|\\le M$, the maximum error is at most $\\dfrac{(b-a)^2M}{8n^2}$: doubling the neurons divides the bound by four. For the scene’s curve, $M\\le 3.36$; with $n=24$ the bound is 0.026 and the measured error is 0.025. The ratio of measured errors is not always four: 2.5 from 3 to 6 neurons, 3.0 from 6 to 12, 4.1 from 12 to 24, and 3.8 from 24 to 48. Nor does it drop at every step (from 1 to 2, 4 to 5, and 7 to 8 neurons it rises a little, because equally spaced knots fall in other places). The turn’s goal, 0.05, is reached with 17 neurons (0.047; with 16, 0.057). Here the weights are computed, not trained.
 
 ## Depth: the sawtooth
 
-The tent function $g(x)=2\\,\\mathrm{ReLU}(x)-4\\,\\mathrm{ReLU}(x-\\tfrac12)$ on $[0,1]$ uses two neurons. The composition $g^{(k)}=g\\circ\\cdots\\circ g$ ($k$ layers, $2k$ neurons) has $2^k$ straight pieces. A network with one hidden layer of $m$ ReLU neurons has at most $m+1$ pieces in one dimension, so to match it, it needs at least $2^k-1$ neurons. Telgarsky (2016) generalizes this argument and proves that certain functions require an exponential number of neurons if the network is shallow. It is a result about specific functions, not a law: it does not say that every real task benefits equally.
+The tent function $g(x)=2\\,\\mathrm{ReLU}(x)-4\\,\\mathrm{ReLU}(x-\\tfrac12)$ on $[0,1]$ uses two neurons: it rises from 0 to 1 on $[0,\\tfrac12]$ and falls from 1 to 0 on $[\\tfrac12,1]$. The composition $g^{(k)}=g\\circ\\cdots\\circ g$ ($k$ layers, $2k$ neurons) has $2^k$ straight pieces (checked numerically up to $k=6$). A network with one hidden layer of $m$ ReLU neurons has at most $m+1$ pieces in one dimension (each neuron adds one corner), so to match it, it needs at least $2^k-1$ neurons. Telgarsky (2016) uses this same function and proves something stronger, for approximating and not just matching: for every $k$ there is a ReLU network with $2k^3+8$ layers and $3k^3+12$ neurons such that every ReLU network with at most $k$ layers and at most $2^k$ neurons stays at $L^1$ distance at least $1/64$ on $[0,1]^d$. It is a result about specific functions, not a law: it does not say that every real task benefits equally from depth.
 
 ## In code: the forward pass and the collapse
 

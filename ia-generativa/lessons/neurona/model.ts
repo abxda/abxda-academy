@@ -4,8 +4,9 @@
 //   x1 = enlaces que trae el correo, x2 = confianza que inspira quien lo envía.
 //   t = 1 (sospechoso, cruz) o 0 (legítimo, círculo).
 // Se escribieron a mano para que los dos grupos se puedan separar con una recta (margen ≈ 0,12) y para que
-// la neurona de partida (w₁ = 2, w₂ = −1,5, b = −0,5) se equivoque en cuatro. Se comprobó con un script que
-// existen soluciones en la rejilla de los controles y que la regla del perceptrón converge en nueve pasos.
+// la neurona de partida (w₁ = 2, w₂ = −1,5, b = −0,5) se equivoque en cuatro. `verify-data.ts` (misma carpeta) lo recalcula:
+// 3263 combinaciones de la rejilla de los controles aciertan las 16 marcas, el margen máximo es 0,121 y, desde (0; −1,4; 0,1)
+// con η = 0,2, la regla del perceptrón converge en nueve pasos (y en cualquier otro orden de correcciones).
 
 export interface Pt { x: number; y: number; t: 0 | 1 }
 

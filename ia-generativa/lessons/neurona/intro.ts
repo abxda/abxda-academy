@@ -126,10 +126,12 @@ export function drawMP(S: Frame, r: Rect, a: number) {
       d.line(ux + ur, uy, ox - nr, uy, wt.c, 2.5);
       d.circle(ox, uy, nr, { fill: alpha(sg.c, 0.85), stroke: sg.c, lw: 2 });
       d.text('1', ox, uy, { size: fs(S, 15), weight: 800, font: 'mono', color: p.stage, align: 'center', base: 'middle' });
-      tag(S, S.l('umbral', 'threshold'), ux, uy - ur - 14 * u, { tone: 'w' });
+      tag(S, S.l('umbral fijo', 'fixed threshold'), ux, uy - ur - 14 * u, { tone: 'w' });
       tag(S, S.l('señales 0 o 1', 'signals 0 or 1'), ix + nr * 0.6, iy(n - 1) + nr + 18 * u, { align: 'center' });
       tag(S, S.l('sale 1', 'outputs 1'), ox, uy + nr + 16 * u, { tone: 'sig' });
     });
+    // «era una red fija: no aprendía»: aparece hacia el final de la frase
+    d.withAlpha(tr(tau(S, 'mp'), 0.72, 0.84), () => tag(S, S.l('sin aprendizaje', 'no learning'), ux, uy + ur + 20 * u, { tone: 'err' }));
   });
 }
 
