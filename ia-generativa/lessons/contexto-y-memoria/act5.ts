@@ -43,10 +43,10 @@ export function drawLitm(S: Frame) {
         if ([1, 5, 10, 15, 20].includes(i + 1) && !S.portrait) T(S, String(i + 1), cx + cell / 2, cy + cell + 3 * u, { px: 12, weight: 600, font: 'mono', color: p.mute, align: 'center', base: 'top' });
       });
     }
-    const gridBottom = y0 + rows * (cell + gap) + (S.portrait ? 2 : 20) * u;
+    const gridBottom = y0 + rows * (cell + gap) + (S.portrait ? 2 : 24) * u;
 
     // ── gráfica: acierto vs posición
-    const short = isShort(S), ph = F.y + F.h - gridBottom - (S.portrait ? 96 : short ? 8 : 46) * u;
+    const short = isShort(S), ph = F.y + F.h - gridBottom - (S.portrait ? 96 : short ? 38 : 46) * u;
     const outer: Rect = { x: F.x, y: gridBottom + 6 * u, w: S.portrait ? F.w : F.w * (short ? 0.62 : 0.68), h: Math.max(60 * u, ph) };
     const pl: Rect = { x: outer.x + 34 * u, y: outer.y + 6 * u, w: outer.w - 44 * u, h: outer.h - (S.portrait ? 40 : 34) * u };
     const X = (v: number) => pl.x + ((v - 1) / 19) * pl.w, Y = (v: number) => pl.y + pl.h - ((v - YR[0]) / (YR[1] - YR[0])) * pl.h;

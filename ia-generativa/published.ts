@@ -13,4 +13,5 @@ export const PUBLISHED: string[] = [
   'atencion',
   'agentes',
   'evaluar',
+  'contexto-y-memoria',
 ];

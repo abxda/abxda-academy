@@ -10,12 +10,13 @@ export const g1Of = (S: Frame): G1 => (S.st.g1 ??= { mode: null, at: 0, tried: {
 // ───────────────────────────── 1 · El chat ─────────────────────────────
 export function drawChat(S: Frame) {
   const { d, pal: p } = S, F = pad(S), u = S.u;
-  const w = Math.min(F.w, S.portrait ? F.w : Math.max(400 * u, F.w * 0.64)), x = F.x + (S.portrait ? 0 : 6 * u);
-  const px = S.portrait ? 14.5 : 15.5, gap = 10 * u, bw = w * (S.portrait ? 0.84 : 0.66);
+  const short = isShort(S);   // teléfono en horizontal: burbujas más anchas y bajas para que quepan las seis
+  const w = short ? F.w : Math.min(F.w, S.portrait ? F.w : Math.max(400 * u, F.w * 0.64)), x = F.x + (S.portrait ? 0 : 6 * u);
+  const px = S.portrait ? 14.5 : short ? 13 : 15.5, gap = (short ? 6 : 10) * u, bw = w * (S.portrait ? 0.84 : short ? 0.62 : 0.66);
   // el chat: seis burbujas que aparecen una a una
   const times = [0.3, 1.5, 2.7, 3.9]; // hook
   const alphaOf = (i: number) => (i < 4 ? S.reveal('hook', times[i], 0.45) : S.reveal('seems', i === 4 ? 0.3 : 1.6, 0.45));
-  const heights = CHAT.map((m) => (wrapLines(S, S.l(m.es, m.en), bw - 16 * u, px, 600).length * px * K(S) * 1.3) + 18 * u);
+  const heights = CHAT.map((m) => (wrapLines(S, S.l(m.es, m.en), bw - 16 * u, px, 600).length * px * K(S) * 1.3) + (short ? 12 : 18) * u);
   const total = heights.reduce((a, b) => a + b, 0) + gap * (CHAT.length - 1) + 26 * u;
   let y = F.y + Math.max(0, (F.h - total - 24 * u) / 2) + 22 * u;
   T(S, S.l('chat', 'chat'), x, y - 22 * u, { px: 12, weight: 800, color: p.mute, base: 'top', a: S.reveal('hook', 0, 0.4) });
@@ -87,8 +88,10 @@ function appCard(S: Frame, r: Rect, a: number, o: { shown: number; hot: boolean;
   d.withAlpha(a, () => {
     const n = o.shown;
     if (!S.portrait) {
-      T(S, S.l('guarda el historial', 'stores the history'), r.x + 10 * u, r.y + 28 * u, { px: 12, weight: 600, color: p.mute, base: 'top', w: r.w - 20 * u });
-      const rh = Math.min(22 * u, (r.h - 90 * u) / 6), y0 = r.y + 62 * u;
+      const sub = S.l('guarda el historial', 'stores the history');
+      T(S, sub, r.x + 10 * u, r.y + 28 * u, { px: 12, weight: 600, color: p.mute, base: 'top', w: r.w - 20 * u });
+      const y0 = r.y + 34 * u + wrapLines(S, sub, r.w - 20 * u, 12, 600).length * 12 * K(S) * 1.3 + 6 * u;   // las filas empiezan debajo del subtítulo, ocupe las líneas que ocupe
+      const rh = Math.min(22 * u, (r.y + r.h - 12 * u - y0 - 25 * u) / 6);
       ORDER.forEach((m, i) => { if (i < n) wagon(S, { x: r.x + 12 * u, y: y0 + i * (rh + 5 * u), w: r.w - 24 * u, h: rh }, m.role, { label: m.id === 'U1' ? 'Ana' : roleLabel(S, m.role, true), a: clamp(n - i), hot: m.id === 'U1' }); });
     } else {
       const sw = (r.w - 24 * u - 5 * u * 5) / 6, y0 = r.y + 32 * u, rh = 24 * u;

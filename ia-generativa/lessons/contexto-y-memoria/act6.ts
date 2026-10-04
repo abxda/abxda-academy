@@ -36,7 +36,7 @@ const NOTES = {
 /** Notas fuera del modelo, a un lado (o arriba en teléfono). */
 function notebook(S: Frame, r: Rect, a: number, o: { title?: string; rows?: number; hot?: number[]; many?: boolean } = {}) {
   const { d, pal: p } = S, u = S.u, lh = 22 * u;
-  card(S, r, { a, title: o.title ?? S.l('Cuaderno de notas · fuera del modelo', 'Notebook · outside the model'), dashed: false });
+  card(S, r, { a, title: o.title ?? S.l('Notas · fuera del modelo', 'Notes · outside the model'), dashed: false });
   d.withAlpha(a, () => {
     const rows = o.many ? Math.max(3, Math.floor((r.h - 40 * u) / lh)) : 3;
     for (let i = 0; i < rows; i++) {
@@ -58,7 +58,7 @@ export function drawMemory(S: Frame) {
     // ───────── memory-q: las notas viajan al inicio del contexto de una conversación nueva
     const aQ = S.at('memory-q', 0, 0.5, 'out') * (1 - S.at('memory-summary', 0, 0.45, 'out'));
     if (aQ > 0) d.withAlpha(aQ, () => {
-      const ew = land ? Math.min(F.w * 0.34, 300 * u) : F.w, eh = land ? 134 * u : 128 * u;
+      const ew = land ? Math.min(F.w * (short ? 0.42 : 0.34), 300 * u) : F.w, eh = land ? 134 * u : 128 * u;
       const ext: Rect = land ? { x: F.x, y: F.y + F.h * (short ? 0.12 : 0.22), w: ew, h: eh } : { x: F.x, y: F.y + 12 * u, w: F.w, h: eh };
       const win: Strip = land ? { x: ext.x + ew + 90 * u, y: ext.y + eh / 2 - stripH / 2, w: F.w - ew - 100 * u, h: stripH } : { x: F.x + 8 * u, y: ext.y + eh + 92 * u, w: F.w - 16 * u, h: stripH };
       notebook(S, ext, S.reveal('memory-q', 0.1, 0.5), { hot: [0, 1, 2] });
@@ -112,7 +112,7 @@ export function drawMemory(S: Frame) {
     // ───────── memory-store: almacén externo, solo lo relevante
     const aE = S.at('memory-store', 0, 0.5, 'out');
     if (aE > 0) d.withAlpha(aE, () => {
-      const hot = [1, 4], ew = land ? Math.min(F.w * 0.34, 300 * u) : F.w;
+      const hot = [1, 4], ew = land ? Math.min(F.w * (short ? 0.42 : 0.34), 300 * u) : F.w;
       const st: Rect = land ? { x: F.x, y: F.y + 8 * u, w: ew, h: Math.min(F.h - 40 * u, 330 * u) } : { x: F.x, y: F.y + 8 * u, w: F.w, h: Math.min(F.h * 0.4, 168 * u) };
       notebook(S, st, S.reveal('memory-store', 0.1, 0.5), { title: S.l('Almacén externo · enorme y lento', 'External store · huge and slow'), many: true, hot: S.since('memory-store') > 1.6 ? hot : [] });
       const win: Strip = land ? { x: st.x + st.w + 90 * u, y: st.y + st.h / 2 - stripH / 2, w: F.w - st.w - 100 * u, h: stripH } : { x: F.x + 8 * u, y: st.y + st.h + 84 * u, w: F.w - 16 * u, h: stripH };

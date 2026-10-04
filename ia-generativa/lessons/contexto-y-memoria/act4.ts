@@ -68,12 +68,13 @@ export function drawCost(S: Frame) {
     T(S, String(n), pl.x + pl.w - bw / 2, pl.y + pl.h + 4 * u, { px: 12, weight: 600, font: 'mono', color: p.mute, align: 'center', base: 'top' });
     T(S, S.l('turno', 'turn'), pl.x + pl.w / 2, pl.y + pl.h + 4 * u, { px: 12, weight: 700, color: p.mute, align: 'center', base: 'top' });
     // leyenda y valor del último turno
-    const ly = pl.y + 4 * u;
+    let ly = pl.y + 4 * u;
     let lx = pl.x + 8 * u;
     ([['sistema', 'system', tS], ['historial reenviado', 'history resent', tH], ['mensaje nuevo', 'new message', tN]] as const).forEach(([es, en, t]) => {
       if (c.S === 0 && es === 'sistema') return;
-      d.rect(lx, ly, 10 * u, 10 * u, { fill: alpha(t.c, 0.7) });
       const tw = mw(S, S.l(es, en), 12, 600);
+      if (lx + 14 * u + tw > pl.x + pl.w - 64 * u && lx > pl.x + 12 * u) { lx = pl.x + 8 * u; ly += 16 * u; }   // salta de línea para no pisar el valor del último turno
+      d.rect(lx, ly, 10 * u, 10 * u, { fill: alpha(t.c, 0.7) });
       T(S, S.l(es, en), lx + 14 * u, ly + 5 * u, { px: 12, weight: 600, color: p.ink2, base: 'middle' });
       lx += 14 * u + tw + 12 * u;
     });
@@ -109,14 +110,14 @@ export function drawCost(S: Frame) {
       const aS = S.reveal('cost-sum', 0.9, 0.5);
       const toks = cache ? ceq : total, cost = usd(toks, price), per1k = cost * 1000;
       d.withAlpha(aS, () => {
-        const cols = S.portrait ? 2 : 4, cw = stats.w / cols, rh = (S.portrait ? 46 : 56) * u;
+        const cols = S.portrait || short ? 2 : 4, cw = stats.w / cols, rh = (S.portrait ? 46 : short ? 38 : 56) * u;
         const items: [string, string, 'err' | 'dat' | 'ink' | 'sig'][] = [
           [S.l('tokens procesados', 'tokens processed'), num(S, total), 'err'],
           [S.l('si cada token, una vez', 'if each token, once'), num(S, once) + (once > 0 ? ' · ×' + S.n(total / once, 1) : ''), 'ink'],
           [cache ? S.l('con caché (equiv.)', 'with caching (equiv.)') : S.l('costo por conversación', 'cost per conversation'), cache ? num(S, ceq) + ' · ' + usdStr(S, cost) : usdStr(S, cost), cache ? 'dat' : 'sig'],
           [S.l('por mil conversaciones', 'per thousand conversations'), usdStr(S, per1k), 'sig'],
         ];
-        items.forEach(([l, v, t], i) => stat(S, stats.x + (i % cols) * cw, stats.y + Math.floor(i / cols) * rh, l, v, { tone: t, px: S.portrait ? 18 : 21 }));
+        items.forEach(([l, v, t], i) => stat(S, stats.x + (i % cols) * cw, stats.y + Math.floor(i / cols) * rh, l, v, { tone: t, px: S.portrait ? 18 : short ? 17 : 21 }));
         const note = S.l(`Supuestos: ${usdStr(S, price)} por millón de tokens de entrada, mensaje nuevo de ${U_NEW} tokens; sin tokens de salida.`, `Assumptions: ${usdStr(S, price)} per million input tokens, ${U_NEW}-token new message; output tokens not included.`);
         Tbot(S, note, stats.x, stats.y + stats.h, { px: 12, weight: 600, color: p.mute, w: stats.w });
         // «cost-play»: qué probar, con una marca cuando se hizo (cambio visible del segmento)
@@ -141,7 +142,7 @@ export function drawCost(S: Frame) {
           } else {
             // sin espacio para las marcas: se enmarca la cifra del costo
             const cwx = stats.x + (2 % cols) * cw, cyy = stats.y + Math.floor(2 / cols) * rh;
-            d.rect(cwx - 6 * u, cyy - 4 * u, cw - 8 * u, 42 * u, { stroke: tone(S, 'sig').c, lw: 2, r: 4, a: aP });
+            d.rect(cwx - 5 * u, cyy - 3 * u, cw - 10 * u, 39 * u, { stroke: tone(S, 'sig').c, lw: 2, r: 4, a: aP });
           }
         }
       });
