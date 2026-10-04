@@ -1,4 +1,4 @@
-import type { CourseMeta, LessonMeta, ModuleMeta } from '../../../core/types';
+import type { CourseMeta, LessonMeta, ModuleMeta, PartMeta } from '../../../core/types';
 
 /** Fuente de verdad del currículo: módulos, orden, rutas y títulos. El contenido vive en lessons/<id>/. */
 
@@ -118,6 +118,19 @@ export const LESSONS: LessonMeta[] = ROWS.map(([id, module, minutes, exec, sEs, 
   question: { es: qEs, en: qEn },
 }));
 
+/** El curso se libera en tres partes, en orden: la 3 asume la 2 y la 2 asume la 1. */
+export const PARTS: PartMeta[] = [
+  { n: 1, id: 'como-aprende', modules: [1, 2, 3],
+    title: { es: 'Cómo aprende una máquina', en: 'How a machine learns' },
+    blurb: { es: 'De los datos a las redes profundas: error, neuronas, retropropagación, visión, secuencias y el significado como geometría.', en: 'From data to deep networks: error, neurons, backpropagation, vision, sequences, and meaning as geometry.' } },
+  { n: 2, id: 'generar', modules: [4, 5, 6],
+    title: { es: 'Generar: imágenes y lenguaje', en: 'Generating: images and language' },
+    blurb: { es: 'Autocodificadores, GAN y difusión; después tokens, atención, el transformer, la escala y cómo responde un modelo.', en: 'Autoencoders, GANs, and diffusion; then tokens, attention, the transformer, scale, and how a model answers.' } },
+  { n: 3, id: 'asistente-y-decision', modules: [7, 8, 9],
+    title: { es: 'Del modelo al asistente y a la decisión', en: 'From model to assistant to decision' },
+    blurb: { es: 'Ajuste fino, alineación, razonamiento, memoria, RAG y agentes; luego alucinaciones, evaluación, riesgos y estrategia.', en: 'Fine-tuning, alignment, reasoning, memory, RAG, and agents; then hallucinations, evaluation, risks, and strategy.' } },
+];
+
 export const IA_GENERATIVA: CourseMeta = {
   id: 'ia-generativa',
   slug: { es: 'ia-generativa', en: 'generative-ai' },
@@ -132,5 +145,6 @@ export const IA_GENERATIVA: CourseMeta = {
     en: 'Free course on generative AI: from the artificial neuron to the chatbot, with interactive animations, voice, and a layer for decision makers.',
   },
   modules: MODULES,
+  parts: PARTS,
   lessons: LESSONS,
 };

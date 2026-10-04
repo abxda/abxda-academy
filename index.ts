@@ -1,4 +1,4 @@
-import type { CourseMeta } from '../../core/types';
+import type { CourseMeta, LessonMeta } from '../../core/types';
 import { IA_GENERATIVA } from './ia-generativa/curriculum';
 
 /** Registro de cursos de la academia. Para agregar uno: crear content/courses/<id>/ y registrarlo aquí. */
@@ -9,3 +9,5 @@ export const lessonOf = (c: CourseMeta, id: string) => c.lessons.find((l) => l.i
 export const totalMinutes = (c: CourseMeta) => c.lessons.reduce((a, l) => a + l.minutes, 0);
 export const execMinutes = (c: CourseMeta) => c.lessons.filter((l) => l.exec).reduce((a, l) => a + l.minutes, 0);
 export const lessonsOfModule = (c: CourseMeta, n: number) => c.lessons.filter((l) => l.module === n);
+export const partOfLesson = (c: CourseMeta, l: LessonMeta) => c.parts?.find((p) => p.modules.includes(l.module));
+export const modulesOfPart = (c: CourseMeta, n: number) => c.modules.filter((m) => c.parts?.find((p) => p.n === n)?.modules.includes(m.n));
