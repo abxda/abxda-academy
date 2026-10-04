@@ -6,19 +6,27 @@ import { fit, fz, num, panel, pct, rich, times, type Part, uu } from './ui';
 /** g cuantizado (paso 0,05): acota el trabajo de cálculo y el caché. */
 export const gq = (g: number) => Math.round(g * 20) / 20;
 export const GOAL_N = 10, GOAL_V = 0.5;
+/** g de la demostración en «trade» si la persona no llegó a la meta por sí misma (sigue siendo un valor real del modelo: a diez pasos llega ≈ ×0,59). */
+export const G_DEMO = 2.3;
 
-/** Recorrido de g que acompaña a la narración de «regimes»: pequeño → grande → de vuelta al valor por defecto. */
+/** Recorrido de g que acompaña a la narración de «regimes»: pequeño → grande, y se queda en grande (la última imagen es la de los pesos grandes). */
 export function gTour(S: Frame): number {
   const t = S.since('regimes');
   if (t < 0.6) return G_DEFAULT;
   if (t < 2.2) return lerp(G_DEFAULT, 0.4, (t - 0.6) / 1.6);
   if (t < 3.0) return 0.4;
-  if (t < 5.0) return lerp(0.4, 2.3, (t - 3.0) / 2.0);
-  if (t < 6.2) return 2.3;
-  if (t < 7.6) return lerp(2.3, G_DEFAULT, (t - 6.2) / 1.4);
-  return G_DEFAULT;
+  if (t < 5.0) return lerp(0.4, G_DEMO, (t - 3.0) / 2.0);
+  return G_DEMO;
 }
-export const gShown = (S: Frame) => gq(S.on('try-g') ? Number(S.p.g ?? G_DEFAULT) : S.on('regimes') ? gTour(S) : G_DEFAULT);
+/** g que muestra el gráfico. En «trade», si la meta no se alcanzó (se saltó el turno), la escena muestra un g que sí la alcanza para que se vea el precio. */
+export function gShown(S: Frame): number {
+  if (S.on('try-g')) {
+    const v = gq(Number(S.p.g ?? G_DEFAULT));
+    if (S.on('trade') && curveFor(v).typ[GOAL_N] < GOAL_V) return gq(lerp(v, G_DEMO, S.at('trade', 0.2, 1.8, 'io')));
+    return v;
+  }
+  return gq(S.on('regimes') ? gTour(S) : G_DEFAULT);
+}
 
 const LOGLO = -5, LOGHI = 2;
 const ly = (v: number) => clamp(Math.log10(Math.max(v, 1e-12)), LOGLO, LOGHI);
@@ -46,7 +54,7 @@ export function drawPlot(S: Frame, a: number) {
     d.line(pr.x, pr.y, pr.x, pr.y + pr.h, p.lineStrong, 1.5); d.line(pr.x, pr.y + pr.h, pr.x + pr.w, pr.y + pr.h, p.lineStrong, 1.5);
     [0, 10, 20, 30].forEach((n) => { d.line(X(n), pr.y + pr.h, X(n), pr.y + pr.h + 4 * u, p.lineStrong, 1.5); d.text(String(n), X(n), pr.y + pr.h + 7 * u, { size: fz(S, 12), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
     fit(S, S.l('pasos hacia atrás', 'steps back'), pr.x + pr.w, pr.y + pr.h + 26 * u, pr.w * 0.6, { size: 12.5, weight: 700, color: p.ink2, align: 'right' });
-    fit(S, S.l('culpa que llega, según la distancia', 'blame that arrives, by distance'), main.x + 2, main.y + 10 * u, main.w * 0.95, { size: 12.5, weight: 700, color: p.ink2, align: 'left' });
+    fit(S, S.l('culpa que llega · RNN de juguete', 'blame that arrives · toy RNN'), main.x + 2, main.y + 10 * u, main.w * 0.95, { size: 12.5, weight: 700, color: p.ink2, align: 'left' });
     // la frase del ejemplo: cinco pasos
     d.line(X(5), pr.y, X(5), pr.y + pr.h, wt.c, 1.4, [5, 4]);
     fit(S, S.l('«flores»', '“flowers”'), X(5) + 4 * u, pr.y + 11 * u, 70 * u, { size: 12, weight: 700, color: wt.ink, align: 'left' });
@@ -63,14 +71,15 @@ export function drawPlot(S: Frame, a: number) {
       d.circle(X(GOAL_N), Y(GOAL_V), 7 * u, { stroke: dat.c, lw: 2.5, fill: met ? alpha(dat.c, 0.35) : S.pal.stage });
       fit(S, S.l('meta', 'goal'), X(GOAL_N) + 11 * u, Y(GOAL_V) - 9 * u, 50 * u, { size: 12, weight: 700, color: dat.ink, align: 'left', halo: true });
       // dispersión entre frases a diez pasos
-      const x = X(GOAL_N) + 20 * u;
+      const x = X(GOAL_N) + 58 * u;   // a la derecha del rótulo «meta», para no cruzarlo
       d.line(x, Y(c.p90), x, Y(c.p10), wt.c, 2.5); d.line(x - 4 * u, Y(c.p90), x + 4 * u, Y(c.p90), wt.c, 2.5); d.line(x - 4 * u, Y(c.p10), x + 4 * u, Y(c.p10), wt.c, 2.5);
-      fit(S, S.l('entre frases', 'across sentences'), x + 8 * u, (Y(c.p90) + Y(c.p10)) / 2, 100 * u, { size: 12, weight: 700, color: wt.ink, align: 'left', halo: true });
+      // el rótulo va junto al extremo inferior de la barra (así no choca con «meta», que queda cerca del extremo superior)
+      fit(S, S.l('entre frases', 'across sentences'), x + 8 * u, clamp(Y(c.p10) + 2 * u, pr.y + 12 * u, pr.y + pr.h - 12 * u), 100 * u, { size: 12, weight: 700, color: wt.ink, align: 'left', halo: true });
     }
     // etiquetas de las líneas
     if (!S.on('try-g')) fit(S, S.l('frase típica', 'typical sentence'), X(TMAX) - 4 * u, Y(c.typ[TMAX - 3]) - 12 * u, 120 * u, { size: 12.5, weight: 700, color: err.ink, align: 'right', halo: true });
     const lab = S.l(`g = ${num(S, g, 2)}`, `g = ${num(S, g, 2)}`);
-    S.d.tag(lab, pr.x + pr.w - 4 * u, pr.y + pr.h * 0.9, { color: wt.ink, fill: wt.soft, stroke: wt.c, align: 'right', size: fz(S, 13), font: 'mono' });
+    S.d.tag(lab, pr.x + pr.w - 4 * u, pr.y + 16 * u, { color: wt.ink, fill: wt.soft, stroke: wt.c, align: 'right', size: fz(S, 13), font: 'mono' });
   });
   drawAside(S, aside, a, g, c);
 }

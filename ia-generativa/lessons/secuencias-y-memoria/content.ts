@@ -46,8 +46,8 @@ export default defineLesson({
     },
     {
       id: 'state',
-      es: 'Entre palabra y palabra la celda lleva una memoria: un vector de números, el estado oculto. Aquí son seis, empiezan en cero y se reescriben en cada paso.',
-      en: 'Between one word and the next, the cell carries a memory: a vector of numbers, the hidden state. Here there are six, they start at zero, and they are rewritten at every step.',
+      es: 'Entre palabra y palabra la celda lleva una memoria: un vector de números, el estado oculto. Aquí son seis, empiezan en cero y se reescriben en cada paso, con pesos al azar, sin entrenar.',
+      en: 'Between one word and the next, the cell carries a memory: a vector of numbers, the hidden state. Here there are six; they start at zero and get rewritten at every step, using random, untrained weights.',
       note: { es: 'Estado oculto: la memoria de la red, un vector que se reescribe en cada paso.', en: 'Hidden state: the network’s memory, a vector rewritten at every step.' },
       pad: 0.3,
     },
@@ -190,8 +190,8 @@ export default defineLesson({
     },
     {
       id: 'try-gates',
-      es: 'Tu turno: mueve las tres compuertas para que, al final, la celda recuerde «plural» y la red elija «están». Cuidado con «mercado».',
-      en: 'Your turn: move the three gates so that, at the end, the cell remembers “plural” and the network picks “are.” Watch out for “market.”',
+      es: 'Tu turno: mueve a mano las tres compuertas de esta celda de juguete para que, al final, recuerde «plural» y la red elija «están». Cuidado con «mercado».',
+      en: 'Your turn: move by hand the three gates of this toy cell so that, at the end, it remembers “plural” and the network picks “are.” Watch out for “market.”',
       gate: {
         id: 'gates',
         prompt: { es: 'Logra una lectura final «plural» (al menos el 60 % de la ideal).', en: 'Get a final “plural” reading (at least 60% of the ideal).' },
@@ -243,11 +243,11 @@ export default defineLesson({
     },
     {
       id: 'bridge',
-      es: 'Las convoluciones nacieron en 1989 y la LSTM en 1997, y aun así el despegue llegó hacia 2012. ¿Qué cambió para que todo esto, por fin, funcionara a gran escala?',
-      en: 'Convolutions date from 1989 and the LSTM from 1997, yet the takeoff came around 2012. What changed so that all this finally worked at scale?',
+      es: 'Las redes convolucionales ya leían códigos postales en 1989 y la LSTM nació en 1997, y aun así el despegue llegó hacia 2012. ¿Qué cambió para que todo esto, por fin, funcionara a gran escala?',
+      en: 'Convolutional networks were already reading zip codes in 1989 and the LSTM dates from 1997, yet the takeoff came around 2012. What changed so that all this finally worked at scale?',
       tts: {
-        es: 'Las convoluciones nacieron en mil novecientos ochenta y nueve y la ele ese te eme en mil novecientos noventa y siete, y aun así el despegue llegó hacia dos mil doce. ¿Qué cambió para que todo esto, por fin, funcionara a gran escala?',
-        en: 'Convolutions date from nineteen eighty-nine and the L S T M from nineteen ninety-seven, yet the takeoff came around twenty twelve. What changed so that all this finally worked at scale?',
+        es: 'Las redes convolucionales ya leían códigos postales en mil novecientos ochenta y nueve y la ele ese te eme nació en mil novecientos noventa y siete, y aun así el despegue llegó hacia dos mil doce. ¿Qué cambió para que todo esto, por fin, funcionara a gran escala?',
+        en: 'Convolutional networks were already reading zip codes in nineteen eighty-nine and the L S T M dates from nineteen ninety-seven, yet the takeoff came around twenty twelve. What changed so that all this finally worked at scale?',
       },
     },
   ],
@@ -309,9 +309,9 @@ o_t&=\\sigma(W_o[h_{t-1},x_t]+b_o), & \\tilde c_t&=\\tanh(W_c[h_{t-1},x_t]+b_c),
 c_t&=f_t\\odot c_{t-1}+i_t\\odot\\tilde c_t, & h_t&=o_t\\odot\\tanh(c_t).
 \\end{aligned}$$
 
-La cinta $c_t$ se actualiza por **suma**, no por reescritura. A lo largo de ella, $\\partial c_t/\\partial c_{t-1}=\\mathrm{diag}(f_t)$ (más caminos indirectos por $h$), de modo que la culpa se multiplica solo por la compuerta de olvido: con $f\\approx1$ llega casi intacta, el «carrusel de error constante» del artículo de 1997. La LSTM original tenía compuertas de entrada y de salida; la de olvido la añadieron Gers, Schmidhuber y Cummins (2000). Un truco práctico: iniciar el sesgo $b_f$ cerca de $1$ para que la cinta empiece abierta (Jozefowicz et al., 2015). Una capa tiene $4H(H+D)+4H$ parámetros: cuatro veces los de la RNN. Con $H=D=1000$ son $8\\,004\\,000$. Las LSTM apiladas llegaron lejos: el sistema de traducción neuronal de Google (Wu et al., 2016) usaba ocho capas LSTM en el codificador y ocho en el decodificador.
+La cinta $c_t$ se actualiza por **suma**, no por reescritura. A lo largo de ella, $\\partial c_t/\\partial c_{t-1}=\\mathrm{diag}(f_t)$ (más caminos indirectos por $h$), de modo que la culpa se multiplica solo por la compuerta de olvido: con $f\\approx1$ llega casi intacta, el «carrusel de error constante» del artículo de 1997. La LSTM original tenía compuertas de entrada y de salida; la de olvido la añadieron Gers, Schmidhuber y Cummins (2000). Un truco práctico: iniciar el sesgo $b_f$ cerca de $1$ para que la cinta empiece abierta (Jozefowicz et al., 2015). Una capa tiene $4H(H+D)+4H$ parámetros: cuatro veces los de la RNN. Con $H=D=1000$ son $8\\,004\\,000$. Las LSTM apiladas llegaron lejos: el sistema de traducción neuronal de Google (Wu et al., 2016) usaba ocho capas LSTM en el codificador y ocho en el decodificador, con atención y conexiones residuales.
 
-En la lección las compuertas son números fijos y hay una sola celda: $c_t=f\\,c_{t-1}+i_t\\tanh(v_t)$, $h_t=o\\tanh(c_t)$, donde $v_t$ son pistas de número gramatical **ilustrativas** (plural para «flores», singular para «mercado») y $i_t=1$ en la palabra clave. Una red entrenada calcula $f_t$ e $i_t$ de la palabra y del estado. En 2019, Lakretz et al. hallaron dos «unidades de número» en una LSTM entrenada como modelo de lenguaje que arrastran el número del sujeto a lo largo de la frase, justo lo que hace nuestra celda de juguete.
+En la lección las compuertas son números fijos y hay una sola celda: $c_t=f\\,c_{t-1}+i_t\\tanh(v_t)$, $h_t=o\\tanh(c_t)$, donde $v_t$ son pistas de número gramatical **ilustrativas** (plural para «flores», singular para «mercado») y $i_t=1$ en la palabra clave. Una red entrenada calcula $f_t$ e $i_t$ de la palabra y del estado. En 2019, Lakretz et al. hallaron que, en una LSTM entrenada como modelo de lenguaje, la información de número de largo alcance la manejan sobre todo dos «unidades de número», justo lo que hace nuestra celda de juguete.
 
 ## En código
 
@@ -387,9 +387,9 @@ o_t&=\\sigma(W_o[h_{t-1},x_t]+b_o), & \\tilde c_t&=\\tanh(W_c[h_{t-1},x_t]+b_c),
 c_t&=f_t\\odot c_{t-1}+i_t\\odot\\tilde c_t, & h_t&=o_t\\odot\\tanh(c_t).
 \\end{aligned}$$
 
-The belt $c_t$ is updated by **addition**, not by rewriting. Along it, $\\partial c_t/\\partial c_{t-1}=\\mathrm{diag}(f_t)$ (plus indirect paths through $h$), so the blame is multiplied only by the forget gate: with $f\\approx1$ it arrives nearly intact, the “constant error carousel” of the 1997 paper. The original LSTM had input and output gates; the forget gate was added by Gers, Schmidhuber, and Cummins (2000). A practical trick: initialize the bias $b_f$ near $1$ so the belt starts open (Jozefowicz et al., 2015). A layer has $4H(H+D)+4H$ parameters: four times those of the RNN. With $H=D=1000$ that is $8{,}004{,}000$. Stacked LSTMs went far: Google’s neural machine translation system (Wu et al., 2016) used eight LSTM layers in the encoder and eight in the decoder.
+The belt $c_t$ is updated by **addition**, not by rewriting. Along it, $\\partial c_t/\\partial c_{t-1}=\\mathrm{diag}(f_t)$ (plus indirect paths through $h$), so the blame is multiplied only by the forget gate: with $f\\approx1$ it arrives nearly intact, the “constant error carousel” of the 1997 paper. The original LSTM had input and output gates; the forget gate was added by Gers, Schmidhuber, and Cummins (2000). A practical trick: initialize the bias $b_f$ near $1$ so the belt starts open (Jozefowicz et al., 2015). A layer has $4H(H+D)+4H$ parameters: four times those of the RNN. With $H=D=1000$ that is $8{,}004{,}000$. Stacked LSTMs went far: Google’s neural machine translation system (Wu et al., 2016) used eight LSTM layers in the encoder and eight in the decoder, with attention and residual connections.
 
-In the lesson the gates are fixed numbers and there is a single cell: $c_t=f\\,c_{t-1}+i_t\\tanh(v_t)$, $h_t=o\\tanh(c_t)$, where $v_t$ are **illustrative** grammatical-number cues (plural for “flowers,” singular for “market”) and $i_t=1$ at the key word. A trained network computes $f_t$ and $i_t$ from the word and the state. In 2019, Lakretz et al. found two “number units” in an LSTM trained as a language model that carry the subject’s number across the sentence, exactly what our toy cell does.
+In the lesson the gates are fixed numbers and there is a single cell: $c_t=f\\,c_{t-1}+i_t\\tanh(v_t)$, $h_t=o\\tanh(c_t)$, where $v_t$ are **illustrative** grammatical-number cues (plural for “flowers,” singular for “market”) and $i_t=1$ at the key word. A trained network computes $f_t$ and $i_t$ from the word and the state. In 2019, Lakretz et al. found that, in an LSTM trained as a language model, long-distance number information is largely managed by two “number units,” just what our toy cell does.
 
 ## In code
 
@@ -536,6 +536,7 @@ The RNN and the LSTM read in a line and squeeze everything into one vector; atte
     { title: 'On the difficulty of training recurrent neural networks', authors: 'Pascanu, R., Mikolov, T., Bengio, Y.', year: 2013, url: 'https://arxiv.org/abs/1211.5063' },
     { title: 'Sequence to sequence learning with neural networks', authors: 'Sutskever, I., Vinyals, O., Le, Q. V.', year: 2014, url: 'https://arxiv.org/abs/1409.3215' },
     { title: 'On the properties of neural machine translation: encoder-decoder approaches', authors: 'Cho, K., van Merriënboer, B., Bahdanau, D., Bengio, Y.', year: 2014, url: 'https://arxiv.org/abs/1409.1259' },
+    { title: 'An empirical exploration of recurrent network architectures', authors: 'Jozefowicz, R., Zaremba, W., Sutskever, I.', year: 2015, url: 'https://proceedings.mlr.press/v37/jozefowicz15.html' },
     { title: 'Google’s neural machine translation system: bridging the gap between human and machine translation', authors: 'Wu, Y., Schuster, M., Chen, Z., Le, Q. V., Norouzi, M., et al.', year: 2016, url: 'https://arxiv.org/abs/1609.08144' },
     { title: 'Sharp nearby, fuzzy far away: how neural language models use context', authors: 'Khandelwal, U., He, H., Qi, P., Jurafsky, D.', year: 2018, url: 'https://arxiv.org/abs/1805.04623' },
     { title: 'The emergence of number and syntax units in LSTM language models', authors: 'Lakretz, Y., Kruszewski, G., Desbordes, T., Hupkes, D., Dehaene, S., Baroni, M.', year: 2019, url: 'https://arxiv.org/abs/1903.07435' },

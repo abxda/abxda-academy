@@ -193,7 +193,7 @@ export function drawRnnLane(S: Frame, L: Lane, v: RnnView) {
       // estado
       if (v.stA[i] > 0) {
         stateBars(S, s, run.states[i + 1], { a: v.stA[i], hot: hot });
-        const lx = vert ? s.x - 16 * u : s.x + s.w / 2, ly = vert ? s.y + s.h / 2 : s.y + s.h + 9 * u;
+        const lx = vert ? s.x - 14 * u : s.x + s.w / 2, ly = vert ? s.y + s.h / 2 - 10 * u : s.y + s.h + 9 * u;
         d.text(`h${sub(i + 1)}`, lx, ly, { size: fz(S, 12), weight: 600, font: 'mono', color: dat.ink, align: 'center', base: 'middle', a: v.stA[i] });
       }
     }
@@ -276,9 +276,10 @@ export function bandRnn(S: Frame, L: Lane, id: string, a: number, extra: { guess
   const A = (k: string, delay = 0.2) => a * S.reveal(k, delay, 0.5);
   const line = (y: number, parts: Part[], aa: number, o: { size?: number; align?: 'left' | 'center' | 'right'; font?: 'mono' | 'ui' } = {}) => rich(S, o.align === 'center' ? cx : inn.x, y, parts, { size: o.size ?? 13, maxW: mw, a: aa, align: o.align, font: o.font });
   const lhh = fz(S, 13) * u * 1.55;
+  const toy = S.l('pesos al azar', 'random weights');   // la RNN de la lección es de juguete: pesos al azar, sin entrenar
   switch (id) {
     case 'state': {
-      const y = panelTitle(S, inn, S.l('Estado oculto h₃ (tras leer «que»)', 'Hidden state h₃ (after “I”)').replace('«que»', q(S, W[2])), 'dat', A('state', 0.3));
+      const y = panelTitle(S, inn, S.l('Estado oculto h₃ tras «que»', 'Hidden state h₃ after “I”').replace('«que»', q(S, W[2])), 'dat', A('state', 0.3), toy);
       const vals = run.states[3];
       line(y + lhh * 0.7, vals.flatMap((v, i): Part[] => [[num(S, v, 2, true), v >= 0 ? 'dat' : 'ink2', true], [i < 5 ? '  ' : '', 'ink2']]), A('state', 0.6), { font: 'mono', size: 13 });
       break;
@@ -302,7 +303,7 @@ export function bandRnn(S: Frame, L: Lane, id: string, a: number, extra: { guess
       break;
     }
     case 'wiggle': {
-      const y = panelTitle(S, inn, S.l('Empujón en «flores»', 'Nudge at “flowers”').replace('«flores»', q(S, W[1])), 'err', A('wiggle', 0.2));
+      const y = panelTitle(S, inn, S.l('Empujón en «flores»', 'Nudge at “flowers”').replace('«flores»', q(S, W[1])), 'err', A('wiggle', 0.2), toy);
       const arr = S.at('wiggle', 3.4, 4.2);
       line(y + lhh * 0.7, [[S.l('tamaño del cambio en cada celda', 'size of the change in each cell'), 'ink2']], A('wiggle', 0.5));
       line(y + lhh * 1.7, [[S.l('llega a la última: ', 'reaches the last one: '), 'ink2'], [pct(S, run.amp[KEY][T]), 'err', true]], a * arr);
@@ -313,7 +314,7 @@ export function bandRnn(S: Frame, L: Lane, id: string, a: number, extra: { guess
       const parts: Part[] = [['1', 'ink2', true]];
       for (let t = KEY + 1; t <= T; t++) parts.push([' × ', 'ink2'], [num(S, f[t] / f[t - 1], 2), 'err', true]);
       parts.push([' = ', 'ink2'], [num(S, f[T], 2), 'err', true]);
-      const y = panelTitle(S, inn, S.l('Cinco factores seguidos', 'Five factors in a row'), 'err', A('fade', 0.2));
+      const y = panelTitle(S, inn, S.l('Cinco factores seguidos', 'Five factors in a row'), 'err', A('fade', 0.2), toy);
       line(y + lhh * 0.7, parts, A('fade', 0.5), { font: 'mono' });
       const g = extra.guess, ok = g === 'none', txt = g === 'all' ? S.l('Casi todo', 'Almost all') : g === 'half' ? S.l('Cerca de la mitad', 'About half') : S.l('Casi nada', 'Almost nothing');
       if (g && g !== 'x') line(y + lhh * 1.7, [[S.l('Tu predicción: ', 'Your prediction: '), 'ink2'], [txt, ok ? 'dat' : 'err', true], [ok ? S.l(' — acertaste.', ' — spot on.') : S.l(' — era casi nada.', ' — it was almost nothing.'), 'ink2']], A('fade', 1.2));
@@ -331,7 +332,7 @@ export function bandRnn(S: Frame, L: Lane, id: string, a: number, extra: { guess
       break;
     }
     case 'vanish': {
-      const y = panelTitle(S, inn, S.l('La culpa retrocede', 'The blame travels back'), 'err', A('vanish', 0.2));
+      const y = panelTitle(S, inn, S.l('La culpa retrocede', 'The blame travels back'), 'err', A('vanish', 0.2), toy);
       line(y + lhh * 0.7, [[S.l('llega a ', 'it reaches '), 'ink2'], [q(S, W[1]), 'lat', true], [S.l(' con ', ' with '), 'ink2'], [pct(S, run.infl[2]), 'err', true], [S.l(' de su tamaño', ' of its size'), 'ink2']], A('vanish', 0.6));
       break;
     }

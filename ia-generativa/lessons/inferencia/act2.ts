@@ -3,7 +3,7 @@
 import { alpha, clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { H100, LLAMA3_8B, denseParams, gb, kvBytesPerToken, nf, tok } from './model';
 import { runDemo, type Demo } from './tiny';
-import { FS, brace, chip, fitText, lang, lerpRect, mark, op, pad, pill, show, tagText } from './ui';
+import { FS, brace, chip, fitText, holds, lang, lerpRect, mark, op, pad, pill, show, tagText } from './ui';
 
 const A8 = LLAMA3_8B, W8 = denseParams(A8) * 2, KV8 = kvBytesPerToken(A8), CAP = H100.mem;
 const P = 10, G = 16, COLS = P + G - 1, ROWS = G;
@@ -60,8 +60,8 @@ function drawGrid(S: Frame, R: Rect, o: GridOpts, foot: number) {
 export function drawGrids(S: Frame) {
   const { d, pal: p } = S, u = S.u, A = pad(S), dm = demo(), l = lang(S);
   // `room`: franja extra bajo las gráficas para el rótulo «la misma columna» (para que no pise la leyenda).
-  const banner = (S.portrait ? 46 : 28) * u * S.reveal('count', 0.3, 0.6), room = (S.portrait ? 24 : 20) * u * (S.on('unchanged') ? S.reveal('unchanged', 1.5, 0.6) : 0), foot = (S.portrait ? 50 : 56) * u;
-  const body: Rect = { x: A.x, y: A.y, w: A.w, h: A.h - banner };
+  const banner = (S.portrait ? 46 : 28) * u * S.reveal('count', 0.3, 0.6), room = (S.portrait ? 30 : 20) * u * (S.on('unchanged') ? S.reveal('unchanged', 1.5, 0.6) : 0), foot = (S.portrait ? 50 : 56) * u;
+  const body: Rect = { x: A.x, y: A.y, w: A.w, h: A.h - banner - (banner > 0 ? 6 * u : 0) };
   // posiciones: solo (una gráfica) → pareja (con y sin caché)
   const k = S.at('kvcache', 0, 0.9, 'io');
   const soloW = S.portrait ? body.w : Math.min(body.w * 0.64, 680 * u);
@@ -77,7 +77,7 @@ export function drawGrids(S: Frame) {
   void nA;
   if (colHi) {
     const gx = rA.x + 22 * u, cwA = (rA.w - 22 * u) / COLS;
-    show(S, S.reveal('unchanged', 2.2, 0.5), () => pill(S, S.l('la misma columna, una y otra vez', 'the same column, over and over'), Math.min(rA.x + rA.w - 4 * u, Math.max(rA.x + 140 * u, gx + 3.5 * cwA)), rA.y + rA.h - (S.portrait ? 8 : 6) * u, { t: 'ink', align: 'center' }));
+    show(S, S.reveal('unchanged', 2.2, 0.5), () => pill(S, S.l('la misma columna, una y otra vez', 'the same column, over and over'), Math.min(rA.x + rA.w - 4 * u, Math.max(rA.x + 140 * u, gx + 3.5 * cwA)), rA.y + rA.h - (S.portrait ? 8 : 12) * u, { t: 'ink', align: 'center' }));
   }
   if (S.on('kvcache')) {
     show(S, S.reveal('kvcache', 0.1, 0.6), () => {
@@ -113,6 +113,7 @@ export function drawKvBytes(S: Frame) {
   const cols = S.portrait ? 3 : 6, rowsN = S.portrait ? 2 : 1;
   const opw = 20 * u, chH = 54 * u, chW = S.portrait ? (A.w - 2 * opw) / 3 : (A.w - 5 * opw) / (5 + 1.45);
   const y0 = A.y + 4 * u + clamp((A.h - 300 * u) * 0.35, 0, 90 * u);   // baja un poco la escena para no dejar medio escenario vacío
+  const narrow = chW < 125 * u, short: Record<string, [string, string]> = { 'clave y valor': ['clave+valor', 'key+value'], 'dim. por cabeza': ['dim. cabeza', 'head dim.'], 'bytes (FP16)': ['bytes', 'bytes'] };   // en chips estrechos las etiquetas largas no caben
   const place = (i: number): Rect => {
     if (S.portrait) { const row = i < 3 ? 0 : 1, c = i < 3 ? i : i - 3; return { x: A.x + c * (chW + opw), y: y0 + row * (chH + 12 * u), w: i === 5 ? chW : chW, h: chH }; }
     return { x: A.x + i * (chW + opw), y: y0, w: i === 5 ? chW * 1.45 : chW, h: chH };
@@ -121,7 +122,8 @@ export function drawKvBytes(S: Frame) {
   parts.forEach((q, i) => {
     const a = S.reveal(q.at, q.delay, 0.5), r = place(i);
     if (a <= 0) return;
-    chip(S, r, S.l(q.lab[0], q.lab[1]), q.v, q.t, { a });
+    const lb = narrow && short[q.lab[0]] ? short[q.lab[0]] : q.lab;
+    chip(S, r, S.l(lb[0], lb[1]), q.v, q.t, { a });
     if (i > 0) { const pr = place(i - 1); if (S.portrait && i === 3) op(S, A.x - 0, r.y + r.h / 2, '', a); else op(S, (pr.x + pr.w + r.x) / 2, r.y + r.h / 2, '×', a); }
   });
   if (resT > 0) { const r = place(5), pr = place(4); op(S, (pr.x + pr.w + r.x) / 2, r.y + r.h / 2, '=', resT); chip(S, r, S.l('por token', 'per token'), `${res} B`, 'lat', { a: resT, hot: 0.5, vsize: S.portrait ? 15 : 17 }); }
@@ -175,7 +177,7 @@ export function updateLedger(S: Frame): boolean {
   if (!S.between('try1', 'read-all')) return false;
   const st = (S.st.ledger ??= { seen: {} as Record<number, boolean> });
   const ctx = Number(S.p.ctx1 ?? 8000), users = Math.round(S.p.users1 ?? 1);
-  if (users === maxFit(ctx)) st.seen[ctx] = true;
+  if (holds(S, `ledger${ctx}`, users === maxFit(ctx))) st.seen[ctx] = true;   // hay que detenerse en el máximo, no pasar de largo
   return !!st.seen[8000] && !!st.seen[128000];
 }
 
@@ -231,7 +233,7 @@ export function drawLedger(S: Frame) {
     void dt;
   });
   if (!demoMode) show(S, S.reveal('try1', 0.3, 0.5), () => {
-    const st = (S.st.ledger ??= { seen: {} as Record<number, boolean> }), y = cy + rowsH + 20 * u;
+    const st = (S.st.ledger ??= { seen: {} as Record<number, boolean> }), y = cy + rowsH + (S.portrait ? 52 : 20) * u;   // teléfono: bajo el mensaje de estado
     [8000, 128000].forEach((c, i) => {
       const x = A.x + A.w - (i === 0 ? 150 : 0) * u - (i === 0 ? 0 : 0);
       void x;

@@ -2,7 +2,7 @@
 // turno 3 («una tarea que cuesta casi todo por la entrada y otra casi todo por la salida»).
 import { alpha, clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { CACHE_READ, H100, LLAMA3_8B, MFU_PREFILL, PRICE_IN, PRICE_OUT, bill, denseParams, nf, prefillTime, secs, serve, tok, usd } from './model';
-import { FS, brace, chip, fitText, hbar, lang, mark, noteUp, pad, pill, show, tagText } from './ui';
+import { FS, brace, chip, fitText, hbar, holds, lang, mark, noteUp, pad, pill, show, tagText } from './ui';
 
 const A8 = LLAMA3_8B;
 
@@ -114,8 +114,8 @@ export const taskOf = (S: Frame) => ({ tin: lg(Number(S.p.lgin ?? 3.7)), tout: l
 export function updateTask(S: Frame): boolean {
   if (!S.between('try3', 'moe-idea')) return false;
   const st = (S.st.task ??= { inp: false, out: false }), b = bill(taskOf(S));
-  if (b.shareIn >= 0.8) st.inp = true;
-  if (b.shareIn <= 0.2) st.out = true;
+  if (holds(S, 'task-in', b.shareIn >= 0.8)) st.inp = true;      // hay que detenerse en la tarea, no pasar de largo con el deslizador
+  if (holds(S, 'task-out', b.shareIn <= 0.2)) st.out = true;
   return st.inp && st.out;
 }
 
@@ -150,7 +150,7 @@ export function drawGate3(S: Frame) {
   chip(S, { x: right.x, y: right.y, w: cw, h: ch }, S.l('entrada', 'input'), tok(t.tin, l), 'sig', { vsize: S.portrait ? 14 : 16 });
   chip(S, { x: right.x + cw + cg, y: right.y, w: cw, h: ch }, S.l('salida', 'output'), tok(t.tout, l), 'lat', { vsize: S.portrait ? 14 : 16 });
   chip(S, { x: right.x, y: right.y + ch + cg, w: cw, h: ch }, S.l('por 1 000 tareas', 'per 1,000 tasks'), usd(b.total * 1000, l), 'ink' as 'sig', { vsize: S.portrait ? 14 : 16 });
-  chip(S, { x: right.x + cw + cg, y: right.y + ch + cg, w: cw, h: ch }, S.l('entrada que pagas', 'input you pay for'), t.cached ? S.l('con caché', 'cached') : S.l('completa', 'full'), t.cached ? 'dat' : 'sig', { vsize: S.portrait ? 13 : 15 });
+  chip(S, { x: right.x + cw + cg, y: right.y + ch + cg, w: cw, h: ch }, S.l('entrada cobrada', 'input billed'), t.cached ? S.l('con caché', 'cached') : S.l('completa', 'full'), t.cached ? 'dat' : 'sig', { vsize: S.portrait ? 13 : 15 });
   const gy = right.y + 2 * (ch + cg) + 12 * u, goals: [string, boolean][] = [[S.l('más del 80 % del costo en la entrada', 'over 80% of the cost in input'), st.inp], [S.l('más del 80 % del costo en la salida', 'over 80% of the cost in output'), st.out]];
   goals.forEach(([lab, ok], i) => {
     const y = gy + i * 28 * u;

@@ -3,8 +3,9 @@ import { alpha, box, clamp, inset, link, neu, tone, type Frame, type Rect } from
 import { sentenceRun, G_DEFAULT } from './model';
 import { arrow, fit, fz, panel, stateBars, tok, uu } from './ui';
 
-const ENC = { es: ['Las', 'flores', 'están', 'marchitas'], en: ['The', 'flowers', 'are', 'wilted'] };
-const DEC = { es: ['The', 'flowers', 'are', 'wilted'], en: ['Les', 'fleurs', 'sont', 'fanées'] };
+// El artículo de 2014 tradujo del inglés al francés: la figura lo muestra igual en los dos idiomas (frase de ejemplo ILUSTRATIVA, no del artículo).
+const ENC = { es: ['The', 'flowers', 'are', 'wilted'], en: ['The', 'flowers', 'are', 'wilted'] };
+const DEC = { es: ['Les', 'fleurs', 'sont', 'fanées'], en: ['Les', 'fleurs', 'sont', 'fanées'] };
 
 // ═════════════════════════════════════════════════════════════════════════
 // Codificador → vector fijo → decodificador
@@ -91,8 +92,10 @@ export function drawSeq2Seq(S: Frame, a: number) {
       const ia = S.reveal('success', 3.0, 0.7);
       d.withAlpha(ia, () => {
         const inn = panel(S, info, 1);
-        fit(S, S.l('Traducción automática con LSTM, 2014', 'Machine translation with LSTMs, 2014'), inn.x, inn.y + 10 * u, inn.w, { size: 12.5, weight: 800, color: sg.ink, align: 'left' });
-        fit(S, S.l('un LSTM lee la frase y la comprime; otro la escribe', 'one LSTM reads and compresses the sentence; another writes it'), inn.x, inn.y + 32 * u, inn.w, { size: 12.5, weight: 600, color: p.ink2, align: 'left' });
+        fit(S, S.l('Traducción inglés → francés con LSTM, 2014', 'English → French translation with LSTMs, 2014'), inn.x, inn.y + 10 * u, inn.w, { size: 12.5, weight: 800, color: sg.ink, align: 'left' });
+        const tall = inn.h > 60 * u;
+        fit(S, tall ? S.l('una LSTM lee y comprime; otra escribe', 'one LSTM reads and compresses; another writes') : S.l('una LSTM lee y comprime; otra escribe · ejemplo ilustrativo', 'one LSTM reads and compresses; another writes · illustrative'), inn.x, inn.y + 30 * u, inn.w, { size: 12.5, weight: 600, color: p.ink2, align: 'left' });
+        if (tall) fit(S, S.l('frase de ejemplo, ilustrativa', 'sample sentence, illustrative'), inn.x, inn.y + 50 * u, inn.w, { size: 12, weight: 500, color: p.mute, align: 'left' });
       });
     }
   });
@@ -113,18 +116,20 @@ function infoBottleneck(S: Frame, r: Rect, a: number) {
   const { d, pal: p } = S, u = uu(S), inn = panel(S, r, a), lat = tone(S, 'lat'), err = tone(S, 'err');
   d.withAlpha(a, () => {
     fit(S, S.l('Todo cabe en el mismo vector', 'It all has to fit in the same vector'), inn.x, inn.y + 10 * u, inn.w, { size: 12.5, weight: 800, color: lat.ink, align: 'left' });
-    const rows: [string, number][] = [[S.l('frase corta', 'short sentence'), 4], [S.l('frase larga', 'long sentence'), 18]];
-    const lw = Math.min(96 * u, inn.w * 0.3), cell = Math.min(10 * u, (inn.w - lw - 80 * u) / 18), y0 = inn.y + 30 * u, rh = Math.min(20 * u, (inn.h - 36 * u) / 2);
+    const rows: [string, number][] = [[S.l('frase corta', 'short sentence'), 3], [S.l('frase larga', 'long sentence'), 12]];
+    const lw = Math.min(104 * u, inn.w * 0.32), bw = 88 * u, bx = inn.x + inn.w - bw, cell = Math.min(10 * u, (bx - inn.x - lw - 22 * u) / 12 - 2 * u);
+    const y0 = inn.y + 26 * u, rh = Math.min(20 * u, (inn.h - 32 * u) / 2);
     rows.forEach(([lab, n], j) => {
       const y = y0 + j * rh + rh / 2;
       fit(S, lab, inn.x, y, lw - 6 * u, { size: 12, weight: 600, color: p.ink2, align: 'left' });
       for (let k = 0; k < n; k++) d.rect(inn.x + lw + k * (cell + 2 * u), y - 5 * u, cell, 10 * u, { fill: alpha(lat.c, 0.5), stroke: lat.c, lw: 1 });
-      const ex = inn.x + lw + n * (cell + 2 * u) + 6 * u, bx = inn.x + inn.w - 56 * u;
+      const ex = inn.x + lw + n * (cell + 2 * u) + 6 * u;
       arrow(S, ex, y, bx - 4 * u, y, p.ink2, { lw: 1.4, head: 5 });
     });
-    const bx = inn.x + inn.w - 52 * u, by = y0 + 2 * u, bh = rh * 2 - 4 * u;
-    d.rect(bx, by, 48 * u, bh, { fill: alpha(lat.c, 0.12), stroke: lat.c, lw: 2.2, r: 3 });
-    fit(S, S.l('mismo tamaño', 'same size'), bx + 24 * u, by + bh + 9 * u, 100 * u, { size: 12, weight: 700, color: err.ink, align: 'center' });
+    // el mismo vector de tamaño fijo recibe las dos
+    const by = y0 + 1 * u, bh = rh * 2 - 2 * u;
+    d.rect(bx, by, bw, bh, { fill: alpha(lat.c, 0.12), stroke: lat.c, lw: 2.2, r: 3 });
+    fit(S, S.l('mismo tamaño', 'same size'), bx + bw / 2, by + bh / 2, bw - 6 * u, { size: 12, weight: 700, color: err.ink, align: 'center' });
   });
 }
 
@@ -144,13 +149,13 @@ export function drawGauge(S: Frame, a: number) {
     d.withAlpha(g2, () => d.dither(X(50), by, X(200) - X(50), bh, dat.c, 0.5, 2));
     d.withAlpha(g3, () => d.rect(X(200), by, X(250) - X(200), bh, { stroke: err.c, lw: 1.5, dash: [4, 4] }));
     [0, 50, 100, 200].forEach((n) => { d.line(X(n), by + bh, X(n), by + bh + 5 * u, p.lineStrong, 1.5); d.text(String(n), X(n), by + bh + 8 * u, { size: fz(S, 12), font: 'mono', color: p.mute, align: n === 0 ? 'left' : 'center', base: 'top' }); });
-    fit(S, S.l('palabras hacia atrás', 'words back'), X(250), by + bh + 8 * u, bw * 0.5, { size: 12, weight: 700, color: p.ink2, align: 'right', base: 'top' });
+    fit(S, S.l('palabras hacia atrás', 'words back'), X(250), by + bh + 32 * u, bw * 0.6, { size: 12, weight: 700, color: p.ink2, align: 'right' });
     // leyenda
-    const ly = by + bh + 50 * u, rowH = 32 * u;
+    const ly = by + bh + 64 * u, rowH = 32 * u;
     const items: [string, string, 'dat' | 'err', number, number][] = [
       [S.l('0–50: el orden importa', '0–50: word order matters'), 'solid', 'dat', g1, 0],
       [S.l('50–200: se usa, sin orden', '50–200: used, without order'), 'dither', 'dat', g2, 1],
-      [S.l('más de 200: no se usa', 'beyond 200: not used'), 'empty', 'err', g3, 2],
+      [S.l('más de 200: casi no se usa', 'beyond 200: barely used'), 'empty', 'err', g3, 2],
     ];
     items.forEach(([lab, kind, tn, ga, i]) => {
       const y = ly + i * rowH, t = tone(S, tn);

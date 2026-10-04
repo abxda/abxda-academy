@@ -2,7 +2,7 @@
 // («un lote que cueste poco sin que cada persona vaya lenta»). Todos los números salen de model.ts.
 import { Plot, alpha, clamp, hash, lerp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { A100, H100, LLAMA3_8B, RTX3060, denseParams, gb, nf, secs, serve, sig, tok, usd, type Gpu } from './model';
-import { FS, axes, chip, fitText, lang, lerpRect, line2, mark, noteUp, op, pad, pill, show, tagText } from './ui';
+import { FS, axes, chip, fitText, holds, lang, lerpRect, line2, mark, noteUp, op, pad, pill, show, tagText } from './ui';
 
 const A8 = LLAMA3_8B, N8 = denseParams(A8), W8 = N8 * 2, BW = H100.bw;
 
@@ -32,7 +32,7 @@ export function drawBw(S: Frame) {
     fitText(S, S.l('Cálculo', 'Arithmetic'), cmp.x + cmp.w / 2, cmp.y + 8 * S.u, cmp.w - 8 * u, 14, { weight: 800, color: dt.ink, align: 'center', base: 'top' });
     const blink = S.on('read-slow') ? (Math.sin(S.clock * 1.7) > 0.96 ? 1 : 0) : 0;
     cells(cmp, 'dat', (k) => (flash > 0 ? 0.15 + 0.85 * flash : blink && k === Math.floor(S.clock * 3) % 30 ? 0.9 : 0.02), 1);
-    if (S.on('read-slow')) tagText(S, S.l('esperando datos', 'waiting for data'), cmp.x + cmp.w / 2, cmp.y + cmp.h - 6 * S.u, { t: 'mute', align: 'center', base: 'bottom', weight: 700 });
+    if (S.on('read-slow')) tagText(S, S.portrait ? S.l('esperando', 'waiting') : S.l('esperando datos', 'waiting for data'), cmp.x + cmp.w / 2, cmp.y + cmp.h - 6 * S.u, { t: 'mute', align: 'center', base: 'bottom', weight: 700 });
   });
   // tubería
   const py = y0 + dh / 2, px0 = mem.x + mem.w + 8 * u, px1 = cmp.x - 8 * u, ph = 28 * u;
@@ -71,7 +71,7 @@ export function drawBw(S: Frame) {
     op(S, A.x + cw + gap / 2, y + chH / 2, '÷');
     chip(S, { x: A.x + cw + gap, y, w: cw, h: chH }, S.l('bytes por token', 'bytes per token'), gb(W8, l, 1), 'w', { vsize: S.portrait ? 15 : 20 });
     op(S, A.x + 2 * cw + gap * 1.5, y + chH / 2, '=');
-    chip(S, { x: A.x + 2 * (cw + gap), y, w: cw, h: chH }, S.l('techo, un usuario', 'ceiling, one user'), `${nf(Math.round(ceil), 0, l)} t/s`, 'dat', { vsize: S.portrait ? 15 : 20, hot: 0.5 });
+    chip(S, { x: A.x + 2 * (cw + gap), y, w: cw, h: chH }, S.portrait ? S.l('techo', 'ceiling') : S.l('techo, un usuario', 'ceiling, one user'), `${nf(Math.round(ceil), 0, l)} t/s`, 'dat', { vsize: S.portrait ? 15 : 20, hot: 0.5 });
     tagText(S, S.l('tokens por segundo ≤ ancho de banda ÷ bytes leídos por token', 'tokens per second ≤ bandwidth ÷ bytes read per token'), A.x + A.w / 2, y + chH + 26 * u, { align: 'center', base: 'top', w: A.w, size: 14, t: 'ink' });
   });
   void tok; void sig;
@@ -178,8 +178,8 @@ export function drawBatch(S: Frame) {
       if (S.on('trade-off')) { /* queda dibujada */ }
       const yEnd = at(c8.thr, Math.min(c8.maxU, bm)), xEnd = pl.X(Math.min(c8.maxU, bm));
       d.circle(xEnd, pl.Y(yEnd), 5.5 * u, { fill: dt.c, stroke: p.stage, lw: 2 });
-      tagText(S, S.l('con la caché de cada persona (8 000 tokens)', 'with each person’s cache (8,000 tokens)'), pl.r.x + pl.r.w - 8 * u, pl.Y(c8.thr[NB - 1]) + 12 * u, { align: 'right', base: 'top', t: 'dat', size: 12 });
-      show(S, S.reveal('batch-limit', 4.8, 0.6), () => tagText(S, S.l('no cabe', 'does not fit'), pl.r.x + pl.r.w - 4 * u, pl.r.y + 14 * u, { t: 'err', align: 'right', size: 12 }));
+      if (!S.on('trade-off')) tagText(S, S.portrait ? S.l('con cachés (8 000 tokens)', 'with caches (8,000 tokens)') : S.l('con la caché de cada persona (8 000 tokens)', 'with each person’s cache (8,000 tokens)'), pl.r.x + pl.r.w - 8 * u, pl.Y(c8.thr[NB - 1]) - 26 * u, { align: 'right', base: 'bottom', t: 'dat', size: 12 });
+      show(S, S.reveal('batch-limit', 4.8, 0.6), () => tagText(S, S.l('no cabe', 'does not fit'), pl.r.x + pl.r.w - 4 * u, pl.r.y + pl.r.h * 0.45, { t: 'err', align: 'right', size: 12 }));
     });
     if (S.on('trade-off')) {
       const q = S.at('trade-off', 0.8, 3.4, 'io'), b = 1 + 31 * q, x = pl.X(b), y = pl.Y(at(c8.thr, b));
@@ -206,7 +206,7 @@ export const GOAL_COST = 0.3, GOAL_SPEED = 50;
 export function updateBatch(S: Frame): boolean {
   if (!S.between('try2', 'context-hurts')) return false;
   const ctx = Number(S.p.ctx2 ?? 8000), B = Math.round(S.p.bsize ?? 1), s = serve(A8, H100, 2, B, ctx);
-  return ctx === 8000 && s.fits && s.costPerM <= GOAL_COST && s.perUser >= GOAL_SPEED;
+  return holds(S, 'batch', ctx === 8000 && s.fits && s.costPerM <= GOAL_COST && s.perUser >= GOAL_SPEED);   // detenerse en la meta, no pasar de largo
 }
 
 export function drawGate2(S: Frame) {
@@ -224,7 +224,7 @@ export function drawGate2(S: Frame) {
   const p2 = new Plot(S, r2, { xr: [0, NB], yr: [0, 240], pad: { l: S.portrait ? 44 : 52, r: 10, t: 24, b: 34 } });
   axes(S, p2, { xTicks: [0, 16, 32, 48, 64], yTicks: [0, 50, 100, 150, 200], xFmt: (v) => nf(v, 0, l), yFmt: (v) => nf(v, 0, l), xLabel: S.l('personas en el lote', 'people in the batch'), yLabel: S.l('tokens/s por persona', 'tokens/s per person'), grid: true });
   const feas = (c: Curves, f: (b: number) => number) => sample(f, 1, c.maxU);
-  const metaC = (pl: Plot) => { line2(S, pl, [[0, GOAL_COST], [NB, GOAL_COST]], 'dat', 2, { dash: [7, 5] }); tagText(S, S.l(`meta ≤ ${nf(GOAL_COST, 2, 'es')}`, `goal ≤ ${nf(GOAL_COST, 2, 'en')}`), pl.r.x + pl.r.w - 6 * u, pl.Y(GOAL_COST) + (hurts ? 10 : -10) * u, { align: 'right', base: hurts ? 'top' : 'bottom', t: 'dat', size: 12 }); };
+  const metaC = (pl: Plot) => { line2(S, pl, [[0, GOAL_COST], [NB, GOAL_COST]], 'dat', 2, { dash: [7, 5] }); if (!(hurts && S.portrait)) tagText(S, S.l(`meta ≤ ${nf(GOAL_COST, 2, 'es')}`, `goal ≤ ${nf(GOAL_COST, 2, 'en')}`), pl.r.x + pl.r.w - 6 * u, pl.Y(GOAL_COST) + (hurts ? 10 : -10) * u, { align: 'right', base: hurts ? 'top' : 'bottom', t: 'dat', size: 12 }); };
   const metaS = (pl: Plot) => { line2(S, pl, [[0, GOAL_SPEED], [NB, GOAL_SPEED]], 'sig', 2, { dash: [7, 5] }); tagText(S, S.l(`meta ≥ ${GOAL_SPEED}`, `goal ≥ ${GOAL_SPEED}`), pl.r.x + pl.r.w - 6 * u, pl.Y(GOAL_SPEED) + 10 * u, { align: 'right', base: 'top', t: 'sig', size: 12 }); };
   metaC(p1); metaS(p2);
   if (!hurts) {

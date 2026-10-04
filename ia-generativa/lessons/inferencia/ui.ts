@@ -7,6 +7,12 @@ export const lang = (S: Frame) => S.lang as Lang;
 /** Tamaño de fuente (antes de escalar por S.u) que garantiza ≥ 12 px efectivos. */
 export const FS = (S: Frame, px: number) => Math.max(px, 12.2 / S.u);
 export const smooth = (x: number) => { const t = clamp(x); return t * t * (3 - 2 * t); };
+/** Verdadero cuando `cond` se ha cumplido sin interrupción durante `secs` segundos: para que un gate se complete al detenerse en la respuesta y no al pasar de largo con el deslizador. */
+export function holds(S: Frame, key: string, cond: boolean, secs = 0.5): boolean {
+  const st = (S.st.hold ??= {} as Record<string, number>);
+  st[key] = cond ? (st[key] ?? 0) + S.dt : 0;
+  return st[key] >= secs;
+}
 /** Área útil con márgenes. */
 export const pad = (S: Frame, m = 14) => inset(S.full(), m * S.u);
 

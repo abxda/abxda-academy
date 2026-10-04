@@ -73,7 +73,14 @@ export function drawLstm(S: Frame, L: Lane, v: LstmView) {
           if (Math.abs(val) < 0.01) { d.circle(cx, cy, 2 * u, { fill: dat.c }); }
           else if (!vert) { if (val >= 0) d.rect(cx - bw / 2, cy - len, bw, len, { fill: dat.c }); else d.rect(cx - bw / 2, cy, bw, len, { fill: alpha(dat.c, 0.2), stroke: dat.c, lw: 1.6 }); }
           else { if (val >= 0) d.rect(cx, cy - bw / 2, len, bw, { fill: dat.c }); else d.rect(cx - len, cy - bw / 2, len, bw, { fill: alpha(dat.c, 0.2), stroke: dat.c, lw: 1.6 }); }
-          const lx = vert ? r.x - 14 * u : cx, ly = vert ? cy : r.y + r.h + 9 * u;
+        }
+      });
+    }
+    // rótulos c₁…c₇ (en teléfono, en el hueco entre la palabra y la cinta, por encima de la flecha de la compuerta de entrada)
+    if (v.barsA > 0) {
+      d.withAlpha(v.barsA, () => {
+        for (let i = 0; i < NCOL; i++) {
+          const r = L.st(i), [cx, cy] = bc(i), lx = vert ? r.x - 14 * u : cx, ly = vert ? cy - 10 * u : r.y + r.h + 9 * u;
           d.text(`c${sub(i + 1)}`, lx, ly, { size: fz(S, 12), weight: 600, font: 'mono', color: dat.ink, align: 'center', base: 'middle' });
         }
       });
@@ -84,7 +91,7 @@ export function drawLstm(S: Frame, L: Lane, v: LstmView) {
         const t = L.tok(i), c = L.cell(i), st = L.st(i), [cx, cy] = mid(c);
         d.withAlpha(v.valveA.i, () => {
           if (!vert) { arrow(S, t.x + t.w / 2, t.y + t.h + 2, cx, cy - 11 * u - 1, p.ink2, { lw: 1.6, head: 5, a: 0.7 }); arrow(S, cx, cy + 11 * u + 1, cx, st.y - 1, p.ink2, { lw: 1.6, head: 5, a: 0.7 }); }
-          else { arrow(S, t.x + t.w + 2, cy, cx - 11 * u - 1, cy, p.ink2, { lw: 1.6, head: 5, a: 0.7 }); arrow(S, cx + 11 * u + 1, cy, st.x - 3 * u, cy, p.ink2, { lw: 1.6, head: 5, a: 0.7 }); }
+          else { arrow(S, t.x + t.w + 2, cy, cx - 11 * u - 1, cy, p.ink2, { lw: 1.6, head: 5, a: 0.7 }); arrow(S, cx + 11 * u + 1, cy, st.x + st.w / 2 - 5 * u, cy, p.ink2, { lw: 1.6, head: 5, a: 0.7 }); }
         });
         valve(S, cx, cy, 'i', v.iv[i], v.valveA.i, { hot: i === KEY - 1 });
       }
@@ -129,11 +136,11 @@ export function drawLstm(S: Frame, L: Lane, v: LstmView) {
 
 // ── banda ───────────────────────────────────────────────────────────────────
 export function chip(S: Frame, x: number, y: number, w: number, letter: string, name: string, val: number, a: number, hot = false) {
-  const { d, pal: p } = S, u = uu(S), sg = tone(S, 'sig');
+  const { d } = S, u = uu(S);
   valve(S, x + 13 * u, y, letter, val, a, { size: 22, hot });
   d.withAlpha(a, () => {
-    fit(S, name, x + 28 * u, y - 7 * u, w - 28 * u, { size: 12, weight: hot ? 800 : 600, color: hot ? sg.ink : p.ink2, align: 'left' });
-    fit(S, num(S, val, 2), x + 28 * u, y + 8 * u, w - 28 * u, { size: 13, weight: 700, color: p.ink, align: 'left', font: 'mono' });
+    // nombre y valor en una sola línea: cabe en la banda aunque sea baja (teléfono horizontal)
+    rich(S, x + 29 * u, y, [[name, hot ? 'sig' : 'ink2', hot], ['  ', 'ink2'], [num(S, val, 2), 'ink', true]], { size: 12.5, maxW: w - 29 * u });
   });
 }
 
@@ -141,25 +148,28 @@ export function bandLstm(S: Frame, L: Lane, id: string, a: number, g: { f: numbe
   if (a <= 0) return;
   const u = uu(S), inn = panel(S, L.band, a), W = words(S), lh = fz(S, 13) * u * 1.55;
   const A = (k: string, delay = 0.2) => a * S.reveal(k, delay, 0.5);
+  const toy = S.l('celda de juguete', 'toy cell');   // una sola celda escalar con pistas de número ILUSTRATIVAS
   const line = (y: number, parts: Part[], aa: number, o: { size?: number; font?: 'mono' | 'ui' } = {}) => rich(S, inn.x, y, parts, { size: o.size ?? 13, maxW: inn.w, a: aa, font: o.font });
   const chips = (hotKey: string, aa: number, y: number, which: ('f' | 'i' | 'o')[] = ['f', 'i', 'o']) => {
     const names = { f: S.l('olvido', 'forget'), i: S.l('entrada', 'input'), o: S.l('salida', 'output') };
     const cw = inn.w / which.length;
+    // una sola compuerta y banda ancha: el valor va a la derecha, a la altura de las dos líneas de texto
+    if (which.length === 1 && !S.portrait) { const w = 130 * u; chip(S, inn.x + inn.w - w, inn.y + inn.h * 0.62, w, which[0], names[which[0]], g[which[0]], aa, hotKey === which[0]); return; }
     which.forEach((k, j) => chip(S, inn.x + cw * j, y, cw - 4 * u, k, names[k], g[k], aa, hotKey === k));
   };
   switch (id) {
     case 'lstm-idea': {
-      const y = panelTitle(S, inn, S.l('La cinta c: estado de la celda', 'The belt c: the cell state'), 'dat', A('lstm-idea', 0.2));
+      const y = panelTitle(S, inn, S.l('La cinta c: estado de la celda', 'The belt c: the cell state'), 'dat', A('lstm-idea', 0.2), S.l('pistas ilustrativas', 'illustrative cues'));
       line(y + lh * 0.75, [[S.l('lo guardado viaja sin reescribirse', 'what is stored travels without being rewritten'), 'ink2']], A('lstm-idea', 0.7));
       break;
     }
-    case 'gate-forget': { const y = panelTitle(S, inn, S.l('Compuerta de olvido f', 'Forget gate f'), 'sig', A(id, 0.2)); line(y + lh * 0.55, [[S.l('multiplica lo que ya hay en la cinta', 'multiplies what is already on the belt'), 'ink2']], A(id, 0.5)); chips('f', A(id, 0.7), y + lh * 1.65, ['f']); break; }
-    case 'gate-input': { const y = panelTitle(S, inn, S.l('Compuerta de entrada i', 'Input gate i'), 'sig', A(id, 0.2)); line(y + lh * 0.55, [[S.l('cuánto de cada palabra nueva se escribe', 'how much of each new word is written'), 'ink2']], A(id, 0.5)); chips('i', A(id, 0.7), y + lh * 1.65, ['i']); break; }
-    case 'gate-output': { const y = panelTitle(S, inn, S.l('Compuerta de salida o', 'Output gate o'), 'sig', A(id, 0.2)); line(y + lh * 0.55, [[S.l('cuánto de la cinta se lee', 'how much of the belt is read'), 'ink2']], A(id, 0.5)); chips('o', A(id, 0.7), y + lh * 1.65, ['o']); break; }
+    case 'gate-forget': { const y = panelTitle(S, inn, S.l('Compuerta de olvido f', 'Forget gate f'), 'sig', A(id, 0.2), toy); line(y + lh * 0.55, [[S.l('multiplica lo que ya hay en la cinta', 'multiplies what is already on the belt'), 'ink2']], A(id, 0.5)); chips('f', A(id, 0.7), y + lh * 1.9, ['f']); break; }
+    case 'gate-input': { const y = panelTitle(S, inn, S.l('Compuerta de entrada i', 'Input gate i'), 'sig', A(id, 0.2), toy); line(y + lh * 0.55, [[S.l('cuánto de cada palabra nueva se escribe', 'how much of each new word is written'), 'ink2']], A(id, 0.5)); chips('i', A(id, 0.7), y + lh * 1.9, ['i']); break; }
+    case 'gate-output': { const y = panelTitle(S, inn, S.l('Compuerta de salida o', 'Output gate o'), 'sig', A(id, 0.2), toy); line(y + lh * 0.55, [[S.l('cuánto de la cinta se lee', 'how much of the belt is read'), 'ink2']], A(id, 0.5)); chips('o', A(id, 0.7), y + lh * 1.9, ['o']); break; }
     case 'gate-learn': {
-      const y = panelTitle(S, inn, S.l('Las compuertas se calculan en cada paso', 'The gates are computed at every step'), 'sig', A(id, 0.2));
-      line(y + lh * 0.75, [['f_t', 'sig', true], [' = σ( ', 'ink2'], ['W_f', 'w', true], [' · [', 'ink2'], ['h_(t−1)', 'dat', true], [', ', 'ink2'], ['x_t', 'lat', true], ['] + b_f )', 'ink2']], A(id, 0.5), { font: 'mono', size: 13 });
-      line(y + lh * 1.75, [[S.l('σ: sigmoide, un valor entre 0 y 1', 'σ: sigmoid, a value between 0 and 1'), 'ink2']], A(id, 0.9), { size: 12.5 });
+      const y = panelTitle(S, inn, S.l('Las compuertas se calculan', 'The gates are computed'), 'sig', A(id, 0.2), S.l('valores ilustrativos', 'illustrative values'));
+      line(y + lh * 0.7, [['f_t', 'sig', true], [' = σ( ', 'ink2'], ['W_f', 'w', true], [' · [', 'ink2'], ['h_(t−1)', 'dat', true], [', ', 'ink2'], ['x_t', 'lat', true], ['] + b_f )', 'ink2']], A(id, 0.5), { font: 'mono', size: 13 });
+      line(y + lh * 1.6, [[S.l('σ: sigmoide, un valor entre 0 y 1', 'σ: sigmoid, a value between 0 and 1'), 'ink2']], A(id, 0.9), { size: 12.5 });
       break;
     }
     case 'gradient': {

@@ -95,7 +95,7 @@ export interface Lane {
 export function lane(S: Frame): Lane {
   const u = uu(S), vertical = S.portrait;
   const all = inset(S.full(), 13 * u);
-  const bh = vertical ? clamp(S.H * 0.21, 78 * u, 104 * u) : clamp(S.H * 0.19, 56 * u, 92 * u);
+  const bh = vertical ? clamp(S.H * 0.21, 78 * u, 104 * u) : clamp(S.H * 0.2, 74 * u, 96 * u);   // la banda debe caber título + dos líneas (o la fila de compuertas) incluso en teléfono horizontal
   const gap = 8 * u;
   const band: Rect = { x: all.x, y: all.y + all.h - bh, w: all.w, h: bh };
   const area: Rect = { x: all.x, y: all.y, w: all.w, h: all.h - bh - gap };
@@ -114,14 +114,15 @@ export function lane(S: Frame): Lane {
     };
   }
   const rh = area.h / NSLOT;
-  const tokW = 66 * u, cellW = 40 * u, stW = 100 * u, g = 9 * u;
-  const infW = Math.max(60 * u, area.w - tokW - cellW - stW - 3 * g);
+  // hueco labW entre la celda y el estado: ahí van los rótulos h₁…h₇ / c₁…c₇ (sin pisar la celda ni las barras)
+  const tokW = 66 * u, cellW = 52 * u, labW = 18 * u, stW = 92 * u, g = 9 * u;
+  const infW = Math.max(60 * u, area.w - tokW - cellW - labW - stW - 3 * g);
   const rowH = Math.min(rh - 5 * u, 36 * u);
   const mk = (x: number, w: number, hh = rowH) => (i: number): Rect => ({ x, y: area.y + rh * (i + 0.5) - hh / 2, w, h: hh });
   return {
     vertical, all, area, band, step: rh, along: (i) => area.y + rh * (i + 0.5),
     tok: mk(area.x, tokW, Math.min(rowH, 27 * u)), cell: mk(area.x + tokW + g, cellW, Math.min(rowH, 27 * u)),
-    st: mk(area.x + tokW + cellW + 2 * g, stW), inf: mk(area.x + tokW + cellW + stW + 3 * g, infW),
+    st: mk(area.x + tokW + cellW + 2 * g + labW, stW), inf: mk(area.x + tokW + cellW + labW + stW + 3 * g, infW),
   };
 }
 

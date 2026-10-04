@@ -16,4 +16,5 @@ export const PUBLISHED: string[] = [
   'contexto-y-memoria',
   'entrenar-bien',
   'generar-distribuciones',
+  'secuencias-y-memoria',
 ];

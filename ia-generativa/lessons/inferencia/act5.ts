@@ -140,7 +140,6 @@ export function drawSpec(S: Frame) {
   draft.forEach((t, i) => { const a = S.reveal('spec', 0.7 + i * 0.35, 0.4); if (a > 0) token(S, xs[i], y1, t, { tone: 'mute', size: fs, h: th, a }); });
   const aV = S.reveal('spec', 3.6, 0.6);
   show(S, aV, () => {
-    tagText(S, S.l('2 · el modelo grande verifica todos de una pasada', '2 · the large model checks them all in one pass'), A.x, y2 - 14 * u, { t: 'w', align: 'left', base: 'bottom', size: 14 });
     d.rect(x0 - 6 * u, y2 - 4 * u, total + 12 * u, th * u + 8 * u, { fill: alpha(wt.c, 0.1), stroke: wt.c, lw: 1.6, r: 4 });
     draft.forEach((t, i) => {
       const ok = i < acc, cx = xs[i] + widths[i] / 2;
@@ -149,6 +148,7 @@ export function drawSpec(S: Frame) {
       if (!ok) d.line(xs[i], y2 + th * u / 2, xs[i] + widths[i], y2 + th * u / 2, er.c, 2.4);
       mark(S, cx, y2 + th * u + 16 * u, ok, { r: 7 });
     });
+    tagText(S, S.l('2 · el modelo grande verifica todos de una pasada', '2 · the large model checks them all in one pass'), A.x, y2 - 14 * u, { t: 'w', align: 'left', base: 'bottom', size: 14 });   // al final: el halo tapa las líneas que lo cruzan
   });
   const aR = S.reveal('spec', 6.0, 0.7);
   show(S, aR, () => {
