@@ -183,11 +183,11 @@ export default defineLesson({
     },
     {
       id: 'after-try2',
-      es: 'La recta cuadrática persigue al atípico; la absoluta casi no se mueve. Gauss ya lo notó en 1809: ese criterio solo mira de qué lado queda un punto, no a qué distancia.',
-      en: 'The squared line chases the outlier; the absolute one barely moves. Gauss noticed this in 1809: that criterion only sees which side a point is on, not how far away.',
+      es: 'La recta cuadrática persigue al atípico; la absoluta casi no se mueve. Gauss ya lo notó en 1809: con ese criterio, un dato puede cambiar de valor sin mover la recta, mientras siga del mismo lado.',
+      en: 'The squared line chases the outlier; the absolute one barely moves. Gauss noticed this in 1809: with that criterion, a point can change its value without moving the line, as long as it stays on the same side.',
       tts: {
-        es: 'La recta cuadrática persigue al atípico; la absoluta casi no se mueve. Gauss ya lo notó en mil ochocientos nueve: ese criterio solo mira de qué lado queda un punto, no a qué distancia.',
-        en: 'The squared line chases the outlier; the absolute one barely moves. Gauss noticed this in eighteen oh nine: that criterion only sees which side a point is on, not how far away.',
+        es: 'La recta cuadrática persigue al atípico; la absoluta casi no se mueve. Gauss ya lo notó en mil ochocientos nueve: con ese criterio, un dato puede cambiar de valor sin mover la recta, mientras siga del mismo lado.',
+        en: 'The squared line chases the outlier; the absolute one barely moves. Gauss noticed this in eighteen oh nine: with that criterion, a point can change its value without moving the line, as long as it stays on the same side.',
       },
       note: { es: 'Cuadrático: sensible a atípicos. Absoluto: más robusto.', en: 'Squared: sensitive to outliers. Absolute: more robust.' },
     },
@@ -198,8 +198,8 @@ export default defineLesson({
     },
     {
       id: 'limits',
-      es: 'Una advertencia: una pérdida baja no garantiza un buen modelo. La recta no sabe doblarse, y con doce horas de estudio predice más de cien puntos, algo imposible.',
-      en: 'One warning: a low loss does not guarantee a good model. The line cannot bend, and with twelve hours of study it predicts more than a hundred points, which is impossible.',
+      es: 'Una advertencia: una pérdida baja no garantiza un buen modelo. Los datos llegan hasta nueve horas y la recta sigue sin doblarse: con doce horas predice más de cien puntos, más que la nota máxima.',
+      en: 'One warning: a low loss does not guarantee a good model. The data stop at nine hours and the line keeps going straight: with twelve hours it predicts more than a hundred points, above the top grade.',
     },
     {
       id: 'curve',
@@ -246,7 +246,7 @@ export default defineLesson({
   deeper: {
     es: `## El modelo y la pérdida
 
-Para una entrada $x$, el modelo lineal predice $\\hat y = wx + b$. Con varias características (lección 2) la entrada es un vector $\\mathbf{x}$ y la predicción es $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: un peso por característica y un solo sesgo.
+Para una entrada $x$, el modelo lineal predice $\\hat y = wx + b$. Con varias características (lección 2) la entrada es un vector $\\mathbf{x}$ y la predicción es $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: un peso por característica y un solo sesgo. Los diez estudiantes de la lección son inventados.
 
 El error de un punto es $e_i = y_i - \\hat y_i$. Con $n$ puntos, las dos pérdidas de la lección son
 
@@ -258,26 +258,31 @@ El MSE se mide en puntos al cuadrado. Su raíz, $\\sqrt{L}$, vuelve a puntos: co
 
 - **Es suave.** $L(w,b)$ es un paraboloide: tiene un único fondo y una pendiente definida en todas partes, lo que permitirá bajar por ella (lección 4). El valor absoluto tiene un pico en cero.
 - **Tiene fórmula.** Al igualar a cero las derivadas parciales de $L$ se obtiene un sistema lineal, las *ecuaciones normales*.
-- **Tiene una justificación probabilística.** Si $y_i = wx_i+b+\\varepsilon_i$ con ruido normal $\\varepsilon_i\\sim\\mathcal N(0,\\sigma^2)$, la verosimilitud es máxima justo donde el MSE es mínimo. Gauss lo planteó en 1809. Con ruido de Laplace, de colas más pesadas, el criterio equivalente es el error absoluto.
-- **Es sensible a los atípicos.** Con un solo parámetro (predecir una constante), el MSE se minimiza con la **media** y el error absoluto con la **mediana**. En los datos de la lección, la media es 64,4 y la mediana 59,5.
+- **Tiene una justificación probabilística.** Si $y_i = wx_i+b+\\varepsilon_i$ con ruido normal $\\varepsilon_i\\sim\\mathcal N(0,\\sigma^2)$, la verosimilitud es máxima justo donde el MSE es mínimo (Goodfellow et al., 2016, sec. 5.5.1, que lo llama un criterio introducido «más o menos arbitrariamente» antes de justificarlo así). Gauss lo planteó en 1809 (*Theoria motus*, arts. 175–179): si los errores siguen la curva normal, el sistema de valores más probable es el de menor suma de cuadrados. Con ruido de Laplace, de colas más pesadas, el criterio equivalente es el error absoluto.
+- **Es sensible a los atípicos.** Con un solo parámetro (predecir una constante), el MSE se minimiza con la **media** y el error absoluto con la **mediana**. En los datos de la lección, la media es 64,4 y la mediana 59,5 (con diez datos, cualquier valor entre 57 y 62 minimiza el error absoluto; se toma el punto medio).
 
-El error absoluto ya lo usaban Boscovich y Laplace antes de que Legendre publicara los mínimos cuadrados. Entre los dos extremos existen pérdidas híbridas, como la de Huber (1964): cuadrática para errores pequeños y lineal para los grandes.
+## Un poco de historia
+
+Legendre presentó los mínimos cuadrados en 1805, en un apéndice, como el principio que, a su juicio, es el «más general, más exacto y de aplicación más fácil», y que establece entre los errores «una especie de equilibrio» que impide a los extremos prevalecer. Gauss escribió en 1809 que lo usaba desde 1795 (*Theoria motus*, art. 186) y que, de todas las potencias pares del error, el cuadrado era «el más simple»; la prioridad se discutió (Plackett, 1972; Stigler, 1981).
+
+En ese mismo artículo Gauss cuenta que Laplace usaba el error absoluto, propuesto antes por Boscovich. Observa que con él la recta pasa, en general, por dos de los puntos y que otro dato cualquiera podría haberse observado sin cambiar la solución, con tal de quedar del mismo lado: es lo que viste con el atípico. Entre los dos extremos existen pérdidas híbridas, como la de Huber (1964): cuadrática para errores pequeños y lineal para los grandes.
 
 ## La mejor recta
 
 $$w^*=\\frac{\\sum_i (x_i-\\bar x)(y_i-\\bar y)}{\\sum_i (x_i-\\bar x)^2}=\\frac{\\operatorname{cov}(x,y)}{\\operatorname{var}(x)}\\qquad\\qquad b^*=\\bar y-w^*\\bar x$$
 
-Con $\\bar x = 4{,}55$ y $\\bar y = 64{,}4$ resultan $w^*\\approx 5{,}26$ y $b^*\\approx 40{,}45$, con pérdida mínima $L_{\\min}\\approx 42{,}5$. La mejor recta siempre pasa por el punto promedio $(\\bar x,\\bar y)$. En forma matricial son las ecuaciones normales, $\\mathbf{w}^*=(X^\\top X)^{-1}X^\\top\\mathbf{y}$.
+Con $\\bar x = 4{,}55$ y $\\bar y = 64{,}4$ resultan $w^*\\approx 5{,}26$ y $b^*\\approx 40{,}45$, con pérdida mínima $L_{\\min}\\approx 42{,}5$. La mejor recta siempre pasa por el punto promedio $(\\bar x,\\bar y)$. En forma matricial son las ecuaciones normales, $\\mathbf{w}^*=(X^\\top X)^{-1}X^\\top\\mathbf{y}$ (en $X$, una columna de unos se encarga del sesgo).
 
 Si dejamos $b=b^*$ y movemos solo $w$, la pérdida es exactamente una parábola:
 
 $$L(w)=L_{\\min}+\\overline{x^2}\\,(w-w^*)^2,\\qquad \\overline{x^2}\\approx 28{,}0$$
 
-Es la curva de la última escena. El nombre «regresión» viene de Galton (1886), que observó que los hijos de padres muy altos tienden a ser menos altos que ellos: regresan hacia el promedio.
+Es la curva de la última escena. El nombre «regresión» viene de Galton. En su estudio de 1886 sobre la estatura (930 hijos adultos de 205 familias) halló que la desviación de estatura de los hijos es, en promedio, dos tercios de la de sus padres: los hijos de padres muy altos tienden a ser menos altos, y los de padres muy bajos, más altos. Lo llamó «regresión hacia la mediocridad», es decir, hacia el promedio.
 
 ## En código
 
 \`\`\`python
+# diez estudiantes inventados para la lección
 horas = [0.5, 1.5, 2, 3, 4, 5, 6, 6.5, 8, 9]
 nota = [43, 49, 52, 57, 62, 72, 73, 56, 87, 93]
 n = len(horas)
@@ -301,7 +306,7 @@ print(round(perdida(2, 45), 1))   # 226.1        (la recta con que arranca la le
 La fórmula cerrada sirve para una recta. En una red con miles de millones de pesos no existe, y el fondo se busca paso a paso: es el descenso del gradiente (lección 4). Y bajar la pérdida en los datos de entrenamiento no basta: hay que medirla con datos que el modelo no vio (lección 10).`,
     en: `## The model and the loss
 
-For an input $x$, the linear model predicts $\\hat y = wx + b$. With several features (lesson 2) the input is a vector $\\mathbf{x}$ and the prediction is $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: one weight per feature and a single bias.
+For an input $x$, the linear model predicts $\\hat y = wx + b$. With several features (lesson 2) the input is a vector $\\mathbf{x}$ and the prediction is $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: one weight per feature and a single bias. The ten students in the lesson are invented.
 
 The error of a point is $e_i = y_i - \\hat y_i$. With $n$ points, the two losses in the lesson are
 
@@ -313,26 +318,31 @@ The MSE is measured in squared points. Its root, $\\sqrt{L}$, goes back to point
 
 - **It is smooth.** $L(w,b)$ is a paraboloid: it has a single bottom and a well-defined slope everywhere, which will let us slide down it (lesson 4). The absolute value has a kink at zero.
 - **It has a formula.** Setting the partial derivatives of $L$ to zero gives a linear system, the *normal equations*.
-- **It has a probabilistic justification.** If $y_i = wx_i+b+\\varepsilon_i$ with normal noise $\\varepsilon_i\\sim\\mathcal N(0,\\sigma^2)$, the likelihood is highest exactly where the MSE is lowest. Gauss set this out in 1809. With Laplace noise, which has heavier tails, the matching criterion is the absolute error.
-- **It is sensitive to outliers.** With a single parameter (predicting a constant), the MSE is minimized by the **mean** and the absolute error by the **median**. In the lesson’s data, the mean is 64.4 and the median 59.5.
+- **It has a probabilistic justification.** If $y_i = wx_i+b+\\varepsilon_i$ with normal noise $\\varepsilon_i\\sim\\mathcal N(0,\\sigma^2)$, the likelihood is highest exactly where the MSE is lowest (Goodfellow et al., 2016, sec. 5.5.1, which calls it a criterion introduced “more or less arbitrarily” before justifying it this way). Gauss set this out in 1809 (*Theoria motus*, arts. 175–179): if the errors follow the normal curve, the most probable system of values is the one with the smallest sum of squares. With Laplace noise, which has heavier tails, the matching criterion is the absolute error.
+- **It is sensitive to outliers.** With a single parameter (predicting a constant), the MSE is minimized by the **mean** and the absolute error by the **median**. In the lesson’s data, the mean is 64.4 and the median 59.5 (with ten data points, any value between 57 and 62 minimizes the absolute error; the midpoint is taken).
 
-The absolute error was already used by Boscovich and Laplace before Legendre published least squares. Between the two extremes there are hybrid losses, such as Huber’s (1964): quadratic for small errors and linear for large ones.
+## A little history
+
+Legendre presented least squares in 1805, in an appendix, as the principle that in his judgment is the “most general, most exact and of easiest application”, and that sets up among the errors “a sort of equilibrium” that keeps the extremes from prevailing. Gauss wrote in 1809 that he had used it since 1795 (*Theoria motus*, art. 186) and that, among all even powers of the error, the square was “the most simple”; the priority was disputed (Plackett, 1972; Stigler, 1981).
+
+In the same article Gauss reports that Laplace used the absolute error, proposed earlier by Boscovich. He notes that with it the line generally passes through two of the points, and that any other value could have been observed for another point without changing the solution, provided it stays on the same side: it is what you saw with the outlier. Between the two extremes there are hybrid losses, such as Huber’s (1964): quadratic for small errors and linear for large ones.
 
 ## The best line
 
 $$w^*=\\frac{\\sum_i (x_i-\\bar x)(y_i-\\bar y)}{\\sum_i (x_i-\\bar x)^2}=\\frac{\\operatorname{cov}(x,y)}{\\operatorname{var}(x)}\\qquad\\qquad b^*=\\bar y-w^*\\bar x$$
 
-With $\\bar x = 4.55$ and $\\bar y = 64.4$ we get $w^*\\approx 5.26$ and $b^*\\approx 40.45$, with minimum loss $L_{\\min}\\approx 42.5$. The best line always passes through the mean point $(\\bar x,\\bar y)$. In matrix form these are the normal equations, $\\mathbf{w}^*=(X^\\top X)^{-1}X^\\top\\mathbf{y}$.
+With $\\bar x = 4.55$ and $\\bar y = 64.4$ we get $w^*\\approx 5.26$ and $b^*\\approx 40.45$, with minimum loss $L_{\\min}\\approx 42.5$. The best line always passes through the mean point $(\\bar x,\\bar y)$. In matrix form these are the normal equations, $\\mathbf{w}^*=(X^\\top X)^{-1}X^\\top\\mathbf{y}$ (in $X$, a column of ones takes care of the bias).
 
 If we keep $b=b^*$ and move only $w$, the loss is exactly a parabola:
 
 $$L(w)=L_{\\min}+\\overline{x^2}\\,(w-w^*)^2,\\qquad \\overline{x^2}\\approx 28.0$$
 
-It is the curve in the last scene. The name “regression” comes from Galton (1886), who observed that the children of very tall parents tend to be less tall than they are: they regress toward the average.
+It is the curve in the last scene. The name “regression” comes from Galton. In his 1886 study of stature (930 adult children from 205 families) he found that the children’s height deviation is, on average, two thirds of their parents’: the children of very tall parents tend to be less tall, and those of very short parents, taller. He called it “regression towards mediocrity”, that is, towards the average.
 
 ## In code
 
 \`\`\`python
+# ten invented students for the lesson
 hours = [0.5, 1.5, 2, 3, 4, 5, 6, 6.5, 8, 9]
 grade = [43, 49, 52, 57, 62, 72, 73, 56, 87, 93]
 n = len(hours)
@@ -446,12 +456,12 @@ The closed formula works for a straight line. In a network with billions of weig
   ],
 
   sources: [
-    { title: 'Nouvelles méthodes pour la détermination des orbites des comètes', authors: 'Legendre, A.-M.', year: 1805 },
-    { title: 'Theoria motus corporum coelestium in sectionibus conicis solem ambientium', authors: 'Gauss, C. F.', year: 1809 },
+    { title: 'Nouvelles méthodes pour la détermination des orbites des comètes (apéndice «Sur la méthode des moindres quarrés», pp. 72–73 para la cita)', authors: 'Legendre, A.-M.', year: 1805, url: 'https://archive.org/details/nouvellesmthode00legegoog' },
+    { title: 'Theoria motus corporum coelestium in sectionibus conicis solem ambientium (libro II, sección 3, arts. 175–186; traducción inglesa de C. H. Davis, 1857)', authors: 'Gauss, C. F.', year: 1809, url: 'https://archive.org/details/theoryofmotionof00gausuoft' },
     { title: 'Studies in the History of Probability and Statistics. XXIX: The discovery of the method of least squares', authors: 'Plackett, R. L.', year: 1972, url: 'https://doi.org/10.1093/biomet/59.2.239' },
     { title: 'Gauss and the Invention of Least Squares', authors: 'Stigler, S. M.', year: 1981, url: 'https://doi.org/10.1214/aos/1176345451' },
     { title: 'Robust Estimation of a Location Parameter', authors: 'Huber, P. J.', year: 1964, url: 'https://doi.org/10.1214/aoms/1177703732' },
-    { title: 'Regression towards mediocrity in hereditary stature', authors: 'Galton, F.', year: 1886 },
-    { title: 'Deep Learning, sección 5.1.4: Example: Linear Regression', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
+    { title: 'Regression towards mediocrity in hereditary stature', authors: 'Galton, F.', year: 1886, url: 'https://galton.org/essays/1880-1889/galton-1886-jaigi-regression-stature.pdf' },
+    { title: 'Deep Learning, cap. 5, secciones 5.1.4 (Example: Linear Regression) y 5.5.1 (Conditional Log-Likelihood and Mean Squared Error)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/ml.html' },
   ],
 });

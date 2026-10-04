@@ -26,12 +26,14 @@ const inFit = (S: Frame) => S.between('try1', 'floor');
 const inOut = (S: Frame) => S.between('try2', 'after-try2');
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
-/** Calificación del estudiante atípico en este instante. Si la persona no lo movió, «after-try2» lo baja solo (demostración) y «gauss» lo devuelve a su sitio. */
-const heldOut = (S: Frame) => (outOf(S).maxDev < 1 && S.on('after-try2') ? 20 : outOf(S).yo);
+/** Calificación del estudiante atípico en este instante. Si la persona lo dejó casi donde estaba (o no lo movió), «after-try2» lo baja solo
+ *  (demostración, para que la voz tenga algo que mostrar) y «gauss» lo devuelve a su sitio. Pasado «try2» ya no se puede arrastrar: o.yo no cambia. */
+const idle = (S: Frame) => Math.abs(outOf(S).yo - YO) < 5;
+const heldOut = (S: Frame) => (idle(S) && S.on('after-try2') ? 20 : outOf(S).yo);
 function yoNow(S: Frame) {
   const o = outOf(S);
   if (S.on('gauss')) return lerp(heldOut(S), YO, S.at('gauss', 0, 1.2));
-  if (S.on('after-try2') && o.maxDev < 1) return lerp(YO, 20, S.at('after-try2', 0.3, 1.9));
+  if (S.on('after-try2') && idle(S)) return lerp(o.yo, 20, S.at('after-try2', 0.3, 1.9));
   return o.yo;
 }
 
@@ -151,7 +153,9 @@ function drawMain(S: Frame, P: Lay) {
   const yo = yoNow(S), ys = withOutlier(yo), line = modelLine(S);
   const errA = 1 - S.at('limits', 0, 0.6);                     // los errores se retiran al salir de los datos
 
-  drawAxes(S, P, S.reveal('hook', 0, 0.7));
+  // el asa del sesgo vive sobre el eje y: que no tape sus números
+  const bHandle = S.between('bias', 'prediction') ? line?.b : S.between('goal', 'floor') ? (line ?? FLAT).b : undefined;
+  drawAxes(S, P, S.reveal('hook', 0, 0.7), bHandle === undefined ? undefined : { x: plot.X(0), y: plot.Y(bHandle), r: S.hitR });
 
   // ── «pattern»…: guía de siete horas y la pregunta ──
   if (S.between('pattern', 'reality')) drawGuide(S, P, line);
@@ -222,7 +226,9 @@ function drawMain(S: Frame, P: Lay) {
   drawPoints(S, P, ys, { appear: (i) => S.reveal('hook', 0.5 + i * 0.2, 0.45), ring: S.between('outlier', 'limits') || S.between('reality', 'all-errors') ? (S.between('reality', 'all-errors') ? [FIVE] : [OUT]) : [] });
   if (S.between('outlier', 'limits')) {
     const a = S.reveal('outlier', 0.3, 0.5), px = plot.X(XS[OUT]), py = plot.Y(ys[OUT]);
-    d.withAlpha(a, () => tag(S, S.l('atípico', 'outlier'), px, py + 22 * u, 'err'));
+    // en «try2» las flechas de arrastre viven a la derecha del punto: la etiqueta se corre a su izquierda para no tocarlas
+    const drag = S.between('try2', 'after-try2');
+    d.withAlpha(a, () => tag(S, S.l('atípico', 'outlier'), px - (drag ? 6 : 0), py + 22 * u, 'err', { align: drag ? 'right' : 'center' }));
   }
 
   // ── etiquetas del error de un punto ──
@@ -302,7 +308,7 @@ function drawBigTags(S: Frame, P: Lay, line: Line, ys: number[]) {
       const txt = `${nf(S, Math.abs(e[i]), 1)}² = ${nf(S, e[i] * e[i], 0)}`, big = side > 70 * u;
       // el cuadrado grande lleva su rótulo dentro; el pequeño, justo debajo
       if (big) tx(S, txt, px + dir * side / 2, (yP + yL) / 2, { px: 14, weight: 800, font: 'mono', color: er.ink, align: 'center', base: 'middle', halo: p.stage, haloW: 4 });
-      else tx(S, txt, px + dir * side / 2, Math.max(yP, yL) + 14 * u, { px: 13, weight: 800, font: 'mono', color: er.ink, align: 'center', base: 'top', halo: p.stage, haloW: 4 });
+      else tx(S, txt, px + dir * 3, Math.max(yP, yL) + 8 * u, { px: 13, weight: 800, font: 'mono', color: er.ink, align: dir > 0 ? 'left' : 'right', base: 'top', halo: p.stage, haloW: 4 });
     });
   });
 }

@@ -25,4 +25,5 @@ export const PUBLISHED: string[] = [
   'que-es-aprender',
   'fine-tuning-lora',
   'datos-como-numeros',
+  'modelo-y-error',
 ];

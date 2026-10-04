@@ -1,5 +1,5 @@
 // Piezas de dibujo de la lección «Un modelo y su error»: texto con tamaño efectivo, ejes, errores, asas y gráficas del panel lateral.
-// Todo es función pura de lo que recibe (sin Math.random ni Date): la escena decide qué mostrar y cuándo.
+// Todo es función pura de lo que recibe (sin azar ni reloj propios): la escena decide qué mostrar y cuándo.
 import { Plot, alpha, clamp, lerp, regions, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 import type { TextOpts } from '../../../../../theme/canvas/draw';
 import { XS, nf, yAt, type Line } from './helpers';
@@ -28,7 +28,8 @@ export function layout(S: Frame): Lay {
 }
 
 // ── ejes ─────────────────────────────────────────────────────────────────
-export interface AxesOpts { xTicks: number[]; yTicks: number[]; xLabel: string; yLabel: string; xTone?: Tone; yTone?: Tone; grid?: number[]; note?: string }
+/** `avoid`: punto (px) que no debe tapar los números del eje y (p. ej. el asa del sesgo, que vive sobre ese eje): se atenúan los cercanos. */
+export interface AxesOpts { xTicks: number[]; yTicks: number[]; xLabel: string; yLabel: string; xTone?: Tone; yTone?: Tone; grid?: number[]; note?: string; avoid?: { x: number; y: number; r: number } }
 /** Ejes de una gráfica con marcas y rótulos de 12–13 px efectivos. `outer` es el rectángulo que contiene la gráfica y sus rótulos. */
 export function axesOf(S: Frame, plot: Plot, outer: Rect, o: AxesOpts, a = 1) {
   const { d, pal: p, u } = S, r = plot.r;
@@ -44,7 +45,8 @@ export function axesOf(S: Frame, plot: Plot, outer: Rect, o: AxesOpts, a = 1) {
     o.yTicks.forEach((v) => {
       const y = plot.Y(v);
       d.line(r.x - 4 * u, y, r.x, y, p.lineStrong, 1.5);
-      tx(S, String(v), r.x - 7 * u, y, { px: 12, font: 'mono', color: p.mute, align: 'right', base: 'middle' });
+      const near = o.avoid ? clamp((Math.hypot(o.avoid.x - (r.x - 14 * u), o.avoid.y - y) - o.avoid.r * 0.6) / (o.avoid.r * 0.8), 0.12, 1) : 1;
+      d.withAlpha(near, () => tx(S, String(v), r.x - 7 * u, y, { px: 12, font: 'mono', color: p.mute, align: 'right', base: 'middle' }));
     });
     tx(S, o.xLabel, r.x + r.w, r.y + r.h + 26 * u, { px: 13, weight: 700, color: ink(S, o.xTone ?? 'ink'), align: 'right', base: 'top' });
     tx(S, o.yLabel, outer.x + 2, r.y - 8 * u, { px: 13, weight: 700, color: ink(S, o.yTone ?? 'ink'), base: 'bottom' });
@@ -52,12 +54,12 @@ export function axesOf(S: Frame, plot: Plot, outer: Rect, o: AxesOpts, a = 1) {
   });
 }
 
-export function drawAxes(S: Frame, P: Lay, a = 1) {
+export function drawAxes(S: Frame, P: Lay, a = 1, avoid?: AxesOpts['avoid']) {
   const ticks: number[] = []; for (let v = 0; v <= P.xmax + 0.01; v += 2) ticks.push(v);
   axesOf(S, P.plot, P.main, {
     xTicks: ticks, yTicks: [0, 50, 100], grid: [25, 50, 75], xTone: 'sig', yTone: 'dat',
     xLabel: S.l('horas de estudio  x', 'hours of study  x'), yLabel: S.l('calificación  y', 'grade  y'),
-    note: S.l('datos ilustrativos', 'illustrative data'),
+    note: S.l('datos ilustrativos', 'illustrative data'), avoid,
   }, a);
 }
 
@@ -159,10 +161,13 @@ export function readouts(S: Frame, r: Rect, items: Item[], o: { cols: number; a?
       for (let c = 0; c < o.cols; c++) {
         const it = items[row * o.cols + c]; if (!it) continue;
         const x = r.x + c * cw, big = it.big && !o.flat ? 1.45 : 1, pxv = vpx * big;
+        // rótulo y subtítulo se parten en líneas si no caben en la columna: la fila crece en vez de montarse sobre la siguiente
+        const lines = (t: string, wt: number) => Math.max(1, Math.ceil(tw(S, t, 12, { weight: wt }) / Math.max(20, cw - 6)));
+        const dl = 15 * (lines(it.label, 700) - 1), ds = it.sub ? 15 * lines(it.sub, 600) : 0;
         tx(S, it.label, x, y, { px: 12, weight: 700, color: p.mute, base: 'top', w: cw - 6 });
-        tx(S, it.value, x, y + 15, { px: pxv, weight: 700, font: 'mono', color: it.t ? ink(S, it.t) : p.ink, base: 'top' });
-        if (it.sub) tx(S, it.sub, x, y + 15 + pxv * 1.25, { px: 12, weight: 600, color: p.ink2, base: 'top', w: cw - 6 });
-        hRow = Math.max(hRow, rh(it) + (it.sub ? 15 : 0));
+        tx(S, it.value, x, y + 15 + dl, { px: pxv, weight: 700, font: 'mono', color: it.t ? ink(S, it.t) : p.ink, base: 'top' });
+        if (it.sub) tx(S, it.sub, x, y + 15 + dl + pxv * 1.25, { px: 12, weight: 600, color: p.ink2, base: 'top', w: cw - 6 });
+        hRow = Math.max(hRow, rh(it) + dl + ds);
       }
       y += hRow;
     }
@@ -240,7 +245,9 @@ export function bell(S: Frame, r: Rect, resid: number[], sigma: number, a = 1, f
       d.line(x, baseY, x, baseY - (hot ? 26 : 14) * u, hot ? er.c : p.ink2, hot ? 3 : 2);
       d.circle(x, baseY - (hot ? 26 : 14) * u, (hot ? 4 : 2.6) * u, { fill: hot ? er.c : p.ink2 });
     });
-    tx(S, S.l('curva normal', 'normal curve'), X(0) + 12 * u, baseY - hMax * 0.92, { px: 12, weight: 700, color: lat.ink, base: 'middle', halo: p.stage, haloW: 4 });
+    // etiqueta sobre la curva, a la derecha del pico; si no cabe, se corre a la izquierda (siempre queda a la derecha del pico y sobre la curva)
+    const lw = tw(S, S.l('curva normal', 'normal curve'), 12, { weight: 700 }), x0 = Math.max(X(0.6 * sigma), Math.min(X(1.25 * sigma), r.x + r.w - lw - 2)), v0 = (x0 - X(0)) / (X(1) - X(0));
+    tx(S, S.l('curva normal', 'normal curve'), x0, baseY - hMax * Math.exp(-(v0 * v0) / (2 * sigma * sigma)) - 8 * u, { px: 12, weight: 700, color: lat.ink, base: 'bottom', halo: p.stage, haloW: 4 });
     if (focus >= 0) tx(S, S.l(`${nf(S, resid[focus], 1)}: el atípico`, `${nf(S, resid[focus], 1)}: the outlier`), X(resid[focus]) + 8 * u, baseY - 40 * u, { px: 12, weight: 700, color: er.ink, base: 'bottom', halo: p.stage, haloW: 4 });
   });
 }
