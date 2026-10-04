@@ -354,7 +354,7 @@ Lesson 18 shows how a sentence becomes the “label” that guides diffusion (CL
   ],
 
   sources: [
-    { title: 'Deep Unsupervised Learning using Nonequilibrium Thermodynamics', authors: 'Sohl-Dickstein, J., Weiss, E., Maheswaranathan, N., Ganguli, S.', year: 2015 },
+    { title: 'Deep Unsupervised Learning using Nonequilibrium Thermodynamics', authors: 'Sohl-Dickstein, J., Weiss, E., Maheswaranathan, N., Ganguli, S.', year: 2015, url: 'https://arxiv.org/abs/1503.03585' },
     { title: 'Denoising Diffusion Probabilistic Models', authors: 'Ho, J., Jain, A., Abbeel, P.', year: 2020, url: 'https://arxiv.org/abs/2006.11239' },
     { title: 'Classifier-Free Diffusion Guidance', authors: 'Ho, J., Salimans, T.', year: 2022, url: 'https://arxiv.org/abs/2207.12598' },
     { title: 'High-Resolution Image Synthesis with Latent Diffusion Models', authors: 'Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B.', year: 2022, url: 'https://arxiv.org/abs/2112.10752' },

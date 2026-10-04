@@ -10,7 +10,7 @@ export type Cell =
   | { k: 'legend'; fresh?: boolean; ring?: boolean; counts?: boolean }
   | { k: 'chips'; m: Model; hot?: number; lock?: boolean }
   | { k: 'lockText'; text: string; a?: number }
-  | { k: 'eq' }
+  | { k: 'eq'; rev?: [number, number, number] }
   | { k: 'bars'; rows: BarRow[]; seen: string; fresh: string }
   | { k: 'arith'; m: Model; l: number; c: number; a?: number };
 
@@ -38,7 +38,7 @@ export function flow(S: Frame, A: Rect, cells: Cell[], a = 1) {
         const cell = 2.4 * k;
         d.withAlpha(c.a ?? 1, () => { lock(S, A.x, y, cell); d.text(c.text, A.x + 8 * cell + 8 * k, y + 4 * cell, { size: fz(S, 13), weight: 700, color: p.ink2, base: 'middle' }); });
         y += 8 * cell + gap;
-      } else if (c.k === 'eq') y += equation(S, A.x, y, A.w) + gap;
+      } else if (c.k === 'eq') y += equation(S, A.x, y, A.w, { reveal: c.rev }) + gap;
       else if (c.k === 'bars') y += groupBars(S, { x: A.x, y, w: A.w, h: 0 }, c.rows, { seenLabel: c.seen, freshLabel: c.fresh }) + gap * 0.5;
       else if (c.k === 'chips') {
         const lw = c.lock ? 30 * k : 0, cw = (A.w - lw - 2 * 6 * k) / 3, h = 44 * k;

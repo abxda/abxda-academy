@@ -187,17 +187,18 @@ export function drawWhen(S: Frame) {
   });
 }
 
-// ── puente: una imagen es una cuadrícula de números ──
+// ── puente: una imagen es una cuadrícula de números (0 = negro, 255 = blanco, como en la lección siguiente) ──
 export function drawBridge(S: Frame) {
   const { d, pal: p } = S, k = kk(S), W = S.W, H = S.H;
   const rows = SPRITES.smile, n = rows.length, cs = Math.min(((S.portrait ? W - 40 * k : H - 110 * k)) / n, 34 * k);
   const x0 = (W - n * cs) / 2, y0 = S.portrait ? 18 * k : 16 * k;
   const aImg = fr(S, 'bridge', 0.03, 0.12), aNum = fr(S, 'bridge', 0.42, 0.66, 'io');
+  const white = p.dark ? p.ink : p.stage, black = p.dark ? p.stage : p.ink;   // el brillo real: 0 negro, 255 blanco, en claro y en oscuro
   d.withAlpha(aImg, () => {
     rows.forEach((row, r) => [...row].forEach((ch, c) => {
       const on = ch === '1';
-      d.rect(x0 + c * cs, y0 + r * cs, cs, cs, { fill: on ? alpha(p.ink, 1 - 0.55 * aNum) : alpha(p.ink, 0.05), stroke: alpha(p.line, aNum) });
-      d.text(on ? '255' : '0', x0 + c * cs + cs / 2, y0 + r * cs + cs / 2, { size: fz(S, 12), weight: 600, font: 'mono', color: on ? p.stage : p.mute, align: 'center', base: 'middle', a: aNum });
+      d.rect(x0 + c * cs, y0 + r * cs, cs, cs, { fill: on ? white : black, stroke: alpha(p.mute, 0.7 * aNum) });
+      d.text(on ? '255' : '0', x0 + c * cs + cs / 2, y0 + r * cs + cs / 2, { size: fz(S, 12), weight: 700, font: 'mono', color: on ? black : white, align: 'center', base: 'middle', a: aNum });
     }));
     d.rect(x0 - 0.5, y0 - 0.5, n * cs + 1, n * cs + 1, { stroke: p.lineStrong, lw: 1.5 });
   });

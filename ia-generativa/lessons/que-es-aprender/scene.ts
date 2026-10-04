@@ -4,7 +4,7 @@
 // Las animaciones se reparten por fracciones de cada segmento (fr): así siguen a la voz en cualquier idioma.
 import { Plot, alpha, badge, clamp, hash, lerp, neu, regions, tone, type Frame, type Rect, type SceneFactory } from '../../../../../theme/kit';
 import {
-  BAD, BAD_PATH, BY_N, DEMO, FINAL, FRESH, MAIL, PATH, SIZES, START, TRAIN, handHits, handSpam, isUsed, measureMail, modelHits, modelSpam,
+  BAD, BAD_PATH, BEST, BY_N, DEMO, FINAL, FRESH, MAIL, PATH, SIZES, START, TRAIN, handHits, handSpam, isUsed, measureMail, modelHits, modelSpam,
   score, stepAt, subset, type Model,
 } from './data';
 import { flow, type Cell } from './aside';
@@ -206,8 +206,15 @@ function drawV1(S: Frame, hand: { a: number; b: number }) {
   } else if (S.on('unseen')) {
     const dp = (fh / 60 - hits / 30) * 100;
     const row: BarRow = { name: S.l('Tu regla', 'Your rule'), tone: 'ink', seen: hits / 30, fresh: fh / 60, freshOn: fr(S, 'unseen', 0.84, 0.92, 'lin') };
-    cells.push({ k: 'lockText', text: S.l('regla fija', 'rule is frozen'), a: fr(S, 'unseen', 0.4, 0.5) }, { k: 'bars', rows: [row], seen: S.l('vistos', 'seen'), fresh: S.l('nuevos', 'new') }, { k: 'legend', fresh: true, ring: true });
-    if (S.on('fragile')) cells.push({ k: 'text', mono: true, tone: dp < -0.5 ? 'err' : 'dat', a: fr(S, 'fragile', 0.78, 0.88), text: S.l(`nuevos − vistos: ${signed(S, dp, 0)} puntos`, `new − seen: ${signed(S, dp, 0)} points`) });
+    const rows: BarRow[] = [row];
+    if (S.on('best-rule')) rows.push({ name: S.l('La mejor regla posible', 'The best possible rule'), tone: 'ink', seen: BEST.seen / 30, fresh: BEST.freshHi / 60, range: [BEST.freshLo / 60, BEST.freshHi / 60], freshOn: fr(S, 'best-rule', 0.5, 0.62, 'lin') });
+    cells.push({ k: 'lockText', text: S.l('regla fija', 'rule is frozen'), a: fr(S, 'unseen', 0.4, 0.5) }, { k: 'bars', rows, seen: S.l('vistos', 'seen'), fresh: S.l('nuevos', 'new') }, { k: 'legend', fresh: true, ring: true });
+    if (S.on('fragile')) {
+      // la diferencia depende de la regla que dejó la persona: el texto no afirma lo que la cifra no muestra
+      const sd = Math.abs(dp) < 0.5 ? S.l('nuevos − vistos: sin cambio', 'new − seen: no change') : S.l(`nuevos − vistos: ${signed(S, dp, 0)} puntos`, `new − seen: ${signed(S, dp, 0)} points`);
+      cells.push({ k: 'text', mono: true, tone: dp < -0.5 ? 'err' : 'dat', a: fr(S, 'fragile', 0.78, 0.88), text: sd });
+      if (dp > -0.5 && !S.on('best-rule')) cells.push({ k: 'text', a: fr(S, 'fragile', 0.84, 0.94), text: S.l('Esta vez no bajó: es una tendencia, no una ley.', 'This time it did not drop: a tendency, not a law.') });
+    }
   }
   flow(S, R.aside, cells, aA);
 }
@@ -299,7 +306,7 @@ function drawV3(S: Frame, hand: { a: number; b: number }) {
     if (!S.on('use-compute')) qMark(x, y, fr(S, 'use-arrive', 0.55, 0.65));
     else {
       const ra = fr(S, 'use-compute', 0.5, 0.6);
-      mark(S, x, y, score(FINAL, 2, 24) > 0 ? 1 : 0, { big: true, a: ra, ring: true });
+      mark(S, x, y, score(FINAL, 2, 24) > 0 ? 1 : 0, { big: true, a: ra, ring: true, dashRing: true });
       qMark(x, y, 1 - ra);
     }
   }
@@ -307,7 +314,7 @@ function drawV3(S: Frame, hand: { a: number; b: number }) {
     const q = stOf(S);
     q.probes.forEach((pr, j) => {
       const x = plot.X(pr.l), y = plot.Y(pr.c), v = score(FINAL, pr.l, pr.c) > 0 ? 1 : 0, last = j === q.probes.length - 1;
-      mark(S, x, y, v, { big: true, ring: !last });
+      mark(S, x, y, v, { big: true, ring: !last, dashRing: true });
       if (last) d.circle(x, y, (12 + 2.5 * Math.sin(S.clock * 4)) * S.u, { stroke: p.ink, lw: 2 });
     });
   }
@@ -324,7 +331,7 @@ function drawV3(S: Frame, hand: { a: number; b: number }) {
     );
   } else if (S.between('learn-setup', 'model-form')) {
     cells.push({ k: 'ro', name: S.l('ejemplos', 'examples'), value: '30' }, { k: 'legend', counts: true });
-  } else if (S.between('model-form', 'model-sign')) { cells.push({ k: 'eq' }); aA = fr(S, 'model-form', 0.08, 0.2); }
+  } else if (S.between('model-form', 'model-sign')) cells.push({ k: 'eq', rev: [fr(S, 'model-form', 0.08, 0.2), fr(S, 'model-form', 0.4, 0.5), fr(S, 'model-form', 0.7, 0.8)] });
   else if (S.between('model-sign', 'params')) { cells.push({ k: 'eq' }, { k: 'text', text: S.l('positivo: spam · negativo: normal', 'positive: spam · negative: legit'), a: fr(S, 'model-sign', 0.2, 0.32) }); }
   else if (S.between('params', 'training') && m) { cells.push(chips(m)); aA = fr(S, 'params', 0.05, 0.15); }
   else if (S.between('training', 'train-result') && m) {

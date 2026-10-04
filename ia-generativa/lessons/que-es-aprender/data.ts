@@ -1,13 +1,18 @@
 // Datos y modelo de la lección «Programar o aprender».
 //
 // DATOS SINTÉTICOS E ILUSTRATIVOS (no son correos reales). Cada punto es [enlaces, % de mayúsculas, clase]:
-// clase 0 = normal, clase 1 = spam. Se generaron una sola vez, fuera de la escena, con el rng de core/scene/math
-// (semillas 190 y 191): normales independientes por clase (normal: enlaces ≈ N(1,8; 1,5), mayúsculas ≈ N(8; 3,8);
-// spam: enlaces ≈ N(5,2; 2,1), mayúsculas ≈ N(19; 8)), más un 18 % de «boletines» legítimos con muchos enlaces
-// y un 20 % de spam «sin enlaces y a gritos». Los enlaces se redondean a enteros y las mayúsculas a décimas.
-// De 400 semillas se tomó una cuyos resultados quedan cerca de la mediana (mejor regla a mano sobre los 30 vistos
-// ≈ 93 %, sobre los 60 nuevos ≈ 78–87 %; modelo aprendido ≈ 90 % y ≈ 87 %), para que lo que se ve sea típico.
-// Se guardan como números fijos para que la escena sea idéntica en cualquier navegador.
+// clase 0 = normal, clase 1 = spam. Las tablas TRAIN y FRESH de abajo se pueden regenerar con `build-data.ts`
+// (misma carpeta; se ejecuta con `npx tsx` desde app/), que además comprueba cada cifra que la lección dice en voz alta.
+// Receta, con el rng de core/scene/math (mulberry32 + Box–Muller): semilla 190 para los 30 de entrenamiento y 191 para los
+// 60 nuevos; la fila i es normal si i es par y spam si es impar; de cada fila se sortea primero un número u y después dos
+// gaussianas (enlaces y mayúsculas). Normal: enlaces ≈ N(1,8; 1,5) y mayúsculas ≈ N(8; 3,8), salvo un 18 % (u < 0,18) de
+// «boletines» legítimos con enlaces ≈ N(5,5; 1,5) y mayúsculas ≈ N(7; 3). Spam: enlaces ≈ N(5,2; 2,1) y mayúsculas ≈ N(19; 8),
+// salvo un 20 % (u < 0,20) «sin enlaces y a gritos» con enlaces ≈ N(0,8; 1,0) y mayúsculas ≈ N(24; 6). Los enlaces se redondean
+// a enteros (mínimo 0) y las mayúsculas a décimas, con tope de 40 y piso de 1 (normales) o de 4 (spam); en estas semillas el tope
+// actúa una vez y el piso de 4 otra, ambas entre los 60 nuevos; el piso de 1 nunca.
+// Las semillas 190/191 se tomaron de 400 candidatas (s y s+1) porque sus resultados son típicos, no los mejores: mejor regla a
+// mano sobre los 30 vistos 28 de 30 (la mediana de las 400), modelo aprendido 27 de 30 vistos y 52 de 60 nuevos (mediana 27 y 53).
+// Los números quedan fijos aquí para que la escena sea idéntica en cualquier navegador.
 //
 // El modelo es de verdad: regresión logística entrenada con descenso del gradiente (η = 0,5, 300 pasos) sobre
 // medidas estandarizadas. Nada del entrenamiento que se ve en pantalla está simulado.
@@ -65,6 +70,15 @@ export function measureMail(lines: string[]) {
 /** «Spam si trae al menos `a` enlaces o al menos `b` % de mayúsculas.» */
 export const handSpam = (a: number, b: number, p: Pt): Cls => (p.l >= a || p.c >= b ? 1 : 0);
 export const handHits = (a: number, b: number, pts: Pt[]) => pts.filter((p) => handSpam(a, b, p) === p.y).length;
+
+/** Todas las reglas que permiten los deslizadores (enlaces 1–10 × mayúsculas 5–40 %): 10 × 36 = 360. */
+export const RULES: { a: number; b: number }[] = Array.from({ length: 10 * 36 }, (_, i) => ({ a: 1 + Math.floor(i / 36), b: 5 + (i % 36) }));
+/** La mejor regla posible con los 30 vistos (puede haber empates): aciertos con los vistos y rango de aciertos de esas mismas reglas con los 60 nuevos. */
+export const BEST = (() => {
+  const seen = RULES.map((r) => handHits(r.a, r.b, TRAIN)), top = Math.max(...seen);
+  const fresh = RULES.filter((_, i) => seen[i] === top).map((r) => handHits(r.a, r.b, FRESH));
+  return { seen: top, count: fresh.length, freshLo: Math.min(...fresh), freshHi: Math.max(...fresh) };
+})();
 
 // ── modelo aprendido: suma ponderada  puntaje = w1·enlaces + w2·mayúsculas + b ──
 export interface Model { w1: number; w2: number; b: number }

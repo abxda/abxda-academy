@@ -4,6 +4,9 @@ import { alpha, clamp, tone, type Frame, type Rect, type Tone } from '../../../.
 import { G } from './task';
 import type { Pt } from './tinynet';
 
+/** Tamaño de fuente (antes de escalar por S.u) que garantiza ≥ 12 px efectivos. */
+export const FS = (S: Frame, px: number) => Math.max(px, 12.2 / S.u);
+
 // ── color con caché (alpha() analiza la cadena cada vez) ─────────────────────
 const CACHE = new Map<string, string>();
 export function alp(c: string, a: number): string {
@@ -140,8 +143,8 @@ export function maxAbs(M: ArrayLike<number>): number { let m = 1e-9; for (let i 
 export function meter(S: Frame, r: Rect, label: string, v: number, o: { tone?: Tone; hatch?: boolean; mark?: number; a?: number; ghost?: number } = {}) {
   const { d, ctx, pal: p } = S, u = S.u, t = tone(S, o.tone ?? 'dat');
   d.withAlpha(o.a ?? 1, () => {
-    d.text(label, r.x, r.y, { size: 12, weight: 700, color: p.mute, base: 'top' });
-    d.text(S.n(v * 100, 0) + ' %', r.x + r.w, r.y - 1, { size: 15, weight: 700, font: 'mono', color: t.ink, align: 'right', base: 'top' });
+    d.text(label, r.x, r.y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
+    d.text(S.n(v * 100, 0) + ' %', r.x + r.w, r.y - 1, { size: FS(S, 15), weight: 700, font: 'mono', color: t.ink, align: 'right', base: 'top' });
     const by = r.y + 18 * u, bh = Math.max(8, 11 * u);
     d.rect(r.x, by, r.w, bh, { fill: p.surface2, stroke: p.line, lw: 1 });
     const w = r.w * clamp(v);
@@ -161,7 +164,7 @@ export function meter(S: Frame, r: Rect, label: string, v: number, o: { tone?: T
 export function miniLoss(S: Frame, r: Rect, losses: number[], upto: number, total: number, o: { a?: number; maxY?: number; label?: string } = {}) {
   const { d, pal: p } = S, t = tone(S, 'err'), maxY = o.maxY ?? 1.6;
   d.withAlpha(o.a ?? 1, () => {
-    if (o.label) d.text(o.label, r.x, r.y, { size: 12, weight: 700, color: p.mute, base: 'top' });
+    if (o.label) d.text(o.label, r.x, r.y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
     const top = r.y + (o.label ? 16 * S.u : 0), h = r.h - (top - r.y);
     if (h < 14) return;
     d.line(r.x, top + h, r.x + r.w, top + h, p.lineStrong, 1.5);
@@ -179,7 +182,7 @@ export function miniLoss(S: Frame, r: Rect, losses: number[], upto: number, tota
 // ── texto y cajas ────────────────────────────────────────────────────────────
 /** Etiqueta corta con fondo, que devuelve su caja. */
 export function chip(S: Frame, text: string, x: number, y: number, o: { tone?: Tone; align?: CanvasTextAlign; a?: number; size?: number; dashed?: boolean; mono?: boolean } = {}) {
-  const { d, pal: p } = S, t = tone(S, o.tone ?? 'ink'), size = o.size ?? 12, pad = 7 * S.u;
+  const { d, pal: p } = S, t = tone(S, o.tone ?? 'ink'), size = FS(S, o.size ?? 12), pad = 7 * S.u;
   const w = d.measure(text, { size, weight: 700, font: o.mono ? 'mono' : 'ui' }) + pad * 2, h = size * S.u * 1.3 + pad * 1.1;
   const al = o.align ?? 'center', x0 = al === 'center' ? x - w / 2 : al === 'right' ? x - w : x;
   d.withAlpha(o.a ?? 1, () => {
@@ -191,7 +194,7 @@ export function chip(S: Frame, text: string, x: number, y: number, o: { tone?: T
 
 /** Texto con ajuste de línea que devuelve su altura. */
 export function para(S: Frame, text: string, x: number, y: number, w: number, o: { size?: number; weight?: number; color?: string; align?: CanvasTextAlign; a?: number; lh?: number; base?: CanvasTextBaseline } = {}) {
-  return S.d.text(text, x, y, { size: o.size ?? 13, weight: o.weight ?? 600, color: o.color ?? S.pal.ink2, w, align: o.align, a: o.a, lh: o.lh ?? 1.3, base: o.base ?? 'top' });
+  return S.d.text(text, x, y, { size: FS(S, o.size ?? 13), weight: o.weight ?? 600, color: o.color ?? S.pal.ink2, w, align: o.align, a: o.a, lh: o.lh ?? 1.3, base: o.base ?? 'top' });
 }
 
 export const thousands = (S: Frame, n: number) => S.n(n, 0);

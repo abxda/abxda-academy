@@ -566,7 +566,7 @@ Lowering the training error is not enough: you have to measure with data the mod
     { title: 'Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour', authors: 'Goyal, P., Dollár, P., Girshick, R., et al.', year: 2017, url: 'https://arxiv.org/abs/1706.02677' },
     { title: 'Language Models are Few-Shot Learners (GPT-3): Tabla 2.1, Tabla 2.2 y Apéndice B', authors: 'Brown, T. B., et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
     { title: 'A Stochastic Approximation Method', authors: 'Robbins, H., Monro, S.', year: 1951, url: 'https://doi.org/10.1214/aoms/1177729586' },
-    { title: 'Some methods of speeding up the convergence of iteration methods (USSR Computational Mathematics and Mathematical Physics 4(5): 1–17)', authors: 'Polyak, B. T.', year: 1964 },
+    { title: 'Some methods of speeding up the convergence of iteration methods (USSR Computational Mathematics and Mathematical Physics 4(5): 1–17)', authors: 'Polyak, B. T.', year: 1964, url: 'https://doi.org/10.1016/0041-5553(64)90137-5' },
     { title: 'SGDR: Stochastic Gradient Descent with Warm Restarts', authors: 'Loshchilov, I., Hutter, F.', year: 2017, url: 'https://arxiv.org/abs/1608.03983' },
     { title: 'Attention Is All You Need', authors: 'Vaswani, A., et al.', year: 2017, url: 'https://arxiv.org/abs/1706.03762' },
     { title: 'Random Search for Hyper-Parameter Optimization', authors: 'Bergstra, J., Bengio, Y.', year: 2012, url: 'https://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf' },

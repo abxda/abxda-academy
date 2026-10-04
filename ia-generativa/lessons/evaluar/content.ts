@@ -589,7 +589,7 @@ Measured quality is one axis; risk is another: privacy, instruction hijacking, b
     { title: 'Red Teaming Language Models to Reduce Harms: Methods, Scaling Behaviors, and Lessons Learned', authors: 'Ganguli, D., Lovitt, L., Kernion, J., et al.', year: 2022, url: 'https://arxiv.org/abs/2209.07858' },
     { title: 'Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference', authors: 'Chiang, W.-L., Zheng, L., Sheng, Y., et al.', year: 2024, url: 'https://arxiv.org/abs/2403.04132' },
     { title: 'Scaling Laws for Reward Model Overoptimization', authors: 'Gao, L., Schulman, J., Hilton, J.', year: 2022, url: 'https://arxiv.org/abs/2210.10760' },
-    { title: '«Improving ratings»: audit in the British University system (European Review 5, 305–321)', authors: 'Strathern, M.', year: 1997 },
+    { title: '«Improving ratings»: audit in the British University system (European Review 5, 305–321)', authors: 'Strathern, M.', year: 1997, url: 'https://doi.org/10.1002/(SICI)1234-981X(199707)5:3<305::AID-EURO184>3.0.CO;2-4' },
     { title: 'Interval Estimation for a Binomial Proportion', authors: 'Brown, L. D., Cai, T. T., DasGupta, A.', year: 2001, url: 'https://doi.org/10.1214/ss/1009213286' },
     { title: 'Don’t Use the CLT in LLM Evals With Fewer Than a Few Hundred Datapoints', authors: 'Bowyer, S., Aitchison, L., Ivanova, D. R.', year: 2025, url: 'https://arxiv.org/abs/2503.01747' },
     { title: 'Quantifying Language Models’ Sensitivity to Spurious Features in Prompt Design', authors: 'Sclar, M., Choi, Y., Tsvetkov, Y., Suhr, A.', year: 2023, url: 'https://arxiv.org/abs/2310.11324' },

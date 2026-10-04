@@ -1,6 +1,6 @@
 // Panel lateral común del modelo diminuto: parámetros que se entrenan, habilidades (nueva y original) y curva de pérdida.
 import { clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
-import { meter, miniLoss } from './ui';
+import { meter, miniLoss, FS } from './ui';
 
 export interface PanelO {
   a?: number;
@@ -31,18 +31,18 @@ export function drawPanel(S: Frame, r: Rect, o: PanelO) {
       }
       const rest = r.y + r.h - y;
       if (showTrain) {
-        d.text(S.l('se entrenan', 'trainable'), r.x, y, { size: 12, weight: 700, color: p.mute, base: 'top' });
-        d.text(S.n(o.trainable, 0), r.x, y + 15 * u, { size: 24, weight: 700, font: 'mono', color: wt.ink, base: 'top' });
-        d.text(S.l('congelados ', 'frozen ') + S.n(o.frozen, 0), r.x, y + 46 * u, { size: 12, weight: 600, color: p.mute, base: 'top' });
+        d.text(S.l('se entrenan', 'trainable'), r.x, y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
+        d.text(S.n(o.trainable, 0), r.x, y + 15 * u, { size: FS(S, 24), weight: 700, font: 'mono', color: wt.ink, base: 'top' });
+        d.text(S.l('congelados ', 'frozen ') + S.n(o.frozen, 0), r.x, y + 46 * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top' });
       }
       if (o.showLoss && o.losses && rest > 50 * u) miniLoss(S, { x: r.x + (showTrain ? hw * 0.62 + gap : 0), y: y, w: showTrain ? r.w - hw * 0.62 - gap : r.w, h: Math.min(rest, 78 * u) }, o.losses, o.step ?? 0, o.total ?? 300, { label: S.l('pérdida', 'loss'), maxY: 1.5 });
     } else {
       let y = r.y;
-      if (o.title) { d.text(o.title, r.x, y, { size: 13, weight: 700, color: p.ink2, base: 'top' }); y += 24 * u; }
+      if (o.title) { d.text(o.title, r.x, y, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'top' }); y += 24 * u; }
       if (showTrain) {
-        d.text(S.l('parámetros que se entrenan', 'trainable parameters'), r.x, y, { size: 12, weight: 700, color: p.mute, base: 'top' });
-        d.text(S.n(o.trainable, 0), r.x, y + 16 * u, { size: 28, weight: 700, font: 'mono', color: wt.ink, base: 'top' });
-        d.text(S.l('congelados: ', 'frozen: ') + S.n(o.frozen, 0), r.x + r.w, y + 26 * u, { size: 12, weight: 600, color: p.mute, align: 'right', base: 'top' });
+        d.text(S.l('parámetros que se entrenan', 'trainable parameters'), r.x, y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
+        d.text(S.n(o.trainable, 0), r.x, y + 16 * u, { size: FS(S, 28), weight: 700, font: 'mono', color: wt.ink, base: 'top' });
+        d.text(S.l('congelados: ', 'frozen: ') + S.n(o.frozen, 0), r.x + r.w, y + 26 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'right', base: 'top' });
         y += 58 * u;
       }
       if (showMeters) {

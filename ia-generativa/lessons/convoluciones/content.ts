@@ -351,9 +351,9 @@ Backpropagation from lesson 8 trains the kernels like any other weight. Convolut
   ],
 
   sources: [
-    { title: 'Backpropagation Applied to Handwritten Zip Code Recognition', authors: 'LeCun, Y., Boser, B., Denker, J. S., Henderson, D., Howard, R. E., Hubbard, W., Jackel, L. D.', year: 1989 },
-    { title: 'Gradient-Based Learning Applied to Document Recognition', authors: 'LeCun, Y., Bottou, L., Bengio, Y., Haffner, P.', year: 1998 },
-    { title: 'ImageNet Classification with Deep Convolutional Neural Networks', authors: 'Krizhevsky, A., Sutskever, I., Hinton, G. E.', year: 2012 },
-    { title: 'ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and robustness', authors: 'Geirhos, R., Rubisch, P., Michaelis, C., Bethge, M., Wichmann, F. A., Brendel, W.', year: 2019 },
+    { title: 'Backpropagation Applied to Handwritten Zip Code Recognition', authors: 'LeCun, Y., Boser, B., Denker, J. S., Henderson, D., Howard, R. E., Hubbard, W., Jackel, L. D.', year: 1989, url: 'https://doi.org/10.1162/neco.1989.1.4.541' },
+    { title: 'Gradient-Based Learning Applied to Document Recognition', authors: 'LeCun, Y., Bottou, L., Bengio, Y., Haffner, P.', year: 1998, url: 'https://doi.org/10.1109/5.726791' },
+    { title: 'ImageNet Classification with Deep Convolutional Neural Networks', authors: 'Krizhevsky, A., Sutskever, I., Hinton, G. E.', year: 2012, url: 'https://papers.nips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html' },
+    { title: 'ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and robustness', authors: 'Geirhos, R., Rubisch, P., Michaelis, C., Bethge, M., Wichmann, F. A., Brendel, W.', year: 2019, url: 'https://arxiv.org/abs/1811.12231' },
   ],
 });

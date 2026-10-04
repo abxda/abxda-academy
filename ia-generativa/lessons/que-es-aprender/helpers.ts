@@ -20,7 +20,7 @@ export const label = (S: Frame, c: Cls) => (c === 1 ? 'spam' : S.l('normal', 'le
 export const clsTone = (c: Cls): Tone => (c === 1 ? 'err' : 'dat');
 
 // ── marcadores de dato: círculo = normal, cruz = spam (la forma acompaña al color) ──
-export function mark(S: Frame, x: number, y: number, cls: Cls, o: { r?: number; a?: number; ring?: boolean; ringA?: number; ghost?: boolean; big?: boolean } = {}) {
+export function mark(S: Frame, x: number, y: number, cls: Cls, o: { r?: number; a?: number; ring?: boolean; ringA?: number; ghost?: boolean; big?: boolean; dashRing?: boolean } = {}) {
   const { d, pal: p } = S, t = tone(S, clsTone(cls)), r = (o.r ?? 5) * S.u * (o.big ? 1.35 : 1);
   d.withAlpha(o.a ?? 1, () => {
     if (cls === 0) {
@@ -31,7 +31,7 @@ export function mark(S: Frame, x: number, y: number, cls: Cls, o: { r?: number; 
       d.line(x - r, y - r, x + r, y + r, p.stage, w + 2.2); d.line(x - r, y + r, x + r, y - r, p.stage, w + 2.2);
       d.line(x - r, y - r, x + r, y + r, t.c, w); d.line(x - r, y + r, x + r, y - r, t.c, w);
     }
-    if (o.ring) d.withAlpha(o.ringA ?? 1, () => d.circle(x, y, r + 5 * S.u, { stroke: p.ink, lw: 1.6 }));
+    if (o.ring) d.withAlpha(o.ringA ?? 1, () => d.circle(x, y, r + 5 * S.u, { stroke: p.ink, lw: o.dashRing ? 1.8 : 1.6, dash: o.dashRing ? [3, 3] : undefined }));
   });
 }
 
@@ -124,21 +124,22 @@ export function lock(S: Frame, x: number, y: number, cell: number, a = 1) {
   return 8 * cell;
 }
 
-/** La ecuación del modelo, con ajuste de línea. Devuelve la altura usada. */
-export function equation(S: Frame, x: number, y: number, w: number, o: { a?: number; vals?: Model } = {}) {
+/** La ecuación del modelo, con ajuste de línea. `reveal` da la opacidad de cada término (peso de enlaces, peso de mayúsculas, número fijo). Devuelve la altura usada. */
+export function equation(S: Frame, x: number, y: number, w: number, o: { a?: number; vals?: Model; reveal?: [number, number, number] } = {}) {
   const { d, pal: p } = S, size = fz(S, 14), wt = tone(S, 'w'), sg = tone(S, 'sig'), k = kk(S);
-  type Tk = [string, string];
+  type Tk = [string, string, number];
+  const rv = o.reveal ?? [1, 1, 1];
   const f = (v: number | undefined, nm: string) => (v === undefined ? nm : num(S, v, 2));
   const groups: Tk[][] = [
-    [[S.l('puntaje', 'score'), p.ink], [' = ', p.ink2], [f(o.vals?.w1, 'w₁'), wt.ink], [' · ', p.ink2], [S.l('enlaces', 'links'), sg.ink]],
-    [[' + ', p.ink2], [f(o.vals?.w2, 'w₂'), wt.ink], [' · ', p.ink2], [S.l('mayúsculas', 'capitals'), sg.ink]],
-    [[o.vals && o.vals.b < 0 ? ' − ' : ' + ', p.ink2], [o.vals ? num(S, Math.abs(o.vals.b), 2) : 'b', wt.ink]],
+    [[S.l('puntaje', 'score'), p.ink, rv[0]], [' = ', p.ink2, rv[0]], [f(o.vals?.w1, 'w₁'), wt.ink, rv[0]], [' · ', p.ink2, rv[0]], [S.l('enlaces', 'links'), sg.ink, rv[0]]],
+    [[' + ', p.ink2, rv[1]], [f(o.vals?.w2, 'w₂'), wt.ink, rv[1]], [' · ', p.ink2, rv[1]], [S.l('mayúsculas', 'capitals'), sg.ink, rv[1]]],
+    [[o.vals && o.vals.b < 0 ? ' − ' : ' + ', p.ink2, rv[2]], [o.vals ? num(S, Math.abs(o.vals.b), 2) : 'b', wt.ink, rv[2]]],
   ];
   const wid = (g: Tk[]) => g.reduce((s, [t]) => s + d.measure(t, { size, weight: 700, font: 'mono' }), 0);
   const lines: Tk[][] = [];
   for (const g of groups) { const last = lines[lines.length - 1]; if (last && wid(last) + wid(g) <= w) last.push(...g); else lines.push([...g]); }
   const lh = 21 * k;
-  d.withAlpha(o.a ?? 1, () => lines.forEach((ln, i) => { let cx = x; ln.forEach(([t, c]) => { d.text(t, cx, y + i * lh, { size, weight: 700, font: 'mono', color: c, base: 'top' }); cx += d.measure(t, { size, weight: 700, font: 'mono' }); }); }));
+  d.withAlpha(o.a ?? 1, () => lines.forEach((ln, i) => { let cx = x; ln.forEach(([t, c, a]) => { if (a > 0.01) d.text(t, cx, y + i * lh, { size, weight: 700, font: 'mono', color: c, base: 'top', a }); cx += d.measure(t, { size, weight: 700, font: 'mono' }); }); }));
   return lines.length * lh;
 }
 
@@ -161,14 +162,14 @@ export function legend(S: Frame, x: number, y: number, w: number, o: { fresh?: b
   return Math.ceil(items.length / cols) * 22 * k;
 }
 
-/** Barras agrupadas: para cada fila (tu regla / la máquina) una barra con los vistos y otra con los nuevos. */
-export interface BarRow { name: string; tone: Tone; seen: number; fresh: number; freshOn?: number }
+/** Barras agrupadas: para cada fila (tu regla / la máquina) una barra con los vistos y otra con los nuevos. `range` (fracciones) pinta los nuevos como un rango. */
+export interface BarRow { name: string; tone: Tone; seen: number; fresh: number; freshOn?: number; range?: [number, number] }
 export function groupBars(S: Frame, r: Rect, rows: BarRow[], o: { seenLabel: string; freshLabel: string }) {
-  const { d, pal: p } = S, k = kk(S), size = fz(S, 12), lw = Math.min(70 * k, r.w * 0.28), vw = 40 * k;
+  const { d, pal: p } = S, k = kk(S), size = fz(S, 12), anyRange = rows.some((q) => q.range), vw = (anyRange ? 62 : 40) * k, lw = Math.min(70 * k, r.w * 0.28);
   let y = r.y;
   rows.forEach((row) => {
     const t = tone(S, row.tone);
-    d.text(row.name, r.x, y, { size: fz(S, 13), weight: 800, color: t.ink, base: 'top' });
+    d.text(row.name, r.x, y, { size: fz(S, 13), weight: 800, color: t.ink, base: 'top', w: r.w });
     y += 18 * k;
     ([[o.seenLabel, row.seen, 1], [o.freshLabel, row.fresh, row.freshOn ?? 1]] as [string, number, number][]).forEach(([nm, v, on], j) => {
       const bx = r.x + lw, bw = r.w - lw - vw, bh = 12 * k;
@@ -176,8 +177,14 @@ export function groupBars(S: Frame, r: Rect, rows: BarRow[], o: { seenLabel: str
       d.rect(bx, y, bw, bh, { fill: p.surface2 });
       d.withAlpha(on, () => {
         if (j === 0) d.rect(bx, y, bw * v, bh, { fill: t.c });
-        else d.rect(bx, y, bw * v, bh, { fill: alpha(t.c, 0.22), stroke: t.c, lw: 1.5 });
-        d.text(pct(S, v), bx + bw + 6 * k, y + bh / 2, { size, weight: 700, font: 'mono', color: p.ink, base: 'middle' });
+        else if (row.range) {
+          const [lo, hi] = row.range;
+          d.rect(bx, y, bw * hi, bh, { fill: alpha(t.c, 0.1) });
+          d.rect(bx, y, bw * lo, bh, { fill: alpha(t.c, 0.22), stroke: t.c, lw: 1.5 });
+          d.line(bx + bw * hi, y - 2 * k, bx + bw * hi, y + bh + 2 * k, t.c, 2);
+        } else d.rect(bx, y, bw * v, bh, { fill: alpha(t.c, 0.22), stroke: t.c, lw: 1.5 });
+        const txt = j === 1 && row.range ? `${S.n(row.range[0] * 100, 0)}–${S.n(row.range[1] * 100, 0)}${S.lang === 'es' ? ' %' : '%'}` : pct(S, v);
+        d.text(txt, bx + bw + 6 * k, y + bh / 2, { size, weight: 700, font: 'mono', color: p.ink, base: 'middle' });
       });
       y += 18 * k;
     });

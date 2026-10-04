@@ -408,9 +408,9 @@ For images, a fully connected network does not scale. Lesson 11 shows the idea o
   ],
 
   sources: [
-    { title: 'The Elements of Statistical Learning (2.ª ed.), cap. 7: Model Assessment and Selection', authors: 'Hastie, T., Tibshirani, R., Friedman, J.', year: 2009 },
+    { title: 'The Elements of Statistical Learning (2.ª ed.), cap. 7: Model Assessment and Selection', authors: 'Hastie, T., Tibshirani, R., Friedman, J.', year: 2009, url: 'https://web.stanford.edu/~hastie/ElemStatLearn/' },
     { title: 'Deep Learning, cap. 5 (Machine Learning Basics) y cap. 7 (Regularization)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
-    { title: 'Leakage and the reproducibility crisis in machine-learning-based science', authors: 'Kapoor, S., Narayanan, A.', year: 2023, url: 'https://www.cell.com/patterns/fulltext/S2666-3899(23)00159-9' },
-    { title: 'Dropout: A Simple Way to Prevent Neural Networks from Overfitting', authors: 'Srivastava, N., Hinton, G., Krizhevsky, A., Sutskever, I., Salakhutdinov, R.', year: 2014 },
+    { title: 'Leakage and the reproducibility crisis in machine-learning-based science', authors: 'Kapoor, S., Narayanan, A.', year: 2023, url: 'https://doi.org/10.1016/j.patter.2023.100804' },
+    { title: 'Dropout: A Simple Way to Prevent Neural Networks from Overfitting', authors: 'Srivastava, N., Hinton, G., Krizhevsky, A., Sutskever, I., Salakhutdinov, R.', year: 2014, url: 'https://jmlr.org/papers/v15/srivastava14a.html' },
   ],
 });

@@ -324,8 +324,8 @@ The weights in this example were chosen by hand. In a real network they are lear
 
   sources: [
     { title: 'The perceptron: a probabilistic model for information storage and organization in the brain', authors: 'Rosenblatt, F.', year: 1958, url: 'https://doi.org/10.1037/h0042519' },
-    { title: 'Perceptrons: An Introduction to Computational Geometry', authors: 'Minsky, M., Papert, S.', year: 1969 },
-    { title: 'Artificial Intelligence: A General Survey (informe Lighthill, Science Research Council)', authors: 'Lighthill, J.', year: 1973 },
-    { title: 'What is science for? The Lighthill report on artificial intelligence reinterpreted', authors: 'Agar, J.', year: 2020 },
+    { title: 'Perceptrons: An Introduction to Computational Geometry', authors: 'Minsky, M., Papert, S.', year: 1969, url: 'https://mitpress.mit.edu/9780262631112/perceptrons/' },
+    { title: 'Artificial Intelligence: A General Survey (informe Lighthill, Science Research Council)', authors: 'Lighthill, J.', year: 1973, url: 'http://www.chilton-computing.org.uk/inf/literature/reports/lighthill_report/p001.htm' },
+    { title: 'What is science for? The Lighthill report on artificial intelligence reinterpreted', authors: 'Agar, J.', year: 2020, url: 'https://doi.org/10.1017/S0007087420000230' },
   ],
 });

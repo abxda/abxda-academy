@@ -66,9 +66,15 @@ export default defineLesson({
     },
     {
       id: 'fragile',
-      es: 'Acertar con lo ya visto es fácil; lo que cuenta es acertar con lo nuevo. A eso se le llama generalizar. Compara tus dos cifras.',
-      en: 'Getting the seen cases right is easy; what counts is getting new cases right. That is called generalizing. Compare your two figures.',
+      es: 'Lo que cuenta es acertar con lo nuevo: a eso se le llama generalizar. Compara tus dos cifras: cuanto más afinas la regla con los treinta, más suele bajar la segunda.',
+      en: 'What counts is getting new cases right: that is called generalizing. Compare your two figures: the more you tune the rule to the thirty, the more the second one tends to drop.',
       note: { es: 'Generalizar: acertar con casos que nunca vio.', en: 'Generalizing: getting right cases it has never seen.' },
+    },
+    {
+      id: 'best-rule',
+      es: 'Con estos deslizadores hay trescientas sesenta reglas posibles. Las mejores aciertan veintiocho de treinta; con los sesenta nuevos, esas mismas aciertan entre cuarenta y siete y cincuenta y dos.',
+      en: 'These sliders allow three hundred sixty possible rules. The best ones get twenty-eight of thirty; on the sixty new emails, those same rules get between forty-seven and fifty-two.',
+      pad: 0.4,
     },
     {
       id: 'programming',
@@ -129,8 +135,8 @@ export default defineLesson({
     },
     {
       id: 'train-result',
-      es: 'Nadie escribió esta regla: la máquina la encontró en los ejemplos. Comparemos las dos con los correos vistos y con los nuevos.',
-      en: 'Nobody wrote this rule: the machine found it in the examples. Let’s compare the two on seen and new emails.',
+      es: 'Nadie escribió esta regla: la máquina la encontró en los ejemplos. Con solo dos medidas, una persona paciente puede igualarla. Compáralas con los correos vistos y con los nuevos.',
+      en: 'Nobody wrote this rule: the machine found it in the examples. With only two measures, a patient person can match it. Compare both on the seen and the new emails.',
       pad: 0.4,
     },
     {
@@ -145,8 +151,8 @@ export default defineLesson({
     },
     {
       id: 'more-data',
-      es: 'Con muy pocos ejemplos acierta todos los que vio y aun así falla más con los nuevos; la recta cambia mucho. Con más, se estabiliza.',
-      en: 'With very few examples it gets every one it saw right and still does worse on the new ones; the line swings a lot. With more, it settles.',
+      es: 'Con muy pocos ejemplos acierta todos los que vio y aun así falla más con los nuevos; la recta cambia mucho. Con más, las dos cifras se acercan.',
+      en: 'With very few examples it gets every one it saw right and still does worse on the new ones; the line swings a lot. With more, the two figures move closer.',
       pad: 0.4,
     },
     {
@@ -204,14 +210,14 @@ export default defineLesson({
       'Programar es escribir reglas: reglas + datos → respuestas. Aprender invierte el flujo: datos + respuestas → reglas.',
       'Un modelo es una forma de regla con números ajustables, los parámetros. Entrenar es buscar esos números a partir de ejemplos con respuesta.',
       'Usar un modelo ya entrenado (inferencia) es aplicar sus parámetros fijos a un caso nuevo. En ese momento no aprende nada.',
-      'Lo que importa es generalizar: acertar con casos nuevos. Medir con los mismos ejemplos del entrenamiento engaña.',
+      'Lo que importa es generalizar: acertar con casos nuevos. Medir con los mismos ejemplos del entrenamiento suele dar una cifra optimista.',
       'El modelo aprende lo que muestran los ejemplos: si están mal anotados o sesgados, la regla aprendida sale torcida.',
     ],
     en: [
       'Programming is writing rules: rules + data → answers. Learning flips the flow: data + answers → rules.',
       'A model is a form of rule with adjustable numbers, the parameters. Training is the search for those numbers from examples with answers.',
       'Using a trained model (inference) means applying its frozen parameters to a new case. It learns nothing at that moment.',
-      'What matters is generalizing: getting new cases right. Measuring on the very examples used for training is misleading.',
+      'What matters is generalizing: getting new cases right. Measuring on the very examples used for training tends to give an optimistic figure.',
       'The model learns what the examples show: if they are mislabeled or biased, the rule it learns comes out bent.',
     ],
   },
@@ -250,17 +256,23 @@ Los parámetros son $\\theta = (w_1, w_2, b)$ y la frontera $w_1 x_1 + w_2 x_2 +
 
 $$L(\\theta) = -\\frac{1}{n}\\sum_{i=1}^{n}\\Big[\\,y_i \\ln p_i + (1-y_i)\\ln(1-p_i)\\,\\Big]$$
 
-Cada paso mueve los parámetros en contra del gradiente, $\\theta \\leftarrow \\theta - \\eta\\,\\nabla L(\\theta)$ (lección 4). En la escena: $\\eta = 0{,}5$, 300 pasos, medidas estandarizadas y los 30 ejemplos. El resultado, en las unidades originales, es $w_1 \\approx 0{,}69$, $w_2 \\approx 0{,}53$ y $b \\approx -9{,}63$. La exactitud es aciertos entre total: 27 de 30 con los ejemplos y 52 de 60 con los nuevos. Los datos son sintéticos, inventados para ilustrar; no son correos reales.
+Cada paso mueve los parámetros en contra del gradiente, $\\theta \\leftarrow \\theta - \\eta\\,\\nabla L(\\theta)$ (lección 4). En la escena: $\\eta = 0{,}5$, 300 pasos y los 30 ejemplos, con las medidas estandarizadas, $(x_1 - 3{,}5)/2{,}5$ y $(x_2 - 14)/8$, y un punto de partida arbitrario. El resultado, en las unidades originales, es $w_1 \\approx 0{,}69$, $w_2 \\approx 0{,}53$ y $b \\approx -9{,}63$. La exactitud es aciertos entre total: 27 de 30 con los ejemplos y 52 de 60 con los nuevos. Los datos son sintéticos, inventados para ilustrar; no son correos reales.
 
 La regla a mano de la lección, «spam si $x_1 \\ge a$ o $x_2 \\ge b$», tampoco es gratuita: también tiene parámetros, los dos umbrales. Aprender es dejar que los datos los fijen en lugar de ajustarlos a ojo.
 
 ## Por qué la cifra con los ejemplos engaña
 
-La exactitud medida con los mismos ejemplos que sirvieron para ajustar es optimista. En la lección, la mejor de las $10 \\times 36 = 360$ reglas que permiten los deslizadores acierta 28 de los 30 ejemplos ($\\approx 93\\,\\%$), pero con los 60 correos nuevos esas reglas óptimas aciertan entre 47 y 52 ($\\approx 78\\,\\%$ a $87\\,\\%$). Cuantas más opciones se prueban sobre los mismos datos, más se ajusta uno al azar de esos datos. Con pocos ejemplos pasa algo parecido: el modelo acierta todos los que vio y falla más con los nuevos. Separar entrenamiento, validación y prueba, y medir bien, es el tema de la lección 10.
+La exactitud medida con los mismos ejemplos que sirvieron para ajustar es, en promedio, optimista. En la lección, la mejor de las $10 \\times 36 = 360$ reglas que permiten los deslizadores acierta 28 de los 30 ejemplos ($\\approx 93\\,\\%$); hay seis empatadas y, con los 60 correos nuevos, esas seis aciertan entre 47 y 52 ($\\approx 78\\,\\%$ a $87\\,\\%$). Entre las 84 reglas que aciertan 24 o más de los 30, 58 bajan con los nuevos, 16 suben y 10 quedan igual; el cambio medio es de $-3{,}2$ puntos porcentuales. Es una tendencia, no una ley: con solo 60 correos nuevos cada cifra es ruidosa, y una regla afinada con cuidado puede aguantar («enlaces $\\ge 5$ o mayúsculas $\\ge 17\\,\\%$» acierta 27 de 30 y 54 de 60). Cuantas más opciones se prueban sobre los mismos datos, más se ajusta uno al azar de esos datos.
+
+Con pocos ejemplos pasa algo parecido. Con 4 ejemplos, el modelo acierta los 4 que vio y 48 de los 60 nuevos ($80\\,\\%$); con los 30, acierta 27 de 30 ($90\\,\\%$) y 52 de 60 ($87\\,\\%$): las dos cifras se acercan. Separar entrenamiento, validación y prueba, y medir bien, es el tema de la lección 10.
 
 ## Samuel y las damas (1959)
 
-El nombre *machine learning* se asocia a Arthur L. Samuel, que lo usa en el título de «Some Studies in Machine Learning Using the Game of Checkers» (IBM Journal of Research and Development, julio de 1959). Su programa puntuaba cada posición del tablero con una suma ponderada de rasgos del tablero (un «polinomio lineal», en sus palabras), y el aprendizaje consistía en determinar el signo y la magnitud de los coeficientes que multiplican esos rasgos: la misma forma de modelo que en esta lección. En la versión que describe había 38 términos candidatos, de los que 16 estaban activos a la vez. El resumen afirma que una computadora puede programarse para aprender a jugar mejor que la persona que escribió el programa, en 8 o 10 horas de juego de la máquina y dadas solo las reglas del juego, un sentido de dirección y una lista redundante e incompleta de parámetros. Y el propio artículo plantea el objetivo: programar las computadoras para que aprendan de la experiencia «debería eliminar con el tiempo la necesidad de buena parte de este esfuerzo de programación detallada» (traducción nuestra). La frase muy repetida «el campo de estudio que da a las computadoras la capacidad de aprender sin ser programadas explícitamente» se le atribuye con frecuencia, pero no figura en ese artículo.
+El nombre *machine learning* se asocia a Arthur L. Samuel, que lo usa en el título de «Some Studies in Machine Learning Using the Game of Checkers» (IBM Journal of Research and Development, vol. 3, n.º 3, julio de 1959). Su programa, en una IBM 704, elegía jugadas mirando varias jugadas por delante y puntuaba cada posición del tablero con un «polinomio lineal», en sus palabras: una suma ponderada de rasgos del tablero. En una de sus dos formas de aprendizaje (la «generalización») el programa determinaba el signo y la magnitud de los coeficientes que multiplican esos rasgos y escogía qué términos usar: la misma forma de modelo que en esta lección, aunque con otro fin (puntuar posiciones, no clasificar). En la versión que describe había 38 términos, además del de ventaja de piezas, de los que 16 estaban activos a la vez. El resumen afirma que una computadora puede programarse para aprender a jugar mejor que la persona que escribió el programa, en 8 o 10 horas de juego de la máquina y dadas solo las reglas del juego, un sentido de dirección y una lista redundante e incompleta de parámetros. Y el propio artículo plantea el objetivo: programar las computadoras para que aprendan de la experiencia «debería eliminar con el tiempo la necesidad de buena parte de este esfuerzo de programación detallada» (traducción nuestra). La frase muy repetida «el campo de estudio que da a las computadoras la capacidad de aprender sin ser programadas explícitamente» se le atribuye con frecuencia, pero no figura en ese artículo.
+
+## Un caso real: filtrar correo basura
+
+En 1998, Sahami, Dumais, Heckerman y Horvitz estudiaron cómo construir filtros de correo basura de forma automática. Señalan que las reglas escritas a mano suponen usuarios capaces de construirlas y deben ajustarse sin cesar a medida que cambia el correo basura, y proponen en cambio aprender de los mensajes del propio usuario. Su clasificador probabilístico (bayesiano ingenuo) combinaba el texto del mensaje con rasgos propios del problema, como el porcentaje de caracteres no alfanuméricos del asunto. Subrayan además que clasificar como basura un correo legítimo suele costar mucho más que dejar pasar uno de basura; por eso solo marcaban un mensaje como basura si su probabilidad superaba el 99,9 %.
 
 ## En código
 
@@ -290,15 +302,17 @@ for _ in range(2000):        # entrenar: muchas pasadas por los ejemplos
     w2 -= eta * g2 / n
     b -= eta * gb / n
 
-print(round(w1, 1), round(w2, 1), round(b, 1))
+print(round(w1, 1), round(w2, 1), round(b, 1))   # pesos en la escala 0-1 de las medidas
 # usar: parámetros fijos, solo aritmética
-for enlaces, mayus in [(1, 6), (8, 12), (3, 35)]:
+for enlaces, mayus in [(1, 6), (8, 12), (5, 30)]:
     s = puntaje(w1, w2, b, enlaces / 10, mayus / 100)
-    print((enlaces, mayus), 'spam' if s > 0 else 'normal')
+    print((enlaces, mayus), round(s, 1), 'spam' if s > 0 else 'normal')
 # 7.7 2.8 -3.3
-# (1, 6) normal
-# (8, 12) spam
-# (3, 35) spam
+# (1, 6) -2.3 normal
+# (8, 12) 3.3 spam
+# (5, 30) 1.5 spam
+# Estos 8 ejemplos se separan del todo: con más pasos los pesos seguirían creciendo;
+# 2000 bastan para clasificarlos bien.
 \`\`\`
 
 ## Lo que viene
@@ -327,17 +341,23 @@ The parameters are $\\theta = (w_1, w_2, b)$ and the boundary $w_1 x_1 + w_2 x_2
 
 $$L(\\theta) = -\\frac{1}{n}\\sum_{i=1}^{n}\\Big[\\,y_i \\ln p_i + (1-y_i)\\ln(1-p_i)\\,\\Big]$$
 
-Each step moves the parameters against the gradient, $\\theta \\leftarrow \\theta - \\eta\\,\\nabla L(\\theta)$ (lesson 4). In the scene: $\\eta = 0.5$, 300 steps, standardized measures, and the 30 examples. The result, in the original units, is $w_1 \\approx 0.69$, $w_2 \\approx 0.53$ and $b \\approx -9.63$. Accuracy is hits divided by total: 27 of 30 on the examples and 52 of 60 on the new emails. The data is synthetic, made up for illustration; these are not real emails.
+Each step moves the parameters against the gradient, $\\theta \\leftarrow \\theta - \\eta\\,\\nabla L(\\theta)$ (lesson 4). In the scene: $\\eta = 0.5$, 300 steps, and the 30 examples, with the measures standardized, $(x_1 - 3.5)/2.5$ and $(x_2 - 14)/8$, and an arbitrary starting point. The result, in the original units, is $w_1 \\approx 0.69$, $w_2 \\approx 0.53$ and $b \\approx -9.63$. Accuracy is hits divided by total: 27 of 30 on the examples and 52 of 60 on the new emails. The data is synthetic, made up for illustration; these are not real emails.
 
 The hand-written rule in the lesson, “spam if $x_1 \\ge a$ or $x_2 \\ge b$”, is not free either: it also has parameters, the two thresholds. Learning means letting the data set them instead of tuning them by eye.
 
 ## Why the figure on the examples is misleading
 
-Accuracy measured on the very examples used for tuning is optimistic. In the lesson, the best of the $10 \\times 36 = 360$ rules the sliders allow gets 28 of the 30 examples right ($\\approx 93\\,\\%$), but on the 60 new emails those optimal rules get between 47 and 52 right ($\\approx 78\\,\\%$ to $87\\,\\%$). The more options you try on the same data, the more you fit the luck of that data. Something similar happens with few examples: the model gets every one it saw right and does worse on the new ones. Splitting training, validation, and test data, and measuring well, is the topic of lesson 10.
+Accuracy measured on the very examples used for tuning is, on average, optimistic. In the lesson, the best of the $10 \\times 36 = 360$ rules the sliders allow gets 28 of the 30 examples right ($\\approx 93\\,\\%$); six rules tie, and on the 60 new emails those six get between 47 and 52 right ($\\approx 78\\,\\%$ to $87\\,\\%$). Among the 84 rules that get 24 or more of the 30 right, 58 drop on the new emails, 16 rise, and 10 stay the same; the average change is $-3.2$ percentage points. That is a tendency, not a law: with only 60 new emails each figure is noisy, and a carefully tuned rule can hold up (“links $\\ge 5$ or capitals $\\ge 17\\,\\%$” gets 27 of 30 and 54 of 60). The more options you try on the same data, the more you fit the luck of that data.
+
+Something similar happens with few examples. With 4 examples, the model gets the 4 it saw right and 48 of the 60 new ones ($80\\,\\%$); with all 30, it gets 27 of 30 ($90\\,\\%$) and 52 of 60 ($87\\,\\%$): the two figures move closer. Splitting training, validation, and test data, and measuring well, is the topic of lesson 10.
 
 ## Samuel and checkers (1959)
 
-The name *machine learning* is associated with Arthur L. Samuel, who uses it in the title of “Some Studies in Machine Learning Using the Game of Checkers” (IBM Journal of Research and Development, July 1959). His program scored each board position with a weighted sum of board features (a “linear polynomial,” in his words), and learning meant determining the sign and magnitude of the coefficients that multiply those features: the same form of model as in this lesson. In the version he describes there were 38 candidate terms, 16 of them active at any one time. The abstract states that a computer can be programmed to learn to play a better game of checkers than the person who wrote the program, in 8 or 10 hours of machine-playing time, given only the rules of the game, a sense of direction, and a redundant and incomplete list of parameters. And the paper itself states the goal: programming computers to learn from experience “should eventually eliminate the need for much of this detailed programming effort.” The oft-repeated phrase “the field of study that gives computers the ability to learn without being explicitly programmed” is frequently attributed to him, but it does not appear in that paper.
+The name *machine learning* is associated with Arthur L. Samuel, who uses it in the title of “Some Studies in Machine Learning Using the Game of Checkers” (IBM Journal of Research and Development, vol. 3, no. 3, July 1959). His program, on an IBM 704, chose moves by looking several moves ahead and scored each board position with a “linear polynomial,” in his words: a weighted sum of board features. In one of his two forms of learning (“generalization”), the program determined the sign and magnitude of the coefficients that multiply those features and chose which terms to use: the same form of model as in this lesson, though with a different purpose (scoring positions, not classifying). In the version he describes there were 38 terms, besides the piece-advantage term, 16 of them active at any one time. The abstract states that a computer can be programmed to learn to play a better game of checkers than the person who wrote the program, in 8 or 10 hours of machine-playing time, given only the rules of the game, a sense of direction, and a redundant and incomplete list of parameters. And the paper itself states the goal: programming computers to learn from experience “should eventually eliminate the need for much of this detailed programming effort.” The oft-repeated phrase “the field of study that gives computers the ability to learn without being explicitly programmed” is frequently attributed to him, but it does not appear in that paper.
+
+## A real case: filtering junk mail
+
+In 1998, Sahami, Dumais, Heckerman, and Horvitz studied how to build junk-mail filters automatically. They point out that hand-written rules assume users who can build them and must be tuned constantly as junk mail changes, and they propose learning from the user’s own messages instead. Their probabilistic classifier (naive Bayes) combined the text of the message with problem-specific features, such as the percentage of non-alphanumeric characters in the subject. They also stress that classifying a legitimate email as junk usually costs far more than letting a junk one through; so they only marked a message as junk if its probability exceeded 99.9%.
 
 ## In code
 
@@ -367,15 +387,17 @@ for _ in range(2000):        # training: many passes over the examples
     w2 -= eta * g2 / n
     b -= eta * gb / n
 
-print(round(w1, 1), round(w2, 1), round(b, 1))
+print(round(w1, 1), round(w2, 1), round(b, 1))   # weights on the 0-1 scale of the measures
 # using it: frozen parameters, just arithmetic
-for links, caps in [(1, 6), (8, 12), (3, 35)]:
+for links, caps in [(1, 6), (8, 12), (5, 30)]:
     s = score(w1, w2, b, links / 10, caps / 100)
-    print((links, caps), 'spam' if s > 0 else 'legit')
+    print((links, caps), round(s, 1), 'spam' if s > 0 else 'legit')
 # 7.7 2.8 -3.3
-# (1, 6) legit
-# (8, 12) spam
-# (3, 35) spam
+# (1, 6) -2.3 legit
+# (8, 12) 3.3 spam
+# (5, 30) 1.5 spam
+# These 8 examples are perfectly separable: with more steps the weights would keep growing;
+# 2000 are enough to classify them correctly.
 \`\`\`
 
 ## What comes next
@@ -388,13 +410,13 @@ In lesson 2 we will see how any data (an image, a sound, a text) is turned into 
       'Aprender de datos conviene cuando la regla es difícil de escribir, hay muchos ejemplos con respuesta y algún error es tolerable. Si la ley o un procedimiento fijan la regla y un error es inaceptable, escribe la regla.',
       'Todo parte de ejemplos con respuesta: pregunta quién los anotó, cuántos son y si se parecen a los casos reales. Si están mal anotados o sesgados, el modelo aprende ese error, como vimos con cuatro etiquetas torcidas.',
       'Exige la cifra de acierto medida con casos que el modelo nunca vio, no con los datos de entrenamiento. Una demostración con los mismos datos del ajuste no dice cómo funcionará en la operación real.',
-      'Separa costos y errores: entrenar es un gasto grande y poco frecuente; usar el modelo es un gasto pequeño que se repite en cada consulta. Y no todos los errores cuestan igual: marcar como spam un correo legítimo suele costar más que dejar pasar uno de spam.',
+      'Separa costos y errores: entrenar es un gasto grande y poco frecuente; usar el modelo es un gasto pequeño que se repite en cada consulta. Y no todos los errores cuestan igual: marcar como spam un correo legítimo suele costar más que dejar pasar uno de spam, y así lo planteaban ya Sahami y colaboradores en 1998.',
     ],
     en: [
       'Learning from data makes sense when the rule is hard to write, there are many examples with answers, and some errors are tolerable. If a law or a procedure fixes the rule and an error is unacceptable, write the rule.',
       'It all starts with examples that have answers: ask who labeled them, how many there are, and whether they resemble real cases. If they are mislabeled or biased, the model learns that error, as we saw with four bent labels.',
       'Demand the accuracy figure measured on cases the model never saw, not on the training data. A demo on the same data used for tuning does not tell you how it will work in real operation.',
-      'Separate costs and errors: training is a large, infrequent expense; using the model is a small expense repeated on every query. And not all errors cost the same: flagging a legitimate email as spam usually costs more than letting a spam email through.',
+      'Separate costs and errors: training is a large, infrequent expense; using the model is a small expense repeated on every query. And not all errors cost the same: flagging a legitimate email as spam usually costs more than letting a spam email through, as Sahami and colleagues already argued in 1998.',
     ],
   },
 
@@ -481,7 +503,7 @@ In lesson 2 we will see how any data (an image, a sound, a text) is turned into 
   sources: [
     { title: 'Some Studies in Machine Learning Using the Game of Checkers', authors: 'Samuel, A. L.', year: 1959, url: 'https://doi.org/10.1147/rd.33.0210' },
     { title: 'Machine Learning (McGraw-Hill)', authors: 'Mitchell, T. M.', year: 1997 },
-    { title: 'A Bayesian Approach to Filtering Junk E-Mail (AAAI-98 Workshop on Learning for Text Categorization, WS-98-05)', authors: 'Sahami, M., Dumais, S., Heckerman, D., Horvitz, E.', year: 1998 },
+    { title: 'A Bayesian Approach to Filtering Junk E-Mail (AAAI-98 Workshop on Learning for Text Categorization, WS-98-05)', authors: 'Sahami, M., Dumais, S., Heckerman, D., Horvitz, E.', year: 1998, url: 'https://cdn.aaai.org/Workshops/1998/WS-98-05/WS98-05-009.pdf' },
     { title: 'Deep Learning, capítulo 5: Machine Learning Basics', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
   ],
 });
