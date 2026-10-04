@@ -22,4 +22,5 @@ export const PUBLISHED: string[] = [
   'embeddings',
   'alucinaciones-y-limites',
   'alineacion',
+  'que-es-aprender',
 ];

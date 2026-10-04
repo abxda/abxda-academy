@@ -166,11 +166,12 @@ export function legend(S: Frame, x: number, y: number, w: number, o: { fresh?: b
 export interface BarRow { name: string; tone: Tone; seen: number; fresh: number; freshOn?: number; range?: [number, number] }
 export function groupBars(S: Frame, r: Rect, rows: BarRow[], o: { seenLabel: string; freshLabel: string }) {
   const { d, pal: p } = S, k = kk(S), size = fz(S, 12), anyRange = rows.some((q) => q.range), vw = (anyRange ? 62 : 40) * k, lw = Math.min(70 * k, r.w * 0.28);
+  const step = (S.portrait && rows.length > 1 ? 16 : 18) * k;   // en vertical, con dos filas, las barras se compactan para que quepa la leyenda
   let y = r.y;
   rows.forEach((row) => {
     const t = tone(S, row.tone);
     d.text(row.name, r.x, y, { size: fz(S, 13), weight: 800, color: t.ink, base: 'top', w: r.w });
-    y += 18 * k;
+    y += step;
     ([[o.seenLabel, row.seen, 1], [o.freshLabel, row.fresh, row.freshOn ?? 1]] as [string, number, number][]).forEach(([nm, v, on], j) => {
       const bx = r.x + lw, bw = r.w - lw - vw, bh = 12 * k;
       d.text(nm, r.x + lw - 6 * k, y + bh / 2, { size, weight: 600, color: p.ink2, align: 'right', base: 'middle' });
@@ -186,9 +187,9 @@ export function groupBars(S: Frame, r: Rect, rows: BarRow[], o: { seenLabel: str
         const txt = j === 1 && row.range ? `${S.n(row.range[0] * 100, 0)}–${S.n(row.range[1] * 100, 0)}${S.lang === 'es' ? ' %' : '%'}` : pct(S, v);
         d.text(txt, bx + bw + 6 * k, y + bh / 2, { size, weight: 700, font: 'mono', color: p.ink, base: 'middle' });
       });
-      y += 18 * k;
+      y += step;
     });
-    y += 6 * k;
+    y += (step < 18 * k ? 3 : 6) * k;
   });
   return y - r.y;
 }

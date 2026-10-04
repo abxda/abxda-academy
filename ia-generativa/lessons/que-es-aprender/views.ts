@@ -121,14 +121,15 @@ export function drawTvu(S: Frame) {
     [S.l('Costo por vez', 'Cost each time'), S.l('alto', 'high'), S.l('bajo', 'low'), 0.4],
     [S.l('Frecuencia', 'How often'), S.l('pocas veces', 'rarely'), S.l('sin parar', 'nonstop'), 0.62],
   ];
-  const mx = (S.portrait ? 12 : 40) * k, tw = W - 2 * mx, lw = tw * (S.portrait ? 0.27 : 0.2), cw = (tw - lw) / 2, rh = clamp((H - 90 * k) / 5, 38 * k, 62 * k), y0 = (H - rh * 5) / 2 + 6 * k;
+  const mx = (S.portrait ? 12 : 40) * k, tw = W - 2 * mx, lw = tw * (S.portrait ? 0.27 : 0.2), cw = (tw - lw) / 2, rh = clamp((H - 90 * k) / 5, 38 * k, 62 * k);
+  const hh = S.portrait ? rh * 1.25 : rh, y0 = (H - (hh + rh * 4)) / 2 + 6 * k;   // en vertical el encabezado «Usar (inferencia)» ocupa dos líneas: se le da más alto
   const heads: [string, Tone, number, number][] = [[S.l('Entrenar', 'Train'), 'w', 0, 0.04], [S.l('Usar (inferencia)', 'Use (inference)'), 'sig', 1, 0.1]];
   heads.forEach(([txt, tn, i, at]) => {
     const t = tone(S, tn), a = fr(S, 'train-vs-use', at, at + 0.08);
-    d.withAlpha(a, () => { d.rect(mx + lw + i * cw + 3 * k, y0, cw - 6 * k, rh - 6 * k, { fill: alpha(t.c, 0.16), stroke: t.c, lw: 2, r: 3 }); d.text(txt, mx + lw + i * cw + cw / 2, y0 + (rh - 6 * k) / 2, { size: fz(S, 18), weight: 800, color: t.ink, align: 'center', base: 'middle', w: cw - 14 * k }); });
+    d.withAlpha(a, () => { d.rect(mx + lw + i * cw + 3 * k, y0, cw - 6 * k, hh - 6 * k, { fill: alpha(t.c, 0.16), stroke: t.c, lw: 2, r: 3 }); d.text(txt, mx + lw + i * cw + cw / 2, y0 + (hh - 6 * k) / 2, { size: fz(S, S.portrait ? 16 : 18), weight: 800, color: t.ink, align: 'center', base: 'middle', w: cw - 14 * k }); });
   });
   rows.forEach(([nm, a1, a2, at], i) => {
-    const y = y0 + (i + 1) * rh, a = fr(S, 'train-vs-use', at, at + 0.08);
+    const y = y0 + hh + i * rh, a = fr(S, 'train-vs-use', at, at + 0.08);
     d.withAlpha(a, () => {
       d.line(mx, y - 3 * k, mx + tw, y - 3 * k, p.line, 1);
       d.text(nm, mx + 4 * k, y + (rh - 6 * k) / 2, { size: fz(S, 14), weight: 700, color: p.mute, base: 'middle', w: lw - 8 * k });

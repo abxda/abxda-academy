@@ -2,13 +2,15 @@
 // una sola vez (por clave) y la escena la reproduce como una función del tiempo. Cada 10 pasos se guarda una instantánea
 // (mapa de decisión, habilidades, ΔW y, en LoRA, B y A) para animar y para saltar a cualquier punto de la lección.
 import { BASE } from './base';
+import { BASE_NF4 } from './quant';
 import { FT, REPLAY, mapOf, skills, type RuleId } from './task';
 import { Tuner, deltaW, type Lora } from './tinynet';
 
 export type Mode = 'full' | number;           // 'full' = ajuste completo; número = rango r de LoRA (sobre la capa W2)
-export interface Spec { mode: Mode; replay: boolean; rule: RuleId }
+/** `q`: la base congelada va guardada en 4 bits (QLoRA a escala diminuta); solo tiene sentido con LoRA. */
+export interface Spec { mode: Mode; replay: boolean; rule: RuleId; q?: boolean }
 export const STEPS = 300, EVERY = 10, LR = 0.01, SEED = 5;
-export const specKey = (s: Spec) => `${s.rule}|${s.mode}|${s.replay ? 'R' : 'n'}`;
+export const specKey = (s: Spec) => `${s.rule}|${s.mode}|${s.replay ? 'R' : 'n'}${s.q ? '|q' : ''}`;
 
 export interface Snap { step: number; pred: Uint8Array; newSk: number; oldSk: number; dW: number[]; A: number[] | null; B: number[] | null; r: number }
 
@@ -25,7 +27,7 @@ export class Run {
     this.spec = spec;
     const data = [...FT[spec.rule], ...(spec.replay ? REPLAY[spec.rule] : [])];
     this.n = data.length;
-    this.tuner = new Tuner(BASE, data, spec.mode === 'full' ? { full: true } : { r: spec.mode, seed: SEED, alpha: spec.mode }, LR);
+    this.tuner = new Tuner(spec.q ? BASE_NF4 : BASE, data, spec.mode === 'full' ? { full: true } : { r: spec.mode, seed: SEED, alpha: spec.mode }, LR);
     this.trainable = this.tuner.trainable;
     this.snaps.push(snapOf(0, this.tuner, spec.rule, null));
   }

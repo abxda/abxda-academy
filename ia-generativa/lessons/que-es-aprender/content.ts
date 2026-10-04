@@ -45,8 +45,8 @@ export default defineLesson({
     },
     {
       id: 'try-rule',
-      es: 'Tu turno: mueve los dos umbrales y busca la regla que clasifique bien más de esos treinta correos.',
-      en: 'Your turn: move the two thresholds and find the rule that classifies the most of those thirty emails correctly.',
+      es: 'Tu turno: mueve los dos umbrales con los deslizadores de abajo y busca la regla que clasifique bien más de esos treinta correos.',
+      en: 'Your turn: move the two thresholds with the sliders below and find the rule that classifies the most of those thirty emails correctly.',
       gate: {
         id: 'rule',
         prompt: { es: 'Mueve los umbrales hasta acertar 24 de 30 o más.', en: 'Move the thresholds until you get 24 of 30 or more right.' },
@@ -141,8 +141,8 @@ export default defineLesson({
     },
     {
       id: 'try-data',
-      es: 'Tu turno: cambia con cuántos ejemplos aprende la máquina. Baja a pocos, vuelve a subir y compara con los correos nuevos.',
-      en: 'Your turn: change how many examples the machine learns from. Go down to a few, back up, and compare on the new emails.',
+      es: 'Tu turno: con el deslizador de abajo, cambia con cuántos ejemplos aprende la máquina. Baja a pocos, vuelve a subir y compara con los nuevos.',
+      en: 'Your turn: with the slider below, change how many examples the machine learns from. Go down to a few, back up, and compare on the new emails.',
       gate: {
         id: 'data',
         prompt: { es: 'Baja a 8 ejemplos o menos y vuelve a subir a 26 o más.', en: 'Go down to 8 examples or fewer, then back up to 26 or more.' },
@@ -502,8 +502,8 @@ In lesson 2 we will see how any data (an image, a sound, a text) is turned into 
 
   sources: [
     { title: 'Some Studies in Machine Learning Using the Game of Checkers', authors: 'Samuel, A. L.', year: 1959, url: 'https://doi.org/10.1147/rd.33.0210' },
-    { title: 'Machine Learning (McGraw-Hill)', authors: 'Mitchell, T. M.', year: 1997 },
+    { title: 'Machine Learning (McGraw-Hill)', authors: 'Mitchell, T. M.', year: 1997, url: 'https://www.cs.cmu.edu/~tom/mlbook.html' },
     { title: 'A Bayesian Approach to Filtering Junk E-Mail (AAAI-98 Workshop on Learning for Text Categorization, WS-98-05)', authors: 'Sahami, M., Dumais, S., Heckerman, D., Horvitz, E.', year: 1998, url: 'https://cdn.aaai.org/Workshops/1998/WS-98-05/WS98-05-009.pdf' },
-    { title: 'Deep Learning, capítulo 5: Machine Learning Basics', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
+    { title: 'Deep Learning, capítulo 5: Machine Learning Basics', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/ml.html' },
   ],
 });

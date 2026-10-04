@@ -208,12 +208,14 @@ function drawV1(S: Frame, hand: { a: number; b: number }) {
     const row: BarRow = { name: S.l('Tu regla', 'Your rule'), tone: 'ink', seen: hits / 30, fresh: fh / 60, freshOn: fr(S, 'unseen', 0.84, 0.92, 'lin') };
     const rows: BarRow[] = [row];
     if (S.on('best-rule')) rows.push({ name: S.l('La mejor regla posible', 'The best possible rule'), tone: 'ink', seen: BEST.seen / 30, fresh: BEST.freshHi / 60, range: [BEST.freshLo / 60, BEST.freshHi / 60], freshOn: fr(S, 'best-rule', 0.5, 0.62, 'lin') });
-    cells.push({ k: 'lockText', text: S.l('regla fija', 'rule is frozen'), a: fr(S, 'unseen', 0.4, 0.5) }, { k: 'bars', rows, seen: S.l('vistos', 'seen'), fresh: S.l('nuevos', 'new') }, { k: 'legend', fresh: true, ring: true });
-    if (S.on('fragile')) {
+    const tight = S.portrait && S.on('best-rule');   // en vertical la franja inferior es baja: con las dos filas de barras se quita lo que ya se dijo
+    if (!tight) cells.push({ k: 'lockText', text: S.l('regla fija', 'rule is frozen'), a: fr(S, 'unseen', 0.4, 0.5) });
+    cells.push({ k: 'bars', rows, seen: S.l('vistos', 'seen'), fresh: S.l('nuevos', 'new') }, { k: 'legend', fresh: true, ring: true });
+    if (S.on('fragile') && !tight) {
       // la diferencia depende de la regla que dejó la persona: el texto no afirma lo que la cifra no muestra
       const sd = Math.abs(dp) < 0.5 ? S.l('nuevos − vistos: sin cambio', 'new − seen: no change') : S.l(`nuevos − vistos: ${signed(S, dp, 0)} puntos`, `new − seen: ${signed(S, dp, 0)} points`);
       cells.push({ k: 'text', mono: true, tone: dp < -0.5 ? 'err' : 'dat', a: fr(S, 'fragile', 0.78, 0.88), text: sd });
-      if (dp > -0.5 && !S.on('best-rule')) cells.push({ k: 'text', a: fr(S, 'fragile', 0.84, 0.94), text: S.l('Esta vez no bajó: es una tendencia, no una ley.', 'This time it did not drop: a tendency, not a law.') });
+      if (dp > -0.5 && !S.on('best-rule') && !S.portrait) cells.push({ k: 'text', a: fr(S, 'fragile', 0.84, 0.94), text: S.l('Esta vez no bajó: es una tendencia, no una ley.', 'This time it did not drop: a tendency, not a law.') });
     }
   }
   flow(S, R.aside, cells, aA);
