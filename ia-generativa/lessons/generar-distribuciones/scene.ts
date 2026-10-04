@@ -373,10 +373,8 @@ function drawPix(S: Frame) {
 
 function drawVector(S: Frame) {
   const { d, pal: p } = S, u = S.u, Rg = R_(S, 0.56, 0.6), im = L.img(HOOK[0]);
-  const lay = tileLayout(Rg.main, 1, { maxCell: 52, valign: 'center' });
-  const cell = Math.max(S.portrait ? 30 : 34, lay.cell);
-  const fits = lay.cell >= 30, c2 = fits ? lay.cell : lay.cell;
-  void cell;
+  const lay = tileLayout({ x: Rg.main.x, y: Rg.main.y + 26 * u, w: Rg.main.w, h: Rg.main.h - 26 * u }, 1, { maxCell: 52, valign: 'center' });
+  const c2 = lay.cell;
   const q = lay.pos(0);
   digit(S, q.x, q.y, im, c2, { a: S.reveal('not-image', 0.1, 0.5), values: c2 >= 26 && S.on('not-image') && S.since('not-image') > 0.9 });
   d.text(S.l('8 × 8 = 64 píxeles', '8 × 8 = 64 pixels'), q.x, q.y - 8 * u, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'bottom', a: S.reveal('not-image', 0.2, 0.5) });
@@ -426,19 +424,20 @@ function aeLay(S: Frame): AeLay {
   const u = S.u, R = inset(S.full(), 14 * u, 14 * u);
   if (!S.portrait) {
     const cell = Math.max(4, Math.min(8, Math.floor(R.h * 0.3 / 8))), im = 8 * cell, cy = R.y + R.h * 0.4, bh = Math.min(120 * u, R.h * 0.4);
-    const encW = R.w * 0.2, codeW = R.w * 0.13, gap = (R.w - 2 * im - 2 * encW - codeW) / 4;
+    const encW = R.w * 0.2, codeW = Math.max(R.w * 0.13, 98), gap = (R.w - 2 * im - 2 * encW - codeW) / 4;
     const x1 = R.x, x2 = x1 + im + gap, x3 = x2 + encW + gap, x4 = x3 + codeW + gap, x5 = x4 + encW + gap;
     return { hor: true, cell, img: { x: x1, y: cy - im / 2, w: im, h: im }, enc: { x: x2, y: cy - bh / 2, w: encW, h: bh }, code: { x: x3, y: cy - 34 * u, w: codeW, h: 68 * u }, dec: { x: x4, y: cy - bh / 2, w: encW, h: bh }, out: { x: x5, y: cy - im / 2, w: im, h: im }, err: { x: x5 + (im - im * 0.7) / 2, y: cy + im / 2 + 54 * u, w: im * 0.7, h: im * 0.7 } };
   }
-  const cell = 5, im = 8 * cell, cx = R.x + R.w / 2, bh = 40 * u, bw = Math.min(190 * u, R.w * 0.6);
-  const gaps = (R.h - 2 * im - 2 * bh - 50 * u) / 4;
-  let y = R.y + 14 * u;
-  const img = { x: cx - im - 24 * u, y, w: im, h: im }; y += im + gaps;
-  const enc = { x: cx - bw / 2, y, w: bw, h: bh }; y += bh + gaps;
-  const code = { x: cx - 64 * u, y, w: 128 * u, h: 50 * u }; y += 50 * u + gaps;
-  const dec = { x: cx - bw / 2, y, w: bw, h: bh }; y += bh + gaps;
-  const out = { x: cx - im - 24 * u, y, w: im, h: im };
-  return { hor: false, cell, img, enc, code, dec, out, err: { x: cx + 24 * u, y, w: im, h: im } };
+  // vertical: una columna (imagen → codificador → código → decodificador → reconstrucción) y los rótulos a su derecha, para que ninguna flecha cruce un texto
+  const cell = 5, im = 8 * cell, cx = R.x + R.w * 0.36, bh = 36 * u, bw = Math.min(180 * u, R.w * 0.5), codeH = 46 * u, codeW = 124 * u, lossH = 28 * u;
+  const gap = clamp((R.h - 4 * u - im * 2 - bh * 2 - codeH - lossH) / 4, 14 * u, 60 * u);
+  let y = R.y + 2 * u;
+  const img = { x: cx - im / 2, y, w: im, h: im }; y += im + gap;
+  const enc = { x: cx - bw / 2, y, w: bw, h: bh }; y += bh + gap;
+  const code = { x: cx - codeW / 2, y, w: codeW, h: codeH }; y += codeH + gap;
+  const dec = { x: cx - bw / 2, y, w: bw, h: bh }; y += bh + gap;
+  const out = { x: cx - im / 2, y, w: im, h: im };
+  return { hor: false, cell, img, enc, code, dec, out, err: { x: R.x + R.w - im - 2, y, w: im, h: im } };
 }
 function trap(S: Frame, r: Rect, hor: boolean, narrowEnd: boolean, label: string, a: number, active = 0) {
   const { d, pal: p } = S, t = tone(S, 'w'), k = 0.28;
@@ -456,8 +455,13 @@ function drawAE(S: Frame) {
   const cell = G.cell;
   // imagen de entrada
   digit(S, G.img.x, G.img.y, im, cell, { a: S.reveal('compress', 0.1, 0.5) });
-  d.text(S.l('imagen', 'image'), G.img.x + G.img.w / 2, G.img.y - 8 * u, { size: fs(S, 13), weight: 700, color: p.ink2, align: 'center', base: 'bottom', a: S.reveal('compress', 0.1, 0.5) });
-  d.text(S.l('64 números', '64 numbers'), G.img.x + G.img.w / 2, G.img.y + G.img.h + 6 * u, { size: fs(S, 12), color: p.mute, align: 'center', base: 'top', a: S.reveal('compress', 0.3, 0.5) });
+  if (G.hor) {
+    d.text(S.l('imagen', 'image'), G.img.x + G.img.w / 2, G.img.y - 8 * u, { size: fs(S, 13), weight: 700, color: p.ink2, align: 'center', base: 'bottom', a: S.reveal('compress', 0.1, 0.5) });
+    d.text(S.l('64 números', '64 numbers'), G.img.x + G.img.w / 2, G.img.y + G.img.h + 6 * u, { size: fs(S, 12), color: p.mute, align: 'center', base: 'top', a: S.reveal('compress', 0.3, 0.5) });
+  } else {
+    d.text(S.l('imagen', 'image'), G.img.x + G.img.w + 10 * u, G.img.y + G.img.h / 2 - 1, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'bottom', a: S.reveal('compress', 0.1, 0.5) });
+    d.text(S.l('64 números', '64 numbers'), G.img.x + G.img.w + 10 * u, G.img.y + G.img.h / 2 + 1, { size: fs(S, 12), color: p.mute, base: 'top', a: S.reveal('compress', 0.3, 0.5) });
+  }
   // codificador
   const aE = S.reveal('compress', 0.4, 0.6);
   trap(S, G.enc, G.hor, true, S.l('codificador', 'encoder'), aE, S.is('compress') ? 0.5 + 0.5 * Math.abs(Math.sin(S.clock * 3)) : 0);
@@ -469,7 +473,8 @@ function drawAE(S: Frame) {
     d.rect(c.x, c.y, c.w, c.h, { fill: lat.soft, stroke: lat.c, lw: 2, r: 3 });
     d.text(`z₁ = ${S.n(z[0], 1)}`, c.x + c.w / 2, c.y + c.h * 0.32, { size: fs(S, 14), weight: 800, font: 'mono', color: lat.ink, align: 'center', base: 'middle' });
     d.text(`z₂ = ${S.n(z[1], 1)}`, c.x + c.w / 2, c.y + c.h * 0.7, { size: fs(S, 14), weight: 800, font: 'mono', color: lat.ink, align: 'center', base: 'middle' });
-    d.text(S.l('código: 2 números', 'code: 2 numbers'), c.x + c.w / 2, c.y - 8 * u, { size: fs(S, 12.5), weight: 700, color: lat.ink, align: 'center', base: 'bottom' });
+    if (G.hor) d.text(S.l('código: 2 números', 'code: 2 numbers'), c.x + c.w / 2, c.y - 8 * u, { size: fs(S, 12.5), weight: 700, color: lat.ink, align: 'center', base: 'bottom' });
+    else d.text(S.l('código: 2 números', 'code: 2 numbers'), c.x + c.w + 10 * u, c.y + c.h / 2, { size: fs(S, 12.5), weight: 700, color: lat.ink, base: 'middle', w: S.W - (c.x + c.w + 10 * u) - 12 * u });
     const b = G.enc; if (G.hor) d.arrow(b.x + b.w + 3, c.y + c.h / 2, c.x - 2, c.y + c.h / 2, p.ink2, 2, 8); else d.arrow(c.x + c.w / 2, b.y + b.h + 3, c.x + c.w / 2, c.y - 2, p.ink2, 2, 8);
   });
   // decodificador y reconstrucción
@@ -481,7 +486,8 @@ function drawAE(S: Frame) {
     const b = G.dec, o = G.out;
     if (G.hor) d.arrow(b.x + b.w + 3, o.y + o.h / 2, o.x - 3, o.y + o.h / 2, p.ink2, 2, 8); else d.arrow(b.x + b.w / 2, b.y + b.h + 3, b.x + b.w / 2, o.y - 3 + (o.y - b.y - b.h < 8 ? 0 : 0), p.ink2, 2, 8);
     digit(S, o.x, o.y, rec, cell, { kind: 'model' });
-    d.text(S.l('reconstrucción', 'reconstruction'), o.x + o.w / 2, o.y - 8 * u, { size: fs(S, 13), weight: 700, color: p.ink2, align: 'center', base: 'bottom' });
+    if (G.hor) d.text(S.l('reconstrucción', 'reconstruction'), o.x + o.w / 2, o.y - 8 * u, { size: fs(S, 13), weight: 700, color: p.ink2, align: 'center', base: 'bottom' });
+    else d.text(S.l('reconstrucción', 'reconstruction'), o.x + o.w + 10 * u, o.y + o.h / 2, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'middle' });
   });
   // error de reconstrucción y pérdida
   const aL = S.reveal('autoencoder', 0.2, 0.7);
@@ -489,9 +495,9 @@ function drawAE(S: Frame) {
     const diff = Float32Array.from(im, (v, i) => Math.abs(v - rec[i]));
     const sse = Array.from(im).reduce((a, v, i) => a + (v - rec[i]) ** 2, 0), e = G.err, errT = tone(S, 'err');
     digit(S, e.x, e.y, diff, Math.max(3, Math.floor(e.w / 8)), { tone: 'err', hl: 'err' });
-    d.text(S.l('diferencia', 'difference'), e.x + e.w / 2, e.y - 6 * u, { size: fs(S, 12.5), weight: 700, color: errT.ink, align: 'center', base: 'bottom' });
-    const tx = G.hor ? G.img.x : G.err.x + G.err.w + 14 * u, ty = G.hor ? G.err.y + 8 * u : G.err.y + 4 * u;
-    d.text(S.l(`pérdida = Σ (x − x̂)² = ${S.n(sse, 2)}`, `loss = Σ (x − x̂)² = ${S.n(sse, 2)}`), tx, ty, { size: fs(S, G.hor ? 17 : 14), weight: 800, font: 'mono', color: errT.ink, base: 'top', w: G.hor ? G.err.x - G.img.x - 12 * u : S.W - tx - 14 * u });
+    d.text(S.l('diferencia', 'difference'), G.hor ? e.x + e.w / 2 : e.x + e.w, e.y - 6 * u, { size: fs(S, 12.5), weight: 700, color: errT.ink, align: G.hor ? 'center' : 'right', base: 'bottom' });
+    const tx = G.hor ? G.img.x : 14 * u, ty = G.hor ? G.err.y + 8 * u : G.out.y + G.out.h + 12 * u;
+    d.text(S.l(`pérdida = Σ (x − x̂)² = ${S.n(sse, 2)}`, `loss = Σ (x − x̂)² = ${S.n(sse, 2)}`), tx, ty, { size: fs(S, G.hor ? 17 : 14), weight: 800, font: 'mono', color: errT.ink, base: 'top', w: G.hor ? G.err.x - G.img.x - 12 * u : S.W - tx - 10 * u });
   });
 }
 
@@ -525,13 +531,14 @@ function drawTrain(S: Frame) {
     const cur = L.LOSS[Math.min(L.LOSS.length - 1, Math.round(shown / 10))];
     d.circle(X(shown), plot.Y(cur), 5.5 * u, { fill: tone(S, 'err').c, stroke: p.stage, lw: 2 });
     d.text(epochTxt, A.x + A.w - 6, A.y + 2, { size: fs(S, 14), weight: 800, font: 'mono', color: p.ink, align: 'right', base: 'top' });
-    d.text(S.n(cur, 2), X(shown) + 10 * u, plot.Y(cur) - 10 * u, { size: fs(S, 13), weight: 800, font: 'mono', color: tone(S, 'err').ink, base: 'bottom', halo: p.stage });
+    const edge = X(shown) > A.x + A.w * 0.72;
+    d.text(S.n(cur, 2), X(shown) + (edge ? -12 : 10) * u, plot.Y(cur) - 16 * u, { size: fs(S, 13), weight: 800, font: 'mono', color: tone(S, 'err').ink, align: edge ? 'right' : 'left', base: 'bottom', halo: p.stage });
   });
 }
 
 function drawSweep(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = inset(S.full(), 14 * u, 14 * u), ks = L.SWEEP.k, rows = ks.length + 1;
-  const labW = (S.portrait ? 54 : 150) * u, rightW = (S.portrait ? 62 : 230) * u, rowH = (R.h - 8 * u) / rows;
+  const foot = S.portrait ? 26 * u : 0, labW = (S.portrait ? 54 : 150) * u, rightW = (S.portrait ? 62 : 230) * u, rowH = (R.h - 8 * u - foot) / rows;
   const area: Rect = { x: R.x + labW, y: R.y, w: R.w - labW - rightW, h: rowH * 1 };
   const tl = tileLayout({ x: R.x + labW, y: R.y, w: R.w - labW - rightW, h: rowH - 4 * u }, 8, { cols: 8, gap: 3 * u, maxCell: 6 });
   void area;
@@ -542,6 +549,7 @@ function drawSweep(S: Frame) {
     for (let i = 0; i < 8; i++) digit(S, tl.x0 + i * (tl.tile + tl.gap), rowY(0), L.img(sh[i]), tl.cell, {});
     if (!S.portrait) { d.text(S.l('error por imagen', 'error per image'), R.x + R.w - rightW + 8 * u, rowY(0) + tl.tile / 2, { size: fs(S, 12.5), weight: 700, color: tone(S, 'err').ink, base: 'middle', w: rightW - 10 }); }
   });
+  if (S.portrait) d.text(S.l('números del código · error por imagen', 'code size · error per image'), R.x, R.y + R.h - 2, { size: fs(S, 12), weight: 600, color: p.ink2, base: 'bottom', a: S.reveal('bottleneck', 0.8, 0.5), w: R.w });
   ks.forEach((k, r) => {
     const a = S.reveal('bottleneck', 0.5 + 0.55 * r, 0.5), y = rowY(r + 1), sse = L.SWEEP.sse[r], acc = L.SWEEP.acc[r];
     d.withAlpha(a, () => {
@@ -586,11 +594,11 @@ function drawMap(S: Frame) {
     });
   }
   // etiquetas de cada grupo (solo para quien mira: la red no usó etiquetas)
-  const aL = S.reveal('latent-map', 1.6, 0.7) * (1 - 0.9 * toMos * (1 - outMos));
+  const aL = S.reveal('latent-map', 1.6, 0.7) * (1 - toMos * (1 - outMos)) * (1 - 0.85 * S.at('problem', 0, 0.5)), aN = aL * (1 - S.at('walk', 0, 0.4));
   if (aL > 0) d.withAlpha(aL, () => {
     for (let k = 0; k < 10; k++) { const t = tone(S, digTone(k)); const x = plot.X(MED[k][0]), y = plot.Y(MED[k][1]); d.rect(x - 11 * u, y - 11 * u, 22 * u, 22 * u, { fill: p.surface, stroke: t.c, lw: 2, r: 3 }); d.text(String(k), x, y, { size: fs(S, 14), weight: 800, color: t.ink, align: 'center', base: 'middle' }); }
-    d.text(S.l('los colores y números están solo para ti: la red no los usó', 'colors and numbers are only for you: the network did not use them'), r.x + 6, r.y + r.h - 4, { size: fs(S, 12), color: p.ink2, weight: 600, base: 'bottom', halo: p.stage, w: r.w - 12 });
   });
+  if (aN > 0) d.text(S.portrait || r.w < 440 ? S.l('solo para ti: la red no usó etiquetas', 'for you only: the network used no labels') : S.l('los colores y números están solo para ti: la red no los usó', 'colors and numbers are only for you: the network did not use them'), r.x + 6, r.y + r.h - 4, { size: fs(S, 12), color: p.ink2, weight: 600, base: 'bottom', halo: p.stage, w: r.w - 12, a: aN });
   // tres imágenes y su punto
   if (S.between('latent-map', 'walk')) {
     const lay = tileLayout(A, 3, { cols: S.portrait ? 3 : 1, gap: 12 * u, extraH: 0, maxCell: 8, valign: 'top' }), a = S.reveal('latent-map', 0.5, 0.6);
@@ -613,7 +621,7 @@ function drawMap(S: Frame) {
     const a = S.reveal('problem', 0.2, 0.7), cv = crowdEmpty(), err = tone(S, 'err');
     d.withAlpha(a, () => {
       d.rect(plot.X(B.x0), plot.Y(B.y1), plot.X(B.x1) - plot.X(B.x0), plot.Y(B.y0) - plot.Y(B.y1), { stroke: p.ink, lw: 2, dash: [8, 5] });
-      d.text(S.l('recuadro de los códigos', 'box of the codes'), plot.X(B.x1) - 6, plot.Y(B.y1) + 5, { size: fs(S, 12.5), weight: 700, color: p.ink, align: 'right', base: 'top', halo: p.stage });
+      d.text(S.l('recuadro de los códigos', 'box of the codes'), plot.X(B.x1) - 6, plot.Y(B.y0) - 5, { size: fs(S, 12.5), weight: 700, color: p.ink, align: 'right', base: 'bottom', halo: p.stage });
       d.circle(plot.X(cv.crowd[0]), plot.Y(cv.crowd[1]), 30 * u, { stroke: err.c, lw: 2.5, dash: [5, 4] });
       badge(S, S.l('apiñados', 'crowded'), plot.X(cv.crowd[0]), plot.Y(cv.crowd[1]) - 42 * u, { tone: 'err', size: fs(S, 12.5) });
       d.circle(plot.X(cv.empty[0]), plot.Y(cv.empty[1]), 34 * u, { stroke: p.ink2, lw: 2.5, dash: [5, 4] });
@@ -631,7 +639,7 @@ function drawExplorer(S: Frame, plot: Plot, A: Rect, st: St) {
     d.line(x - 16 * u, y, x + 16 * u, y, p.ink, 1.5); d.line(x, y - 16 * u, x, y + 16 * u, p.ink, 1.5);
     d.circle(x, y, 9 * u, { fill: lat.soft, stroke: p.ink, lw: 2.8 });
     // imagen decodificada
-    const imgW = S.portrait ? Math.min(A.h - 8 * u, A.w * 0.42) : Math.min(A.w - 8, A.h * 0.5), cell = Math.max(4, Math.floor(imgW / 8));
+    const imgW = S.portrait ? Math.min(A.h - 8 * u - (S.on('try2') ? 46 * u : 0), A.w * 0.42) : Math.min(A.w - 8, A.h * 0.5), cell = Math.max(4, Math.floor(imgW / 8));
     const ix = A.x + 2, iy = A.y + 4;
     digit(S, ix, iy, dec, cell, { kind: 'model' });
     d.line(x, y, ix + 4 * cell, iy + 8 * cell, lat.c, 1.4, [3, 3], 0.5);
@@ -680,7 +688,10 @@ function mosaicCanvas(S: Frame, plot: Plot): HTMLCanvasElement {
 // 6 · el VAE: nubes, penalización, sorteo
 // ═════════════════════════════════════════════════════════════════════════
 const VAE_SUB = Array.from({ length: 42 }, (_, i) => (i * 36 + 5) % L.NTR);
-const NOISE_IMG = (() => { for (let i = 0; i < L.NTR; i++) if (L.LAB[i] === 2) return i; return 0; })();
+// Imagen de entrenamiento cuya nube se enseña (un «0» aislado, a la izquierda del plano). Elegida a propósito, entre las imágenes cuyas cinco muestras
+// (NOISE_EPS) se leen como su propio dígito: sirve para ver el mecanismo, no como estadística. (Con la primera imagen de dígito «2»,
+// cuya nube cae junto a los «1», las cinco muestras salían como «1» y la escena contradecía a la voz.)
+const NOISE_IMG = 845;
 const NOISE_EPS = (() => { const r = rng(21); return Array.from({ length: 5 }, () => [gauss(r), gauss(r)] as [number, number]); })();
 const VAE_DRAW = L.drawVAE(8, 33);
 
@@ -770,21 +781,27 @@ function drawCompare(S: Frame) {
     else for (let i = 0; i < 32; i++) { const q = lay.pos(i); d.rect(q.x, q.y, lay.tile, lay.tile, { stroke: p.line, lw: 1, dash: [3, 3], a: 0.7 }); }
     d.withAlpha(S.reveal('try3', 0.3, 0.6), () => d.text(S.l('cada imagen es un punto sorteado y decodificado', 'each image is a drawn point, decoded'), m.x + 2, m.y + m.h - 2, { size: fs(S, 12), color: p.mute, base: 'bottom', w: m.w - 4 }));
   });
-  // histogramas por dígito (acumulados o de mil sorteos)
-  const res = inRes ? result() : null;
-  const ae = res ? res.ae : c.ae, vae = res ? res.vae : c.vae;
-  const aeN = res ? 1000 : c.presses.ae * 32, vaeN = res ? 1000 : c.presses.vae * 32;
+  // histogramas por dígito (los acumulados al sortear, en el lateral)
   const hA: Rect = S.portrait ? { x: A.x, y: A.y, w: A.w / 2 - 8 * u, h: A.h } : { x: A.x, y: A.y, w: A.w, h: A.h / 2 - 6 * u };
   const hB: Rect = S.portrait ? { x: A.x + A.w / 2 + 8 * u, y: A.y, w: A.w / 2 - 8 * u, h: A.h } : { x: A.x, y: A.y + A.h / 2 + 6 * u, w: A.w, h: A.h / 2 - 6 * u };
   const ttl = (name: string, n: number) => S.l(`${name} · ${n} sorteos`, `${name} · ${n} draws`);
-  digitBars(S, hA, ae, { tone: 'sig', title: ttl(S.l('Autocod.', 'Autoenc.'), aeN), n: aeN, stats: aeN >= 96 || !!res });
-  digitBars(S, hB, vae, { tone: 'lat', title: ttl('VAE', vaeN), n: vaeN, stats: vaeN >= 96 || !!res });
-  if (res) {
+  const aeN = c.presses.ae * 32, vaeN = c.presses.vae * 32;
+  if (fRes < 1) d.withAlpha(1 - fRes, () => {
+    digitBars(S, hA, c.ae, { tone: 'sig', title: ttl(S.l('Autocod.', 'Autoenc.'), aeN), n: aeN, stats: aeN >= 96, refOutside: !S.portrait });
+    digitBars(S, hB, c.vae, { tone: 'lat', title: ttl('VAE', vaeN), n: vaeN, stats: vaeN >= 96, refOutside: !S.portrait });
+  });
+  // tras mil sorteos con cada modelo: los dos gráficos ocupan toda la escena
+  if (inRes) {
+    const res = result(), F = inset(S.full(), 14 * u, 12 * u);
     d.withAlpha(fRes, () => {
-      const big: Rect = { x: m.x, y: m.y, w: m.w, h: m.h };
-      d.text(S.l('Reparto de dígitos tras mil sorteos con cada modelo', 'Digit mix after a thousand draws with each model'), big.x + 2, big.y + 2, { size: fs(S, 14), weight: 800, color: p.ink, base: 'top', w: big.w - 4 });
-      d.text(S.l('Los datos reales: cerca del 10 % de cada dígito.', 'The real data: close to 10% of each digit.'), big.x + 2, big.y + 48 * u, { size: fs(S, 13), weight: 600, color: p.ink2, base: 'top', w: big.w - 4 });
-      d.text(S.l('El autocodificador sortea en su recuadro; el VAE, de la campana estándar.', 'The autoencoder draws inside its box; the VAE, from the standard bell.'), big.x + 2, big.y + 90 * u, { size: fs(S, 13), weight: 600, color: p.ink2, base: 'top', w: big.w - 4 });
+      d.text(S.l('Reparto de dígitos tras mil sorteos con cada modelo', 'Digit mix after a thousand draws with each model'), F.x, F.y, { size: fs(S, 14), weight: 800, color: p.ink, base: 'top', w: F.w });
+      const th = (S.portrait ? 40 : 22) * u;
+      d.text(S.l('Línea punteada: la mezcla de los datos reales (cerca del 10 % de cada dígito). El autocodificador sortea en su recuadro; el VAE, de la campana estándar.', 'Dashed line: the mix of the real data (close to 10% of each digit). The autoencoder draws inside its box; the VAE, from the standard bell.'), F.x, F.y + th, { size: fs(S, 12.5), weight: 600, color: p.ink2, base: 'top', w: F.w });
+      const top = F.y + th + (S.portrait ? 60 : 40) * u, hh = F.h - (top - F.y), gap = 16 * u;
+      const cA: Rect = S.portrait ? { x: F.x, y: top, w: F.w, h: (hh - gap) / 2 } : { x: F.x, y: top, w: (F.w - gap) / 2, h: hh };
+      const cB: Rect = S.portrait ? { x: F.x, y: top + (hh + gap) / 2, w: F.w, h: (hh - gap) / 2 } : { x: F.x + (F.w + gap) / 2, y: top, w: (F.w - gap) / 2, h: hh };
+      digitBars(S, cA, res.ae, { tone: 'sig', title: S.l('Autocodificador · 1000 sorteos', 'Autoencoder · 1000 draws'), n: 1000, stats: true, refOutside: true });
+      digitBars(S, cB, res.vae, { tone: 'lat', title: S.l('VAE · 1000 sorteos', 'VAE · 1000 draws'), n: 1000, stats: true, refOutside: true });
     });
   }
 }
@@ -815,10 +832,12 @@ function drawCollage(S: Frame) {
   d.withAlpha(a2, () => {
     const x = A.x + 2;
     d.text(S.l('distancia media al dato de entrenamiento más cercano', 'mean distance to the nearest training data'), x, A.y, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'top', w: A.w - 6 });
-    const ry = A.y + (S.portrait ? 34 : 52) * u, cw = A.w / 3;
-    ro(S, x, ry, S.l('generadas', 'generated'), S.n(mv, 2), 'lat', 20);
-    ro(S, x + cw, ry, S.l('reales nuevos', 'new real'), S.n(mr, 2), 'dat', 20);
-    ro(S, x + 2 * cw, ry, S.l('una copia', 'a copy'), S.n(0, 2), 'err', 20);
+    const ry = A.y + (S.portrait ? 34 : 52) * u, cw = A.w / 3, rows = cw < 110;     // lateral estrecho (teléfono horizontal): una lectura debajo de otra
+    const reads: [string, number, Tone][] = [[S.l('generadas', 'generated'), mv, 'lat'], [S.l('reales nuevos', 'new real'), mr, 'dat'], [S.l('una copia', 'a copy'), 0, 'err']];
+    reads.forEach(([lab, v, t], k) => {
+      if (!rows) ro(S, x + k * cw, ry, lab, S.n(v, 2), t, 20);
+      else { const yy = ry - 10 * u + k * 38 * u; d.text(lab, x, yy + 12 * u, { size: fs(S, 12.5), weight: 700, color: p.mute, base: 'middle' }); d.text(S.n(v, 2), x + A.w * 0.62, yy + 12 * u, { size: 18, weight: 700, font: 'mono', color: tone(S, t).ink, base: 'middle' }); }
+    });
     d.text(S.l(`El modelo guarda ${S.n(L.N_PARAMS_VAE, 0)} pesos; los datos son ${S.n(L.NTR * 64, 0)} números.`, `The model stores ${S.n(L.N_PARAMS_VAE, 0)} weights; the data is ${S.n(L.NTR * 64, 0)} numbers.`), x, A.y + A.h - 4, { size: fs(S, 12.5), weight: 600, color: p.ink2, base: 'bottom', w: A.w - 6 });
   });
 }
@@ -832,22 +851,22 @@ function drawStrip2(S: Frame) {
   const lay = { x: R.x, y: R.y + 40 * u, w: R.w, h: R.h - 40 * u };
   const q = strip(S, lay, rows, { xmax: 4.5, xTicks: [0, 1, 2, 3, 4], xLabel: S.l('distancia al dato de entrenamiento más cercano', 'distance to the nearest training data'), ex: false, zero: 'copy', show: S.at('caveat', 0.5, 2.5, 'lin') });
   d.withAlpha(S.reveal('caveat', 1.6, 0.6), () => {
-    badge(S, S.l('una copia estaría aquí: memorización', 'a copy would be here: memorization'), q.X(0) + 8 * u, lay.y + 12 * u, { tone: 'err', align: 'left', size: fs(S, 12.5) });
+    badge(S, S.l('una copia estaría aquí: memorización', 'a copy would be here: memorization'), q.X(0) + 8 * u, lay.y + lay.h - q.axisH + 6 * u - 15 * u, { tone: 'err', align: 'left', size: fs(S, 12.5) });
   });
   d.withAlpha(S.reveal('caveat', 0.1, 0.5), () => d.text(S.l('nuestro modelo diminuto no copia; los enormes pueden hacerlo', 'our tiny model does not copy; huge ones can'), R.x + 2, R.y, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'top', w: R.w - 4 }));
 }
 
 function drawBlur(S: Frame) {
-  const { d, pal: p } = S, u = S.u, R = inset(S.full(), 16 * u, 16 * u), n = S.portrait ? 5 : 8, half = (R.h - 28 * u) / 2, capH = 24 * u, sp = sharp();
+  const { d, pal: p } = S, u = S.u, R = inset(S.full(), 16 * u, 16 * u), n = S.portrait ? 5 : 8, half = (R.h - 28 * u) / 2, capH = 44 * u, sp = sharp();
   const real = Array.from({ length: n }, (_, i) => L.img(L.NTR + 100 + i)), gen = L.drawVAE(n, 91).img;
   const rows: [string, Float32Array[], 'real' | 'model', number][] = [[S.l('dígitos reales', 'real digits'), real, 'real', 0], [S.l('generados por el VAE', 'generated by the VAE'), gen, 'model', 1]];
   rows.forEach(([label, imgs, kind, i]) => {
-    const top = R.y + i * (half + 14 * u), lay = tileLayout({ x: R.x, y: top + capH, w: R.w, h: half - capH - 22 * u }, n, { cols: n, gap: 8 * u, maxCell: 9, valign: 'center' });
+    const top = R.y + i * (half + 14 * u), lay = tileLayout({ x: R.x, y: top + capH, w: R.w, h: half - capH - 4 * u }, n, { cols: n, gap: 8 * u, maxCell: 9, valign: 'center' });
     d.withAlpha(i === 0 ? S.reveal('blurry', 0.1, 0.5) : S.reveal('blurry', 0.8, 0.6), () => {
       d.text(label, lay.x0, top + 2, { size: fs(S, 13), weight: 700, color: i ? tone(S, 'lat').ink : p.ink2, base: 'top' });
       imgs.forEach((im, k) => { const q = lay.pos(k); digit(S, q.x, q.y, im, lay.cell, { kind }); });
       const v = i === 0 ? sp.real : sp.vae;
-      d.text(S.l(`píxeles bien definidos: ${S.n(v * 100, 0)} %`, `well-defined pixels: ${S.n(v * 100, 0)}%`), lay.x0, top + half - 2, { size: fs(S, 12.5), weight: 700, color: i ? tone(S, 'lat').ink : tone(S, 'dat').ink, base: 'bottom' });
+      d.text(S.l(`píxeles bien definidos: ${S.n(v * 100, 0)} %`, `well-defined pixels: ${S.n(v * 100, 0)}%`), lay.x0, top + 2 + 20 * u, { size: fs(S, 12.5), weight: 700, color: i ? tone(S, 'lat').ink : tone(S, 'dat').ink, base: 'top' });
     });
   });
 }
@@ -858,7 +877,7 @@ function drawRecap(S: Frame) {
   const tones: Tone[] = ['dat', 'w', 'sig', 'lat'];
   const bw = Math.min(190 * u, S.portrait ? R.w * 0.8 : R.w * 0.21), bh = 54 * u;
   const pos: Rect[] = S.portrait
-    ? [0, 1, 2, 3].map((i) => ({ x: R.x + (R.w - bw) / 2, y: R.y + 4 * u + i * ((R.h - 8 * u - bh - (i === 3 ? 0 : 0)) / 3), w: bw, h: bh }))
+    ? [0, 1, 2, 3].map((i) => ({ x: R.x + (R.w - bw) / 2, y: R.y + 2 * u + i * ((R.h - 8 * u - bh - (62 + 24 * u)) / 3), w: bw, h: bh }))
     : [0, 1, 2, 3].map((i) => ({ x: R.x + i * ((R.w - bw) / 3), y: R.y + R.h * 0.3, w: bw, h: bh }));
   pos.forEach((b, i) => { const a = S.reveal('recap', 0.2 + 0.4 * i, 0.5); if (a > 0) box(S, b, labels[i], { tone: tones[i], a, size: S.portrait ? 15 : 14 }); });
   for (let i = 0; i < 3; i++) { const a = S.at('recap', 0.6 + 0.4 * i, 1.2 + 0.4 * i); if (a > 0) link(S, pos[i], pos[i + 1], { tone: 'ink', progress: a }); }
@@ -869,7 +888,7 @@ function drawRecap(S: Frame) {
 function d_img(S: Frame, last: Rect, im: Float32Array, cell: number, a: number) {
   const x = last.x + (last.w - 8 * cell) / 2, y = S.portrait ? last.y + last.h + 14 * S.u : last.y + last.h + 22 * S.u;
   digit(S, x, y, im, cell, { kind: 'model', a });
-  S.d.text(S.l('un dígito que nunca existió', 'a digit that never existed'), x + 4 * cell, y + 8 * cell + 8 * S.u, { size: fs(S, 13), weight: 700, color: tone(S, 'lat').ink, align: 'center', base: 'top', a, w: Math.max(150, 8 * cell + 80) });
+  S.d.text(S.l('un dígito que nunca existió', 'a digit that never existed'), S.portrait ? x + 4 * cell : last.x + last.w, y + 8 * cell + 8 * S.u, { size: fs(S, 13), weight: 700, color: tone(S, 'lat').ink, align: S.portrait ? 'center' : 'right', base: 'top', a, w: Math.max(200, 8 * cell + 80) });
 }
 
 function drawBridge(S: Frame) {

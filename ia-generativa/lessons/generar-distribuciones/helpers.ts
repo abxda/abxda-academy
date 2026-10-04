@@ -100,7 +100,7 @@ export interface StripRow { label: string; vals: ArrayLike<number>; tone: Tone; 
 export function strip(S: Frame, r: Rect, rows: StripRow[], o: { xmax: number; xTicks: number[]; xLabel: string; show?: number; ex?: boolean; zero?: string; fmt?: (v: number) => string }) {
   const { d, pal: p } = S, u = S.u, fm = o.fmt ?? ((v: number) => S.n(v, 1));
   const cellEx = S.portrait ? 3 : 4, exW = o.ex === false ? 0 : 8 * cellEx + 10 * u;
-  const left = r.x + exW, axisH = 44 * u, rowH = (r.h - axisH) / rows.length, W = r.w - exW - 8 * u;
+  const left = r.x + exW, axisH = Math.max(44 * u, 19 * u + 34), rowH = (r.h - axisH) / rows.length, W = r.w - exW - 8 * u;
   const X = (v: number) => left + (v / o.xmax) * W;
   d.line(left, r.y + r.h - axisH + 6 * u, left + W, r.y + r.h - axisH + 6 * u, p.lineStrong, 1.5);
   o.xTicks.forEach((v) => { d.line(X(v), r.y + r.h - axisH + 6 * u, X(v), r.y + r.h - axisH + 10 * u, p.lineStrong, 1.5); d.text(fm(v), X(v), r.y + r.h - axisH + 13 * u, { size: fs(S, 11.5), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
@@ -111,7 +111,7 @@ export function strip(S: Frame, r: Rect, rows: StripRow[], o: { xmax: number; xT
   rows.forEach((row, i) => {
     const y0 = r.y + i * rowH, cy = y0 + rowH * 0.58, t = tone(S, row.tone), a = row.a ?? 1;
     d.withAlpha(a, () => {
-      d.text(row.label, left, y0 + 2, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'top' });
+      d.text(row.label, left + (o.zero !== undefined ? 8 * u : 0), y0 + 2, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'top' });
       if (row.ex && o.ex !== false) digit(S, r.x, cy - 4 * cellEx, row.ex, cellEx, { kind: 'real' });
       const n = Math.floor(row.vals.length * (o.show ?? 1));
       let sum = 0;
@@ -125,17 +125,17 @@ export function strip(S: Frame, r: Rect, rows: StripRow[], o: { xmax: number; xT
       d.text(fm(m), X(m), cy - rowH * 0.3, { size: fs(S, 13), weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'bottom', halo: p.stage });
     });
   });
-  return { X };
+  return { X, axisH, rowH };
 }
 
 /** Barras de la frecuencia de cada dígito (0–9) con la línea del reparto parejo (10 %). */
-export function digitBars(S: Frame, r: Rect, counts: number[], o: { tone: Tone; title?: string; n?: number; a?: number; stats?: boolean; ymax?: number }) {
+export function digitBars(S: Frame, r: Rect, counts: number[], o: { tone: Tone; title?: string; n?: number; a?: number; stats?: boolean; ymax?: number; refOutside?: boolean }) {
   const { d, pal: p } = S, u = S.u, total = o.n ?? counts.reduce((a, b) => a + b, 0), t = tone(S, o.tone);
   const titleH = o.title ? 18 * u : 0, labH = 18 * u, top = r.y + titleH + 10 * u, h = r.h - titleH - labH - 10 * u - (o.stats ? 20 * u : 0);
-  const ymax = o.ymax ?? 0.3, slot = r.w / 10, bw = Math.max(3, slot * 0.62);
+  const rw = o.refOutside ? r.w - 58 * u : r.w, ymax = o.ymax ?? 0.3, slot = rw / 10, bw = Math.max(3, slot * 0.62);
   d.withAlpha(o.a ?? 1, () => {
     if (o.title) d.text(o.title, r.x, r.y, { size: fs(S, 13), weight: 800, color: t.ink, base: 'top' });
-    d.line(r.x, top + h, r.x + r.w, top + h, p.lineStrong, 1.5);
+    d.line(r.x, top + h, r.x + rw, top + h, p.lineStrong, 1.5);
     const f = counts.map((c) => (total > 0 ? c / total : 0));
     f.forEach((v, k) => {
       const bh = clamp(v / ymax) * h, x = r.x + k * slot + (slot - bw) / 2;
@@ -143,8 +143,11 @@ export function digitBars(S: Frame, r: Rect, counts: number[], o: { tone: Tone; 
       d.text(String(k), x + bw / 2, top + h + 3 * u, { size: fs(S, 12), weight: 700, font: 'mono', color: p.ink2, align: 'center', base: 'top' });
     });
     const yRef = top + h - (0.1 / ymax) * h;
-    d.line(r.x, yRef, r.x + r.w, yRef, p.ink2, 1.5, [5, 4]);
-    d.text(S.l('parejo: 10 %', 'even: 10%'), r.x + r.w, yRef - 3, { size: fs(S, 11.5), weight: 600, color: p.ink2, align: 'right', base: 'bottom', halo: p.stage });
+    d.line(r.x, yRef, r.x + rw, yRef, p.ink2, 1.5, [5, 4]);
+    if (o.refOutside) {
+      d.text(S.l('parejo', 'even'), r.x + rw + 6 * u, yRef - 2, { size: fs(S, 12), weight: 600, color: p.ink2, base: 'bottom' });
+      d.text(S.l('10 %', '10%'), r.x + rw + 6 * u, yRef + 2, { size: fs(S, 12), weight: 600, color: p.ink2, base: 'top' });
+    } else d.text(S.l('parejo: 10 %', 'even: 10%'), r.x + r.w, yRef - 3, { size: fs(S, 11.5), weight: 600, color: p.ink2, align: 'right', base: 'bottom', halo: p.stage });
     if (o.stats && total > 0) {
       let hi = 0, lo = 0; f.forEach((v, k) => { if (v > f[hi]) hi = k; if (v < f[lo]) lo = k; });
       d.text(S.l(`más: ${hi} (${S.n(f[hi] * 100, 0)} %) · menos: ${lo} (${S.n(f[lo] * 100, 0)} %)`, `most: ${hi} (${S.n(f[hi] * 100, 0)}%) · least: ${lo} (${S.n(f[lo] * 100, 0)}%)`), r.x, r.y + r.h, { size: fs(S, 12.5), weight: 700, color: p.ink, base: 'bottom' });

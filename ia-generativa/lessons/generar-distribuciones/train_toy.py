@@ -21,7 +21,7 @@ MODELOS (todos con 32 neuronas ocultas y activación tanh; la salida del decodif
 SEMILLAS. La arquitectura y los hiperparámetros se fijaron antes de mirar resultados. Para comparar «sortear al azar» en el AE y en el VAE se mide qué tan
 pareja sale la mezcla de dígitos (un clasificador de regresión logística etiqueta 3000 imágenes generadas; distancia de variación total TV a la mezcla
 uniforme, 0 = pareja). Con ocho semillas (0–7; SCAN=1 python train_toy.py reproduce el cuadro): AE sorteando en el recuadro de sus códigos, TV = 0,21–0,37
-(media 0,28); VAE sorteando de N(0, I), TV = 0,09–0,15 (media 0,11); en TODAS las semillas el VAE sale más parejo. La semilla 5 es la usada porque queda
+(media 0,28); VAE sorteando de N(0, I), TV = 0,09–0,16 (media 0,12); en TODAS las semillas el VAE sale más parejo. La semilla 5 es la usada porque queda
 más cerca del promedio de las ocho (AE 0,26; VAE 0,11): ni la mejor ni la peor.
 
 SALIDA latent.json (imágenes como cadenas de un carácter por píxel, base 17: '0'–'9','a'–'g'):

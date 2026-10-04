@@ -119,8 +119,8 @@ export default defineLesson({
     },
     {
       id: 'bottleneck',
-      es: 'El tamaño del código decide cuánto se pierde. Con un número se adivina apenas; con dieciséis, casi todo se conserva. Comprimir siempre pierde algo.',
-      en: 'The size of the code decides how much is lost. With one number you can barely guess; with sixteen, nearly everything survives. Compressing always loses something.',
+      es: 'El tamaño del código decide cuánto se pierde. Con un número se confunden muchos dígitos; con dieciséis, casi todo se conserva. Comprimir siempre pierde algo.',
+      en: 'The size of the code decides how much is lost. With one number many digits get mixed up; with sixteen, nearly everything survives. Compressing always loses something.',
       pad: 0.5,
     },
     {
@@ -190,8 +190,8 @@ export default defineLesson({
     },
     {
       id: 'result',
-      es: 'Sorteando en su recuadro, el autocodificador produce unos dígitos de más y otros casi nunca. El VAE reparte los diez de forma bastante más pareja, como los datos.',
-      en: 'Drawing from its box, the autoencoder produces some digits too often and others almost never. The VAE spreads the ten much more evenly, like the data.',
+      es: 'Sorteando en su recuadro, el autocodificador produce unos dígitos de más y otros casi nunca. El VAE reparte los diez de forma mucho más pareja, aunque no perfecta.',
+      en: 'Drawing from its box, the autoencoder produces some digits too often and others almost never. The VAE spreads the ten much more evenly, though not perfectly.',
       pad: 0.5,
     },
     {
@@ -272,7 +272,7 @@ Un codificador $z=E_\\phi(x)$ y un decodificador $\\hat x=D_\\theta(z)$, entrena
 
 $$\\mathcal L_{\\text{AE}}=\\lVert x-\\hat x\\rVert^2=\\sum_{j=1}^{64}(x_j-\\hat x_j)^2$$
 
-Los modelos de la lección son diminutos: $64\\to32\\to2\\to32\\to64$ con $\\tanh$ en la capa oculta y un sigmoide a la salida (4354 parámetros), entrenados con descenso del gradiente (Adam) sobre 1500 imágenes; otras 297 se reservaron para reconstruir imágenes que la red nunca vio. Error medio por imagen reservada según el tamaño del código: 3,14 con 1 número, 2,34 con 2, 1,46 con 4, 0,95 con 8 y 0,54 con 16 (adivinar siempre la imagen media daría 4,71). Con decodificador lineal y error cuadrático, un autocodificador aprende el mismo subespacio que el PCA (Goodfellow et al., 2016, §14.1); las capas no lineales lo generalizan.
+Los modelos de la lección son diminutos: $64\\to32\\to2\\to32\\to64$ con $\\tanh$ en la capa oculta y un sigmoide a la salida (4354 parámetros), entrenados con descenso del gradiente (Adam) sobre 1500 imágenes; otras 297 se reservaron para reconstruir imágenes que la red nunca vio. Error medio por imagen reservada según el tamaño del código: 3,14 con 1 número, 2,34 con 2, 1,46 con 4, 0,95 con 8 y 0,54 con 16 (adivinar siempre la imagen media daría 4,71). Con decodificador lineal y error cuadrático, un autocodificador aprende el mismo subespacio que el PCA (Goodfellow et al., 2016, §14.1); las capas no lineales lo generalizan, y Hinton y Salakhutdinov (2006) mostraron que los autocodificadores profundos aprenden códigos que comprimen mucho mejor que el PCA.
 
 ## Autocodificador variacional (VAE)
 
@@ -288,7 +288,7 @@ El primer término es el error de reconstrucción; el segundo, la penalización 
 
 $$D_{\\mathrm{KL}}=\\tfrac12\\sum_{k}\\big(\\mu_k^2+\\sigma_k^2-\\ln\\sigma_k^2-1\\big)$$
 
-La pérdida usada en la lección es $\\lVert x-\\hat x\\rVert^2/(2\\sigma_{\\text{obs}}^2)+D_{\\mathrm{KL}}$ con $\\sigma_{\\text{obs}}^2=0{,}1$. Los dos términos compiten: la reconstrucción separa y encoge las nubes; la penalización las junta y las ensancha. Para **generar**: $z\\sim\\mathcal N(0,I)$ y $x=D_\\theta(z)$. Con un decodificador gaussiano de varianza fija, el decodificador tiende a devolver un promedio de lo plausible, de ahí la borrosidad (que se atenúa con modelos de inferencia más flexibles; Kingma y Welling, 2019).
+La pérdida usada en la lección es $\\lVert x-\\hat x\\rVert^2/(2\\sigma_{\\text{obs}}^2)+D_{\\mathrm{KL}}$ con $\\sigma_{\\text{obs}}^2=0{,}1$. Los dos términos compiten: la reconstrucción separa y encoge las nubes; la penalización las junta y las ensancha. Para **generar**: $z\\sim\\mathcal N(0,I)$ y $x=D_\\theta(z)$. Con un decodificador gaussiano de varianza fija y error cuadrático, la mejor reconstrucción de un código es el promedio de las imágenes que caben en él: de ahí la borrosidad. Kingma y Welling (2019, §2.8.2) la atribuyen a que el ajuste nunca es perfecto (la cota castiga más no cubrir los datos que cubrir de más) y señalan que se atenúa con un modelo de inferencia y uno generativo más flexibles.
 
 ## En código
 
@@ -336,7 +336,7 @@ An encoder $z=E_\\phi(x)$ and a decoder $\\hat x=D_\\theta(z)$, trained together
 
 $$\\mathcal L_{\\text{AE}}=\\lVert x-\\hat x\\rVert^2=\\sum_{j=1}^{64}(x_j-\\hat x_j)^2$$
 
-The lesson’s models are tiny: $64\\to32\\to2\\to32\\to64$ with $\\tanh$ in the hidden layer and a sigmoid at the output (4,354 parameters), trained with gradient descent (Adam) on 1,500 images; another 297 were held back so the network could rebuild images it never saw. Mean error per held-out image by code size: 3.14 with 1 number, 2.34 with 2, 1.46 with 4, 0.95 with 8 and 0.54 with 16 (always guessing the mean image would give 4.71). With a linear decoder and squared error, an autoencoder learns the same subspace as PCA (Goodfellow et al., 2016, §14.1); nonlinear layers generalize it.
+The lesson’s models are tiny: $64\\to32\\to2\\to32\\to64$ with $\\tanh$ in the hidden layer and a sigmoid at the output (4,354 parameters), trained with gradient descent (Adam) on 1,500 images; another 297 were held back so the network could rebuild images it never saw. Mean error per held-out image by code size: 3.14 with 1 number, 2.34 with 2, 1.46 with 4, 0.95 with 8 and 0.54 with 16 (always guessing the mean image would give 4.71). With a linear decoder and squared error, an autoencoder learns the same subspace as PCA (Goodfellow et al., 2016, §14.1); nonlinear layers generalize it, and Hinton and Salakhutdinov (2006) showed that deep autoencoders learn codes that work much better than PCA.
 
 ## Variational autoencoder (VAE)
 
@@ -352,7 +352,7 @@ The first term is the reconstruction error; the second is the penalty that pulls
 
 $$D_{\\mathrm{KL}}=\\tfrac12\\sum_{k}\\big(\\mu_k^2+\\sigma_k^2-\\ln\\sigma_k^2-1\\big)$$
 
-The loss used in the lesson is $\\lVert x-\\hat x\\rVert^2/(2\\sigma_{\\text{obs}}^2)+D_{\\mathrm{KL}}$ with $\\sigma_{\\text{obs}}^2=0.1$. The two terms compete: reconstruction separates and shrinks the clouds; the penalty pulls them together and widens them. To **generate**: $z\\sim\\mathcal N(0,I)$ and $x=D_\\theta(z)$. With a fixed-variance Gaussian decoder, the decoder tends to return an average of what is plausible, hence the blur (which eases with more flexible inference models; Kingma and Welling, 2019).
+The loss used in the lesson is $\\lVert x-\\hat x\\rVert^2/(2\\sigma_{\\text{obs}}^2)+D_{\\mathrm{KL}}$ with $\\sigma_{\\text{obs}}^2=0.1$. The two terms compete: reconstruction separates and shrinks the clouds; the penalty pulls them together and widens them. To **generate**: $z\\sim\\mathcal N(0,I)$ and $x=D_\\theta(z)$. With a fixed-variance Gaussian decoder and squared error, the best reconstruction of a code is the average of the images that fit it: hence the blur. Kingma and Welling (2019, §2.8.2) attribute it to the fit never being perfect (the bound penalizes failing to cover the data more than covering too much) and note that it eases with a sufficiently flexible inference model and generative model.
 
 ## In code
 
