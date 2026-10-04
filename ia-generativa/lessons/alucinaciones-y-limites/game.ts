@@ -59,7 +59,7 @@ export const gameOf = (S: Frame): GameState => (S.st.game ??= newGame());
 /** Registra una respuesta (botón). Devuelve true si con ella se completa el juego. */
 export function answer(S: Frame, id: string): boolean {
   const g = gameOf(S);
-  if (g.answers.length >= CLAIMS.length) return false;
+  if (g.done || g.answers.length >= CLAIMS.length) return false;
   const saysTrue = id === 'v-sure' || id === 'v-maybe', sure = id === 'v-sure' || id === 'f-sure';
   const claim = CLAIMS[g.answers.length];
   g.answers.push({ saysTrue, sure, right: saysTrue === claim.truth });
@@ -127,7 +127,7 @@ function drawAside(S: Frame, r: Rect, g: GameState) {
     lines2.forEach(({ c, a }, i) => {
       const y = ty + 22 * u + i * rowH + rowH / 2;
       if (rowH < 15) return;
-      mark(S, r.x + 8 * u, y, a.right ? 'ok' : 'no', 6 * u, { lw: 2.2 });
+      if (a) mark(S, r.x + 8 * u, y, a.right ? 'ok' : 'no', 6 * u, { lw: 2.2 }); else mark(S, r.x + 8 * u, y, 'dash', 6 * u, { lw: 2.2 });
       fitText(S, `${c.short[S.lang]} · ${c.truth ? S.l('verdadera', 'true') : S.l('inventada', 'invented')}`, r.x + 22 * u, y, r.w - 24 * u, 12.5, { weight: 700, color: tone(S, c.truth ? 'dat' : 'err').ink, base: 'middle' });
     });
   }

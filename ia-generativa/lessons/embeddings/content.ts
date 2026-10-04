@@ -147,8 +147,8 @@ export default defineLesson({
     },
     {
       id: 'offset',
-      es: 'Algo más raro: las direcciones también significan. De Francia a París hay un desplazamiento, y de Italia a Roma, de Japón a Tokio, casi el mismo.',
-      en: 'Something stranger: directions carry meaning too. From France to Paris there is an offset, and from Italy to Rome, or Japan to Tokyo, nearly the same one.',
+      es: 'Algo más raro: las direcciones también significan. De Francia a París hay un desplazamiento; de Alemania a Berlín, de Japón a Tokio y de Egipto a El Cairo, casi el mismo.',
+      en: 'Something stranger: directions carry meaning too. From France to Paris there is an offset; from Germany to Berlin, Japan to Tokyo, and Egypt to Cairo, nearly the same one.',
       pad: 0.5,
     },
     {
@@ -208,8 +208,8 @@ export default defineLesson({
     },
     {
       id: 'bias-fix',
-      es: 'Se puede intentar corregirlo, pero quitar una dirección no basta: el sesgo sigue en otras partes del espacio. Lo prudente es medirlo con tus propios casos y decidir si importa.',
-      en: 'People try to fix it, but removing one direction is not enough: the bias persists elsewhere in the space. The prudent move is to measure it with your own cases and decide whether it matters.',
+      es: 'Se puede intentar corregirlo quitando esa dirección. El eje queda en cero, pero adivinar de qué lado estaba cada profesión aún acierta treinta y cinco de cincuenta y dos: el sesgo sigue en otras partes.',
+      en: 'People try to fix it by removing that direction. The axis drops to zero, yet guessing which side each profession was on still gets thirty-five of fifty-two right: the bias lives elsewhere too.',
       pad: 0.3,
     },
     {
@@ -339,11 +339,11 @@ Los pares los elegí yo y son relaciones limpias; el conjunto de Mikolov et al. 
 
 ## Cómo se mide el sesgo en la lección
 
-Con $F=\\{$mujer, niña, madre, esposa, hermana, hija$\\}$ y $M=\\{$hombre, niño, padre, esposo, hermano, hijo$\\}$ (en inglés en los datos), el puntaje de una palabra $w$ es
+Con $F$ = {mujer, niña, madre, esposa, hermana, hija} y $M$ = {hombre, niño, padre, esposo, hermano, hijo} (en inglés en los datos), el puntaje de una palabra $w$ es
 
 $$s(w)=\\frac{1}{|F|}\\sum_{f\\in F}\\cos(w,f)\\;-\\;\\frac{1}{|M|}\\sum_{m\\in M}\\cos(w,m)$$
 
-Positivo es más cerca de lo femenino. Se usan conjuntos y no un par porque «man» tiene varios sentidos. Es una versión simplificada de las pruebas de asociación de Caliskan et al. (2017). Resultado con las 52 profesiones del vocabulario: de $-0{,}16$ («boss») a $+0{,}10$ («receptionist»); 26 objetos sin género (mesa, árbol, río…) quedan entre $-0{,}05$ y $+0{,}03$. La correlación de Spearman con el puntaje «she» − «he» en GloVe completo es 0,91. El puntaje mezcla género con tema (en el texto, lo femenino aparece más junto a «vestido» o «jabón»): sirve para ver la pendiente, no para dar un veredicto sobre una persona. Gonen y Goldberg (2019) mostraron que los métodos para «desagregar» el sesgo en gran medida lo esconden, no lo quitan.
+Positivo es más cerca de lo femenino. Se usan conjuntos y no un par porque «man» tiene varios sentidos. Es una versión simplificada de las pruebas de asociación de Caliskan et al. (2017). Resultado con las 52 profesiones del vocabulario: de $-0{,}16$ («boss») a $+0{,}10$ («receptionist»); 26 objetos sin género (mesa, árbol, río…) quedan entre $-0{,}05$ y $+0{,}03$. La correlación de Spearman con el puntaje «she» − «he» en GloVe completo es 0,91. El puntaje mezcla género con tema (en el texto, lo femenino aparece más junto a «vestido» o «jabón»): sirve para ver la pendiente, no para dar un veredicto sobre una persona. Si a cada vector se le resta su componente en $g=\\bar F-\\bar M$ (normalizado), el puntaje en ese eje vale 0 por construcción; aun así, adivinar si cada profesión estaba por encima o por debajo de la mediana del puntaje original, con el centroide más cercano por coseno y dejando una fuera cada vez, acierta 41 de 52 antes y 35 de 52 después (azar: 26). Es un experimento mínimo, con pocas palabras, en el espíritu del de Gonen y Goldberg (2019), quienes mostraron que los métodos para «desagregar» el sesgo en gran medida lo esconden, no lo quitan.
 
 ## Búsqueda semántica
 
@@ -467,17 +467,17 @@ I picked the pairs, and they are clean relations; the Mikolov et al. set (19,544
 
 ## How the bias is measured in the lesson
 
-With $F=\\{$woman, girl, mother, wife, sister, daughter$\\}$ and $M=\\{$man, boy, father, husband, brother, son$\\}$, the score of a word $w$ is
+With $F$ = {woman, girl, mother, wife, sister, daughter} and $M$ = {man, boy, father, husband, brother, son}, the score of a word $w$ is
 
 $$s(w)=\\frac{1}{|F|}\\sum_{f\\in F}\\cos(w,f)\\;-\\;\\frac{1}{|M|}\\sum_{m\\in M}\\cos(w,m)$$
 
-Positive means closer to the female words. Sets are used rather than a pair because “man” has several senses. It is a simplified version of the association tests of Caliskan et al. (2017). Result over the 52 professions in the vocabulary: from $-0.16$ (“boss”) to $+0.10$ (“receptionist”); 26 objects with no gender (table, tree, river…) fall between $-0.05$ and $+0.03$. The Spearman correlation with the “she” − “he” score in the full GloVe is 0.91. The score mixes gender with topic (in the text, the female words show up more next to “dress” or “soap”): it shows the slope, it is not a verdict about any person. Gonen and Goldberg (2019) showed that methods for “debiasing” mostly hide the bias rather than remove it.
+Positive means closer to the female words. Sets are used rather than a pair because “man” has several senses. It is a simplified version of the association tests of Caliskan et al. (2017). Result over the 52 professions in the vocabulary: from $-0.16$ (“boss”) to $+0.10$ (“receptionist”); 26 objects with no gender (table, tree, river…) fall between $-0.05$ and $+0.03$. The Spearman correlation with the “she” − “he” score in the full GloVe is 0.91. The score mixes gender with topic (in the text, the female words show up more next to “dress” or “soap”): it shows the slope, it is not a verdict about any person. If each vector has its component along $g=\\bar F-\\bar M$ (normalized) subtracted, the score on that axis is 0 by construction; even so, guessing whether each profession was above or below the median of the original score, with the nearest cosine centroid and leaving one out at a time, gets 41 of 52 right before and 35 of 52 after (chance: 26). It is a minimal experiment, with few words, in the spirit of Gonen and Goldberg (2019), who showed that methods for “debiasing” mostly hide the bias rather than remove it.
 
 ## Semantic search
 
 The average of a text with words $w_1,\\dots,w_n$ is $q=\\frac1n\\sum_k e_{w_k}$; documents are ranked by $\\cos(q,D_j)$. Comparing against $N$ documents costs $O(N\\cdot d)$ per query, and with millions of them approximate indexes are used. Sentence vectors (Reimers and Gurevych, 2019) are computed once per document: finding the most similar pair among 10,000 sentences with BERT takes about 50 million inferences (about 65 hours); with sentence vectors, about 5 seconds. The third column of the scene uses \`paraphrase-multilingual-MiniLM-L12-v2\` (Apache-2.0, 384 dimensions, more than 50 languages; Reimers and Gurevych, 2020), with the mean of the output vectors and cosine. Its scores were computed offline for the 36 test questions.
 
-With 36 questions, 19 hits are 52.8% with a 95% Wilson interval of 37% to 68%: a margin of about ±15 points. That is why lesson 34 insists on sample size.
+With 36 questions, 21 hits (the vector average on the English questions) are 58.3% with a 95% Wilson interval of 42% to 73%: a margin of about ±15 points. That is why lesson 34 insists on sample size.
 
 ## In code
 

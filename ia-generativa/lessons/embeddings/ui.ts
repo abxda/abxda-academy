@@ -122,7 +122,7 @@ export function cosBars(S: Frame, r: Rect, rows: { label: string; value: number;
 // ───────── PCA mínima de unas pocas palabras (para dibujar desplazamientos sin pretender más de lo que son) ─────────
 /** Diagonaliza una matriz simétrica pequeña con el método de Jacobi. Devuelve valores y vectores propios (columnas). */
 function jacobi(A: number[][]): { val: number[]; vec: number[][] } {
-  const n = A.length, a = A.map((r) => r.slice()), v = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+  const n = A.length, a = A.map((r) => r.slice()), v: number[][] = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
   for (let sweep = 0; sweep < 60; sweep++) {
     let off = 0; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += a[i][j] * a[i][j];
     if (off < 1e-20) break;

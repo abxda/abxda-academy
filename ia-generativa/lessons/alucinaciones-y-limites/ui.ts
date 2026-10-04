@@ -1,15 +1,20 @@
 // Ayudas de dibujo propias de la lección «Alucinaciones y límites».
 // Todo texto respeta ≥ 12 px efectivos (FS) y los colores salen de tone()/S.pal (nunca hex). El kit no trae sellos, burbujas de chat
 // ni barras de probabilidad con tamaño mínimo garantizado, así que se implementan aquí.
-import { alpha, clamp, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
+import { alpha, clamp, ease, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 
 /** Tamaño de fuente (antes de escalar por S.u) que garantiza ≥ 12 px efectivos. */
 export const FS = (S: Frame, px: number) => Math.max(px, 12.2 / S.u);
 
 export const smooth = (x: number) => { const t = clamp(x); return t * t * (3 - 2 * t); };
 
+/** Número con el formato del texto de la lección: 1 234,5 (es: coma decimal y espacio de miles) / 1,234.5 (en). */
+export const num = (S: Frame, v: number, digits = 0) => {
+  const s = v.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return S.lang === 'es' ? s.replace(/,/g, '\u00a0').replace('.', ',') : s;
+};
 /** Porcentaje con el formato del idioma: 73,6 % (es) / 73.6% (en). */
-export const pct = (S: Frame, v: number, digits = 0) => `${S.n(v * 100, digits)}${S.lang === 'es' ? ' %' : '%'}`;
+export const pct = (S: Frame, v: number, digits = 0) => `${num(S, v * 100, digits)}${S.lang === 'es' ? '\u00a0%' : '%'}`;
 
 /** Texto que se encoge hasta caber en `w` (sin bajar de 12 px efectivos). */
 export function fitText(S: Frame, str: string, x: number, y: number, w: number, size: number, o: { weight?: number; font?: 'ui' | 'mono'; color?: string; align?: CanvasTextAlign; base?: CanvasTextBaseline; halo?: string; a?: number } = {}) {
@@ -137,4 +142,31 @@ export function stat(S: Frame, x: number, y: number, label: string, value: strin
 /** Pie de figura con la fuente de lo que se muestra (una línea, abajo a la izquierda). */
 export function source(S: Frame, str: string, a = 1) {
   fitText(S, str, 14 * S.u, S.H - 3 * S.u, S.W - 28 * S.u, 11.5, { weight: 600, color: S.pal.mute, base: 'bottom', a: 0.92 * a });
+}
+
+/** Aparición de un acto entre su primer segmento y el primero del siguiente (fundido corto). */
+export function fadeFor(S: Frame, from: string, to?: string, dur = 0.5): number {
+  if (!S.on(from)) return 0;
+  const a = S.at(from, 0, dur, 'out'), b = to ? S.at(to, 0, dur * 0.8, 'out') : 0;
+  return a * (1 - b);
+}
+
+/** Dibuja `fn` con la opacidad dada, solo si es visible. */
+export const show = (S: Frame, a: number, fn: () => void) => { if (a > 0.004) S.d.withAlpha(a, fn); };
+
+/** Verdadero cuando `cond` se ha cumplido sin interrupción durante `secs` segundos: el gate se completa al detenerse en la respuesta, no al pasar de largo. */
+export function holds(S: Frame, key: string, cond: boolean, secs = 0.5): boolean {
+  const st = (S.st.hold ??= {} as Record<string, number>);
+  st[key] = cond ? (st[key] ?? 0) + S.dt : 0;
+  return st[key] >= secs;
+}
+
+/** Área útil con márgenes. */
+export const area = (S: Frame, m = 14): Rect => ({ x: m * S.u, y: m * S.u, w: S.W - 2 * m * S.u, h: S.H - 2 * m * S.u });
+
+/** Progreso 0→1 entre las fracciones a y b de la duración del segmento `id` (sincroniza una imagen con la frase de la voz, sea cual sea el idioma). */
+export function fr(S: Frame, id: string, a: number, b: number, e: 'out' | 'io' | 'lin' = 'out'): number {
+  if (!S.on(id)) return 0;
+  const s = S.start(id), L = Math.max(1, S.end(id) - s);
+  return ease[e](clamp((S.t - s - a * L) / Math.max(1e-6, (b - a) * L)));
 }

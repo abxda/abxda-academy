@@ -4,13 +4,16 @@ Demostraciones sueltas con el MISMO modelo real que `run-qa.py` (Pythia-1.4B, Ap
 Paso 1b de la lección «Alucinaciones y límites». Escribe un JSON que `build-data.py` incorpora a `real-data.ts`.
 
 Reproducir:  python run-demo.py EleutherAI/pythia-1.4b out/demo.json [cuda|cpu]
+(sin tercer argumento usa la GPU en float16, igual que run-qa.py; en CPU con float32 los resultados son casi idénticos)
 
 Qué mide (todo determinista, voraz):
-  · dist:   las 8 piezas más probables tras «A:» para cuatro preguntas, y la respuesta voraz con su probabilidad conjunta.
-            Dos son preguntas del banco de `questions.py`; «The Glass Cathedral of Aldermoor» es un título INVENTADO para esta lección.
-  · idk:    probabilidad de que el modelo continúe con una frase de «no sé» (suma de variantes) frente a nombrar un autor.
+  · dist:   las 8 piezas más probables tras «A:» para cuatro preguntas, la respuesta voraz con su probabilidad conjunta y
+            cuántas piezas hacen falta para sumar la mitad de la probabilidad (n_half) y el 90 % (n_90).
+            Tres son preguntas del banco de `questions.py`; «The Glass Cathedral of Aldermoor» es un título INVENTADO para esta lección.
+  · idk:    probabilidad de que el modelo continúe con una frase de «no sé» (suma de variantes) y, aparte, la de la respuesta correcta.
   · snow:   continuación voraz de una frase que da por cierta una autoría falsa y de la misma con la autoría correcta.
-  · arith:  40 multiplicaciones de tres cifras por dos cifras (semilla fija); ¿acierta?, ¿acierta el número de cifras?
+  · arith:  40 multiplicaciones de tres cifras por dos cifras (semilla fija), con tres ejemplos resueltos en el prompt;
+            ¿acierta el resultado?, ¿acierta el número de cifras?, ¿la primera cifra?
 """
 import copy, json, math, random, sys, pathlib, importlib.util
 import torch
@@ -31,8 +34,12 @@ def probs_next(text):
         return torch.softmax(model(ids).logits[0, -1].float(), -1)
 
 def top(text, k=8):
-    v, i = torch.topk(probs_next(text), k)
-    return [[tok.decode(int(a)), float(b)] for b, a in zip(v, i)]
+    pr = probs_next(text)
+    v, i = torch.topk(pr, k)
+    srt = torch.sort(pr, descending=True).values.cumsum(0)
+    n_half = int((srt < 0.5).sum()) + 1
+    n_90 = int((srt < 0.9).sum()) + 1
+    return [[tok.decode(int(a)), float(b)] for b, a in zip(v, i)], n_half, n_90
 
 def seqprob(prefix, cont):
     ids = tok(prefix, return_tensors='pt').input_ids.to(dev)
@@ -61,19 +68,33 @@ R['dist'] = []
 for q in DQ:
     pre = SHOTS + f"Q: {q}\nA:"
     ans, pr = greedy(pre, 14, stop_nl=True)
-    R['dist'].append({'q': q, 'top': top(pre, 8), 'ans': ans.strip(), 'p': math.prod(pr), 'p1': pr[0]})
+    tp, n_half, n_90 = top(pre, 8)
+    R['dist'].append({'q': q, 'top': tp, 'ans': ans.strip(), 'p': math.prod(pr), 'p1': pr[0], 'n_half': n_half, 'n_90': n_90})
 
 R['idk'] = {}
 for q in ["Who wrote 'Pedro Páramo'?", "Who wrote the novel 'The Glass Cathedral of Aldermoor'?", "What is the capital of Australia?"]:
     pre = SHOTS + f"Q: {q}\nA:"
     variants = [" I don't know", " I do not know", " I'm not sure", " Unknown", " I don't know.", " Not sure", " No one knows", " There is no such novel"]
     R['idk'][q] = {'variants': {v: seqprob(pre, v) for v in variants}}
+    if q == "Who wrote 'Pedro Páramo'?":   # la respuesta correcta, aparte de las frases de «no sé»
+        R['idk'][q]['gold'] = {' Juan Rulfo': seqprob(pre, ' Juan Rulfo')}
 
 R['snow'] = []
 for pre in ["Pedro Páramo is a novel by Pablo Neruda, first published in", "Pedro Páramo is a novel by Juan Rulfo, first published in"]:
     txt, _ = greedy(pre, 36)
     R['snow'].append({'prefix': pre, 'cont': txt})
 
+# Tres multiplicaciones resueltas (ninguna está entre las 40 que se miden): sin ellas, un modelo base ni siquiera sabe que se espera un número.
+SHOTS_ARITH = """Q: What is 214 times 37?
+A: 7918
+
+Q: What is 562 times 83?
+A: 46646
+
+Q: What is 905 times 26?
+A: 23530
+
+"""
 rnd = random.Random(33)
 items = []
 seen = set()
@@ -81,7 +102,7 @@ while len(items) < 40:
     a, b = rnd.randint(100, 999), rnd.randint(11, 99)
     if (a, b) in seen: continue
     seen.add((a, b))
-    pre = SHOTS + f"Q: What is {a} times {b}?\nA:"
+    pre = SHOTS_ARITH + f"Q: What is {a} times {b}?\nA:"
     ans, pr = greedy(pre, 10, stop_nl=True)
     gold = a * b
     digits = ''.join(c for c in ans if c.isdigit())

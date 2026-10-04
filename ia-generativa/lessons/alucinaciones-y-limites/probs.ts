@@ -51,7 +51,7 @@ export function drawProbs(S: Frame, R: { main: Rect; aside: Rect; all: Rect }) {
   const nrows = TOPK + 1 + (S.on('noidk') ? 1 : 0);
   const rowH = Math.min(30 * u, bars.h / (TOPK + 2));
   const growA = S.at('known', 0.1, 1.5, 'out'), growB = S.at('unknown', 0.2, 1.8, 'out');
-  const showA = S.on('recall') && (1 - smooth(toUnk) * (inUnk ? 1 : 0));
+  const showA = S.on('recall') ? 1 - smooth(toUnk) : 0;
   if (showA > 0.01) d.withAlpha(showA, () => {
     const rows = rowsFor(S, AUS, 0, S.on('known') ? growA : 0.0001, undefined).map((r, i) => (S.on('known') ? r : { ...r, value: 0, a: S.reveal('recall', 0.7 + i * 0.07, 0.4) }));
     probBars(S, { ...bars, h: rowH * nrows }, rows, { rowH, labelW: Math.min(150 * u, bars.w * 0.38) });

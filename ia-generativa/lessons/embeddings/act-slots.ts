@@ -15,8 +15,8 @@ export function drawHook(S: Frame) {
   const doc = DOCS.find((x) => x.id === 'refund')!, q = QUERIES[4];
   const words = (t: string) => t.replace(/[.,;:!?¿¡]/g, '').split(/\s+/).filter(Boolean);
   const gap = (S.portrait ? 74 : 150) * u, tiny = isTiny(S);
-  const ch = S.portrait ? (A.h - gap) / 2 - 4 * u : Math.min(A.h * 0.72, 220 * u), cw = S.portrait ? A.w : (A.w - gap) / 2;
-  const top = S.portrait ? A.y : A.y + (A.h - ch) / 2;
+  const ch = S.portrait ? Math.min((A.h - gap) / 2 - 4 * u, 150 * u) : Math.min(A.h * 0.72, 150 * u), cw = S.portrait ? A.w : (A.w - gap) / 2;
+  const top = S.portrait ? A.y + (A.h - (2 * ch + gap)) / 2 : A.y + (A.h - ch) / 2;
   const R1: Rect = { x: A.x, y: top, w: cw, h: ch };
   const R2: Rect = S.portrait ? { x: A.x, y: top + ch + gap, w: cw, h: ch } : { x: A.x + cw + gap, y: top, w: cw, h: ch };
   const sz = fs(S, tiny ? 12 : 13), rh = (tiny ? 24 : 28) * u;
@@ -166,10 +166,10 @@ export function drawDense(S: Frame) {
       const one = new Float32Array(100); one[37] = 1;
       const row = (y: number, title: string, vals: ArrayLike<number>, tn: 'ink' | 'lat') => {
         d.text(title, R.x, y, { size: fs(S, 12), weight: 700, color: p.ink2, base: 'top' });
-        strip(S, { x: R.x, y: y + fs(S, 12) * u * 1.25, w: Math.min(R.w, 300 * u), h: sh }, vals, { tone: tn === 'ink' ? 'mute' : 'lat', max: 1 });
+        strip(S, { x: R.x, y: y + fs(S, 12) * u * 1.25, w: Math.min(R.w, 300 * u), h: sh }, vals, { tone: tn === 'ink' ? 'mute' : 'lat', max: tn === 'ink' ? 1 : 0.4 });
       };
       row(R.y + (S.portrait ? 0 : R.h * 0.22), S.l('one-hot: 100 de 50 000 casillas', 'one-hot: 100 of 50,000 slots'), one, 'ink');
-      row(R.y + (S.portrait ? sh + 28 * u : R.h * 0.22 + sh + 44 * u), S.l('embedding: 100 de 100 números', 'embedding: 100 of 100 numbers'), Array.from({ length: 100 }, (_, k) => V[SLOT[1] * 100 + k] * 2.6), 'lat');
+      row(R.y + (S.portrait ? sh + 28 * u : R.h * 0.22 + sh + 44 * u), S.l('embedding: 100 de 100 números', 'embedding: 100 of 100 numbers'), Array.from({ length: 100 }, (_, k) => V[SLOT[1] * 100 + k]), 'lat');
     });
     const aS = S.reveal('table', 1.4, 0.8);
     if (aS > 0) d.withAlpha(aS, () => {
@@ -243,7 +243,7 @@ export function drawContext(S: Frame) {
         const R: Rect = S.portrait ? { x: A.x, y: hy + 24 * u + 5 * rh + 14 * u, w: A.w, h: A.y + A.h - (hy + 24 * u + 5 * rh + 14 * u) } : { x: x0 + gw + 28 * u, y: A.y + A.h * 0.18, w: A.x + A.w - (x0 + gw + 28 * u), h: A.h * 0.6 };
         const lt = tone(S, 'lat'), pairs: [number, number][] = [[W3[0], W3[1]], [W3[0], W3[2]]];
         pairs.forEach(([i, j], k) => {
-          const y = R.y + k * (S.portrait ? 30 * u : 70 * u), c = cos(i, j);
+          const y = R.y + k * (S.portrait ? 40 * u : 70 * u), c = cos(i, j);
           d.text(S.l(`«${word(S, i)}» y «${word(S, j)}»`, `“${word(S, i)}” and “${word(S, j)}”`), R.x, y, { size: fs(S, 13), weight: 700, color: p.ink2, base: 'top' });
           const by = y + (S.portrait ? fs(S, 13) * u * 1.3 : 22 * u);
           const bw = Math.min(R.w - 70 * u, 220 * u);
@@ -263,7 +263,7 @@ export function drawGlove(S: Frame) {
   const three = [idOf('dog'), idOf('cat'), idOf('bread')];
   d.withAlpha(a, () => {
     // tubería: texto → entrenamiento → tabla
-    const bh = (S.portrait ? 54 : tiny ? 44 : 62) * u, gap = (S.portrait ? 14 : 30) * u, bw = (A.w - gap * 2) / 3;
+    const bh = (S.portrait ? 66 : tiny ? 46 : 62) * u, gap = (S.portrait ? 12 : 30) * u, bw = (A.w - gap * 2) / 3;
     const subs = [S.l('palabras de texto en inglés', 'words of English text'), S.l('números por palabra', 'numbers per word'), S.l('palabras en la tabla', 'words in the table')];
     const bigs = ['6 000 000 000', '100', '400 000'];
     const bx = [0, 1, 2].map((k) => ({ x: A.x + k * (bw + gap), y: A.y, w: bw, h: bh }));
@@ -271,14 +271,15 @@ export function drawGlove(S: Frame) {
       const ak = S.reveal('glove', 0.3 + k * 0.9, 0.6);
       d.withAlpha(ak, () => {
         d.rect(r.x, r.y, r.w, r.h, { fill: alpha(tone(S, k === 1 ? 'w' : 'dat').c, 0.1), stroke: tone(S, k === 1 ? 'w' : 'dat').c, lw: 1.5, r: 3 });
-        d.text(bigs[k], r.x + r.w / 2, r.y + r.h * 0.38, { size: S.portrait ? 15 : 20, weight: 800, font: 'mono', color: tone(S, k === 1 ? 'w' : 'dat').ink, align: 'center', base: 'middle' });
-        d.text(subs[k], r.x + r.w / 2, r.y + r.h * 0.74, { size: fs(S, 11), weight: 600, color: p.ink2, align: 'center', base: 'middle', w: r.w - 8 * u, lh: 1.05 });
+        const bsz = S.portrait ? 12 : 20; let bs = bsz; while (bs > 8 && d.measure(bigs[k], { size: bs, weight: 800, font: 'mono' }) > r.w - 8 * u) bs -= 1;
+        d.text(bigs[k], r.x + r.w / 2, r.y + r.h * 0.3, { size: bs, weight: 800, font: 'mono', color: tone(S, k === 1 ? 'w' : 'dat').ink, align: 'center', base: 'middle' });
+        d.text(subs[k], r.x + r.w / 2, r.y + r.h * 0.56, { size: fs(S, 11), weight: 600, color: p.ink2, align: 'center', base: 'top', w: r.w - 6 * u, lh: 1.05 });
       });
       if (k < 2) { const al = S.reveal('glove', 0.9 + k * 0.9, 0.5); d.withAlpha(al, () => d.arrow(r.x + r.w + 3, r.y + r.h / 2, r.x + r.w + gap - 3, r.y + r.h / 2, p.ink2, 2, 7)); }
     });
     d.withAlpha(S.reveal('glove', 2.6, 0.6), () => d.text(S.l('GloVe 6B · Pennington, Socher y Manning, 2014 · licencia de dominio público', 'GloVe 6B · Pennington, Socher & Manning, 2014 · public-domain license'), A.x, A.y + bh + 6 * u, { size: fs(S, 11), weight: 600, color: p.mute, base: 'top', w: A.w }));
     // barras reales
-    const y0 = A.y + bh + (S.portrait ? 44 : 36) * u, sh = Math.min((tiny ? 40 : 56) * u, (A.y + A.h - y0 - 22 * u) / 3 - 6 * u), lw = (S.portrait ? 54 : 70) * u;
+    const y0 = A.y + bh + (S.portrait ? 54 : 36) * u, sh = Math.min((tiny ? 40 : 84) * u, (A.y + A.h - y0 - 22 * u) / 3 - 6 * u), lw = (S.portrait ? 54 : 70) * u;
     three.forEach((i, k) => {
       const ra = S.reveal('glove', 3.6 + k * 0.5, 0.5), y = y0 + k * (sh + 8 * u);
       d.withAlpha(ra, () => {

@@ -19,4 +19,5 @@ export const PUBLISHED: string[] = [
   'secuencias-y-memoria',
   'inferencia',
   'big-bang-deep-learning',
+  'embeddings',
 ];

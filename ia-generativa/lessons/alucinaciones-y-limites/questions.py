@@ -118,7 +118,7 @@ for ev, y in [('the Berlin Wall fall', 1989), ('World War II end', 1945), ('the 
 for c, cur in [('Japan', ['yen']), ('Switzerland', ['Swiss franc', 'franc']), ('India', ['rupee', 'Indian rupee']), ('Brazil', ['real', 'Brazilian real']),
                ('Poland', ['zloty']), ('Sweden', ['krona', 'Swedish krona']), ('Thailand', ['baht']), ('South Africa', ['rand']),
                ('Turkey', ['lira', 'Turkish lira']), ('Russia', ['ruble', 'rouble']), ('Hungary', ['forint']),
-               ('the Czech Republic', ['koruna', 'Czech koruna']), ('Vietnam', ['dong']), ('South Korea', ['won']), ('Israel', ['shekel']),
+               ('the Czech Republic', ['koruna', 'Czech koruna', 'Czech crown']), ('Vietnam', ['dong']), ('South Korea', ['won']), ('Israel', ['shekel']),
                ('Norway', ['krone', 'Norwegian krone']), ('China', ['yuan', 'renminbi']), ('Indonesia', ['rupiah']), ('Malaysia', ['ringgit']),
                ('Saudi Arabia', ['riyal']), ('Nigeria', ['naira']), ('Ghana', ['cedi']), ('Ukraine', ['hryvnia']), ('Romania', ['leu']),
                ('Bulgaria', ['lev']), ('Guatemala', ['quetzal']), ('Cambodia', ['riel']), ('Mongolia', ['tugrik', 'togrog']), ('Bangladesh', ['taka']),
