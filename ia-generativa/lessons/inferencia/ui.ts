@@ -24,6 +24,12 @@ export function tagText(S: Frame, str: string, x: number, y: number, o: { t?: To
   return S.d.text(str, x, y, { size: FS(S, o.size ?? 13), weight: o.weight ?? 700, color: o.t ? c.ink : S.pal.ink, align: o.align, base: o.base ?? 'middle', font: o.font, halo: S.pal.stage, haloW: 4, a: o.a, w: o.w });
 }
 
+/** Nota al pie que puede ocupar varias líneas: la última línea queda en `yBottom` y el resto crece hacia arriba (nunca se sale del escenario). */
+export function noteUp(S: Frame, str: string, x: number, yBottom: number, w: number, o: { t?: Tone; align?: CanvasTextAlign; size?: number; weight?: number } = {}) {
+  const size = FS(S, o.size ?? 12), weight = o.weight ?? 600, n = S.d.wrap(str, w, { size, weight }).length, lh = 1.3 * size * S.u;
+  return S.d.text(str, x, yBottom - (n - 1) * lh, { size, weight, color: tone(S, o.t ?? 'mute').ink, align: o.align ?? 'left', base: 'bottom', halo: S.pal.stage, haloW: 4, w });
+}
+
 /** Rótulo en pastilla (≥ 12 px efectivos). */
 export function pill(S: Frame, str: string, x: number, y: number, o: { t?: Tone; align?: CanvasTextAlign; a?: number; mono?: boolean } = {}) {
   const c = tone(S, o.t ?? 'ink');

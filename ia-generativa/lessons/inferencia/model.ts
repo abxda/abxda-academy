@@ -118,15 +118,20 @@ export function bill(t: Task, users = 16): Bill {
   return { costIn, costOut, total: costIn + costOut, shareIn: costIn / (costIn + costOut), ttft, gen, time: ttft + gen, newIn };
 }
 
-// ── formato (mismos locales que Frame.n) ──
+// ── formato ──
+// Como en la prosa de la lección (y de todo el curso): en español coma decimal y espacio de miles («3,35», «8 000»); en inglés
+// punto decimal y coma de miles. (Frame.n usa es-MX, con punto decimal: aquí se formatea a mano para que el lienzo, los controles,
+// los subtítulos y «Por dentro» escriban igual.)
 export type Lang = 'es' | 'en';
-const loc = (l: Lang) => (l === 'es' ? 'es-MX' : 'en-US');
-export const nf = (x: number, d: number, l: Lang) => x.toLocaleString(loc(l), { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtEn = (x: number, d: number) => x.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const toEs = (s: string) => s.replace(/[,.]/g, (c) => (c === ',' ? '\u00a0' : ','));
+export const nf = (x: number, d: number, l: Lang) => (l === 'es' ? toEs(fmtEn(x, d)) : fmtEn(x, d));
 /** Cifras significativas sin ceros finales (3 cifras). */
 export function sig(x: number, l: Lang): string {
   const ax = Math.abs(x), d = ax >= 100 ? 0 : ax >= 10 ? 1 : ax >= 1 ? 2 : 3;
-  const s = nf(x, d, l), sep = (1.5).toLocaleString(loc(l)).replace(/\d/g, '')[0];
-  return d > 0 && s.includes(sep) ? s.replace(new RegExp(`\\${sep}?0+$`), '') : s;
+  let s = fmtEn(x, d);
+  if (d > 0) s = s.replace(/\.?0+$/, '');
+  return l === 'es' ? toEs(s) : s;
 }
 /** Bytes → «16,1 GB» (decimal, como en las hojas de datos). */
 export function gb(bytes: number, l: Lang, digits?: number): string {

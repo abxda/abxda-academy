@@ -38,8 +38,8 @@ export default defineLesson({
     },
     {
       id: 'full',
-      es: 'El descenso del gradiente de la lección cuatro usa todos los ejemplos para calcular la pendiente. Es exacto, pero cada paso cuesta mirar los doscientos cincuenta y seis.',
-      en: 'The gradient descent from lesson four uses every example to compute the slope. It is exact, but each step costs a look at all two hundred fifty-six.',
+      es: 'Con todos los ejemplos, el descenso del gradiente de la lección cuatro calcula la pendiente del error promedio. Es exacto, pero cada paso cuesta mirar los doscientos cincuenta y seis.',
+      en: 'With every example, the gradient descent from lesson four computes the slope of the average error. It is exact, but each step costs a look at all two hundred fifty-six.',
       pad: 0.3,
     },
     {
@@ -164,8 +164,8 @@ export default defineLesson({
     },
     {
       id: 'adam-honest',
-      es: 'No es magia. Ayuda sobre todo cuando los pesos viven en escalas muy distintas, y con tasa constante termina rebotando alrededor del fondo.',
-      en: 'It is not magic. It helps most when weights live on very different scales, and with a constant rate it ends up bouncing around the bottom.',
+      es: 'No es magia. Ayuda sobre todo cuando los pesos viven en escalas muy distintas, y con tasa constante suele seguir rebotando alrededor del fondo.',
+      en: 'It is not magic. It helps most when weights live on very different scales, and with a constant rate it tends to keep bouncing around the bottom.',
       pad: 0.4,
     },
     {
@@ -302,7 +302,7 @@ Cerca de un mínimo con curvatura $h$, el ruido del gradiente (varianza $s^2=\\s
 
 $$\\mathbf{v}_{t+1}=\\beta\\,\\mathbf{v}_t+\\mathbf{g}_t,\\qquad \\mathbf{w}_{t+1}=\\mathbf{w}_t-\\eta\\,\\mathbf{v}_{t+1}$$
 
-Con $\\beta=0{,}9$ y un gradiente constante, $\\mathbf{v}\\to \\mathbf{g}/(1-\\beta)$: el paso efectivo es diez veces mayor, y por eso la tasa del momento es unas diez veces menor que la de SGD. En un cuadrático con curvaturas $\\lambda_{\\min}\\le h\\le\\lambda_{\\max}$ y número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, la mejor tasa fija de SGD reduce la distancia al fondo por paso en un factor $\\frac{\\kappa-1}{\\kappa+1}$, y el momento bien ajustado en $\\frac{\\sqrt\\kappa-1}{\\sqrt\\kappa+1}$ (Polyak, 1964). En el cañón de la lección, cerca del fondo, $\\kappa\\approx 50$: unos $0{,}96$ por paso frente a $0{,}75$ (en teoría, sin ruido).
+Con $\\beta=0{,}9$ y un gradiente constante, $\\mathbf{v}\\to \\mathbf{g}/(1-\\beta)$: el paso efectivo es diez veces mayor; a igual paso efectivo, la tasa del momento sería unas diez veces menor que la de SGD (en la práctica la razón es menor: en el cañón de la lección, 0,02 frente a 0,07). En un cuadrático con curvaturas $\\lambda_{\\min}\\le h\\le\\lambda_{\\max}$ y número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, la mejor tasa fija de SGD reduce la distancia al fondo por paso en un factor $\\frac{\\kappa-1}{\\kappa+1}$, y el momento bien ajustado en $\\frac{\\sqrt\\kappa-1}{\\sqrt\\kappa+1}$ (Polyak, 1964). En el cañón de la lección, cerca del fondo, $\\kappa\\approx 50$: unos $0{,}96$ por paso frente a $0{,}75$ (en teoría, sin ruido).
 
 ## Adam
 
@@ -310,7 +310,7 @@ $$\\mathbf{m}_t=\\beta_1\\mathbf{m}_{t-1}+(1-\\beta_1)\\mathbf{g}_t,\\qquad \\ma
 
 $$\\hat{\\mathbf{m}}_t=\\frac{\\mathbf{m}_t}{1-\\beta_1^{\\,t}},\\quad \\hat{\\mathbf{s}}_t=\\frac{\\mathbf{s}_t}{1-\\beta_2^{\\,t}},\\qquad \\mathbf{w}_t=\\mathbf{w}_{t-1}-\\eta\\,\\frac{\\hat{\\mathbf{m}}_t}{\\sqrt{\\hat{\\mathbf{s}}_t}+\\varepsilon}$$
 
-Todo es por peso (el cuadrado y la raíz actúan componente a componente). Los valores por defecto de Kingma y Ba (2015) son $\\eta=0{,}001$, $\\beta_1=0{,}9$, $\\beta_2=0{,}999$ y $\\varepsilon=10^{-8}$. Las correcciones de sesgo compensan que $\\mathbf{m}$ y $\\mathbf{s}$ empiezan en cero. En el primer paso $\\hat{\\mathbf{m}}/\\sqrt{\\hat{\\mathbf{s}}}=\\operatorname{signo}(\\mathbf{g})$, así que cada peso se mueve $\\eta$; en régimen normal el paso de cada peso es del orden de $\\eta$ como máximo. Dos consecuencias: el método es invariante al reescalar cada gradiente por separado (lo dicen sus autores), y con $\\eta$ constante el camino no se asienta: oscila con una amplitud del orden de $\\eta$ alrededor del mínimo.
+Todo es por peso (el cuadrado y la raíz actúan componente a componente). Los valores por defecto de Kingma y Ba (2015) son $\\eta=0{,}001$, $\\beta_1=0{,}9$, $\\beta_2=0{,}999$ y $\\varepsilon=10^{-8}$. Las correcciones de sesgo compensan que $\\mathbf{m}$ y $\\mathbf{s}$ empiezan en cero. En el primer paso $\\hat{\\mathbf{m}}/\\sqrt{\\hat{\\mathbf{s}}}=\\operatorname{signo}(\\mathbf{g})$, así que cada peso se mueve $\\eta$; en régimen normal el paso de cada peso es del orden de $\\eta$ como máximo. Dos consecuencias: el método es invariante al reescalar cada gradiente por separado (lo dicen sus autores), y cerca de un óptimo la señal frente al ruido baja y los pasos se encogen solos, un «recocido automático» según Kingma y Ba. Con gradientes de lotes ruidosos eso no basta: en la simulación de la lección, con $\\eta$ constante el camino sigue sacudiéndose alrededor del fondo, con una amplitud que crece con $\\eta$, y bajar $\\eta$ al final lo calma.
 
 ## Calendarios de la tasa
 
@@ -387,7 +387,7 @@ Near a minimum with curvature $h$, gradient noise (variance $s^2=\\sigma^2/B$) l
 
 $$\\mathbf{v}_{t+1}=\\beta\\,\\mathbf{v}_t+\\mathbf{g}_t,\\qquad \\mathbf{w}_{t+1}=\\mathbf{w}_t-\\eta\\,\\mathbf{v}_{t+1}$$
 
-With $\\beta=0.9$ and a constant gradient, $\\mathbf{v}\\to \\mathbf{g}/(1-\\beta)$: the effective step is ten times larger, which is why momentum’s rate is about ten times smaller than SGD’s. For a quadratic with curvatures $\\lambda_{\\min}\\le h\\le\\lambda_{\\max}$ and condition number $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, the best fixed rate for SGD shrinks the distance to the bottom per step by a factor $\\frac{\\kappa-1}{\\kappa+1}$, and well-tuned momentum by $\\frac{\\sqrt\\kappa-1}{\\sqrt\\kappa+1}$ (Polyak, 1964). In the lesson’s canyon, near the bottom, $\\kappa\\approx 50$: about $0.96$ per step versus $0.75$ (in theory, without noise).
+With $\\beta=0.9$ and a constant gradient, $\\mathbf{v}\\to \\mathbf{g}/(1-\\beta)$: the effective step is ten times larger; for the same effective step, momentum’s rate would be about ten times smaller than SGD’s (in practice the ratio is smaller: in the lesson’s canyon, 0.02 versus 0.07). For a quadratic with curvatures $\\lambda_{\\min}\\le h\\le\\lambda_{\\max}$ and condition number $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, the best fixed rate for SGD shrinks the distance to the bottom per step by a factor $\\frac{\\kappa-1}{\\kappa+1}$, and well-tuned momentum by $\\frac{\\sqrt\\kappa-1}{\\sqrt\\kappa+1}$ (Polyak, 1964). In the lesson’s canyon, near the bottom, $\\kappa\\approx 50$: about $0.96$ per step versus $0.75$ (in theory, without noise).
 
 ## Adam
 
@@ -395,7 +395,7 @@ $$\\mathbf{m}_t=\\beta_1\\mathbf{m}_{t-1}+(1-\\beta_1)\\mathbf{g}_t,\\qquad \\ma
 
 $$\\hat{\\mathbf{m}}_t=\\frac{\\mathbf{m}_t}{1-\\beta_1^{\\,t}},\\quad \\hat{\\mathbf{s}}_t=\\frac{\\mathbf{s}_t}{1-\\beta_2^{\\,t}},\\qquad \\mathbf{w}_t=\\mathbf{w}_{t-1}-\\eta\\,\\frac{\\hat{\\mathbf{m}}_t}{\\sqrt{\\hat{\\mathbf{s}}_t}+\\varepsilon}$$
 
-Everything is per weight (the square and the root act component by component). The defaults from Kingma and Ba (2015) are $\\eta=0.001$, $\\beta_1=0.9$, $\\beta_2=0.999$, and $\\varepsilon=10^{-8}$. The bias corrections compensate for $\\mathbf{m}$ and $\\mathbf{s}$ starting at zero. On the first step $\\hat{\\mathbf{m}}/\\sqrt{\\hat{\\mathbf{s}}}=\\operatorname{sign}(\\mathbf{g})$, so every weight moves by $\\eta$; in normal operation each weight’s step is at most on the order of $\\eta$. Two consequences: the method is invariant to rescaling each gradient separately (its authors say so), and with a constant $\\eta$ the path does not settle: it oscillates with an amplitude on the order of $\\eta$ around the minimum.
+Everything is per weight (the square and the root act component by component). The defaults from Kingma and Ba (2015) are $\\eta=0.001$, $\\beta_1=0.9$, $\\beta_2=0.999$, and $\\varepsilon=10^{-8}$. The bias corrections compensate for $\\mathbf{m}$ and $\\mathbf{s}$ starting at zero. On the first step $\\hat{\\mathbf{m}}/\\sqrt{\\hat{\\mathbf{s}}}=\\operatorname{sign}(\\mathbf{g})$, so every weight moves by $\\eta$; in normal operation each weight’s step is at most on the order of $\\eta$. Two consequences: the method is invariant to rescaling each gradient separately (its authors say so), and near an optimum the signal-to-noise ratio drops and the steps shrink on their own, an “automatic annealing” in Kingma and Ba’s words. With noisy batch gradients that is not enough: in the lesson’s simulation, with a constant $\\eta$ the path keeps jittering around the bottom, with an amplitude that grows with $\\eta$, and lowering $\\eta$ at the end calms it.
 
 ## Learning-rate schedules
 
@@ -566,11 +566,11 @@ Lowering the training error is not enough: you have to measure with data the mod
     { title: 'Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour', authors: 'Goyal, P., Dollár, P., Girshick, R., et al.', year: 2017, url: 'https://arxiv.org/abs/1706.02677' },
     { title: 'Language Models are Few-Shot Learners (GPT-3): Tabla 2.1, Tabla 2.2 y Apéndice B', authors: 'Brown, T. B., et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
     { title: 'A Stochastic Approximation Method', authors: 'Robbins, H., Monro, S.', year: 1951, url: 'https://doi.org/10.1214/aoms/1177729586' },
-    { title: 'Some methods of speeding up the convergence of iteration methods', authors: 'Polyak, B. T.', year: 1964 },
+    { title: 'Some methods of speeding up the convergence of iteration methods (USSR Computational Mathematics and Mathematical Physics 4(5): 1–17)', authors: 'Polyak, B. T.', year: 1964 },
     { title: 'SGDR: Stochastic Gradient Descent with Warm Restarts', authors: 'Loshchilov, I., Hutter, F.', year: 2017, url: 'https://arxiv.org/abs/1608.03983' },
     { title: 'Attention Is All You Need', authors: 'Vaswani, A., et al.', year: 2017, url: 'https://arxiv.org/abs/1706.03762' },
     { title: 'Random Search for Hyper-Parameter Optimization', authors: 'Bergstra, J., Bengio, Y.', year: 2012, url: 'https://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf' },
     { title: 'An Empirical Model of Large-Batch Training', authors: 'McCandlish, S., Kaplan, J., Amodei, D., OpenAI Dota Team', year: 2018, url: 'https://arxiv.org/abs/1812.06162' },
-    { title: 'Optimization Methods for Large-Scale Machine Learning', authors: 'Bottou, L., Curtis, F. E., Nocedal, J.', year: 2018, url: 'https://doi.org/10.1137/16M1080173' },
+    { title: 'Optimization Methods for Large-Scale Machine Learning', authors: 'Bottou, L., Curtis, F. E., Nocedal, J.', year: 2018, url: 'https://arxiv.org/abs/1606.04838' },
   ],
 });

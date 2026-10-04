@@ -1,6 +1,6 @@
 // Simulación REAL de la lección «Entrenar bien»: un modelo de juguete con DOS pesos (x, y) y N = 256 ejemplos, y los
 // optimizadores SGD, SGD con momento y Adam implementados tal cual (sin atajos). Todo es analítico y determinista: los
-// lotes salen de barajar con un generador con semilla (sin Math.random).
+// lotes salen de barajar con un generador con semilla (sin azar del navegador).
 //
 // El modelo de juguete (lo único «inventado» es la forma del paisaje; el entrenamiento sobre él es de verdad):
 //   en las coordenadas del valle (u a lo largo del fondo, v a través de las paredes) cada ejemplo i tiene su propio error

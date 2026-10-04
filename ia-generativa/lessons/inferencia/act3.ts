@@ -2,14 +2,14 @@
 // («un lote que cueste poco sin que cada persona vaya lenta»). Todos los números salen de model.ts.
 import { Plot, alpha, clamp, hash, lerp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { A100, H100, LLAMA3_8B, RTX3060, denseParams, gb, nf, secs, serve, sig, tok, usd, type Gpu } from './model';
-import { FS, axes, chip, fitText, lang, lerpRect, line2, mark, op, pad, pill, show, tagText } from './ui';
+import { FS, axes, chip, fitText, lang, lerpRect, line2, mark, noteUp, op, pad, pill, show, tagText } from './ui';
 
 const A8 = LLAMA3_8B, N8 = denseParams(A8), W8 = N8 * 2, BW = H100.bw;
 
 // ═════════════ leer vs calcular ═════════════
 export function drawBw(S: Frame) {
   const { d, pal: p } = S, u = S.u, A = pad(S), l = lang(S), wt = tone(S, 'w'), dt = tone(S, 'dat');
-  const dh = clamp(A.h * 0.34, 110 * u, 190 * u), y0 = A.y + clamp(A.h * 0.05, 6 * u, 36 * u), bwid = A.w * (S.portrait ? 0.3 : 0.26);
+  const dh = clamp(A.h * 0.34, 110 * u, 190 * u), y0 = A.y + clamp(A.h * 0.05, 6 * u, 36 * u), bwid = A.w * (S.portrait ? 0.28 : 0.26);
   const mem: Rect = { x: A.x, y: y0, w: bwid, h: dh }, cmp: Rect = { x: A.x + A.w - bwid, y: y0, w: bwid, h: dh };
   const tCalc = (2 * N8) / H100.peak, tMem = W8 / BW;
   const cells = (r: Rect, t: 'w' | 'dat', act: (i: number) => number, al: number) => {
@@ -23,7 +23,7 @@ export function drawBw(S: Frame) {
     d.rect(mem.x, mem.y, mem.w, mem.h, { fill: alpha(wt.c, 0.06), stroke: wt.c, lw: 1.6, r: 4 });
     fitText(S, S.l('Memoria (HBM)', 'Memory (HBM)'), mem.x + mem.w / 2, mem.y + 8 * S.u, mem.w - 8 * u, 14, { weight: 800, color: wt.ink, align: 'center', base: 'top' });
     cells(mem, 'w', (k) => 0.55 + 0.4 * hash(k, 5), 1);
-    fitText(S, S.l(`pesos ${gb(W8, 'es', 1)}`, `weights ${gb(W8, 'en', 1)}`), mem.x + mem.w / 2, mem.y + mem.h - 6 * S.u, mem.w - 8 * u, 13, { weight: 700, font: 'mono', color: p.ink, align: 'center', base: 'bottom' });
+    fitText(S, S.portrait ? gb(W8, l, 1) : S.l(`pesos ${gb(W8, 'es', 1)}`, `weights ${gb(W8, 'en', 1)}`), mem.x + mem.w / 2, mem.y + mem.h - 6 * S.u, mem.w - 8 * u, 13, { weight: 700, font: 'mono', color: p.ink, align: 'center', base: 'bottom' });
   });
   // cálculo
   const flash = S.on('math-little') && !S.on('read-slow') ? clamp(1 - Math.abs(S.since('math-little') - 1.2) / 0.45) : 0;
@@ -41,7 +41,7 @@ export function drawBw(S: Frame) {
     const n = Math.max(4, Math.floor((px1 - px0) / (26 * u)));
     for (let i = 0; i < n; i++) { const f = (S.clock * 0.45 + i / n) % 1; d.rect(px0 + f * (px1 - px0 - 10 * u), py - 5 * u, 10 * u, 10 * u, { fill: alpha(wt.c, 0.85) }); }
     d.arrow(px0 + 6 * u, py + ph / 2 + 12 * u, px1 - 6 * u, py + ph / 2 + 12 * u, p.lineStrong, 1.6, 7);
-    tagText(S, S.l(`${gb(W8, 'es', 1)} por cada token`, `${gb(W8, 'en', 1)} for every token`), (px0 + px1) / 2, py - ph / 2 - 12 * u, { t: 'w', align: 'center', base: 'bottom', size: 14 });
+    tagText(S, S.l(`${gb(W8, 'es', 1)} por token`, `${gb(W8, 'en', 1)} per token`), (px0 + px1) / 2, py - ph / 2 - 12 * u, { t: 'w', align: 'center', base: 'bottom', size: S.portrait ? 13 : 14 });
     if (S.on('read-slow')) tagText(S, S.l(`ancho de banda ${nf(BW / 1e12, 2, 'es')} TB/s`, `bandwidth ${nf(BW / 1e12, 2, 'en')} TB/s`), (px0 + px1) / 2, py + ph / 2 + 28 * u, { t: 'w', align: 'center', base: 'top', a: S.reveal('read-slow', 0.1, 0.5), weight: 600 });
   });
   // barras de tiempo
@@ -60,7 +60,7 @@ export function drawBw(S: Frame) {
     });
     show(S, S.reveal('read-slow', 2.4, 0.6), () => {
       pill(S, S.l(`≈ ${nf(Math.round(tMem / tCalc / 10) * 10, 0, 'es')} veces más`, `≈ ${nf(Math.round(tMem / tCalc / 10) * 10, 0, 'en')}× longer`), bx + bw * 0.5, y2 + bh + 24 * u, { t: 'w' });
-      pill(S, S.l(`cálculo usado: ${nf((tCalc / tMem) * 100, 1, 'es')} %`, `arithmetic used: ${nf((tCalc / tMem) * 100, 1, 'en')}%`), cmp.x + cmp.w / 2, cmp.y + cmp.h + 20 * u, { t: 'dat' });
+      pill(S, S.l(`cálculo usado: ${nf((tCalc / tMem) * 100, 1, 'es')} %`, `arithmetic used: ${nf((tCalc / tMem) * 100, 1, 'en')}%`), cmp.x + cmp.w, cmp.y + cmp.h + 20 * u, { t: 'dat', align: 'right' });
     });
   });
   // la regla: ancho de banda ÷ bytes
@@ -81,7 +81,7 @@ export function drawBw(S: Frame) {
 export function drawQuant(S: Frame) {
   const { d, pal: p } = S, u = S.u, A = pad(S), l = lang(S), dt = tone(S, 'dat'), wt = tone(S, 'w'), er = tone(S, 'err');
   const gpus: Gpu[] = [RTX3060, A100, H100], precs: [number, string, string][] = [[2, '16 bits', '16 bits'], [1, '8 bits', '8 bits'], [0.5, '4 bits', '4 bits']];
-  const rowLabW = Math.min(150 * u, A.w * 0.33), cw = (A.w - rowLabW) / 3, top = A.y + 56 * u, rh = clamp((A.h - 56 * u - 70 * u) / 3, 54 * u, 100 * u), headH = 46 * u;
+  const rowLabW = Math.min(150 * u, A.w * (S.portrait ? 0.38 : 0.33)), cw = (A.w - rowLabW) / 3, top = A.y + 56 * u, rh = clamp((A.h - 56 * u - 70 * u) / 3, 54 * u, 100 * u), headH = 46 * u;
   const a0 = S.reveal('quant-speed', 0.1, 0.5);
   show(S, a0, () => {
     fitText(S, S.l('Techo de tokens por segundo, una persona', 'Tokens-per-second ceiling, one person'), A.x, A.y + 4 * u, A.w, 17, { weight: 800, base: 'top' });
@@ -100,7 +100,7 @@ export function drawQuant(S: Frame) {
         } else {
           d.rect(cx, y, cwid, chh, { fill: alpha(er.c, 0.05), stroke: er.c, lw: 1.3, r: 3, dash: [5, 4] });
           mark(S, cx + cwid / 2, y + chh * 0.36, false, { r: 8 });
-          fitText(S, S.l('no cabe', 'does not fit'), cx + cwid / 2, y + chh * 0.72, cwid - 8 * u, 13, { weight: 700, color: er.ink, align: 'center', base: 'middle' });
+          fitText(S, S.portrait ? S.l('no cabe', 'won’t fit') : S.l('no cabe', 'does not fit'), cx + cwid / 2, y + chh * 0.72, cwid - 8 * u, 13, { weight: 700, color: er.ink, align: 'center', base: 'middle' });
         }
       });
     });
@@ -115,7 +115,7 @@ export function drawQuant(S: Frame) {
     const y = top + headH, r = { x: A.x + 2 * u, y: y - 2 * u, w: A.w - 4 * u, h: rh - 2 * u };
     d.rect(r.x, r.y, r.w, r.h, { stroke: p.ink, lw: 2.2, r: 4 });
   });
-  show(S, S.reveal('quant-speed', 1.0, 0.6), () => tagText(S, S.l('cota teórica: ignora la caché y los sobrecostos; 4 bits cuenta como medio byte por peso', 'theoretical bound: ignores the cache and overheads; 4 bits counts as half a byte per weight'), A.x + A.w / 2, A.y + A.h - 4 * u, { align: 'center', base: 'bottom', w: A.w, size: 12, t: 'mute', weight: 600 }));
+  show(S, S.reveal('quant-speed', 1.0, 0.6), () => noteUp(S, S.l('cota teórica: ignora la caché y los sobrecostos; 4 bits cuenta como medio byte por peso', 'theoretical bound: ignores the cache and overheads; 4 bits counts as half a byte per weight'), A.x + A.w / 2, A.y + A.h - 2 * u, A.w, { align: 'center' }));
 }
 
 // ═════════════ lotes: rendimiento y velocidad por persona ═════════════
@@ -178,8 +178,8 @@ export function drawBatch(S: Frame) {
       if (S.on('trade-off')) { /* queda dibujada */ }
       const yEnd = at(c8.thr, Math.min(c8.maxU, bm)), xEnd = pl.X(Math.min(c8.maxU, bm));
       d.circle(xEnd, pl.Y(yEnd), 5.5 * u, { fill: dt.c, stroke: p.stage, lw: 2 });
-      tagText(S, S.l('con la caché de cada persona (8 000 tokens)', 'with each person’s cache (8,000 tokens)'), pl.r.x + pl.r.w - 8 * u, pl.Y(c8.thr[NB - 1]) - 26 * u, { align: 'right', base: 'bottom', t: 'dat', size: 12 });
-      show(S, S.reveal('batch-limit', 4.8, 0.6), () => tagText(S, S.l('no cabe', 'does not fit'), (pl.X(c8.maxU) + pl.r.x + pl.r.w) / 2, pl.r.y + 14 * u, { t: 'err', align: 'center', size: 12 }));
+      tagText(S, S.l('con la caché de cada persona (8 000 tokens)', 'with each person’s cache (8,000 tokens)'), pl.r.x + pl.r.w - 8 * u, pl.Y(c8.thr[NB - 1]) + 12 * u, { align: 'right', base: 'top', t: 'dat', size: 12 });
+      show(S, S.reveal('batch-limit', 4.8, 0.6), () => tagText(S, S.l('no cabe', 'does not fit'), pl.r.x + pl.r.w - 4 * u, pl.r.y + 14 * u, { t: 'err', align: 'right', size: 12 }));
     });
     if (S.on('trade-off')) {
       const q = S.at('trade-off', 0.8, 3.4, 'io'), b = 1 + 31 * q, x = pl.X(b), y = pl.Y(at(c8.thr, b));
@@ -224,7 +224,7 @@ export function drawGate2(S: Frame) {
   const p2 = new Plot(S, r2, { xr: [0, NB], yr: [0, 240], pad: { l: S.portrait ? 44 : 52, r: 10, t: 24, b: 34 } });
   axes(S, p2, { xTicks: [0, 16, 32, 48, 64], yTicks: [0, 50, 100, 150, 200], xFmt: (v) => nf(v, 0, l), yFmt: (v) => nf(v, 0, l), xLabel: S.l('personas en el lote', 'people in the batch'), yLabel: S.l('tokens/s por persona', 'tokens/s per person'), grid: true });
   const feas = (c: Curves, f: (b: number) => number) => sample(f, 1, c.maxU);
-  const metaC = (pl: Plot) => { line2(S, pl, [[0, GOAL_COST], [NB, GOAL_COST]], 'dat', 2, { dash: [7, 5] }); tagText(S, S.l(`meta ≤ ${nf(GOAL_COST, 2, 'es')}`, `goal ≤ ${nf(GOAL_COST, 2, 'en')}`), pl.r.x + pl.r.w - 6 * u, pl.Y(GOAL_COST) - 10 * u, { align: 'right', base: 'bottom', t: 'dat', size: 12 }); };
+  const metaC = (pl: Plot) => { line2(S, pl, [[0, GOAL_COST], [NB, GOAL_COST]], 'dat', 2, { dash: [7, 5] }); tagText(S, S.l(`meta ≤ ${nf(GOAL_COST, 2, 'es')}`, `goal ≤ ${nf(GOAL_COST, 2, 'en')}`), pl.r.x + pl.r.w - 6 * u, pl.Y(GOAL_COST) + (hurts ? 10 : -10) * u, { align: 'right', base: hurts ? 'top' : 'bottom', t: 'dat', size: 12 }); };
   const metaS = (pl: Plot) => { line2(S, pl, [[0, GOAL_SPEED], [NB, GOAL_SPEED]], 'sig', 2, { dash: [7, 5] }); tagText(S, S.l(`meta ≥ ${GOAL_SPEED}`, `goal ≥ ${GOAL_SPEED}`), pl.r.x + pl.r.w - 6 * u, pl.Y(GOAL_SPEED) + 10 * u, { align: 'right', base: 'top', t: 'sig', size: 12 }); };
   metaC(p1); metaS(p2);
   if (!hurts) {
@@ -247,7 +247,7 @@ export function drawGate2(S: Frame) {
     ];
     rows.forEach(([lab, v, ok, t], i) => {
       const r = { x: A.x + i * (cwid + cg), y, w: cwid, h: chipH };
-      chip(S, r, lab, v, ok ? t : 'err', { vsize: S.portrait ? 14 : 17, hot: ok ? 0.6 : 0 });
+      chip(S, r, S.portrait && i === 0 ? S.l('US$/millón', 'US$/million') : lab, v, ok ? t : 'err', { vsize: S.portrait ? 14 : 17, hot: ok ? 0.6 : 0 });
       mark(S, r.x + r.w - 12 * u, r.y + 12 * u, ok, { r: 6 });
     });
   } else {

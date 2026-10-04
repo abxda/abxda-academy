@@ -150,8 +150,8 @@ export default defineLesson({
     },
     {
       id: 'quant-speed',
-      es: 'Por eso cuantizar acelera: con ocho bits se lee la mitad; con cuatro, un cuarto. En una RTX 3060 el techo sube de cuarenta y cinco a noventa tokens por segundo.',
-      en: 'That is why quantizing speeds things up: eight bits mean reading half, four bits a quarter. On an RTX 3060 the ceiling rises from forty-five to ninety tokens per second.',
+      es: 'Por eso cuantizar acelera: con ocho bits se lee la mitad; con cuatro, un cuarto. Una RTX 3060 no aloja el modelo en dieciséis bits; con ocho da cuarenta y cinco tokens por segundo, y con cuatro, noventa.',
+      en: 'That is why quantizing speeds things up: eight bits mean reading half, four bits a quarter. An RTX 3060 cannot hold the model at sixteen bits; at eight it gives forty-five tokens per second, and at four, ninety.',
       pad: 0.6,
     },
     {
@@ -200,8 +200,8 @@ export default defineLesson({
     },
     {
       id: 'price-ratio',
-      es: 'Por eso las API cobran aparte entrada y salida, y la salida cuesta más: cinco veces en la lista de Anthropic. Un inicio de prompt repetido, ya en caché, cuesta una décima parte.',
-      en: 'That is why APIs bill input and output separately, and output costs more: five times on Anthropic’s price list. A repeated prompt prefix, already cached, costs a tenth.',
+      es: 'Por eso las API cobran aparte entrada y salida, y la salida cuesta más: cinco veces en la lista de Anthropic. Un inicio de prompt repetido, ya en caché, cuesta una décima parte o menos.',
+      en: 'That is why APIs bill input and output separately, and output costs more: five times on Anthropic’s price list. A repeated prompt prefix, already cached, costs a tenth or less.',
       pad: 0.6,
     },
     {
@@ -305,21 +305,23 @@ Son multiplicaciones de matrices grandes: la GPU trabaja cerca de su pico (la le
 
 $$t_{\\text{vuelta}}=\\max\\!\\left(\\frac{W+B\\,L\\,c_{kv}}{\\mathrm{BW}},\\ \\frac{B\\,(2N+4\\,n_\\ell\\,d_{\\text{attn}}\\,L)}{P}\\right)$$
 
-con $W$ los bytes de pesos, $c_{kv}$ los bytes de caché por token, BW el ancho de banda y $P$ el cálculo útil de la GPU (la lección usa la mitad del pico). Con $B=1$ hay $2N$ FLOPs por cada $W=bN$ bytes, es decir $2/b$ FLOPs por byte: uno, en FP16. Una H100 puede hacer $989\\cdot10^{12}/3{,}35\\cdot10^{12}\\approx 295$ por byte, así que el decode de una persona usa cerca del 0,3 % del cálculo. Ignorando la caché, el lote con el que el cálculo alcanza a la memoria es $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})\\approx 295$; la caché de cada persona suele impedir llegar ahí.
+con $W$ los bytes de pesos, $c_{kv}$ los bytes de caché por token, BW el ancho de banda y $P$ el cálculo útil de la GPU (la lección usa la mitad del pico). Con $B=1$ hay $2N$ FLOPs por cada $W=bN$ bytes, es decir $2/b$ FLOPs por byte: uno, en FP16. Una H100 puede hacer $989\\cdot10^{12}/3{,}35\\cdot10^{12}\\approx 295$ por byte, así que el decode de una persona usa cerca del 0,3 % del cálculo. Ignorando la caché, el lote con el que el cálculo alcanza a la memoria es $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})$: unos 295 con el pico de la hoja de datos y unos 148 con la mitad del pico que usa la lección; la caché de cada persona suele impedir llegar ahí.
 
 ## La caché KV por dentro
 
 $$c_{kv}=2\\,n_\\ell\\,n_{kv}\\,d_h\\,b$$
 
-El 2 es clave y valor; $n_{kv}$ son las cabezas de clave-valor; $d_h$ la dimensión por cabeza y $b$ los bytes por número. Llama 3 8B (Llama Team, 2024, tabla 3): $2\\cdot32\\cdot8\\cdot128\\cdot2=131\\,072$ bytes por token; 70B: $2\\cdot80\\cdot8\\cdot128\\cdot2=327\\,680$. Con atención multicabeza completa (32 cabezas KV en el 8B) serían $524\\,288$. La atención de consultas agrupadas (GQA, Ainslie et al., 2023) comparte cada par entre un grupo de cabezas de consulta; la de una sola cabeza (Shazeer, 2019) usa un par para todas. La misma cuenta da el valor de Kwon et al. (2023) para OPT-13B: $2\\cdot5120\\cdot40\\cdot2=819\\,200$ bytes, unos 800 KB, y 1,6 GB para 2 048 tokens.
+El 2 es clave y valor; $n_{kv}$ son las cabezas de clave-valor; $d_h$ la dimensión por cabeza y $b$ los bytes por número. Llama 3 8B (Llama Team, 2024, tabla 3; la ventana de 128 000 tokens es la que el informe logra al final del preentrenamiento, partiendo de 8 000): $2\\cdot32\\cdot8\\cdot128\\cdot2=131\\,072$ bytes por token; 70B: $2\\cdot80\\cdot8\\cdot128\\cdot2=327\\,680$. Con atención multicabeza completa (32 cabezas KV en el 8B) serían $524\\,288$. La atención de consultas agrupadas (GQA, Ainslie et al., 2023) comparte cada par entre un grupo de cabezas de consulta; la de una sola cabeza (Shazeer, 2019) usa un par para todas. La misma cuenta da el valor de Kwon et al. (2023) para OPT-13B: $2\\cdot5120\\cdot40\\cdot2=819\\,200$ bytes, unos 800 KB, y 1,6 GB para 2 048 tokens.
 
-Sin caché, generar $G$ tokens tras $P$ de entrada procesa $GP+G(G-1)/2$ posiciones; con caché, $P+G-1$. Con $P=10$ y $G=16$: $280$ frente a $25$. El juguete de la escena (2 capas, 2 cabezas, $d=16$, pesos aleatorios) cuenta esas pasadas y las multiplicaciones-sumas realizadas (unas 1,46 millones contra 135 mil), y los logits coinciden con una diferencia máxima de 0.
+Sin caché, generar $G$ tokens tras $P$ de entrada procesa $GP+G(G-1)/2$ posiciones; con caché, $P+G-1$. Con $P=10$ y $G=16$: $280$ frente a $25$. El juguete de la escena (2 capas, 2 cabezas, $d=16$, pesos aleatorios) cuenta esas pasadas y las multiplicaciones-sumas realizadas (unos 1,46 millones contra 135 mil), y los logits coinciden con una diferencia máxima de 0.
 
 ## Techo de velocidad, lotes y costo
 
 $$\\text{tokens/s por persona}\\le\\frac{\\mathrm{BW}}{W+B\\,L\\,c_{kv}},\\qquad \\text{rendimiento}=\\frac{B}{t_{\\text{vuelta}}},\\qquad \\text{costo por millón}=\\frac{\\text{precio por hora}}{3600\\cdot\\text{rendimiento}}\\cdot10^{6}$$
 
 Con el 8B en FP16 en una H100, contexto de 8 000 tokens y 2 USD por GPU-hora (supuesto): $B=1$ da 196 tokens/s y 2,84 USD por millón; $B=32$ da 67,5 tokens/s por persona, 2 161 en total y 0,26 USD por millón. Con 32 000 tokens de contexto caben 15 conversaciones y el mejor caso cuesta cerca de 0,87 USD por millón. Con $B=1$ el costo es once veces el de $B=32$ en la misma máquina: una GPU poco usada es cara por token.
+
+Los precios de la API que aparecen en la escena (US$ 3 y 15 por millón de tokens) son un ejemplo. En la lista de Anthropic consultada el 4 de octubre de 2026, la salida cuesta cinco veces la entrada en todos los modelos listados; leer de la caché de prompt cuesta 0,1 veces el precio de entrada en casi todos (0,05 y 0,025 en dos modelos) y escribir en ella, con vigencia de cinco minutos, 1,25 veces. La escena ignora ese sobrecosto de escritura.
 
 ## Mezcla de expertos
 
@@ -420,13 +422,13 @@ These are large matrix multiplications: the GPU works close to its peak (the les
 
 $$t_{\\text{turn}}=\\max\\!\\left(\\frac{W+B\\,L\\,c_{kv}}{\\mathrm{BW}},\\ \\frac{B\\,(2N+4\\,n_\\ell\\,d_{\\text{attn}}\\,L)}{P}\\right)$$
 
-with $W$ the bytes of weights, $c_{kv}$ the cache bytes per token, BW the bandwidth, and $P$ the useful compute of the GPU (the lesson uses half the peak). With $B=1$ there are $2N$ FLOPs for every $W=bN$ bytes, that is $2/b$ FLOPs per byte: one, in FP16. An H100 can do $989\\cdot10^{12}/3.35\\cdot10^{12}\\approx 295$ per byte, so single-user decode uses about 0.3% of the arithmetic. Ignoring the cache, the batch at which arithmetic catches up with memory is $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})\\approx 295$; each person’s cache usually prevents getting there.
+with $W$ the bytes of weights, $c_{kv}$ the cache bytes per token, BW the bandwidth, and $P$ the useful compute of the GPU (the lesson uses half the peak). With $B=1$ there are $2N$ FLOPs for every $W=bN$ bytes, that is $2/b$ FLOPs per byte: one, in FP16. An H100 can do $989\\cdot10^{12}/3.35\\cdot10^{12}\\approx 295$ per byte, so single-user decode uses about 0.3% of the arithmetic. Ignoring the cache, the batch at which arithmetic catches up with memory is $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})$: about 295 with the datasheet peak and about 148 with the half-peak the lesson uses; each person’s cache usually prevents getting there.
 
 ## The KV cache, inside
 
 $$c_{kv}=2\\,n_\\ell\\,n_{kv}\\,d_h\\,b$$
 
-The 2 is key and value; $n_{kv}$ is the number of key-value heads; $d_h$ the dimension per head and $b$ the bytes per number. Llama 3 8B (Llama Team, 2024, table 3): $2\\cdot32\\cdot8\\cdot128\\cdot2=131{,}072$ bytes per token; 70B: $2\\cdot80\\cdot8\\cdot128\\cdot2=327{,}680$. With full multi-head attention (32 KV heads in the 8B) it would be $524{,}288$. Grouped-query attention (GQA, Ainslie et al., 2023) shares each pair among a group of query heads; multi-query attention (Shazeer, 2019) uses one pair for all. The same count gives Kwon et al.’s (2023) value for OPT-13B: $2\\cdot5120\\cdot40\\cdot2=819{,}200$ bytes, about 800 KB, and 1.6 GB for 2,048 tokens.
+The 2 is key and value; $n_{kv}$ is the number of key-value heads; $d_h$ the dimension per head and $b$ the bytes per number. Llama 3 8B (Llama Team, 2024, table 3; the 128,000-token window is the one the report reaches at the end of pre-training, starting from 8,000): $2\\cdot32\\cdot8\\cdot128\\cdot2=131{,}072$ bytes per token; 70B: $2\\cdot80\\cdot8\\cdot128\\cdot2=327{,}680$. With full multi-head attention (32 KV heads in the 8B) it would be $524{,}288$. Grouped-query attention (GQA, Ainslie et al., 2023) shares each pair among a group of query heads; multi-query attention (Shazeer, 2019) uses one pair for all. The same count gives Kwon et al.’s (2023) value for OPT-13B: $2\\cdot5120\\cdot40\\cdot2=819{,}200$ bytes, about 800 KB, and 1.6 GB for 2,048 tokens.
 
 Without a cache, generating $G$ tokens after $P$ input tokens processes $GP+G(G-1)/2$ positions; with a cache, $P+G-1$. With $P=10$ and $G=16$: $280$ versus $25$. The toy in the scene (2 layers, 2 heads, $d=16$, random weights) counts those passes and the multiply-adds actually performed (about 1.46 million against 135 thousand), and the logits match with a maximum difference of 0.
 
@@ -435,6 +437,8 @@ Without a cache, generating $G$ tokens after $P$ input tokens processes $GP+G(G-
 $$\\text{tokens/s per person}\\le\\frac{\\mathrm{BW}}{W+B\\,L\\,c_{kv}},\\qquad \\text{throughput}=\\frac{B}{t_{\\text{turn}}},\\qquad \\text{cost per million}=\\frac{\\text{price per hour}}{3600\\cdot\\text{throughput}}\\cdot10^{6}$$
 
 With the 8B in FP16 on an H100, 8,000 tokens of context, and 2 USD per GPU-hour (assumption): $B=1$ gives 196 tokens/s and 2.84 USD per million; $B=32$ gives 67.5 tokens/s per person, 2,161 in total, and 0.26 USD per million. With 32,000 tokens of context, 15 conversations fit and the best case costs about 0.87 USD per million. At $B=1$ the cost is eleven times that of $B=32$ on the same machine: an underused GPU is expensive per token.
+
+The API prices in the scene ($3 and $15 per million tokens) are an example. On Anthropic’s list as consulted on October 4, 2026, output costs five times input on every model listed; reading from the prompt cache costs 0.1 times the input price on almost all of them (0.05 and 0.025 on two models), and writing to it, valid for five minutes, 1.25 times. The scene ignores that write surcharge.
 
 ## Mixture of experts
 
@@ -527,13 +531,13 @@ Real systems add more pieces: PagedAttention splits the cache into blocks so mem
     es: [
       'Costo por tarea = tokens de entrada × precio de entrada + tokens de salida × precio de salida. Pide el desglose por tipo de tarea: resumir (entrada larga, salida corta) no se parece a redactar (al revés). Estima tu volumen real en tokens antes de presupuestar.',
       'La latencia depende del contexto: la espera hasta el primer token crece con lo que envías, y cada token posterior sale más lento con contextos largos. Pide el tiempo al primer token y los tokens por segundo medidos con tu longitud de contexto, no los de la ficha comercial.',
-      'Pregunta por la caché de prompt. Si el inicio de tu prompt se repite (instrucciones, un documento base), reutilizarlo baja el costo y la espera: en la lista de Anthropic, leer de caché cuesta una décima parte de la entrada.',
+      'Pregunta por la caché de prompt. Si el inicio de tu prompt se repite (instrucciones, un documento base), reutilizarlo baja el costo y la espera: en la lista de Anthropic, leer de caché cuesta una décima parte de la entrada o menos (escribir la primera vez cuesta algo más: 1,25 veces).',
       'Al comparar modelos o proveedores, mira más que los «parámetros»: parámetros activos (mezcla de expertos), tamaño de contexto, precio de entrada y de salida. Si alojas el modelo tú, el costo por token depende de la utilización: con los supuestos de la lección, una GPU casi vacía cuesta unas once veces más por token que una bien agrupada.',
     ],
     en: [
       'Cost per task = input tokens × input price + output tokens × output price. Ask for the breakdown by task type: summarizing (long input, short output) is nothing like drafting (the reverse). Estimate your real token volume before budgeting.',
       'Latency depends on context: the wait for the first token grows with what you send, and every later token comes out slower with long contexts. Ask for time to first token and tokens per second measured at your context length, not the ones on the spec sheet.',
-      'Ask about prompt caching. If the start of your prompt repeats (instructions, a base document), reusing it cuts cost and wait: on Anthropic’s list, reading from cache costs a tenth of the input price.',
+      'Ask about prompt caching. If the start of your prompt repeats (instructions, a base document), reusing it cuts cost and wait: on Anthropic’s list, reading from cache costs a tenth of the input price or less (writing the first time costs a bit more: 1.25 times).',
       'When comparing models or providers, look beyond “parameters”: active parameters (mixture of experts), context size, input and output price. If you host the model yourself, cost per token depends on utilization: under the lesson’s assumptions, a nearly empty GPU costs about eleven times more per token than a well-batched one.',
     ],
   },
@@ -585,7 +589,7 @@ Real systems add more pieces: PagedAttention splits the cache into blocks so mem
         { es: 'El costo es parecido: ambas mueven un número similar de tokens.', en: 'The cost is similar: both move a similar number of tokens.' },
       ],
       answer: 2,
-      why: { es: 'Resumen: 40 000 × 1 = 40 000 unidades de entrada contra 400 × 5 = 2 000 de salida (95 % entrada). Informe: 500 × 1 = 500 contra 4 000 × 5 = 20 000 (97 % salida). Donde domina la entrada, la caché de prompt ahorra más.', en: 'Summary: 40,000 × 1 = 40,000 input units against 400 × 5 = 2,000 output (95% input). Report: 500 × 1 = 500 against 4,000 × 5 = 20,000 (97% output). Where input dominates, prompt caching saves more.' },
+      why: { es: 'Resumen: 40 000 × 1 = 40 000 unidades de entrada contra 400 × 5 = 2 000 de salida (95 % entrada). Informe: 500 × 1 = 500 contra 4 000 × 5 = 20 000 (98 % salida). Donde domina la entrada, la caché de prompt ahorra más.', en: 'Summary: 40,000 × 1 = 40,000 input units against 400 × 5 = 2,000 output (95% input). Report: 500 × 1 = 500 against 4,000 × 5 = 20,000 (98% output). Where input dominates, prompt caching saves more.' },
     },
   ],
 
@@ -617,6 +621,8 @@ Real systems add more pieces: PagedAttention splits the cache into blocks so mem
     { title: 'PaLM: Scaling Language Modeling with Pathways (apéndice B, FLOPs por token)', authors: 'Chowdhery, A., et al.', year: 2022, url: 'https://arxiv.org/abs/2204.02311' },
     { title: 'DeepSeek-V3 Technical Report', authors: 'DeepSeek-AI', year: 2024, url: 'https://arxiv.org/abs/2412.19437' },
     { title: 'NVIDIA H100 Tensor Core GPU y NVIDIA A100 80GB Tensor Core GPU: hojas de datos (memoria, ancho de banda, FLOPS)', authors: 'NVIDIA', year: 2023, url: 'https://www.nvidia.com/en-us/data-center/h100/' },
+    { title: 'Scaling Laws for Neural Language Models (2N FLOPs por token en la pasada hacia delante)', authors: 'Kaplan, J., McCandlish, S., Henighan, T., Brown, T. B., Chess, B., Child, R., Gray, S., Radford, A., Wu, J., Amodei, D.', year: 2020, url: 'https://arxiv.org/abs/2001.08361' },
+    { title: 'GeForce RTX 3060 (ficha: 12 GB y bus de 192 bits; 360 GB/s con la memoria a 15 Gbps por pin)', authors: 'NVIDIA', year: 2021, url: 'https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3060-3060ti/' },
     { title: 'Pricing (lista de precios de la API, consultada el 4 de octubre de 2026)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/about-claude/pricing' },
   ],
 });

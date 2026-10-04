@@ -2,7 +2,7 @@
 // turno 3 («una tarea que cuesta casi todo por la entrada y otra casi todo por la salida»).
 import { alpha, clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { CACHE_READ, H100, LLAMA3_8B, MFU_PREFILL, PRICE_IN, PRICE_OUT, bill, denseParams, nf, prefillTime, secs, serve, tok, usd } from './model';
-import { FS, brace, chip, fitText, hbar, lang, mark, pad, pill, show, tagText } from './ui';
+import { FS, brace, chip, fitText, hbar, lang, mark, noteUp, pad, pill, show, tagText } from './ui';
 
 const A8 = LLAMA3_8B;
 
@@ -69,7 +69,7 @@ export function drawPrices(S: Frame) {
     d.line(bx + bw * (PRICE_IN / PRICE_OUT) + 14 * u, y0 + bh + 2 * u, bx + bw * (PRICE_IN / PRICE_OUT) + 14 * u, y0 + pitch - 2 * u, p.lineStrong, 1.3, [3, 3]);
   });
   show(S, S.reveal('price-ratio', 6.8, 0.7), () => pill(S, S.l('× 0,1', '× 0.1'), bx + bw * 0.3, y0 + 2 * pitch + bh + 20 * u, { t: 'sig' }));
-  show(S, S.reveal('price-ratio', 8.0, 0.8), () => tagText(S, S.l('Cifras de ejemplo. En la lista de Anthropic (octubre de 2026) la salida cuesta 5 veces la entrada y leer de caché, una décima parte.', 'Example figures. On Anthropic’s list (October 2026) output costs 5 times input, and reading from cache a tenth.'), A.x, A.y + A.h - 2 * u, { t: 'mute', size: 12, weight: 600, align: 'left', base: 'bottom', w: A.w }));
+  show(S, S.reveal('price-ratio', 8.0, 0.8), () => noteUp(S, S.l('Cifras de ejemplo. En la lista de Anthropic (octubre de 2026) la salida cuesta 5 veces la entrada y leer de caché, una décima parte o menos.', 'Example figures. On Anthropic’s list (October 2026) output costs 5 times input, and reading from cache a tenth or less.'), A.x, A.y + A.h - 2 * u, A.w));
 }
 
 // ═════════════ la factura de tres tareas ═════════════
@@ -83,9 +83,9 @@ export function drawTasks(S: Frame) {
   const { d, pal: p } = S, u = S.u, A = pad(S), l = lang(S), sg = tone(S, 'sig'), lt = tone(S, 'lat');
   show(S, S.reveal('cost-task', 0.1, 0.5), () => {
     fitText(S, S.l('costo = entrada × precio + salida × precio', 'cost = input × price + output × price'), A.x, A.y + 4 * u, A.w, 18, { weight: 800, base: 'top', font: 'mono' });
-    tagText(S, S.l('precios de ejemplo: US$ 3 y US$ 15 por millón', 'example prices: $3 and $15 per million'), A.x, A.y + 32 * u, { t: 'mute', align: 'left', base: 'top', weight: 600, size: 12 });
-    // leyenda
-    const lx = A.x + A.w, y = A.y + 14 * u;
+    tagText(S, S.portrait ? S.l('ejemplo: US$ 3 y 15 por millón', 'example: $3 and $15 per million') : S.l('precios de ejemplo: US$ 3 y US$ 15 por millón', 'example prices: $3 and $15 per million'), A.x, A.y + 32 * u, { t: 'mute', align: 'left', base: 'top', weight: 600, size: 12 });
+    // leyenda (en el teléfono baja a la fila del subtítulo para no pisar el título)
+    const lx = A.x + A.w, y = A.y + (S.portrait ? 39 : 14) * u;
     const sw = 11 * u, w2 = d.measure(S.l('salida', 'output'), { size: FS(S, 12), weight: 700 }), w1 = d.measure(S.l('entrada', 'input'), { size: FS(S, 12), weight: 700 });
     d.rect(lx - w2 - sw - 6 * u, y - sw / 2, sw, sw, { fill: lt.c }); d.text(S.l('salida', 'output'), lx, y, { size: FS(S, 12), weight: 700, color: lt.ink, align: 'right', base: 'middle' });
     const x1 = lx - w2 - sw - 22 * u; d.rect(x1 - w1 - sw - 6 * u, y - sw / 2, sw, sw, { fill: sg.c }); d.text(S.l('entrada', 'input'), x1, y, { size: FS(S, 12), weight: 700, color: sg.ink, align: 'right', base: 'middle' });
@@ -144,7 +144,7 @@ export function drawGate3(S: Frame) {
   d.rect(left.x, tb, Math.max(3, left.w * wf), 22 * u, { fill: dt.c }); d.rect(left.x + Math.max(3, left.w * wf), tb, left.w - Math.max(3, left.w * wf), 22 * u, { fill: lt.c });
   d.text(`${S.l('hasta el 1.er token', 'to the 1st token')} ${secs(b.ttft, l)}`, left.x, tb + 30 * u, { size: FS(S, 13), weight: 700, font: 'mono', color: dt.ink, base: 'top' });
   d.text(`${S.l('escribir', 'writing')} ${secs(b.gen, l)}`, left.x + left.w, tb + 30 * u, { size: FS(S, 13), weight: 700, font: 'mono', color: lt.ink, align: 'right', base: 'top' });
-  tagText(S, S.l('modelo de 8 mil M, H100, hasta 16 conversaciones en lote (estimación)', '8B model, H100, up to 16 conversations batched (estimate)'), left.x, left.y + left.h - 2 * u, { t: 'mute', size: 12, weight: 600, align: 'left', base: 'bottom', w: left.w });
+  noteUp(S, S.portrait ? S.l('H100 · lote de 16 · estimación', 'H100 · batch of 16 · estimate') : S.l('modelo de 8 mil M, H100, hasta 16 conversaciones en lote (estimación)', '8B model, H100, up to 16 conversations batched (estimate)'), left.x, left.y + left.h - 2 * u, left.w);
   // lecturas y metas
   const cg = 8 * u, cw = (right.w - cg) / 2, ch = 54 * u;
   chip(S, { x: right.x, y: right.y, w: cw, h: ch }, S.l('entrada', 'input'), tok(t.tin, l), 'sig', { vsize: S.portrait ? 14 : 16 });

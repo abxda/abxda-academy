@@ -10,7 +10,8 @@ const join = (ws: readonly string[]) => ws.join(' ').replace(/ ([,.])/g, '$1');
 
 // ═════════════ 1 · el chat (hook) ═════════════
 export function drawChat(S: Frame) {
-  const { d, pal: p } = S, u = S.u, A = pad(S), l = lang(S), W = WORDS[l];
+  const { d, pal: p } = S, u = S.u, A0 = pad(S), l = lang(S), W = WORDS[l];
+  const A: Rect = { ...A0, y: A0.y + 18 * u, h: A0.h - 18 * u };      // 18 px arriba para el rótulo «Tú»
   const colW = Math.min(A.w, 640 * u), cx = A.x + (A.w - colW) / 2, fs = FS(S, S.portrait ? 16 : 19), lh = fs * 1.32 * u;
   const sg = tone(S, 'sig'), lt = tone(S, 'lat');
   // mensaje de la persona
@@ -109,7 +110,7 @@ export function drawServing(S: Frame) {
 // ═════════════ 3 · el recorrido: prefill → decode ═════════════
 interface FlowGeom { A: Rect; prompt: Rect; model: Rect; out: Rect; time: Rect; promptBoxes: Rect[]; outBoxes: Rect[]; fs: number; th: number }
 function flowGeom(S: Frame): FlowGeom {
-  const u = S.u, A = pad(S), W = WORDS[lang(S)], fs = FS(S, S.portrait ? 13 : 15), th = S.portrait ? 24 : 28;
+  const u = S.u, A0 = pad(S), A: Rect = { ...A0, y: A0.y + 20 * u, h: A0.h - 20 * u }, W = WORDS[lang(S)], fs = FS(S, S.portrait ? 13 : 15), th = S.portrait ? 24 : 28;   // 20 px arriba para «tu mensaje»
   const opts = { show: 0, size: fs, h: th, gap: 5, mono: false };
   const pb = tokenRow(S, A.x, A.y, A.w, [...W.prompt], opts), ob = tokenRow(S, A.x, 0, A.w, [...W.reply], opts);
   const ph = pb[pb.length - 1].y + pb[pb.length - 1].h - pb[0].y, oh = ob[ob.length - 1].y + ob[ob.length - 1].h - ob[0].y;

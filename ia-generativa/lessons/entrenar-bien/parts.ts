@@ -1,5 +1,5 @@
 // Piezas de lectura de la escena de «Entrenar bien»: baraja de ejemplos, curvas de error y de tasa, barras, perillas y fichas.
-import { alpha, clamp, tone, readout, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
+import { alpha, clamp, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 import { N, type Run } from './sim';
 import { FS } from './view';
 
@@ -31,6 +31,30 @@ export function deck(S: Frame, r: Rect, o: { state?: (i: number) => 0 | 1 | 2; a
   return { x: x0, y: y0, w: gw, h: gw };
 }
 
+/** Contador con rótulo (como el del kit, pero con el rótulo siempre ≥ 12 px efectivos). */
+function readout(S: Frame, x: number, y: number, label: string, value: string, o: { tone?: Tone; size?: number } = {}) {
+  const t = tone(S, o.tone ?? 'ink');
+  S.d.text(label, x, y, { size: FS(S, 12), weight: 700, color: S.pal.mute });
+  S.d.text(value, x, y + 6 * S.u, { size: o.size ?? 26, weight: 700, font: 'mono', color: o.tone ? t.ink : S.pal.ink, base: 'top' });
+}
+
+/** Caja con rótulo y subtítulo (como `box` del kit, pero el subtítulo es ≥ 12 px efectivos y se parte en dos líneas si no cabe). */
+export function boxS(S: Frame, r: Rect, label: string, o: { tone?: Tone; sub?: string; a?: number; size?: number; font?: 'ui' | 'mono' } = {}) {
+  const { d, pal: p } = S, u = S.u, t = tone(S, o.tone ?? 'ink'), ls = FS(S, o.size ?? 14), ss = FS(S, 12), cx = r.x + r.w / 2;
+  let lines: string[] = o.sub ? [o.sub] : [];
+  if (o.sub && d.measure(o.sub, { size: ss }) > r.w - 10 * u) {
+    const w = o.sub.split(' '); let best = 1, bw = Infinity;
+    for (let i = 1; i < w.length; i++) { const m = Math.max(d.measure(w.slice(0, i).join(' '), { size: ss }), d.measure(w.slice(i).join(' '), { size: ss })); if (m < bw) { bw = m; best = i; } }
+    lines = [w.slice(0, best).join(' '), w.slice(best).join(' ')];
+  }
+  const lhL = ls * u * 1.2, lhS = ss * u * 1.25, total = lhL + (lines.length ? 3 * u + lines.length * lhS : 0), y0 = r.y + (r.h - total) / 2;
+  d.withAlpha(o.a ?? 1, () => {
+    d.rect(r.x, r.y, r.w, r.h, { fill: alpha(t.c, 0.1), stroke: o.tone ? t.c : p.lineStrong, lw: 1.5, r: 3 });
+    d.text(label, cx, y0 + lhL / 2, { size: ls, weight: 700, color: o.tone ? t.ink : p.ink, align: 'center', base: 'middle', font: o.font });
+    lines.forEach((ln, i) => d.text(ln, cx, y0 + lhL + 3 * u + i * lhS + lhS / 2, { size: ss, color: p.mute, align: 'center', base: 'middle' }));
+  });
+}
+
 /** Lecturas numéricas en una cuadrícula. */
 export function readouts(S: Frame, r: Rect, items: { l: string; v: string; t?: Tone; on?: boolean }[], cols = 2, o: { rowH?: number; size?: number; a?: number } = {}) {
   const vis = items.filter((i) => i.on !== false), rowH = (o.rowH ?? 48) * S.u, cw = r.w / cols;
@@ -46,17 +70,17 @@ export interface Series { run: Run; k: number; tone: Tone; dash?: number[]; a?: 
 /** Curva de error (escala logarítmica) frente al paso, con la línea del umbral. */
 export function lossChart(S: Frame, r: Rect, series: Series[], o: { T: number; thr?: number; a?: number; title?: string; small?: boolean } = { T: 100 }) {
   const { d, pal: p } = S, u = S.u, small = o.small ?? r.h < 120 * u;
-  const pl = (small ? 30 : 38) * u, pr = 6 * u, pt = (o.title ? 18 : 6) * u, pb = (small ? 16 : 22) * u;
+  const pl = (small ? 30 : 38) * u, pr = 12 * u, pt = (o.title ? 24 : 6) * u, pb = (small ? 16 : 22) * u;
   const c: Rect = { x: r.x + pl, y: r.y + pt, w: r.w - pl - pr, h: r.h - pt - pb };
   const X = (t: number) => c.x + (t / o.T) * c.w, Y = (v: number) => c.y + c.h - ((ly(v) - LY0) / (LY1 - LY0)) * c.h;
   d.withAlpha(o.a ?? 1, () => {
     if (o.title) d.text(o.title, r.x, r.y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
     d.line(c.x, c.y + c.h, c.x + c.w, c.y + c.h, p.lineStrong, 1.5); d.line(c.x, c.y, c.x, c.y + c.h, p.lineStrong, 1.5);
     const ticks = small ? [0.01, 1] : [0.001, 0.01, 0.1, 1, 10];
-    ticks.forEach((v) => { d.line(c.x - 3 * u, Y(v), c.x, Y(v), p.lineStrong, 1.2); d.line(c.x, Y(v), c.x + c.w, Y(v), p.line, 1); d.text(S.n(v, v < 0.01 ? 3 : v < 0.1 ? 2 : v < 1 ? 1 : 0), c.x - 5 * u, Y(v), { size: FS(S, 11), font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
+    ticks.forEach((v) => { d.line(c.x - 3 * u, Y(v), c.x, Y(v), p.lineStrong, 1.2); d.line(c.x, Y(v), c.x + c.w, Y(v), p.line, 1); d.text(S.n(v, v < 0.01 ? 3 : v < 0.1 ? 2 : v < 1 ? 1 : 0), c.x - 5 * u, Y(v), { size: FS(S, 12), font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
     const xt = o.T >= 150 ? [0, 50, 100, 150] : [0, 50, 100];
-    xt.forEach((t) => { if (t <= o.T) d.text(String(t), X(t), c.y + c.h + 4 * u, { size: FS(S, 11), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
-    if (!small) d.text(S.l('pasos', 'steps'), c.x + c.w, c.y + c.h + 4 * u + FS(S, 11) * u + 2, { size: FS(S, 11), weight: 700, color: p.mute, align: 'right', base: 'top' });
+    xt.forEach((t) => { if (t <= o.T) d.text(String(t), X(t), c.y + c.h + 4 * u, { size: FS(S, 12), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
+    if (!small) d.text(S.l('pasos', 'steps'), c.x + c.w, c.y + c.h + 4 * u + FS(S, 11) * u + 2, { size: FS(S, 12), weight: 700, color: p.mute, align: 'right', base: 'top' });
     if (o.thr) { d.line(c.x, Y(o.thr), c.x + c.w, Y(o.thr), tone(S, 'dat').c, 1.6, [5, 4]); }
     d.clip(c.x, c.y - 2, c.w, c.h + 4, () => series.forEach((s) => {
       const n = Math.min(s.run.loss.length - 1, Math.floor(s.k)), pts: [number, number][] = [];
@@ -72,15 +96,15 @@ export function lossChart(S: Frame, r: Rect, series: Series[], o: { T: number; t
 /** Curva de la tasa de aprendizaje frente al paso. */
 export function etaChart(S: Frame, r: Rect, series: { etas: number[]; tone: Tone; k?: number; dash?: number[]; a?: number }[], o: { T: number; max: number; a?: number; title?: string; cursor?: number } = { T: 100, max: 0.1 }) {
   const { d, pal: p } = S, u = S.u, small = r.h < 120 * u;
-  const pl = (small ? 30 : 38) * u, pr = 6 * u, pt = (o.title ? 18 : 6) * u, pb = (small ? 16 : 22) * u;
+  const pl = (small ? 30 : 38) * u, pr = 6 * u, pt = (o.title ? 24 : 6) * u, pb = (small ? 16 : 22) * u;
   const c: Rect = { x: r.x + pl, y: r.y + pt, w: r.w - pl - pr, h: r.h - pt - pb };
   const X = (t: number) => c.x + (t / o.T) * c.w, Y = (v: number) => c.y + c.h - (v / o.max) * c.h;
   d.withAlpha(o.a ?? 1, () => {
     if (o.title) d.text(o.title, r.x, r.y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
     d.line(c.x, c.y + c.h, c.x + c.w, c.y + c.h, p.lineStrong, 1.5); d.line(c.x, c.y, c.x, c.y + c.h, p.lineStrong, 1.5);
-    [0, o.max].forEach((v) => d.text(S.n(v, v >= 0.1 ? 2 : 3), c.x - 5 * u, Y(v), { size: FS(S, 11), font: 'mono', color: p.mute, align: 'right', base: 'middle' }));
+    [0, o.max].forEach((v) => d.text(S.n(v, v >= 0.1 ? 2 : 3), c.x - 5 * u, Y(v), { size: FS(S, 12), font: 'mono', color: p.mute, align: 'right', base: 'middle' }));
     const xt = o.T >= 150 ? [0, 50, 100, 150] : [0, 50, 100];
-    xt.forEach((t) => { if (t <= o.T) d.text(String(t), X(t), c.y + c.h + 4 * u, { size: FS(S, 11), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
+    xt.forEach((t) => { if (t <= o.T) d.text(String(t), X(t), c.y + c.h + 4 * u, { size: FS(S, 12), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
     series.forEach((s) => {
       const n = Math.min(s.etas.length - 1, Math.floor(s.k ?? s.etas.length)), pts: [number, number][] = [];
       for (let i = 0; i <= n; i++) pts.push([X(i), Y(s.etas[i])]);

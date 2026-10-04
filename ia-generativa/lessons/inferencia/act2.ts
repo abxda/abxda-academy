@@ -58,8 +58,9 @@ function drawGrid(S: Frame, R: Rect, o: GridOpts, foot: number) {
 }
 
 export function drawGrids(S: Frame) {
-  const { d, pal: p } = S, u = S.u, A = pad(S), dm = demo();
-  const banner = (S.portrait ? 40 : 28) * u * S.reveal('count', 0.3, 0.6), foot = (S.portrait ? 50 : 56) * u;
+  const { d, pal: p } = S, u = S.u, A = pad(S), dm = demo(), l = lang(S);
+  // `room`: franja extra bajo las gráficas para el rótulo «la misma columna» (para que no pise la leyenda).
+  const banner = (S.portrait ? 46 : 28) * u * S.reveal('count', 0.3, 0.6), room = (S.portrait ? 24 : 20) * u * (S.on('unchanged') ? S.reveal('unchanged', 1.5, 0.6) : 0), foot = (S.portrait ? 50 : 56) * u;
   const body: Rect = { x: A.x, y: A.y, w: A.w, h: A.h - banner };
   // posiciones: solo (una gráfica) → pareja (con y sin caché)
   const k = S.at('kvcache', 0, 0.9, 'io');
@@ -72,7 +73,7 @@ export function drawGrids(S: Frame) {
   const rowsA = S.on('kvcache') ? ROWS : S.at('recompute', 0.8, 7.2, 'lin') * ROWS;
   const rep = S.reveal('unchanged', 0.2, 1.4);
   const colHi = S.on('unchanged') && S.at('unchanged', 2.0, 2.5) > 0.5;
-  const nA = drawGrid(S, rA, { title: S.l('Sin caché: se repite todo', 'No cache: everything repeats'), mode: 'nocache', rows: rowsA, repeated: S.on('unchanged') ? rep : 0, colHi: colHi, counter: S.on('count') || S.on('kvcache') || S.on('recompute'), legend: S.on('unchanged') ? 'repeat' : null }, S.portrait && k > 0.5 ? foot * 0.8 : foot);
+  const nA = drawGrid(S, rA, { title: S.l('Sin caché: se repite todo', 'No cache: everything repeats'), mode: 'nocache', rows: rowsA, repeated: S.on('unchanged') ? rep : 0, colHi: colHi, counter: S.on('count') || S.on('kvcache') || S.on('recompute'), legend: S.on('unchanged') ? 'repeat' : null }, (S.portrait && k > 0.5 ? foot * 0.8 : foot) + room);
   void nA;
   if (colHi) {
     const gx = rA.x + 22 * u, cwA = (rA.w - 22 * u) / COLS;
@@ -81,7 +82,7 @@ export function drawGrids(S: Frame) {
   if (S.on('kvcache')) {
     show(S, S.reveal('kvcache', 0.1, 0.6), () => {
       const rowsB = S.at('kvcache', 0.8, 6.8, 'lin') * ROWS;
-      drawGrid(S, pairB, { title: S.l('Con caché KV: cada token, una vez', 'With KV cache: each token, once'), mode: 'cache', rows: S.on('count') ? ROWS : rowsB, repeated: 0, colHi: false, counter: true, legend: 'cache' }, S.portrait ? foot * 0.8 : foot);
+      drawGrid(S, pairB, { title: S.l('Con caché KV: cada token, una vez', 'With KV cache: each token, once'), mode: 'cache', rows: S.on('count') ? ROWS : rowsB, repeated: 0, colHi: false, counter: true, legend: 'cache' }, (S.portrait ? foot * 0.8 : foot) + room);
     });
   }
   // el cierre: 280 frente a 25, mismo resultado
@@ -89,7 +90,11 @@ export function drawGrids(S: Frame) {
     show(S, S.reveal('count', 0.3, 0.6), () => {
       const ratio = dm.passesNoCache / dm.passesCache, by = A.y + A.h - banner + banner / 2;
       d.rect(A.x, A.y + A.h - banner + 2 * u, A.w, banner - 4 * u, { fill: tone(S, 'dat').soft, stroke: tone(S, 'dat').c, lw: 1.4, r: 3 });
-      fitText(S, S.l(`${nf(dm.passesNoCache, 0, 'es')} ÷ ${dm.passesCache} ≈ ${nf(ratio, 0, 'es')} veces menos · mismo resultado (diferencia máxima ${dm.maxDiff === 0 ? '0' : dm.maxDiff.toExponential(0)}) · transformer de juguete real`, `${nf(dm.passesNoCache, 0, 'en')} ÷ ${dm.passesCache} ≈ ${nf(ratio, 0, 'en')}× fewer · same result (max difference ${dm.maxDiff === 0 ? '0' : dm.maxDiff.toExponential(0)}) · real toy transformer`), A.x + A.w / 2, by, A.w - 14 * u, 13, { weight: 700, color: p.ink, align: 'center', base: 'middle' });
+      const nv = nf(dm.passesNoCache, 0, l), md = dm.maxDiff === 0 ? '0' : dm.maxDiff.toExponential(0), rr = nf(ratio, 0, l);
+      if (S.portrait) {   // en el teléfono el aviso va en dos renglones
+        fitText(S, S.l(`${nv} ÷ ${dm.passesCache} ≈ ${rr} veces menos · mismo resultado`, `${nv} ÷ ${dm.passesCache} ≈ ${rr}× fewer · same result`), A.x + A.w / 2, by - 9 * u, A.w - 14 * u, 13, { weight: 700, color: p.ink, align: 'center', base: 'middle' });
+        fitText(S, S.l(`diferencia máxima ${md} · transformer de juguete real`, `max difference ${md} · real toy transformer`), A.x + A.w / 2, by + 9 * u, A.w - 14 * u, 13, { weight: 700, color: p.ink, align: 'center', base: 'middle' });
+      } else fitText(S, S.l(`${nv} ÷ ${dm.passesCache} ≈ ${rr} veces menos · mismo resultado (diferencia máxima ${md}) · transformer de juguete real`, `${nv} ÷ ${dm.passesCache} ≈ ${rr}× fewer · same result (max difference ${md}) · real toy transformer`), A.x + A.w / 2, by, A.w - 14 * u, 13, { weight: 700, color: p.ink, align: 'center', base: 'middle' });
     });
   }
 }
@@ -107,7 +112,7 @@ export function drawKvBytes(S: Frame) {
   const resT = S.reveal('llama-kv', 2.0, 0.6), res = nf(KV8, 0, l);
   const cols = S.portrait ? 3 : 6, rowsN = S.portrait ? 2 : 1;
   const opw = 20 * u, chH = 54 * u, chW = S.portrait ? (A.w - 2 * opw) / 3 : (A.w - 5 * opw) / (5 + 1.45);
-  const y0 = A.y + 4 * u;
+  const y0 = A.y + 4 * u + clamp((A.h - 300 * u) * 0.35, 0, 90 * u);   // baja un poco la escena para no dejar medio escenario vacío
   const place = (i: number): Rect => {
     if (S.portrait) { const row = i < 3 ? 0 : 1, c = i < 3 ? i : i - 3; return { x: A.x + c * (chW + opw), y: y0 + row * (chH + 12 * u), w: i === 5 ? chW : chW, h: chH }; }
     return { x: A.x + i * (chW + opw), y: y0, w: i === 5 ? chW * 1.45 : chW, h: chH };
@@ -157,7 +162,7 @@ function drawGqa(S: Frame, R: Rect) {
   }
   const ty = y2 + sz * 1.5 + 16 * u;
   show(S, S.reveal('gqa', 2.6, 0.6), () => {
-    fitText(S, S.l(`32 cabezas de consulta comparten 8 de clave y valor: ${nf(KV8, 0, 'es')} B por token en lugar de ${nf(KV8 * 4, 0, 'es')}`, `32 query heads share 8 key-value heads: ${nf(KV8, 0, 'en')} B per token instead of ${nf(KV8 * 4, 0, 'en')}`), R.x + R.w / 2, ty, R.w, 14, { weight: 700, align: 'center', base: 'top', color: p.ink });
+    d.text(S.l(`32 cabezas de consulta comparten 8 de clave y valor: ${nf(KV8, 0, 'es')} B por token en lugar de ${nf(KV8 * 4, 0, 'es')}`, `32 query heads share 8 key-value heads: ${nf(KV8, 0, 'en')} B per token instead of ${nf(KV8 * 4, 0, 'en')}`), R.x + R.w / 2, ty, { size: FS(S, 14), weight: 700, align: 'center', base: 'top', color: p.ink, w: R.w });
     void l;
   });
 }
@@ -208,25 +213,25 @@ export function drawLedger(S: Frame) {
     d.text(S.l('caché de cada persona', 'each person’s cache'), bx + 16 * u, ly + 5.5 * u, { size: FS(S, 12), weight: 600, color: p.ink2, base: 'middle' });
   });
   // lecturas
-  const cy = by + barH + (S.portrait ? 72 : 86) * u;
+  const cy = by + barH + (S.portrait ? 68 : 86) * u, gap = 8 * u, chH = (S.portrait ? 46 : 54) * u, rowsH = S.portrait ? 2 * chH + gap : chH;   // teléfono: tarjetas en 2×2
   show(S, a0, () => {
-    const n = 4, gap = 8 * u, cwid = (A.w - gap * (n - 1)) / n, chH = 54 * u;
+    const n = S.portrait ? 2 : 4, cwid = (A.w - gap * (n - 1)) / n;
     const rows: [string, string, 'lat' | 'w' | 'dat' | 'err'][] = [
       [S.l('contexto por persona', 'context per person'), tok(ctx, l), 'lat'],
       [S.l('conversaciones', 'conversations'), String(users), 'lat'],
       [S.l('caché de una', 'one cache'), gb(per, l, 1), 'lat'],
       [fits ? S.l('libre', 'free') : S.l('faltan', 'missing'), gb(Math.abs(CAP - used), l, 1), fits ? 'dat' : 'err'],
     ];
-    rows.forEach(([lab, v, t], i) => chip(S, { x: A.x + i * (cwid + gap), y: cy, w: cwid, h: chH }, lab, v, t, { vsize: S.portrait ? 14 : 17 }));
+    rows.forEach(([lab, v, t], i) => chip(S, { x: A.x + (i % n) * (cwid + gap), y: cy + Math.floor(i / n) * (chH + gap), w: cwid, h: chH }, lab, v, t, { vsize: S.portrait ? 15 : 17 }));
     // estado
-    const sy = cy + chH + 20 * u;
+    const sy = cy + rowsH + 20 * u;
     mark(S, A.x + 10 * u, sy, fits, { r: 8 });
     const msg = !fits ? S.l('No cabe: la memoria se desborda', 'Does not fit: memory overflows') : !demoMode && users === mx ? S.l('Es el máximo: una más ya no cabe', 'That is the maximum: one more will not fit') : S.l('Cabe', 'Fits');
     tagText(S, msg, A.x + 26 * u, sy, { t: fits ? 'dat' : 'err', align: 'left', size: 15 });
     void dt;
   });
   if (!demoMode) show(S, S.reveal('try1', 0.3, 0.5), () => {
-    const st = (S.st.ledger ??= { seen: {} as Record<number, boolean> }), y = cy + 54 * u + 20 * u;
+    const st = (S.st.ledger ??= { seen: {} as Record<number, boolean> }), y = cy + rowsH + 20 * u;
     [8000, 128000].forEach((c, i) => {
       const x = A.x + A.w - (i === 0 ? 150 : 0) * u - (i === 0 ? 0 : 0);
       void x;

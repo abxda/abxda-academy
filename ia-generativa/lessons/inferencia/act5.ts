@@ -1,7 +1,7 @@
 // Acto 5 · Mezcla de expertos (idea, números, memoria), decodificación especulativa (mención), resumen y puente.
 import { alpha, clamp, hash, neu, token, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { expertsTouched, gb, mixtralParams, nf } from './model';
-import { FS, chip, fitText, lang, mark, pad, pill, show, tagText, tokW } from './ui';
+import { FS, chip, fitText, lang, mark, noteUp, pad, pill, show, tagText, tokW } from './ui';
 
 const MP = mixtralParams();
 const E = 8;
@@ -51,7 +51,8 @@ export function drawMoeIdea(S: Frame) {
     tagText(S, S.l('un token', 'one token'), cx + w / 2 + 10 * u, tokY + tokH / 2, { t: 'lat', align: 'left' });
   });
   show(S, S.reveal('moe-idea', 2.0, 0.6), () => {
-    pill(S, S.l('elige 2 de 8', 'picks 2 of 8'), cx + routerW / 2 + 12 * u + 50 * u, routerY + routerH / 2, { t: 'w' });
+    const pl = S.l('elige 2 de 8', 'picks 2 of 8'), pw = d.measure(pl, { size: FS(S, 12), weight: 600 }) + 14 * u;
+    pill(S, pl, Math.min(cx + routerW / 2 + 8 * u + pw / 2, A.x + A.w - pw / 2), routerY + routerH / 2, { t: 'w' });
     tagText(S, S.l('ocho expertos: ocho redes MLP', 'eight experts: eight MLP networks'), cx, ex.y + ex.h + 14 * u + (S.portrait ? 6 * u : 0), { t: 'w', align: 'center', base: 'top', w: A.w });
   });
   void lt;
@@ -84,8 +85,9 @@ export function drawMoeNumbers(S: Frame) {
   // leyenda
   show(S, S.reveal('moe-numbers', 4.6, 0.7), () => {
     const y = y1 + bh + 28 * u, sw = 12 * u;
-    d.rect(bx, y - sw / 2, sw, sw, { fill: wt.c }); d.text(S.l(`comunes: atención y embeddings (${nf(MP.shared / 1e9, 1, 'es')} mil M)`, `shared: attention and embeddings (${nf(MP.shared / 1e9, 1, 'en')}B)`), bx + sw + 6 * u, y, { size: FS(S, 12), weight: 600, color: p.ink2, base: 'middle', w: bw - sw - 8 * u });
-    const y2 = y + 22 * u; d.rect(bx, y2 - sw / 2, sw, sw, { fill: alpha(wt.c, 0.45), stroke: wt.c, lw: 1.2 }); d.text(S.l('expertos: dos de ocho por token', 'experts: two of eight per token'), bx + sw + 6 * u, y2, { size: FS(S, 12), weight: 600, color: p.ink2, base: 'middle', w: bw - sw - 8 * u });
+    const lx = S.portrait ? A.x : bx;   // en el teléfono la leyenda usa todo el ancho (si no, el texto se parte en dos renglones y se pisa)
+    d.rect(lx, y - sw / 2, sw, sw, { fill: wt.c }); d.text(S.l(`comunes: atención y embeddings (${nf(MP.shared / 1e9, 1, l)} mil M)`, `shared: attention and embeddings (${nf(MP.shared / 1e9, 1, l)}B)`), lx + sw + 6 * u, y, { size: FS(S, 12), weight: 600, color: p.ink2, base: 'middle', w: A.x + A.w - lx - sw - 8 * u });
+    const y2 = y + 22 * u; d.rect(lx, y2 - sw / 2, sw, sw, { fill: alpha(wt.c, 0.45), stroke: wt.c, lw: 1.2 }); d.text(S.l('expertos: dos de ocho por token', 'experts: two of eight per token'), lx + sw + 6 * u, y2, { size: FS(S, 12), weight: 600, color: p.ink2, base: 'middle', w: A.x + A.w - lx - sw - 8 * u });
   });
   show(S, S.reveal('moe-numbers', 6.4, 0.7), () => {
     const y = A.y + A.h - 4 * u, w = (A.w - 12 * u) / 2;
@@ -105,14 +107,14 @@ export function drawMoeMemory(S: Frame) {
   const B = st.touched ? Math.round(Number(S.p.moeB ?? 1)) : Math.max(1, Math.round(1 + 15 * S.at('moe-memory', 1.0, 8.0, 'lin')));
   const hits = new Array(E).fill(0); for (let i = 0; i < B; i++) pick2(i).forEach((e) => hits[e]++);
   const touchedN = hits.filter((h) => h > 0).length, f = expertsTouched(B), total = (MP.shared + MP.expertsAll) * 2, read = (MP.shared + MP.expertsAll * f) * 2, denseRef = MP.active * 2;
-  const ex: Rect = { x: A.x, y: A.y + 40 * u, w: A.w, h: S.portrait ? A.h * 0.3 : A.h * 0.24 };
+  const ex: Rect = { x: A.x, y: A.y + 40 * u, w: A.w, h: S.portrait ? A.h * 0.3 : A.h * 0.24 }, bxs = expertBoxes(S, ex), exBottom = bxs[E - 1].y + bxs[E - 1].h;
   show(S, S.reveal('moe-memory', 0.1, 0.5), () => {
     fitText(S, S.l(`Una capa de Mixtral con ${B} ${B === 1 ? 'token' : 'tokens'} en el lote`, `One Mixtral layer with ${B} ${B === 1 ? 'token' : 'tokens'} in the batch`), A.x, A.y + 6 * u, A.w, 16, { weight: 800, base: 'top' });
-    drawExperts(S, expertBoxes(S, ex), hits);
-    tagText(S, S.l(`expertos consultados en esta capa: ${touchedN} de 8`, `experts consulted in this layer: ${touchedN} of 8`), A.x, ex.y + (S.portrait ? ex.h * 2 : ex.h) + 14 * u, { t: 'w', align: 'left', base: 'top', w: A.w });
+    drawExperts(S, bxs, hits);
+    tagText(S, S.l(`expertos consultados en esta capa: ${touchedN} de 8`, `experts consulted in this layer: ${touchedN} of 8`), A.x, exBottom + 12 * u, { t: 'w', align: 'left', base: 'top', w: A.w });
   });
   // pesos leídos por vuelta
-  const by = ex.y + ex.h + (S.portrait ? 96 : 74) * u, bh = clamp(A.h * 0.1, 30 * u, 48 * u), bw = A.w;
+  const by = exBottom + (S.portrait ? 68 : 88) * u, bh = clamp(A.h * 0.1, 30 * u, 48 * u), bw = A.w;
   show(S, S.reveal('moe-memory', 0.8, 0.6), () => {
     d.text(S.l('pesos que se leen en cada vuelta (FP16)', 'weights read on every turn (FP16)'), A.x, by - 10 * u, { size: FS(S, 14), weight: 700, color: p.ink, base: 'bottom' });
     d.rect(A.x, by, bw, bh, { fill: p.surface2, stroke: p.lineStrong, lw: 1.3 });
@@ -124,7 +126,7 @@ export function drawMoeMemory(S: Frame) {
     d.text(S.l(`todos: ${gb(total, 'es', 0)}`, `all of them: ${gb(total, 'en', 0)}`), A.x + bw, by + bh + 8 * u, { size: FS(S, 12), weight: 700, color: p.ink2, align: 'right', base: 'top' });
     d.text(S.l(`esperado: ${nf(f * 100, 0, 'es')} % de los expertos`, `expected: ${nf(f * 100, 0, 'en')}% of the experts`), A.x, by + bh + 28 * u, { size: FS(S, 13), weight: 700, color: wt.ink, base: 'top' });
   });
-  show(S, S.reveal('moe-memory', 1.0, 0.6), () => tagText(S, S.l('ilustrativo: cada token elige sus dos expertos al azar y por igual', 'illustrative: each token picks its two experts at random, uniformly'), A.x, A.y + A.h - 2 * u, { t: 'mute', size: 12, weight: 600, align: 'left', base: 'bottom', w: A.w }));
+  show(S, S.reveal('moe-memory', 1.0, 0.6), () => noteUp(S, S.l('ilustrativo: cada token elige sus dos expertos al azar y por igual', 'illustrative: each token picks its two experts at random, uniformly'), A.x, A.y + A.h - 2 * u, A.w));
 }
 
 // ═════════════ decodificación especulativa ═════════════

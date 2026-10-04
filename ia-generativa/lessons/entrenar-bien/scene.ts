@@ -2,7 +2,7 @@
 // optimizadores SGD, momento y Adam corren de verdad. Tres turnos: el tamaño del lote, la carrera de optimizadores y el calendario
 // de la tasa. Lo narrado es función del tiempo; lo interactivo vive en S.st y avanza en update().
 import {
-  alpha, badge, box, clamp, ease, hash, inset, link, neu, regions, tone,
+  alpha, badge, clamp, ease, hash, inset, link, neu, regions, tone,
   type Frame, type Rect, type SceneFactory, type Tone,
 } from '../../../../../theme/kit';
 import {
@@ -13,7 +13,7 @@ import {
   FS, batchGrad, descentArrow, drawAxisNames, drawCloud, drawLand, drawMin, drawRun, drawStart, landView, marker,
   type LView, type Shape,
 } from './view';
-import { asideSplit, deck, dial, etaChart, hbars, kvCard, lerpRect, lossChart, readouts, type Series } from './parts';
+import { asideSplit, boxS, deck, dial, etaChart, hbars, kvCard, lerpRect, lossChart, readouts, type Series } from './parts';
 
 // ── constantes de la lección ───────────────────────────────────────────────
 const ETA_BOWL = 0.08, BUDGET = 1024, BOWL_SEED = 5, T_RACE = 120, THR = 0.05, T_SCHED = 160, WARM = 16;
@@ -24,6 +24,8 @@ const OPTS: Record<Opt, { name: { es: string; en: string }; tone: Tone; shape: S
 };
 const oname = (S: Frame, o: Opt) => S.L(OPTS[o].name);
 const f2 = (S: Frame, x: number, d = 2) => S.n(x, d);
+/** Etiqueta del kit con tamaño mínimo de 12 px efectivos (en teléfono, `u` < 1 la encogería). */
+const badgeF = (S: Frame, text: string, x: number, y: number, o: Parameters<typeof badge>[4] = {}) => badge(S, text, x, y, { size: FS(S, 12), ...o });
 
 // ── corridas narradas (deterministas) ──────────────────────────────────────
 const bowlRun = (B: number, seed: number, steps: number, full = false) => cachedTrain(BOWL, 'sgd', ETA_BOWL, B, seed, steps, { start: START_BOWL, full });
@@ -232,7 +234,7 @@ function drawBowlLayer(S: Frame, R: ReturnType<typeof regions>) {
     drawAxisNames(S, v, land);
     drawCloud(S, v, { appear: S.at('toy', 0.7, 2.6, 'lin'), batch, a: land });
     if (S.on('average')) drawMin(S, v, S.reveal('average', 0.9, 0.5));
-    if (S.on('toy') && !S.on('average')) d.withAlpha(S.reveal('toy', 2.8, 0.6), () => badge(S, S.l('un punto = un ejemplo', 'one dot = one example'), v.r.x + 10 * u, v.r.y + 40 * u, { tone: 'dat', align: 'left' }));
+    if (S.on('toy') && !S.on('average')) d.withAlpha(S.reveal('toy', 2.8, 0.6), () => badgeF(S, S.l('un punto = un ejemplo', 'one dot = one example'), v.r.x + 10 * u, v.r.y + 40 * u, { tone: 'dat', align: 'left' }));
     drawBowlStory(S, v, mode, run, k);
     d.withAlpha(land, () => d.text(S.l('modelo de juguete', 'toy model'), v.r.x + v.r.w - 6, v.r.y + 5, { size: FS(S, 12), weight: 700, color: p.mute, align: 'right', base: 'top', halo: p.stage }));
   }
@@ -244,7 +246,7 @@ function drawBowlLayer(S: Frame, R: ReturnType<typeof regions>) {
 function drawBowlStory(S: Frame, v: LView, mode: string, run: Run | null, k: number) {
   const { d, pal: p } = S, u = S.u;
   if (!S.on('full')) return;
-  drawStart(S, v, START_BOWL, S.reveal('full', 0.2, 0.5), S.l('inicio', 'start'));
+  drawStart(S, v, START_BOWL, S.reveal('full', 0.2, 0.5), S.between('bigger', 'sgd') ? undefined : S.l('inicio', 'start'));
   if (S.between('full', 'sample')) {
     const kk = clamp((S.since('full') - 1.0) / 0.7, 0, 12);
     drawRun(S, v, FULL(), kk, { tone: 'ink', shape: 'square', lw: 2.2 });
@@ -283,14 +285,8 @@ function drawBowlStory(S: Frame, v: LView, mode: string, run: Run | null, k: num
     const q = S.at('cheap', 0.9, 6.2, 'lin'), seen = q * BUDGET;
     const f = FULL(), s8 = SGD8();
     drawRun(S, v, f, Math.min(4, seen / 256), { tone: 'ink', shape: 'square', lw: 2.4 });
-    const cur = drawRun(S, v, s8, seen / 8, { tone: 'w', shape: 'circle', lw: 2 });
-    if (q > 0.98) {
-      const e4 = v.pt(f.pts[4]);
-      d.withAlpha(S.reveal('cheap', 6.4, 0.6), () => {
-        badge(S, S.l('lote 256 · 4 pasos', 'batch 256 · 4 steps'), e4[0] + 12 * u, e4[1] - 16 * u, { tone: 'mute', align: 'left' });
-        badge(S, S.l('lote 8 · 128 pasos', 'batch 8 · 128 steps'), cur[0] + 12 * u, cur[1] + 22 * u, { tone: 'w', align: 'left' });
-      });
-    }
+    drawRun(S, v, s8, seen / 8, { tone: 'w', shape: 'circle', lw: 2 });
+    legend(S, v.r.x + 8 * u, v.r.y + v.r.h - 58 * u, [{ tone: 'ink', shape: 'square', text: S.l('lote 256 · 4 pasos', 'batch 256 · 4 steps') }, { tone: 'w', shape: 'circle', text: S.l('lote 8 · 128 pasos', 'batch 8 · 128 steps') }], S.reveal('cheap', 0.6, 0.5));
     return;
   }
   if (mode === 'g1') {
@@ -300,7 +296,7 @@ function drawBowlStory(S: Frame, v: LView, mode: string, run: Run | null, k: num
       const a = g1.cur; drawRun(S, v, a.run, a.k, { tone: 'w', lw: 2.4, dots: a.run.steps <= 64 });
       if (a.k > 0 && a.B > 1) { const c = a.run.centers[Math.min(a.run.centers.length - 1, Math.max(0, Math.floor(a.k) - 1))]; const [cx, cyy] = v.pt(c), r = 4.5 * u; const sg = tone(S, 'sig'); d.line(cx - r, cyy - r, cx + r, cyy + r, sg.ink, 2.4); d.line(cx - r, cyy + r, cx + r, cyy - r, sg.ink, 2.4); }
     } else if (!g1.runs.length) {
-      d.text(S.l('elige un lote y pulsa Entrenar', 'pick a batch size and press Train'), v.r.x + v.r.w / 2, v.r.y + v.r.h - 12 * u, { size: FS(S, 14), weight: 700, color: p.mute, align: 'center', base: 'bottom', halo: p.stage });
+      d.text(S.l('elige un lote y pulsa Entrenar', 'pick a batch size and press Train'), v.r.x + v.r.w / 2, v.r.y + v.r.h - 30 * u, { size: FS(S, 14), weight: 700, color: p.mute, align: 'center', base: 'bottom', halo: p.stage });
     }
     return;
   }
@@ -315,14 +311,16 @@ function drawBowlStory(S: Frame, v: LView, mode: string, run: Run | null, k: num
 function asideBowl(S: Frame, info: Rect, mode: string, run: Run | null, k: number) {
   const { d, pal: p } = S, u = S.u;
   if (!S.on('full')) return;
-  const cols = S.portrait ? 2 : 2, items: { l: string; v: string; t?: Tone; on?: boolean }[] = [];
+  const cols = 2, items: { l: string; v: string; t?: Tone; on?: boolean }[] = [];
+  // rótulo largo si cabe en su columna; si no, el corto (en teléfono, vertical u horizontal, la columna es angosta)
+  const cw = info.w / cols, lab = (long: string, short: string) => (S.d.measure(long, { size: FS(S, 12), weight: 700 }) < cw - 10 * u ? long : short);
   const g1 = G1(S);
   let rowsH = 0;
   const a = S.reveal('full', 0.3, 0.5);
   const step = Math.floor(k);
   if (mode === 'full') {
     const kk = clamp((S.since('full') - 1.0) / 0.7, 0, 12), n = Math.floor(kk), f = FULL();
-    items.push({ l: S.l('pasos', 'steps'), v: String(n), t: 'ink' }, { l: S.l('ejemplos vistos', 'examples seen'), v: String(n * 256), t: 'dat' }, { l: S.l('ejemplos por paso', 'examples per step'), v: '256', t: 'dat' }, { l: S.l('error', 'loss'), v: f2(S, f.loss[n]), t: 'err' });
+    items.push({ l: S.l('pasos', 'steps'), v: String(n), t: 'ink' }, { l: lab(S.l('ejemplos vistos', 'examples seen'), S.l('ej. vistos', 'seen')), v: String(n * 256), t: 'dat' }, { l: lab(S.l('ejemplos por paso', 'examples per step'), S.l('ej. por paso', 'ex. per step')), v: '256', t: 'dat' }, { l: S.l('error', 'loss'), v: f2(S, f.loss[n]), t: 'err' });
   } else if (mode === 'sample') {
     items.push({ l: S.l('ejemplos por paso', 'examples per step'), v: S.reveal('sample', 3.2, 0.4) > 0.5 ? '8' : '256', t: 'dat' });
     const h = readouts(S, info, items, 1, { rowH: 50, a });
@@ -333,7 +331,7 @@ function asideBowl(S: Frame, info: Rect, mode: string, run: Run | null, k: numbe
     return;
   } else if (mode === 'sgd' || mode === 'epoch') {
     const r = run!, ep = (step * 8) / N;
-    items.push({ l: S.l('pasos', 'steps'), v: String(step), t: 'ink' }, { l: S.l('ejemplos vistos', 'examples seen'), v: String(step * 8), t: 'dat' }, { l: S.l('época', 'epoch'), v: S.n(ep, 2), t: 'sig' }, { l: S.l('error', 'loss'), v: f2(S, r.loss[Math.min(step, r.loss.length - 1)], 3), t: 'err' });
+    items.push({ l: S.l('pasos', 'steps'), v: String(step), t: 'ink' }, { l: lab(S.l('ejemplos vistos', 'examples seen'), S.l('ej. vistos', 'seen')), v: String(step * 8), t: 'dat' }, { l: S.l('época', 'epoch'), v: S.n(ep, 2), t: 'sig' }, { l: S.l('error', 'loss'), v: f2(S, r.loss[Math.min(step, r.loss.length - 1)], 3), t: 'err' });
   } else if (mode === 'cheap') {
     const q = S.at('cheap', 0.9, 6.2, 'lin'), seen = Math.round(q * BUDGET), f = FULL(), s8 = SGD8(), n4 = Math.min(4, Math.floor(seen / 256)), n8 = Math.floor(seen / 8);
     items.push({ l: S.l('ejemplos vistos', 'examples seen'), v: `${seen} / ${BUDGET}`, t: 'dat' }, { l: S.l('presupuesto', 'budget'), v: S.l('4 épocas', '4 epochs'), t: 'ink' }, { l: S.l('lote 256', 'batch 256'), v: `${n4} ${S.l('pasos', 'steps')} · ${f2(S, f.loss[n4])}`, t: 'ink' }, { l: S.l('lote 8', 'batch 8'), v: `${n8} ${S.l('pasos', 'steps')} · ${f2(S, s8.loss[Math.min(128, n8)], 3)}`, t: 'w' });
@@ -341,14 +339,14 @@ function asideBowl(S: Frame, info: Rect, mode: string, run: Run | null, k: numbe
     return;
   } else if (mode === 'g1') {
     const c = g1.cur ?? g1.runs[g1.runs.length - 1] ?? null;
-    if (c) items.push({ l: S.l('lote', 'batch'), v: String(c.B), t: 'ink' }, { l: S.l('pasos', 'steps'), v: `${Math.floor(c.k)} / ${c.run.steps}`, t: 'ink' }, { l: S.l('ejemplos vistos', 'examples seen'), v: String(Math.round(Math.min(c.k, c.run.steps) * c.B)), t: 'dat' }, { l: S.l('error', 'loss'), v: f2(S, lossAt(c), 3), t: 'err' });
-    else items.push({ l: S.l('presupuesto', 'budget'), v: S.l('1024 ejemplos (4 épocas)', '1024 examples (4 epochs)'), t: 'dat' });
+    if (c) items.push({ l: S.l('lote', 'batch'), v: String(c.B), t: 'ink' }, { l: S.l('pasos', 'steps'), v: `${Math.floor(c.k)} / ${c.run.steps}`, t: 'ink' }, { l: lab(S.l('ejemplos vistos', 'examples seen'), S.l('ej. vistos', 'seen')), v: String(Math.round(Math.min(c.k, c.run.steps) * c.B)), t: 'dat' }, { l: S.l('error', 'loss'), v: f2(S, lossAt(c), 3), t: 'err' });
+    else items.push({ l: lab(S.l('ejemplos por intento', 'examples per run'), S.l('ejemplos', 'examples')), v: String(BUDGET), t: 'dat' }, { l: lab(S.l('épocas por intento', 'epochs per run'), S.l('épocas', 'epochs')), v: '4', t: 'ink' });
   } else {
     return;
   }
   rowsH = readouts(S, info, items, cols, { rowH: S.portrait ? 44 : 50, a });
   if (mode === 'g1' && g1.runs.length) {
-    const y = info.y + rowsH + 8 * u, line = g1.runs.slice().reverse().slice(0, S.portrait ? 3 : 4).map((r) => `${S.l('lote', 'batch')} ${r.B}: ${f2(S, finalLoss(r), finalLoss(r) < 0.1 ? 3 : 2)}`).join('  ·  ');
+    const y = info.y + rowsH + 8 * u, line = g1.runs.slice().reverse().slice(0, S.portrait ? 3 : 4).map((r) => `${S.l('lote', 'batch')}\u00a0${r.B}:\u00a0${f2(S, finalLoss(r), finalLoss(r) < 0.1 ? 3 : 2)}`).join(' · ');
     if (y < info.y + info.h - 10 * u) d.withAlpha(a, () => { d.text(S.l('error final por intento', 'final error per run'), info.x, y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' }); d.text(line, info.x, y + FS(S, 12) * u * 1.4, { size: FS(S, 12), font: 'mono', weight: 600, color: p.ink2, base: 'top', w: info.w }); });
   }
 }
@@ -363,7 +361,7 @@ function drawLegend(S: Frame, r: Rect, a: number) {
 // ═════════════════════════════════════════════════════════════════════════
 function drawTradeoff(S: Frame, R: ReturnType<typeof regions>) {
   const { d, pal: p } = S, u = S.u, r = R.all, curve = U_CURVE(), g1 = G1(S);
-  const pl = 52 * u, pr = 14 * u, pt = 26 * u, pb = 52 * u, c: Rect = { x: r.x + pl, y: r.y + pt, w: r.w - pl - pr, h: r.h - pt - pb };
+  const pl = 52 * u, pr = 14 * u, pt = 26 * u, pb = 84 * u, c: Rect = { x: r.x + pl, y: r.y + pt, w: r.w - pl - pr, h: r.h - pt - pb };
   const X = (i: number) => c.x + (i / 8) * c.w, Y = (v: number) => c.y + c.h - ((Math.log10(Math.max(1e-3, v)) + 3) / 4.2) * c.h;
   const a = S.reveal('tradeoff', 0.1, 0.6), prog = S.at('tradeoff', 0.8, 4.6, 'lin') * 8;
   d.withAlpha(a, () => {
@@ -379,14 +377,15 @@ function drawTradeoff(S: Frame, R: ReturnType<typeof regions>) {
     curve.forEach((e, i) => { if (i <= prog) d.circle(X(i), Y(e.v), 4 * u, { fill: p.surface, stroke: p.ink, lw: 2 }); });
     // los intentos de la persona
     g1.runs.forEach((rr) => { const i = Math.round(Math.log2(rr.B)); marker(S, X(i), Y(finalLoss(rr)), 'circle', 'w', 6); });
-    if (g1.runs.length) badge(S, S.l('tus intentos', 'your runs'), c.x + c.w - 8 * u, c.y + 14 * u, { tone: 'w', align: 'right' });
+    if (g1.runs.length) badgeF(S, S.l('tus intentos', 'your runs'), c.x + c.w - 8 * u, c.y + 14 * u, { tone: 'w', align: 'right' });
   });
   // anotaciones
   const best = curve.reduce((m, e, i) => (e.v < curve[m].v ? i : m), 0);
   d.withAlpha(S.reveal('tradeoff', 5.4, 0.6), () => {
-    badge(S, S.l('pocos pasos, limpios', 'few steps, clean'), X(7.2), Y(curve[7].v) - 32 * u, { tone: 'mute', align: 'center' });
-    badge(S, S.l('muchos pasos, ruidosos', 'many steps, noisy'), X(1.1), Y(curve[0].v) - 32 * u, { tone: 'mute', align: 'center' });
-    badge(S, S.l(`mejor: ${curve[best].B}`, `best: ${curve[best].B}`), X(best), Y(curve[best].v) + 26 * u, { tone: 'dat', align: 'center' });
+    badgeF(S, S.portrait ? S.l('pocos, limpios', 'few, clean') : S.l('pocos pasos, limpios', 'few steps, clean'), X(7) - 14 * u, Y(curve[7].v) + 2 * u, { tone: 'mute', align: 'right' });
+    badgeF(S, S.portrait ? S.l('muchos, ruidosos', 'many, noisy') : S.l('muchos pasos, ruidosos', 'many steps, noisy'), S.portrait ? X(0) : X(1.1), Y(curve[0].v) - 32 * u, { tone: 'mute', align: S.portrait ? 'left' : 'center' });
+    badgeF(S, S.l(`mejor: ${curve[best].B}`, `best: ${curve[best].B}`), X(best), c.y + c.h + 56 * u, { tone: 'dat', align: 'center' });
+    d.line(X(best), Y(curve[best].v) + 8 * u, X(best), c.y + c.h, tone(S, 'dat').c, 1.4, [3, 3]);
   });
   d.withAlpha(S.reveal('tradeoff', 6.4, 0.6), () => d.text(S.l('(con esta tasa y este presupuesto; ilustrativo)', '(for this rate and budget; illustrative)'), r.x + r.w, r.y + r.h, { size: FS(S, 12), color: p.mute, align: 'right', base: 'bottom' }));
 }
@@ -397,7 +396,7 @@ const lerpN = (a: number, b: number, t: number) => a + (b - a) * t;
 // ═════════════════════════════════════════════════════════════════════════
 function drawRealBatch(S: Frame, R: ReturnType<typeof regions>) {
   const { d, pal: p } = S, u = S.u, r = R.all;
-  const pl = 60 * u, pr = 16 * u, pt = 48 * u, pb = 56 * u, c: Rect = { x: r.x + pl, y: r.y + pt, w: r.w - pl - pr, h: r.h - pt - pb };
+  const pl = 104 * u, pr = 16 * u, pt = 48 * u, pb = 44 * u, c: Rect = { x: r.x + pl, y: r.y + pt, w: r.w - pl - pr, h: r.h - pt - pb };
   const X = (t: number) => c.x + t * c.w, Y = (v: number) => c.y + c.h - v * c.h;
   const a = S.reveal('real-batch', 0.1, 0.6), prog = S.at('real-batch', 1.0, 4.5, 'lin');
   const wt = tone(S, 'w');
@@ -405,21 +404,21 @@ function drawRealBatch(S: Frame, R: ReturnType<typeof regions>) {
     d.text(S.l('GPT-3 · tamaño del lote durante el entrenamiento', 'GPT-3 · batch size during training'), r.x, r.y, { size: FS(S, 14), weight: 800, color: p.ink, base: 'top' });
     d.text(S.l('lote medido en tokens', 'batch measured in tokens'), r.x, r.y + FS(S, 14) * u * 1.4, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top' });
     d.line(c.x, c.y + c.h, c.x + c.w, c.y + c.h, p.lineStrong, 1.5); d.line(c.x, c.y, c.x, c.y + c.h, p.lineStrong, 1.5);
-    d.text(S.l('3,2 millones', '3.2 million'), c.x - 6 * u, Y(1), { size: FS(S, 13), font: 'mono', weight: 700, color: wt.ink, align: 'right', base: 'middle' });
-    d.text(S.l('32 mil', '32 thousand'), c.x - 6 * u, Y(0.01), { size: FS(S, 13), font: 'mono', weight: 700, color: wt.ink, align: 'right', base: 'middle' });
+    d.text(S.n(3.2, 1) + S.l(' millones', ' million'), c.x - 6 * u, Y(1), { size: FS(S, 12), font: 'mono', weight: 700, color: wt.ink, align: 'right', base: 'middle' });
+    d.text(S.l('32 mil', '32 thousand'), c.x - 6 * u, Y(0.01), { size: FS(S, 12), font: 'mono', weight: 700, color: wt.ink, align: 'right', base: 'middle' });
     d.line(c.x, Y(1), c.x + c.w, Y(1), p.line, 1, [4, 4]);
-    d.text(S.l('tokens vistos →', 'tokens seen →'), c.x + c.w, c.y + c.h + 8 * u, { size: FS(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
+    d.text(S.l('tokens vistos → (sin escala)', 'tokens seen → (not to scale)'), c.x + c.w, c.y + c.h + 8 * u, { size: FS(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
     const t1 = 0.3, pts: [number, number][] = [];
     for (let i = 0; i <= 40; i++) { const t = (i / 40) * prog; if (t > 1) break; const v = t < t1 ? 0.01 + 0.99 * (t / t1) : 1; pts.push([X(t), Y(v)]); }
     if (pts.length > 1) d.polyline(pts, wt.c, 3.4);
     if (pts.length) { const q = pts[pts.length - 1]; marker(S, q[0], q[1], 'circle', 'w', 6.5); }
   });
   d.withAlpha(S.reveal('real-batch', 5.4, 0.6), () => {
-    const x0 = X(0), x1 = X(0.3), y = c.y + c.h + 24 * u;
-    d.line(x0, y, x1, y, p.ink2, 1.6); d.line(x0, y - 4 * u, x0, y + 4 * u, p.ink2, 1.6); d.line(x1, y - 4 * u, x1, y + 4 * u, p.ink2, 1.6);
-    d.text(S.l('primeros 4 a 12 mil millones de tokens, según el tamaño del modelo', 'first 4 to 12 billion tokens, depending on model size'), x0, y + 6 * u, { size: FS(S, 12), weight: 600, color: p.ink2, base: 'top', w: Math.min(c.w * 0.9, 520 * u) });
+    // la rampa dura solo los primeros 4 a 12 mil millones de tokens de 300 mil millones: el esquema no está a escala
+    const tx = X(0.15) + 20 * u;
+    d.text(S.l('primeros 4 a 12 mil millones de tokens, según el tamaño del modelo', 'first 4 to 12 billion tokens, depending on model size'), tx, Y(0.5), { size: FS(S, 12), weight: 600, color: p.ink2, base: 'top', w: Math.max(80 * u, c.x + c.w - tx - 6 * u) });
   });
-  d.withAlpha(S.reveal('real-batch', 6.4, 0.6), () => d.text('Brown et al., 2020 · Tabla 2.1 y Apéndice B', r.x + r.w, r.y + r.h, { size: FS(S, 12), color: p.mute, align: 'right', base: 'bottom' }));
+  d.withAlpha(S.reveal('real-batch', 6.4, 0.6), () => d.text(S.l('Brown et al., 2020 · Tabla 2.1 y Apéndice B', 'Brown et al., 2020 · Table 2.1 and Appendix B'), r.x + r.w, r.y + r.h, { size: FS(S, 12), color: p.mute, align: 'right', base: 'bottom' }));
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -453,7 +452,7 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
   drawAxisNames(S, v, 1);
   drawCloud(S, v, { dim: 0.55, a: 0.8 });
   drawMin(S, v, 1, !S.on('adam-idea'));
-  drawStart(S, v, high ? START_HIGH : START_NEAR, S.reveal('canyon', 1.0, 0.5), S.on('sgd-big') && !S.on('sgd-small') ? S.l('inicio', 'start') : high && S.between('warm-problem', 'warmup') ? S.l('pesos recién iniciados', 'freshly initialized weights') : undefined);
+  drawStart(S, v, high ? START_HIGH : START_NEAR, S.reveal('canyon', 1.0, 0.5), S.on('sgd-big') && !S.on('sgd-small') ? (S.since('sgd-big') < 8 ? S.l('inicio', 'start') : undefined) : high && S.between('warm-problem', 'warmup') ? S.l('pesos recién iniciados', 'freshly initialized weights') : undefined);
   d.text(S.l('paisaje de juguete', 'toy landscape'), v.r.x + v.r.w - 6, v.r.y + 5, { size: FS(S, 12), weight: 700, color: p.mute, align: 'right', base: 'top', halo: p.stage });
   const T = (id: string) => S.since(id);
   const ls = (id: string, a = 1) => S.reveal(id, 0.4, 0.5) * a;
@@ -468,20 +467,20 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
     d.withAlpha(S.reveal('canyon', 2.2, 0.6), () => {
       const [a0, a1] = along.map((q) => v.pt(q)), [b0, b1] = across.map((q) => v.pt(q)), mid = [(b0[0] + b1[0]) / 2, (b0[1] + b1[1]) / 2];
       d.arrow(a0[0], a0[1], a1[0], a1[1], p.ink, 3, 10);
-      badge(S, S.l('fondo: casi plano', 'bottom: almost flat'), (a0[0] + a1[0]) / 2, (a0[1] + a1[1]) / 2 + 22 * u, { tone: 'dat' });
+      { const txt = S.l('fondo: casi plano', 'bottom: almost flat'), bw = d.measure(txt, { size: FS(S, 12), weight: 600 }) + 14 * u; badgeF(S, txt, Math.min((a0[0] + a1[0]) / 2 + 36 * u, v.r.x + v.r.w - bw / 2 - 4 * u), (a0[1] + a1[1]) / 2 + 28 * u, { tone: 'dat' }); }
       d.arrow(mid[0], mid[1], b0[0], b0[1], p.ink, 3, 10); d.arrow(mid[0], mid[1], b1[0], b1[1], p.ink, 3, 10);
-      badge(S, S.l('paredes: empinadas', 'walls: steep'), mid[0] + (S.portrait ? 40 : 70) * u, mid[1], { tone: 'err' });
+      badgeF(S, S.l('paredes: empinadas', 'walls: steep'), b1[0] + (S.portrait ? 24 : 12) * u, Math.min(b0[1], b1[1]) - 16 * u, { tone: 'err' });
     });
     // lateral: curvatura a lo largo y a lo ancho (números reales del modelo)
     const rows = [
-      { label: S.l('a lo largo del fondo', 'along the bottom'), value: CANYON.H1, text: S.n(CANYON.H1, 1), tone: 'dat' as Tone, a: S.reveal('canyon', 3.4, 0.5) },
-      { label: S.l('a través de las paredes', 'across the walls'), value: h2eff(CANYON), text: S.n(h2eff(CANYON), 0), tone: 'err' as Tone, a: S.reveal('canyon', 4.4, 0.5) },
+      { label: S.l('fondo', 'bottom'), value: CANYON.H1, text: S.n(CANYON.H1, 1), tone: 'dat' as Tone, a: S.reveal('canyon', 3.4, 0.5) },
+      { label: S.l('paredes', 'walls'), value: h2eff(CANYON), text: S.n(h2eff(CANYON), 0), tone: 'err' as Tone, a: S.reveal('canyon', 4.4, 0.5) },
     ];
     d.withAlpha(S.reveal('canyon', 3.0, 0.5), () => {
       d.text(S.l('curvatura: qué tan rápido cambia la pendiente', 'curvature: how fast the slope changes'), aside.x, aside.y, { size: FS(S, 12.5), weight: 700, color: p.mute, base: 'top', w: aside.w });
-      hbars(S, { x: aside.x, y: aside.y + 46 * u, w: aside.w, h: 90 * u }, rows, { max: h2eff(CANYON), labelW: S.portrait ? 120 : 92, rowH: 36 * u });
+      hbars(S, { x: aside.x, y: aside.y + 40 * u, w: aside.w, h: 72 * u }, rows, { max: h2eff(CANYON), labelW: 76, rowH: 36 * u });
     });
-    d.withAlpha(S.reveal('canyon', 5.4, 0.6), () => d.text(S.l(`la pared es unas ${S.n(h2eff(CANYON) / CANYON.H1, 0)} veces más empinada`, `the wall is about ${S.n(h2eff(CANYON) / CANYON.H1, 0)} times steeper`), aside.x, aside.y + (S.portrait ? 100 : 150) * u, { size: FS(S, 13.5), weight: 800, color: p.ink, base: 'top', w: aside.w }));
+    d.withAlpha(S.reveal('canyon', 5.4, 0.6), () => d.text(S.l(`la pared es unas ${S.n(h2eff(CANYON) / CANYON.H1, 0)} veces más empinada`, `the wall is about ${S.n(h2eff(CANYON) / CANYON.H1, 0)} times steeper`), aside.x, aside.y + 124 * u, { size: FS(S, 13.5), weight: 800, color: p.ink, base: 'top', w: aside.w }));
     return;
   }
 
@@ -490,7 +489,7 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
     const A = R_SGD_A(), Bd = R_SGD_DIV(), t = T('sgd-big');
     const kA = clamp((t - 0.8) * 10, 0, 80), tB = t - 8.0, kB = clamp(tB * 5, 0, 6), fadeA = clamp(1 - tB / 0.5) * 0.65 + 0.35;
     drawRun(S, v, A, kA, { tone: 'w', lw: 2.2, a: tB > 0 ? fadeA : 1, marker: tB <= 0 });
-    if (tB > 0) { drawRun(S, v, Bd, kB, { tone: 'err', shape: 'square', lw: 2.6 }); if (kB >= Bd.divAt - 1) { d.withAlpha(S.reveal('sgd-big', 8.8, 0.3), () => badge(S, S.l('¡diverge!', 'diverges!'), v.r.x + v.r.w / 2, v.r.y + v.r.h * 0.28, { tone: 'err' })); } }
+    if (tB > 0) { drawRun(S, v, Bd, kB, { tone: 'err', shape: 'square', lw: 2.6 }); if (kB >= Bd.divAt - 1) { d.withAlpha(S.reveal('sgd-big', 8.8, 0.3), () => badgeF(S, S.l('¡diverge!', 'diverges!'), v.r.x + v.r.w / 2, v.r.y + v.r.h * 0.28, { tone: 'err' })); } }
     legend(S, v.r.x + 8 * u, v.r.y + 28 * u, [{ tone: 'w', shape: 'circle', text: 'SGD · η = ' + S.n(0.08, 2) }, ...(tB > 0 ? [{ tone: 'err' as Tone, shape: 'square' as Shape, text: 'SGD · η = ' + S.n(0.11, 2) }] : [])], ls('sgd-big'));
     drawAsideLoss(S, aside, chartRect, infoRect, [{ run: A, k: kA, tone: 'w', a: tB > 0 ? 0.5 : 1 }, ...(tB > 0 ? [{ run: Bd, k: kB, tone: 'err' as Tone, dash: [5, 3] }] : [])], 100, [{ l: S.l('pasos', 'steps'), v: String(Math.floor(tB > 0 ? kB : kA)), t: 'ink' }, { l: S.l('error', 'loss'), v: sigLoss(tB > 0 ? Bd.loss[Math.min(Math.floor(kB), Bd.loss.length - 1)] : A.loss[Math.min(Math.floor(kA), 100)], S), t: 'err' }]);
     return;
@@ -504,13 +503,13 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
     return;
   }
   if (S.between('momentum', 'momentum-cost')) {
-    const sg = R_SGD_REF(), mo = R_MOM(), t = T('momentum'), k = clamp((t - 0.8) * 12, 0, 70);
+    const sg = R_SGD_REF(), mo = R_MOM(), t = T('momentum'), k = clamp((t - 0.8) * 12, 0, 60);
     drawRun(S, v, sg, k, { tone: 'w', lw: 1.8, a: 0.8 });
     drawRun(S, v, mo, k, { tone: 'sig', shape: 'square', lw: 2.6 });
     legend(S, v.r.x + 8 * u, v.r.y + 28 * u, [{ tone: 'w', shape: 'circle', text: 'SGD · η = ' + S.n(0.06, 3) }, { tone: 'sig', shape: 'square', text: S.l('Momento', 'Momentum') + ' · η = ' + S.n(0.015, 3) }], ls('momentum'));
     d.withAlpha(S.reveal('momentum', 3.4, 0.6), () => {
       const x = v.r.x + 10 * u, y = v.r.y + v.r.h - 12 * u, sz = FS(S, 14);
-      d.text('v ← 0,9·v + g'.replace(',', S.lang === 'es' ? ',' : '.'), x, y - sz * u * 1.5, { size: sz, font: 'mono', weight: 700, color: tone(S, 'sig').ink, base: 'bottom', halo: p.stage });
+      d.text('v ← ' + S.n(0.9, 1) + '·v + g', x, y - sz * u * 1.5, { size: sz, font: 'mono', weight: 700, color: tone(S, 'sig').ink, base: 'bottom', halo: p.stage });
       d.text('w ← w − η·v', x, y, { size: sz, font: 'mono', weight: 700, color: p.ink, base: 'bottom', halo: p.stage });
     });
     drawAsideLoss(S, aside, chartRect, infoRect, [{ run: sg, k, tone: 'w' }, { run: mo, k, tone: 'sig' }], 100, [{ l: S.l('pasos', 'steps'), v: String(Math.floor(k)), t: 'ink' }, { l: 'SGD', v: f2(S, sg.loss[Math.min(Math.floor(k), 120)], 2), t: 'w' }, { l: S.l('Momento', 'Momentum'), v: f2(S, mo.loss[Math.min(Math.floor(k), 120)], 2), t: 'sig' }]);
@@ -521,8 +520,9 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
     drawRun(S, v, mo, k, { tone: 'sig', shape: 'square', lw: 2.6 });
     const n = Math.min(mo.pts.length - 2, Math.floor(k));
     if (n >= 1) { const p0 = mo.pts[n], p1 = mo.pts[n + 1], [x0, y0] = v.pt(p0), [x1, y1] = v.pt(p1); d.arrow(x0, y0, x0 + (x1 - x0) * 5, y0 + (y1 - y0) * 5, tone(S, 'sig').ink, 2.2, 8); }
-    let imax = 0, umax = -9; mo.pts.forEach((q, i) => { const uu = toUV(q[0], q[1])[0]; if (i < 90 && uu > umax) { umax = uu; imax = i; } });
-    if (k > imax && umax > 0.08) { const [ox, oy] = v.pt(mo.pts[imax]); d.withAlpha(S.reveal('momentum-cost', 5.2, 0.5), () => badge(S, S.l('se pasa de largo', 'overshoots'), ox, oy - 26 * u, { tone: 'sig' })); }
+    // el primer vaivén: la pelota cruza el fondo del valle y baja del otro lado (el «pasarse de largo»)
+    let imax = 0, vmin = 9; mo.pts.forEach((q, i) => { const vv = toUV(q[0], q[1])[1]; if (i > 0 && i < 30 && vv < vmin) { vmin = vv; imax = i; } });
+    if (k > imax && vmin < -0.15) { const [ox, oy] = v.pt(mo.pts[imax]); d.withAlpha(S.reveal('momentum-cost', 5.2, 0.5), () => badgeF(S, S.l('se pasa de largo', 'overshoots'), ox + 62 * u, oy + 6 * u, { tone: 'sig' })); }
     legend(S, v.r.x + 8 * u, v.r.y + 28 * u, [{ tone: 'sig', shape: 'square', text: S.l('Momento', 'Momentum') + ' · η = ' + S.n(0.015, 3) }, ], 1);
     d.text(S.l('flecha: la velocidad', 'arrow: the velocity'), v.r.x + 10 * u, v.r.y + v.r.h - 12 * u, { size: FS(S, 13), weight: 700, color: tone(S, 'sig').ink, base: 'bottom', halo: p.stage });
     drawAsideLoss(S, aside, chartRect, infoRect, [{ run: mo, k, tone: 'sig' }], 100, [{ l: S.l('pasos', 'steps'), v: String(Math.floor(k)), t: 'ink' }, { l: S.l('error', 'loss'), v: f2(S, mo.loss[Math.min(Math.floor(k), 120)], 3), t: 'err' }]);
@@ -546,7 +546,7 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
   if (S.between('adam-honest', 'try2')) {
     const ad = R_ADAM(), t = T('adam-honest'), k = 40 + clamp((t - 0.5) * 14, 0, 80);
     drawRun(S, v, ad, k, { tone: 'lat', shape: 'diamond', lw: 2.4, dots: false });
-    d.withAlpha(S.reveal('adam-honest', 3.6, 0.6), () => { const [mx, my] = v.pt([0, 0]); badge(S, S.l('rebota alrededor del fondo', 'bounces around the bottom'), mx + (S.portrait ? 4 : 30) * u, my - 46 * u, { tone: 'lat' }); });
+    d.withAlpha(S.reveal('adam-honest', 3.6, 0.6), () => { const [mx, my] = v.pt([0, 0]); badgeF(S, S.l('rebota alrededor del fondo', 'bounces around the bottom'), mx + (S.portrait ? 4 : 30) * u, my - 46 * u, { tone: 'lat' }); });
     legend(S, v.r.x + 8 * u, v.r.y + 28 * u, [{ tone: 'lat', shape: 'diamond', text: 'Adam · η = ' + S.n(0.25, 2) + S.l(' (constante)', ' (constant)') }], 1);
     drawAsideLoss(S, aside, chartRect, infoRect, [{ run: ad, k, tone: 'lat' }], 120, [{ l: S.l('pasos', 'steps'), v: String(Math.floor(k)), t: 'ink' }, { l: S.l('error', 'loss'), v: f2(S, ad.loss[Math.min(Math.floor(k), 120)], 3), t: 'err' }]);
     return;
@@ -564,7 +564,7 @@ function drawCanyonLayer(S: Frame, R: ReturnType<typeof regions>) {
   if (S.between('warm-problem', 'warmup')) {
     const r = R_HIGH_DIV(), t = T('warm-problem'), k = clamp((t - 1.2) * 2.2, 0, 4);
     drawRun(S, v, r, k, { tone: 'err', shape: 'square', lw: 3 });
-    if (k >= r.divAt - 0.2) d.withAlpha(S.reveal('warm-problem', 3.0, 0.4), () => { badge(S, S.l('¡diverge! sale del mapa', 'diverges! off the map'), v.r.x + v.r.w / 2, v.r.y + v.r.h * 0.3, { tone: 'err' }); });
+    if (k >= r.divAt - 0.2) d.withAlpha(S.reveal('warm-problem', 3.0, 0.4), () => { badgeF(S, S.l('¡diverge! sale del mapa', 'diverges! off the map'), v.r.x + v.r.w * 0.58, v.r.y + v.r.h * 0.8, { tone: 'err' }); });
     legend(S, v.r.x + 8 * u, v.r.y + 28 * u, [{ tone: 'err', shape: 'square', text: 'SGD · η = ' + S.n(0.07, 2) + S.l(' (constante)', ' (constant)') }], ls('warm-problem'));
     drawAsideLoss(S, aside, chartRect, infoRect, [{ run: r, k, tone: 'err' }], T_SCHED, [{ l: S.l('pasos', 'steps'), v: String(Math.floor(k)), t: 'ink' }, { l: S.l('error', 'loss'), v: sigLoss(r.loss[Math.min(Math.floor(k), r.loss.length - 1)], S), t: 'err' }]);
     return;
@@ -616,15 +616,18 @@ function drawWeightBars(S: Frame, r: Rect, a: number, reveal: number[]) {
 }
 
 function drawAdamBoxes(S: Frame, r: Rect, t: number) {
-  const { d, pal: p } = S, u = S.u, bw = S.portrait ? r.w * 0.3 : r.w * 0.46, bh = (S.portrait ? 54 : 58) * u;
+  const { d, pal: p } = S, u = S.u, bw = S.portrait ? r.w * 0.3 : r.w * 0.46, bh = (S.portrait ? 74 : 62) * u;
   const mk = (x: number, y: number): Rect => ({ x, y, w: bw, h: bh });
   const A = S.portrait ? [mk(r.x, r.y + 6 * u), mk(r.x + r.w * 0.35, r.y + 6 * u), mk(r.x + r.w * 0.7, r.y + 6 * u)] : [mk(r.x, r.y + 4 * u), mk(r.x + r.w - bw, r.y + 4 * u), mk(r.x + (r.w - bw) / 2, r.y + 4 * u + bh + 46 * u)];
   const tx = ['m', 's', 'η · m / √s'], sub = [S.l('promedio del gradiente', 'average of the gradient'), S.l('promedio de su cuadrado', 'average of its square'), S.l('el paso de este peso', 'this weight’s step')], tn: Tone[] = ['sig', 'err', 'lat'];
-  A.forEach((b, i) => { const a = S.reveal('adam-how', 0.5 + i * 1.8, 0.5); if (a > 0.01) box(S, b, tx[i], { tone: tn[i], sub: sub[i], a, font: 'mono', size: 15 }); });
+  A.forEach((b, i) => { const a = S.reveal('adam-how', 0.5 + i * 1.8, 0.5); if (a > 0.01) boxS(S, b, tx[i], { tone: tn[i], sub: sub[i], a, font: 'mono', size: 15 }); });
   const l1 = S.at('adam-how', 4.4, 5.2), l2 = S.at('adam-how', 4.8, 5.6);
   if (S.portrait) { if (l1 > 0) link(S, A[0], A[1], { tone: 'ink', progress: l1 }); if (l2 > 0) link(S, A[1], A[2], { tone: 'ink', progress: l2 }); }
   else { if (l1 > 0) link(S, A[0], A[2], { tone: 'ink', progress: l1 }); if (l2 > 0) link(S, A[1], A[2], { tone: 'ink', progress: l2 }); }
-  d.withAlpha(S.reveal('adam-how', 6.4, 0.6), () => d.text(S.l('esto se hace por separado para cada peso', 'this is done separately for every weight'), r.x, r.y + r.h - 2, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'bottom', w: r.w }));
+  d.withAlpha(S.reveal('adam-how', 6.4, 0.6), () => {
+    const txt = S.l('esto se hace por separado para cada peso', 'this is done separately for every weight'), sz = FS(S, 13), n = d.wrap(txt, r.w, { size: sz, weight: 700 }).length;
+    d.text(txt, r.x, r.y + r.h - 2 - (n - 1) * sz * u * 1.3, { size: sz, weight: 700, color: p.ink2, base: 'bottom', w: r.w });
+  });
 }
 
 // ── turno 2: la carrera ──
@@ -632,7 +635,7 @@ function drawRace(S: Frame, v: LView, aside: Rect, chartRect: Rect, infoRect: Re
   const { d, pal: p } = S, u = S.u, g = G2(S);
   const all = g.runs.slice(); if (g.cur) all.push(g.cur);
   all.forEach((a, i) => { const last = a === g.cur; drawRun(S, v, a.run, a.k, { tone: a.tone, shape: a.shape, lw: last ? 2.6 : 1.8, a: last ? 1 : 0.28 + 0.4 * (i / Math.max(1, all.length)), dots: false, marker: last || a === g.runs[g.runs.length - 1] }); });
-  if (!all.length) d.text(S.l('elige un optimizador y una tasa, y pulsa Entrenar', 'pick an optimizer and a rate, and press Train'), v.r.x + v.r.w / 2, v.r.y + v.r.h - 12 * u, { size: FS(S, 14), weight: 700, color: p.mute, align: 'center', base: 'bottom', halo: p.stage });
+  if (!all.length) d.text(S.l('elige un optimizador y una tasa, y pulsa Entrenar', 'pick an optimizer and a rate, and press Train'), v.r.x + v.r.w / 2, v.r.y + v.r.h - 30 * u, { size: FS(S, 14), weight: 700, color: p.mute, align: 'center', base: 'bottom', halo: p.stage });
   const rows = (['sgd', 'mom', 'adam'] as Opt[]).map((o) => { const b = g.best[o]; return { o, b }; });
   // lectura: curvas
   const series: Series[] = all.map((a, i) => ({ run: a.run, k: a.k, tone: a.tone, a: a === g.cur ? 1 : 0.3 + 0.3 * (i / Math.max(1, all.length)), lw: a === g.cur ? 2.4 : 1.6 }));
@@ -645,7 +648,8 @@ function drawRace(S: Frame, v: LView, aside: Rect, chartRect: Rect, infoRect: Re
     const y = rr.y + i * rh + rh / 2, t = tone(S, OPTS[row.o].tone), ok = !!row.b;
     marker(S, rr.x + 8 * u, y, OPTS[row.o].shape, OPTS[row.o].tone, 5);
     d.text(oname(S, row.o), rr.x + 22 * u, y, { size: FS(S, 13), weight: 800, color: t.ink, base: 'middle' });
-    d.text(ok ? `✓ ${row.b!.run.hit} ${S.l('pasos', 'steps')}` : '—', rr.x + rr.w, y, { size: FS(S, 13), font: 'mono', weight: 700, color: ok ? tone(S, 'dat').ink : p.mute, align: 'right', base: 'middle' });
+    const wl = d.measure(oname(S, row.o), { size: FS(S, 13), weight: 800 }), full = `✓ ${row.b ? row.b.run.hit : 0} ${S.l('pasos', 'steps')}`, fits = 22 * u + wl + 10 * u + d.measure(full, { size: FS(S, 13), font: 'mono', weight: 700 }) < rr.w;
+    d.text(ok ? (fits ? full : `✓ ${row.b!.run.hit}`) : '—', rr.x + rr.w, y, { size: FS(S, 13), font: 'mono', weight: 700, color: ok ? tone(S, 'dat').ink : p.mute, align: 'right', base: 'middle' });
   });
   const c = g.cur ?? g.runs[g.runs.length - 1];
   if (c) {
@@ -669,7 +673,7 @@ function drawRaceResult(S: Frame, v: LView, aside: Rect) {
   const max = Math.max(...bs.map((b) => (b.run.hit >= 0 ? b.run.hit : T_RACE)), 1);
   const rows = bs.map((b, i) => ({ label: oname(S, b.o), value: b.run.hit >= 0 ? Math.min(k, b.run.hit) : 0, text: b.run.hit >= 0 ? `${b.run.hit}${b.mine ? '' : ' *'}` : '—', tone: OPTS[b.o].tone, a: S.reveal('race-result', 1.0 + i * 0.5, 0.4) }));
   d.withAlpha(S.reveal('race-result', 0.5, 0.5), () => {
-    d.text(S.l('pasos hasta el fondo (error < 0,05)', 'steps to reach the bottom (loss < 0.05)'), aside.x, aside.y, { size: FS(S, 12.5), weight: 700, color: p.mute, base: 'top', w: aside.w });
+    d.text(S.l(`pasos hasta el fondo (error < ${S.n(THR, 2)})`, `steps to reach the bottom (loss < ${S.n(THR, 2)})`), aside.x, aside.y, { size: FS(S, 12.5), weight: 700, color: p.mute, base: 'top', w: aside.w });
     hbars(S, { x: aside.x, y: aside.y + 42 * u, w: aside.w, h: 110 * u }, rows, { max, labelW: S.portrait ? 78 : 72, rowH: 34 * u });
   });
   const miss = bs.some((b) => !b.mine);
@@ -687,12 +691,12 @@ function drawTry3(S: Frame, v: LView, aside: Rect, chartRect: Rect, infoRect: Re
   const warm = !!S.p.warm, decay = !!S.p.decay, prev = schedOf(warm, decay);
   const shown = a ?? null;
   if (shown) drawRun(S, v, shown.run, shown.k, { tone: g.verdict === 'ok' ? 'dat' : g.verdict === 'div' ? 'err' : 'w', shape: g.verdict === 'div' ? 'square' : 'circle', lw: 2.6, dots: false });
-  else d.text(S.l('activa lo que haga falta y pulsa Entrenar', 'switch on what is needed and press Train'), v.r.x + v.r.w / 2, v.r.y + v.r.h - 12 * u, { size: FS(S, 14), weight: 700, color: p.mute, align: 'center', base: 'bottom', halo: p.stage });
+  else d.text(S.l('activa lo que haga falta y pulsa Entrenar', 'switch on what is needed and press Train'), v.r.x + v.r.w / 2, v.r.y + v.r.h - 30 * u, { size: FS(S, 14), weight: 700, color: p.mute, align: 'center', base: 'bottom', halo: p.stage });
   // vista previa de la tasa elegida
   const etasPrev = Array.from({ length: T_SCHED }, (_, t) => (prev ? (prev.warm > 0 && t < prev.warm ? 0.07 * ((t + 1) / prev.warm) : 0.07) * (prev.decay ? prev.floor + (1 - prev.floor) * 0.5 * (1 + Math.cos(Math.PI * clamp((t - prev.warm) / Math.max(1, prev.total - prev.warm)))) : 1) : 0.07));
   const series: Series[] = shown ? [{ run: shown.run, k: shown.k, tone: g.verdict === 'ok' ? 'dat' : g.verdict === 'div' ? 'err' : 'w' }] : [];
   const g2 = 10 * u, [r1, r2]: Rect[] = S.portrait ? [{ x: aside.x, y: aside.y, w: aside.w * 0.49, h: aside.h }, { x: aside.x + aside.w * 0.51, y: aside.y, w: aside.w * 0.49, h: aside.h }] : [{ x: aside.x, y: aside.y, w: aside.w, h: aside.h * 0.34 }, { x: aside.x, y: aside.y + aside.h * 0.36, w: aside.w, h: aside.h * 0.34 }];
-  etaChart(S, r1, [{ etas: etasPrev, tone: 'ink', k: T_SCHED }], { T: T_SCHED, max: 0.08, title: S.l('tasa η que vas a usar', 'rate η you will use'), cursor: shown ? shown.k : undefined });
+  etaChart(S, r1, [{ etas: etasPrev, tone: 'ink', k: T_SCHED }], { T: T_SCHED, max: 0.08, title: S.portrait ? S.l('tasa η', 'rate η') : S.l('tasa η que vas a usar', 'rate η you will use'), cursor: shown ? shown.k : undefined });
   lossChart(S, r2, series, { T: T_SCHED, thr: THR, title: S.l('error (escala log)', 'loss (log scale)'), small: S.portrait });
   void g2;
   if (!S.portrait) {
@@ -701,7 +705,7 @@ function drawTry3(S: Frame, v: LView, aside: Rect, chartRect: Rect, infoRect: Re
     if (msg) d.text(msg, aside.x, y, { size: FS(S, 13.5), weight: 800, color: t === 'ok' ? tone(S, 'dat').ink : tone(S, 'err').ink, base: 'top', w: aside.w });
   } else if (g.verdict) {
     const t = g.verdict, msg = t === 'div' ? S.l('Diverge', 'Diverges') : t === 'bounce' ? S.l('Rebota', 'Bounces') : S.l('¡Asentado!', 'Settled!');
-    badge(S, msg, v.r.x + v.r.w / 2, v.r.y + v.r.h * 0.2, { tone: t === 'ok' ? 'dat' : 'err' });
+    badgeF(S, msg, v.r.x + v.r.w / 2, v.r.y + v.r.h * 0.2, { tone: t === 'ok' ? 'dat' : 'err' });
   }
   if (!S.portrait && g.verdict) { /* el veredicto ya está en el lateral */ }
 }
@@ -723,23 +727,23 @@ function drawHyper(S: Frame, R: ReturnType<typeof regions>) {
     const a = S.reveal('hyper', 0.8 + i * 1.15, 0.5);
     if (a > 0.01) dial(S, cx, cyy, rad, it.x01 * (0.9 + 0.1 * Math.sin(S.clock * 1.4 + i)), it.l, it.v, it.t, a);
   });
-  const top = r.y + 24 * u + rads(rad) + rows * gh + 8 * u, bh = Math.max(56 * u, (r.y + r.h - top - 8 * u) / 2.2);
+  const top = r.y + 24 * u + rows * gh + 6 * u, availH = r.y + r.h - top - 6 * u, bh = S.portrait ? clamp((availH - 10 * u) / 2, 44 * u, 68 * u) : clamp(availH, 56 * u, 84 * u);
   d.withAlpha(S.reveal('hyper', 7.6, 0.6), () => {
     const bw = S.portrait ? r.w : (r.w - 16 * u) / 2, wt = tone(S, 'w');
     const b1: Rect = { x: r.x, y: top, w: bw, h: bh }, b2: Rect = S.portrait ? { x: r.x, y: top + bh + 10 * u, w: bw, h: bh } : { x: r.x + bw + 16 * u, y: top, w: bw, h: bh };
-    box(S, b1, S.l('Pesos: miles de millones', 'Weights: billions'), { tone: 'w', sub: S.l('se aprenden con gradientes', 'learned with gradients'), size: 16 });
-    box(S, b2, S.l('Hiperparámetros: unas decenas', 'Hyperparameters: a few dozen'), { sub: S.l('los elige una persona', 'a person chooses them'), size: 16 });
+    boxS(S, b1, S.l('Pesos: miles de millones', 'Weights: billions'), { tone: 'w', sub: S.l('se aprenden con gradientes', 'learned with gradients'), size: 16 });
+    boxS(S, b2, S.l('Hiperparámetros: unos pocos', 'Hyperparameters: just a few'), { sub: S.l('los elige una persona', 'a person chooses them'), size: 16 });
     void wt;
   });
   d.withAlpha(S.reveal('hyper', 0.2, 0.5), () => d.text(S.l('ajustes del entrenamiento (valores de ejemplo)', 'training settings (example values)'), r.x, r.y, { size: FS(S, 13), weight: 700, color: p.mute, base: 'top' }));
 }
-const rads = (x: number) => x * 2 + 38;
 
 function drawSearch(S: Frame, R: ReturnType<typeof regions>) {
   const { d, pal: p } = S, u = S.u, r = R.all;
   const etas = [0.01, 0.03, 0.1, 0.3, 1, 3], runs = etas.map((e) => cy('adam', e, 3, 100));
-  const hits = runs.map((x) => (x.hit >= 0 ? x.hit : 1e9)), best = hits.indexOf(Math.min(...hits));
-  const cols = S.portrait ? 2 : 3, rows = S.portrait ? 3 : 2, head = 34 * u, foot = 26 * u, gap = 10 * u;
+  // «más estable» = menor error medio en los últimos 20 pasos (el primero en cruzar el umbral no siempre es el mejor)
+  const tail = runs.map((x) => x.loss.slice(-20).reduce((a, b) => a + b, 0) / 20), best = tail.indexOf(Math.min(...tail));
+  const cols = S.portrait ? 2 : 3, rows = S.portrait ? 3 : 2, head = 34 * u, foot = 48 * u, gap = 10 * u;
   const tw = (r.w - gap * (cols - 1)) / cols, th = (r.h - head - foot - gap * (rows - 1)) / rows;
   d.withAlpha(S.reveal('search', 0.2, 0.5), () => d.text(S.l('Adam con seis tasas: seis entrenamientos', 'Adam with six rates: six training runs'), r.x, r.y, { size: FS(S, 14), weight: 800, color: p.ink, base: 'top' }));
   etas.forEach((e, i) => {
@@ -752,19 +756,22 @@ function drawSearch(S: Frame, R: ReturnType<typeof regions>) {
       const inner = inset(tr, 6 * u);
       lossChart(S, { x: inner.x, y: inner.y + 14 * u, w: inner.w, h: inner.h - 14 * u }, [{ run: runs[i], k, tone: 'lat' }], { T: 100, thr: THR, small: true });
       d.text(`η = ${S.n(e, e < 0.1 ? 2 : e < 1 ? 1 : 0)}`, inner.x, inner.y, { size: FS(S, 13), font: 'mono', weight: 800, color: p.ink, base: 'top' });
-      const done = k >= 99, verdict = runs[i].hit >= 0 ? S.l(`${runs[i].hit} pasos`, `${runs[i].hit} steps`) : S.l('no llega', 'does not get there');
+      const done = k >= 99, verdict = runs[i].hit >= 0 ? S.l(`${runs[i].hit} pasos`, `${runs[i].hit} steps`) : S.l('no llega', 'not reached');
       if (done) d.text(verdict, inner.x + inner.w, inner.y, { size: FS(S, 12.5), weight: 800, color: runs[i].hit >= 0 ? tone(S, 'dat').ink : tone(S, 'err').ink, align: 'right', base: 'top' });
     });
   });
-  d.withAlpha(S.reveal('search', 7.0, 0.5), () => d.text(S.l('seis pruebas = seis veces el costo de un entrenamiento', 'six trials = six times the cost of one training run'), r.x, r.y + r.h, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'bottom' }));
+  d.withAlpha(S.reveal('search', 7.0, 0.5), () => {
+    d.text(S.l('seis pruebas = seis veces el costo de un entrenamiento', 'six trials = six times the cost of one training run'), r.x, r.y + r.h - FS(S, 12) * u * 1.5, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'bottom', w: r.w });
+    d.text(S.l('marcada: termina más estable', 'outlined: ends steadiest'), r.x, r.y + r.h, { size: FS(S, 12), weight: 700, color: tone(S, 'dat').ink, base: 'bottom', w: r.w });
+  });
 }
 
 function drawRealCard(S: Frame, R: ReturnType<typeof regions>) {
   const { d, pal: p } = S, u = S.u, r = R.all;
   const w = Math.min(r.w, 600 * u), x = r.x + (r.w - w) / 2, h = Math.min(r.h - 8 * u, 380 * u);
   const rows = [
-    { k: S.l('Optimizador', 'Optimizer'), v: S.l('Adam · β₂ = 0,95', 'Adam · β₂ = 0.95'), t: 'lat' as Tone },
-    { k: S.l('Lote (final)', 'Batch (final)'), v: S.l('3,2 millones de tokens', '3.2 million tokens'), t: 'dat' as Tone },
+    { k: S.l('Optimizador', 'Optimizer'), v: 'Adam · β₂ = ' + S.n(0.95, 2), t: 'lat' as Tone },
+    { k: S.l('Lote (final)', 'Batch (final)'), v: S.n(3.2, 1) + S.l(' millones de tokens', ' million tokens'), t: 'dat' as Tone },
     { k: S.l('Tasa máxima', 'Peak rate'), v: S.n(0.00006, 5), t: 'w' as Tone },
     { k: S.l('Calentamiento', 'Warmup'), v: S.l('375 millones de tokens', '375 million tokens'), t: 'sig' as Tone },
     { k: S.l('Decaimiento', 'Decay'), v: S.l('coseno hasta el 10 %', 'cosine down to 10 %'), t: 'err' as Tone },
@@ -781,7 +788,7 @@ function drawRecap(S: Frame, R: ReturnType<typeof regions>) {
   const tones: Tone[] = ['dat', 'lat', 'w'];
   const bw = Math.min(S.portrait ? r.w * 0.8 : r.w * 0.27, 230 * u), bh = 70 * u;
   const pos: Rect[] = S.portrait ? [0, 1, 2].map((i) => ({ x: r.x + (r.w - bw) / 2, y: r.y + 14 * u + i * (bh + 36 * u), w: bw, h: bh })) : [0, 1, 2].map((i) => ({ x: r.x + r.w * (0.1 + 0.3 * i), y: r.y + r.h * 0.25, w: bw, h: bh }));
-  pos.forEach((b, i) => { const a = S.reveal('recap', 0.3 + i * 1.6, 0.5); if (a > 0) box(S, b, labels[i], { tone: tones[i], sub: subs[i], a, size: 17 }); });
+  pos.forEach((b, i) => { const a = S.reveal('recap', 0.3 + i * 1.6, 0.5); if (a > 0) boxS(S, b, labels[i], { tone: tones[i], sub: subs[i], a, size: 17 }); });
   for (let i = 0; i < 2; i++) { const a = S.at('recap', 1.3 + i * 1.6, 2.0 + i * 1.6); if (a > 0) link(S, pos[i], pos[i + 1], { tone: 'ink', progress: a }); }
   const aT = S.reveal('recap', 5.4, 0.7), y = S.portrait ? pos[2].y + bh + 22 * u : pos[0].y + bh + 56 * u;
   S.d.withAlpha(aT, () => {
