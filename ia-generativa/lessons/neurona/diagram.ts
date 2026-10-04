@@ -116,9 +116,16 @@ export function drawDiagram(S: Frame, D: Rect, vin: { x1: number; x2: number }) 
     const aP = S.reveal('products', 0.3, 0.6);
     if (aP > 0) {
       let cx: number, cy: number, ax: CanvasTextAlign = 'center';
-      const text = port ? `= ${num(S, E.pr, 2)}` : `${num(S, E.v, 2)}×${num(S, E.w, 1)}=${num(S, E.pr, 2)}`;
-      if (!port) { cx = lerp(A0.x, E.e.x, 0.66); cy = lerp(A0.y, E.e.y, 0.66); }
-      else {
+      const compact = port || S.W < 700;
+      const text = compact ? `= ${num(S, E.pr, 2)}` : `${num(S, E.v, 2)}×${num(S, E.w, 1)}=${num(S, E.pr, 2)}`;
+      if (!compact) { cx = lerp(A0.x, E.e.x, 0.66); cy = lerp(A0.y, E.e.y, 0.66); }
+      else if (!port) {
+        // teléfono horizontal: el valor va entre las dos aristas, a la izquierda de su línea (a la derecha chocaría con la neurona)
+        const px = lerp(A0.x, E.e.x, 0.6), py = lerp(A0.y, E.e.y, 0.6), dx = E.e.x - A0.x, dy = E.e.y - A0.y, L = Math.hypot(dx, dy) || 1;
+        let nx = -dy / L, ny = dx / L;
+        if (nx * (E.a.x - E.other.x) + ny * (E.a.y - E.other.y) > 0) { nx = -nx; ny = -ny; }
+        cx = px + nx * 8 * u; cy = py + ny * 8 * u; ax = 'right';
+      } else {
         const px = lerp(A0.x, E.e.x, 0.8), py = lerp(A0.y, E.e.y, 0.8), dx = E.e.x - A0.x, dy = E.e.y - A0.y, L = Math.hypot(dx, dy) || 1;
         let nx = -dy / L, ny = dx / L;
         if (nx * (E.a.x - E.other.x) + ny * (E.a.y - E.other.y) < 0) { nx = -nx; ny = -ny; }

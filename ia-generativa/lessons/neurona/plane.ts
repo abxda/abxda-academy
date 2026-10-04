@@ -75,9 +75,15 @@ export function drawPlane(S: Frame, main: Rect, o: PlaneSpec): Plot {
   if (ar > 0 && ch) {
     const mx = (ch[0][0] + ch[1][0]) / 2, my = (ch[0][1] + ch[1][1]) / 2, n = Math.hypot(w1, w2) || 1;
     const len = Math.min(r.w * 0.16, 56 * u), sx = plot.X(mx), sy = plot.Y(my), ex = sx + (w1 / n) * len, ey = sy - (w2 / n) * len;
+    // la etiqueta «w» va junto a la punta, del lado donde no haya un punto de datos
+    const dx = w1 / n, dy = -w2 / n, vis = Math.ceil(o.points ?? 0);
+    const cands: [number, number][] = [[dx * 11, dy * 11], [-dy * 13 + dx * 4, dx * 13 + dy * 4], [dy * 13 + dx * 4, -dx * 13 + dy * 4], [dx * 20, dy * 20]];
+    const clear = (cx: number, cy: number) => Math.min(99, ...DATA.slice(0, vis).map((q) => Math.hypot(plot.X(q.x) - cx, plot.Y(q.y) - cy) / u));
+    let best = cands[0], bd = -1;
+    for (const c of cands) { const k = clear(ex + c[0] * u, ey + c[1] * u); if (k > bd + 1e-6) { bd = k; best = c; if (k >= 14) break; } }
     d.withAlpha(ar, () => {
       arrow(S, sx, sy, ex, ey, wt.c, 3, 10);
-      txt(S, 'w', ex + (w1 / n) * 11 * u, ey - (w2 / n) * 11 * u, { size: 15, weight: 800, color: wt.ink, align: 'center', base: 'middle', halo: p.stage, haloW: 4 });
+      txt(S, 'w', ex + best[0] * u, ey + best[1] * u, { size: 15, weight: 800, color: wt.ink, align: 'center', base: 'middle', halo: p.stage, haloW: 4 });
     });
   }
   if ((o.zLabel ?? 0) > 0 && ch) {

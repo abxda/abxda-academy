@@ -29,21 +29,21 @@ export default defineLesson({
     },
     {
       id: 'mp',
-      es: 'En mil novecientos cuarenta y tres, McCulloch y Pitts describieron un modelo matemático de esa idea: una unidad que se enciende solo si sus señales de entrada alcanzan un umbral.',
-      en: 'In nineteen forty-three, McCulloch and Pitts described a mathematical model of that idea: a unit that turns on only if its input signals reach a threshold.',
+      es: 'En mil novecientos cuarenta y tres, McCulloch y Pitts propusieron un modelo matemático de esa idea: una unidad de todo o nada que se enciende solo si sus entradas alcanzan un umbral fijo. Era una red fija: no aprendía.',
+      en: 'In nineteen forty-three, McCulloch and Pitts proposed a mathematical model of that idea: an all-or-nothing unit that fires only if its inputs reach a fixed threshold. It was a fixed network: it did not learn.',
       tts: {
-        es: 'En mil novecientos cuarenta y tres, Mac Calok y Pits describieron un modelo matemático de esa idea: una unidad que se enciende solo si sus señales de entrada alcanzan un umbral.',
+        es: 'En mil novecientos cuarenta y tres, Mac Calok y Pits propusieron un modelo matemático de esa idea: una unidad de todo o nada que se enciende solo si sus entradas alcanzan un umbral fijo. Era una red fija: no aprendía.',
       },
     },
     {
       id: 'inputs',
-      es: 'Armemos la neurona pieza por pieza. Primero, las entradas: números que describen un caso. Aquí, un correo con dos medidas: cuántos enlaces trae y cuánta confianza inspira quien lo envía.',
-      en: 'Let’s build the neuron piece by piece. First, the inputs: numbers describing a case. Here, an email with two measurements: how many links it has and how trustworthy its sender is.',
+      es: 'Armemos la neurona pieza por pieza. Primero, las entradas: las características de un caso, como números. Aquí, un correo con dos, entre cero y uno: cuántos enlaces trae y cuánta confianza inspira quien lo envía.',
+      en: 'Let’s build the neuron piece by piece. First, the inputs: the features of a case, as numbers. Here, an email with two, between zero and one: how many links it has and how trustworthy its sender is.',
     },
     {
       id: 'weights',
-      es: 'Cada entrada tiene un peso, que dice cuánto importa y en qué sentido. Los enlaces suman sospecha, con peso positivo; la confianza la resta, con peso negativo.',
-      en: 'Each input has a weight that says how much it matters and in which direction. Links add suspicion, with a positive weight; trust subtracts it, with a negative weight.',
+      es: 'Cada entrada tiene un peso, que dice cuánto importa y en qué sentido. En este ejemplo, los enlaces suman sospecha, con peso positivo; la confianza la resta, con peso negativo.',
+      en: 'Each input has a weight that says how much it matters and in which direction. In this example, links add suspicion, with a positive weight; trust subtracts it, with a negative weight.',
     },
     {
       id: 'products',
@@ -67,8 +67,8 @@ export default defineLesson({
     },
     {
       id: 'formula',
-      es: 'Eso es toda la neurona: multiplicar, sumar, añadir el sesgo y activar. Sus pesos y su sesgo son los parámetros que el descenso del gradiente ajusta.',
-      en: 'That is the whole neuron: multiply, add, add the bias, and activate. Its weights and bias are the parameters that gradient descent adjusts.',
+      es: 'Eso es toda la neurona: multiplicar, sumar, añadir el sesgo y activar. Sus pesos y su sesgo son sus parámetros: lo que se ajusta para que aprenda.',
+      en: 'That is the whole neuron: multiply, add, add the bias, and activate. Its weights and bias are its parameters: what gets adjusted so that it learns.',
       note: { es: 'Neurona: y = f(w₁x₁ + w₂x₂ + b).', en: 'Neuron: y = f(w₁x₁ + w₂x₂ + b).' },
     },
     {
@@ -130,43 +130,43 @@ export default defineLesson({
     },
     {
       id: 'sigmoid',
-      es: 'La solución es la sigmoide: suaviza el salto y convierte cualquier número en una puntuación entre cero y uno, que vale un medio justo sobre la frontera.',
-      en: 'The fix is the sigmoid: it smooths the jump and turns any number into a score between zero and one, equal to one half right on the boundary.',
+      es: 'Una alternativa es la sigmoide: suaviza el salto y convierte cualquier número en una puntuación entre cero y uno, que vale un medio justo sobre la frontera.',
+      en: 'One alternative is the sigmoid: it smooths the jump and turns any number into a score between zero and one, equal to one half right on the boundary.',
       note: { es: 'Sigmoide: salida suave entre 0 y 1; vale 0,5 sobre la frontera.', en: 'Sigmoid: a smooth output between 0 and 1; it is 0.5 on the boundary.' },
       pad: 0.4,
     },
     {
       id: 'sharp',
-      es: 'Con pesos mayores la frontera no se mueve, pero la transición se vuelve más abrupta: la neurona se muestra más tajante. Con pesos menores, más dudosa.',
-      en: 'With larger weights the boundary does not move, but the transition gets sharper: the neuron becomes more decisive. With smaller weights, more doubtful.',
+      es: 'Si multiplicamos pesos y sesgo por un mismo factor, la frontera no se mueve, pero la transición cambia: con un factor mayor la neurona se muestra más tajante; con uno menor, más dudosa.',
+      en: 'If we multiply the weights and the bias by the same factor, the boundary does not move, but the transition changes: with a larger factor the neuron is more decisive; with a smaller one, more doubtful.',
       pad: 0.5,
     },
     {
       id: 'rosenblatt',
-      es: 'En mil novecientos cincuenta y ocho, Frank Rosenblatt propuso una neurona de este tipo que aprende de ejemplos, corrigiendo sus errores. La llamó perceptrón.',
-      en: 'In nineteen fifty-eight, Frank Rosenblatt proposed a neuron of this kind that learns from examples, correcting its mistakes. He called it the perceptron.',
-      note: { es: 'Perceptrón (Rosenblatt, 1958): una neurona que aprende de sus errores.', en: 'Perceptron (Rosenblatt, 1958): a neuron that learns from its mistakes.' },
+      es: 'En mil novecientos cincuenta y ocho, Frank Rosenblatt publicó el perceptrón: unidades de umbral conectadas en red, que aprenden de ejemplos. Aquí veremos su versión más simple: una sola neurona con escalón.',
+      en: 'In nineteen fifty-eight, Frank Rosenblatt published the perceptron: threshold units connected in a network that learns from examples. Here we will see its simplest version: a single neuron with a step.',
+      note: { es: 'Perceptrón (Rosenblatt, 1958): unidades de umbral que aprenden de ejemplos.', en: 'Perceptron (Rosenblatt, 1958): threshold units that learn from examples.' },
     },
     {
       id: 'mark1',
-      es: 'Su equipo la construyó como máquina, el Mark I Perceptron: un ojo de cuatrocientas fotoceldas, y pesos guardados en potenciómetros, perillas que giraban motores eléctricos.',
-      en: 'His team built it as a machine, the Mark I Perceptron: an eye of four hundred photocells, with the weights stored in potentiometers, knobs turned by electric motors.',
+      es: 'Su equipo construyó una máquina, el Mark I Perceptron: un ojo de cuatrocientas fotoceldas, quinientas doce unidades conectadas al azar, y pesos en potenciómetros que giraban motores eléctricos.',
+      en: 'His team built a machine, the Mark I Perceptron: an eye of four hundred photocells, five hundred twelve units wired at random, and weights stored in potentiometers that electric motors turned.',
       tts: {
-        es: 'Su equipo la construyó como máquina, el Mark uno Perceptron: un ojo de cuatrocientas fotoceldas, y pesos guardados en potenciómetros, perillas que giraban motores eléctricos.',
-        en: 'His team built it as a machine, the Mark one Perceptron: an eye of four hundred photocells, with the weights stored in potentiometers, knobs turned by electric motors.',
+        es: 'Su equipo construyó una máquina, el Mark uno Perceptron: un ojo de cuatrocientas fotoceldas, quinientas doce unidades conectadas al azar, y pesos en potenciómetros que giraban motores eléctricos.',
+        en: 'His team built a machine, the Mark one Perceptron: an eye of four hundred photocells, five hundred twelve units wired at random, and weights stored in potentiometers that electric motors turned.',
       },
       pad: 0.3,
     },
     {
       id: 'rule',
-      es: 'Su regla de aprendizaje es muy simple. Se le muestra un ejemplo: si la neurona acierta, no cambia nada; si falla, mueve los pesos hacia la respuesta correcta.',
-      en: 'Its learning rule is very simple. It is shown an example: if the neuron gets it right, nothing changes; if it gets it wrong, it moves the weights toward the right answer.',
+      es: 'La regla de corrección de errores, que su laboratorio describió hacia mil novecientos sesenta, es simple. Con cada ejemplo: si la neurona acierta, nada cambia; si falla, mueve los pesos hacia la respuesta correcta.',
+      en: 'The error-correction rule, which his lab described around nineteen sixty, is simple. With each example: if the neuron gets it right, nothing changes; if it gets it wrong, it moves the weights toward the right answer.',
       note: { es: 'Regla: w ← w + η (t − y) x. Solo cambia cuando se equivoca.', en: 'Rule: w ← w + η (t − y) x. It only changes when it is wrong.' },
     },
     {
       id: 'update',
-      es: 'Si debía decir uno y dijo cero, suma a los pesos una fracción de la entrada; si era al revés, la resta. La frontera se mueve hacia el ejemplo que falló.',
-      en: 'If it should say one but says zero, it adds a fraction of the input to the weights; if the reverse, it subtracts. The boundary moves toward the missed example.',
+      es: 'Si debía decir uno y dijo cero, suma a cada peso una fracción de su entrada, y al sesgo, la fracción sola: es la tasa de aprendizaje. Si era al revés, resta. La frontera se mueve hacia ese ejemplo.',
+      en: 'If it should say one but says zero, it adds a fraction of its input to each weight, and the bare fraction to the bias: that is the learning rate. If the reverse, it subtracts. The boundary moves toward that example.',
       pad: 0.5,
     },
     {
@@ -181,27 +181,37 @@ export default defineLesson({
     },
     {
       id: 'converge',
-      es: 'Hay una garantía: si existe una recta que separe los grupos, esta regla la encuentra en un número finito de pasos, aunque corregir un error a veces estropee otro.',
-      en: 'There is a guarantee: if a line that separates the groups exists, this rule finds it in a finite number of steps, even though fixing one error sometimes breaks another.',
+      es: 'Hay una garantía, demostrada a comienzos de los sesenta: si existe una recta que separe los grupos, esta regla la encuentra en un número finito de pasos, aunque corregir un error a veces estropee otro.',
+      en: 'There is a guarantee, proved in the early sixties: if a line that separates the groups exists, this rule finds it in a finite number of steps, even though fixing one error sometimes breaks another.',
       note: { es: 'Si existe una recta que separe los datos, el perceptrón la encuentra.', en: 'If a line that separates the data exists, the perceptron finds it.' },
       pad: 0.3,
     },
     {
       id: 'limits',
-      es: 'Y de la biología, ¿qué queda? Muy poco. Una neurona artificial es una fórmula: multiplica, suma y aplica una función. Una neurona real es una célula viva, con química, tiempo y energía.',
-      en: 'And what is left of biology? Very little. An artificial neuron is a formula: it multiplies, adds, and applies a function. A real neuron is a living cell, with chemistry, timing, and energy.',
+      es: '¿Y cuánto queda de la biología? Solo la inspiración. Una neurona artificial es una fórmula: multiplica, suma y aplica una función. Una neurona real es una célula viva, con química, tiempo y energía.',
+      en: 'And how much of biology is left? Only the inspiration. An artificial neuron is a formula: it multiplies, adds, and applies a function. A real neuron is a living cell, with chemistry, timing, and energy.',
       note: { es: 'Una neurona artificial es una fórmula, no un cerebro.', en: 'An artificial neuron is a formula, not a brain.' },
     },
     {
       id: 'real',
-      es: 'Un cerebro humano tiene unos ochenta y seis mil millones de neuronas, y un estudio de dos mil veintiuno halló que imitar a una sola neurona cortical simulada exigía una red de cinco a ocho capas.',
-      en: 'A human brain has about eighty-six billion neurons, and a twenty twenty-one study found that imitating a single simulated cortical neuron took a network of five to eight layers.',
+      es: 'Un cerebro humano adulto tiene unos ochenta y seis mil millones de neuronas. Y para imitar la respuesta de una sola neurona cortical simulada, un estudio de dos mil veintiuno necesitó una red de cinco a ocho capas.',
+      en: 'An adult human brain has about eighty-six billion neurons. And to imitate the response of a single simulated cortical neuron, a twenty twenty-one study needed a network of five to eight layers.',
       pad: 0.4,
     },
     {
       id: 'hype',
-      es: 'En mil novecientos cincuenta y ocho la prensa dijo que la Marina esperaba una máquina consciente de su existencia. La demostración fue distinguir tarjetas marcadas a la izquierda o a la derecha.',
-      en: 'In nineteen fifty-eight the press said the Navy expected a machine conscious of its existence. The demonstration was telling cards marked on the left from cards marked on the right.',
+      es: 'En mil novecientos cincuenta y ocho la prensa contó que la Marina de Estados Unidos esperaba una máquina capaz de reproducirse y de ser consciente de su existencia.',
+      en: 'In nineteen fifty-eight the press reported that the U.S. Navy expected a machine that could reproduce itself and be conscious of its existence.',
+      pad: 0.3,
+    },
+    {
+      id: 'demo',
+      es: 'La demostración fue más modesta: una computadora IBM setecientos cuatro, tras cincuenta ensayos, aprendió a distinguir tarjetas marcadas a la izquierda de las marcadas a la derecha.',
+      en: 'The demonstration was more modest: an IBM seven-oh-four computer, after fifty trials, learned to tell cards marked on the left from cards marked on the right.',
+      tts: {
+        es: 'La demostración fue más modesta: una computadora I B M setecientos cuatro, tras cincuenta ensayos, aprendió a distinguir tarjetas marcadas a la izquierda de las marcadas a la derecha.',
+        en: 'The demonstration was more modest: an I B M seven-oh-four computer, after fifty trials, learned to tell cards marked on the left from cards marked on the right.',
+      },
       pad: 0.4,
     },
     {
@@ -222,14 +232,14 @@ export default defineLesson({
       'Una neurona artificial calcula y = f(w₁x₁ + w₂x₂ + b): multiplica cada entrada por su peso, suma, añade el sesgo y aplica una función de activación.',
       'Con dos entradas, los puntos donde la suma vale cero forman una recta: la frontera de decisión. Los pesos la inclinan; el sesgo la desplaza.',
       'El escalón responde cero o uno de forma tajante y no da gradiente; la sigmoide da una puntuación suave entre cero y uno y sí lo da.',
-      'El perceptrón (Rosenblatt, 1958) aprende corrigiendo los pesos solo cuando se equivoca; si existe una recta que separe los datos, la encuentra en un número finito de pasos.',
+      'El perceptrón (Rosenblatt, 1958) es una red de unidades de umbral que aprende de ejemplos. En su versión más simple, una neurona con escalón, corrige los pesos solo cuando se equivoca y, si existe una recta que separe los datos, la encuentra en un número finito de pasos.',
       'Una neurona artificial es una fórmula inspirada en la biología, no un modelo del cerebro: una neurona real es muchísimo más compleja.',
     ],
     en: [
       'An artificial neuron computes y = f(w₁x₁ + w₂x₂ + b): it multiplies each input by its weight, adds them, adds the bias, and applies an activation function.',
       'With two inputs, the points where the sum equals zero form a straight line: the decision boundary. Weights tilt it; the bias shifts it.',
       'The step answers zero or one abruptly and gives no gradient; the sigmoid gives a smooth score between zero and one and does give one.',
-      'The perceptron (Rosenblatt, 1958) learns by correcting its weights only when it is wrong; if a line that separates the data exists, it finds it in a finite number of steps.',
+      'The perceptron (Rosenblatt, 1958) is a network of threshold units that learns from examples. In its simplest version, a neuron with a step, it corrects its weights only when it is wrong and, if a line that separates the data exists, finds it in a finite number of steps.',
       'An artificial neuron is a formula inspired by biology, not a model of the brain: a real neuron is vastly more complex.',
     ],
   },
@@ -278,9 +288,9 @@ Con $t,y\\in\\{0,1\\}$ (respuesta correcta y respuesta de la neurona):
 
 $$w_i \\leftarrow w_i + \\eta\\,(t-y)\\,x_i,\\qquad b \\leftarrow b + \\eta\\,(t-y)$$
 
-Solo cambia cuando $t\\neq y$, y entonces $t-y=\\pm1$. El mismo ejemplo queda mejor: $\\Delta z=\\eta\\,(t-y)\\,(\\lVert\\mathbf{x}\\rVert^2+1)$ tiene el signo correcto. Es un paso de descenso del gradiente estocástico sobre la pérdida $\\max(0,-\\tilde t\\,z)$, con $\\tilde t=2t-1$: la idea de la lección 4, aplicada a otra pérdida porque la del escalón no tiene gradiente útil.
+Solo cambia cuando $t\\neq y$, y entonces $t-y=\\pm1$. El mismo ejemplo queda mejor: $\\Delta z=\\eta\\,(t-y)\\,(\\lVert\\mathbf{x}\\rVert^2+1)$ tiene el signo correcto. Es un paso de descenso estocástico, con subgradiente, sobre la pérdida $\\max(0,-\\tilde t\\,z)$ (el «criterio del perceptrón»), con $\\tilde t=2t-1$: la idea de la lección 4, aplicada a otra pérdida porque la del escalón (contar errores) es plana casi en todas partes.
 
-El teorema de convergencia dice: si existe un vector unitario $\\mathbf{u}$ y un margen $\\gamma>0$ con $\\tilde t_i\\,(\\mathbf{u}\\cdot\\mathbf{x}_i)\\ge\\gamma$ para todos los ejemplos (con el sesgo como una entrada más, igual a 1) y $\\lVert\\mathbf{x}_i\\rVert\\le R$, el perceptrón comete a lo sumo $(R/\\gamma)^2$ errores (Novikoff, 1962). Si los datos no se separan con una recta, no converge: los pesos no dejan de moverse.
+El teorema de convergencia dice: si existe un vector unitario $\\mathbf{u}$ y un margen $\\gamma>0$ con $\\tilde t_i\\,(\\mathbf{u}\\cdot\\mathbf{x}_i)\\ge\\gamma$ para todos los ejemplos (con el sesgo como una entrada más, igual a 1) y $\\lVert\\mathbf{x}_i\\rVert\\le R$, el perceptrón, partiendo de pesos cero, comete a lo sumo $(R/\\gamma)^2$ errores: la cota sale directamente de la demostración de Novikoff (1962). Con los 16 correos de la lección, $R\\approx 1{,}63$ (el mayor $\\lVert(x_1,x_2,1)\\rVert$) y $\\gamma\\approx 0{,}12$, así que la cota es de unos 190 errores; en 300 pruebas con orden aleatorio, desde cero, nunca hicieron falta más de 31. Si los datos no se separan con una recta, no converge: los pesos no dejan de moverse.
 
 ## En código
 
@@ -329,6 +339,16 @@ for epoca in range(10):
 # 3 0 [1.0, 1.0] -1.0
 \`\`\`
 
+## De dónde viene, con cuidado
+
+**McCulloch y Pitts (1943)** supusieron neuronas de todo o nada que se activan cuando llega un número fijo de sinapsis excitadoras, con inhibición absoluta (una sola sinapsis inhibidora impide la activación) y una red que no cambia con el tiempo. Mostraron que redes así pueden calcular funciones de la lógica proposicional. No tenían pesos que se aprendieran.
+
+**Rosenblatt (1958)** describió el perceptrón como un sistema de unidades de umbral: una retina de sensores (S), unidades de asociación (A) conectadas al azar y unidades de respuesta (R). El artículo describe el aprendizaje como refuerzo de las unidades A (el experimentador «fuerza» la respuesta o premia y castiga); no contiene la regla de arriba. La corrección solo cuando hay error aparece en informes de su laboratorio de 1960, y la forma con una sola neurona es la que se enseña desde entonces.
+
+**El Mark I Perceptron** (manual de 1960): 400 fotorresistencias en una cuadrícula de 20 × 20, 512 unidades A con conexiones al azar a los sensores (generadas por un programa en un IBM 704 y cableadas en un tablero) y 8 unidades R. Los valores de las unidades A, los pesos, son potenciómetros movidos por motores de corriente continua.
+
+**La demostración de julio de 1958** se hizo con una computadora IBM 704: tras 50 ensayos distinguió tarjetas marcadas a la izquierda de las marcadas a la derecha. La frase de la Marina sobre una máquina «consciente de su existencia» es del despacho de UPI que publicó The New York Times el 8 de julio.
+
 ## Lo que viene
 
 Una sola neurona solo separa con una recta; la lección 6 muestra un caso que no puede (XOR). La lección 7 apila capas con activaciones no lineales, y la 8 calcula el gradiente de cada peso de la red (retropropagación).`,
@@ -365,9 +385,9 @@ With $t,y\\in\\{0,1\\}$ (the correct answer and the neuron’s answer):
 
 $$w_i \\leftarrow w_i + \\eta\\,(t-y)\\,x_i,\\qquad b \\leftarrow b + \\eta\\,(t-y)$$
 
-It changes only when $t\\neq y$, and then $t-y=\\pm1$. The same example improves: $\\Delta z=\\eta\\,(t-y)\\,(\\lVert\\mathbf{x}\\rVert^2+1)$ has the right sign. It is a stochastic gradient descent step on the loss $\\max(0,-\\tilde t\\,z)$, with $\\tilde t=2t-1$: the idea of lesson 4, applied to a different loss because the step’s own loss has no useful gradient.
+It changes only when $t\\neq y$, and then $t-y=\\pm1$. The same example improves: $\\Delta z=\\eta\\,(t-y)\\,(\\lVert\\mathbf{x}\\rVert^2+1)$ has the right sign. It is a stochastic subgradient descent step on the loss $\\max(0,-\\tilde t\\,z)$ (the “perceptron criterion”), with $\\tilde t=2t-1$: the idea of lesson 4, applied to a different loss because the step’s own loss (counting errors) is flat almost everywhere.
 
-The convergence theorem says: if there is a unit vector $\\mathbf{u}$ and a margin $\\gamma>0$ with $\\tilde t_i\\,(\\mathbf{u}\\cdot\\mathbf{x}_i)\\ge\\gamma$ for every example (with the bias as one more input, equal to 1) and $\\lVert\\mathbf{x}_i\\rVert\\le R$, the perceptron makes at most $(R/\\gamma)^2$ mistakes (Novikoff, 1962). If the data cannot be separated by a line, it does not converge: the weights never stop moving.
+The convergence theorem says: if there is a unit vector $\\mathbf{u}$ and a margin $\\gamma>0$ with $\\tilde t_i\\,(\\mathbf{u}\\cdot\\mathbf{x}_i)\\ge\\gamma$ for every example (with the bias as one more input, equal to 1) and $\\lVert\\mathbf{x}_i\\rVert\\le R$, the perceptron, starting from zero weights, makes at most $(R/\\gamma)^2$ mistakes: the bound comes straight out of Novikoff’s proof (1962). With the lesson’s 16 emails, $R\\approx 1.63$ (the largest $\\lVert(x_1,x_2,1)\\rVert$) and $\\gamma\\approx 0.12$, so the bound is about 190 mistakes; in 300 runs with random order, from zero, it never took more than 31. If the data cannot be separated by a line, it does not converge: the weights never stop moving.
 
 ## In code
 
@@ -416,6 +436,16 @@ for epoch in range(10):
 # 3 0 [1.0, 1.0] -1.0
 \`\`\`
 
+## Where it comes from, carefully
+
+**McCulloch and Pitts (1943)** assumed all-or-none neurons that fire when a fixed number of excitatory synapses is active, with absolute inhibition (a single inhibitory synapse prevents firing) and a network that does not change over time. They showed that such networks can compute functions of propositional logic. They had no weights to be learned.
+
+**Rosenblatt (1958)** described the perceptron as a system of threshold units: a retina of sensors (S), association units (A) wired at random, and response units (R). The paper describes learning as reinforcement of the A units (the experimenter “forces” the response, or rewards and punishes); it does not contain the rule above. Correcting only when there is an error appears in his laboratory’s 1960 reports, and the single-neuron form is the one taught since.
+
+**The Mark I Perceptron** (1960 manual): 400 photoresistors in a 20 × 20 grid, 512 A units wired at random to the sensors (generated by a program on an IBM 704 and set on a plugboard), and 8 R units. The values of the A units, the weights, are potentiometers moved by direct-current motors.
+
+**The July 1958 demonstration** ran on an IBM 704 computer: after 50 trials it told cards marked on the left from cards marked on the right. The Navy’s line about a machine “conscious of its existence” comes from the UPI dispatch that The New York Times published on July 8.
+
 ## What comes next
 
 A single neuron can only separate with a line; lesson 6 shows a case it cannot handle (XOR). Lesson 7 stacks layers with nonlinear activations, and lesson 8 computes the gradient of every weight in the network (backpropagation).`,
@@ -424,15 +454,15 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
   lens: {
     es: [
       'Cuando un proveedor hable de «neuronas» o de que su sistema «piensa como el cerebro», tradúcelo: son fórmulas con parámetros ajustados con datos. Pide saber con qué datos se entrenó y cómo se evaluó, no cuán «inteligente» parece.',
-      'Una sola neurona se puede auditar: sus pesos dicen cuánto aporta cada entrada a la decisión. Con miles de millones de parámetros esa lectura directa se pierde. Si una decisión debe poder explicarse, pregunta qué explicación puede dar el sistema.',
+      'Una sola neurona se puede auditar: si las entradas están en la misma escala, sus pesos dicen cuánto aporta cada una a la decisión. Con miles de millones de parámetros esa lectura directa se pierde. Si una decisión debe poder explicarse, pregunta qué explicación puede dar el sistema.',
       'Una salida entre 0 y 1 no es automáticamente una probabilidad: un 0,9 no significa «acierta nueve de cada diez veces». Compruébalo con datos propios antes de fijar umbrales de decisión (lección 33).',
-      'Los pesos aprenden lo que hay en los datos: si los ejemplos ya traen un sesgo, la neurona lo reproduce. Y una neurona solo separa lo que una recta separa: pregunta si el problema, de verdad, tiene esa forma.',
+      'Los pesos aprenden lo que hay en los datos: si los ejemplos reflejan los prejuicios o los errores de quien los etiquetó, la neurona los reproduce. Y una neurona solo separa lo que una recta separa: pregunta si el problema, de verdad, tiene esa forma.',
     ],
     en: [
       'When a vendor talks about “neurons” or a system that “thinks like the brain,” translate it: they are formulas with parameters adjusted from data. Ask what data it was trained on and how it was evaluated, not how “intelligent” it seems.',
-      'A single neuron can be audited: its weights say how much each input contributes to the decision. With billions of parameters, that direct reading is lost. If a decision must be explainable, ask what explanation the system can give.',
+      'A single neuron can be audited: if the inputs are on the same scale, its weights say how much each one contributes to the decision. With billions of parameters, that direct reading is lost. If a decision must be explainable, ask what explanation the system can give.',
       'An output between 0 and 1 is not automatically a probability: a 0.9 does not mean “right nine times out of ten.” Check it with your own data before setting decision thresholds (lesson 33).',
-      'Weights learn what is in the data: if the examples already carry a bias, the neuron reproduces it. And a neuron only separates what a line can separate: ask whether the problem really has that shape.',
+      'Weights learn what is in the data: if the examples reflect the prejudices or mistakes of whoever labeled them, the neuron reproduces them. And a neuron only separates what a line can separate: ask whether the problem really has that shape.',
     ],
   },
 
@@ -533,8 +563,8 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
       id: 'perceptron',
       term: { es: 'Perceptrón', en: 'Perceptron' },
       def: {
-        es: 'Neurona con activación en escalón propuesta por Frank Rosenblatt en 1958, junto con una regla que corrige sus pesos cuando se equivoca.',
-        en: 'A neuron with a step activation proposed by Frank Rosenblatt in 1958, together with a rule that corrects its weights when it is wrong.',
+        es: 'Modelo propuesto por Frank Rosenblatt en 1958: unidades de umbral conectadas en red que aprenden de ejemplos. En su versión más simple, una neurona con escalón cuyos pesos se corrigen solo cuando se equivoca.',
+        en: 'A model proposed by Frank Rosenblatt in 1958: threshold units connected in a network that learn from examples. In its simplest version, a neuron with a step whose weights are corrected only when it is wrong.',
       },
     },
     {
@@ -550,10 +580,11 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
   sources: [
     { title: 'A logical calculus of the ideas immanent in nervous activity', authors: 'McCulloch, W. S., Pitts, W.', year: 1943, url: 'https://doi.org/10.1007/BF02478259' },
     { title: 'The perceptron: a probabilistic model for information storage and organization in the brain', authors: 'Rosenblatt, F.', year: 1958, url: 'https://doi.org/10.1037/h0042519' },
-    { title: 'On convergence proofs on perceptrons (Symposium on the Mathematical Theory of Automata, vol. 12, pp. 615–622)', authors: 'Novikoff, A. B. J.', year: 1962 },
+    { title: 'Mark I Perceptron Operators’ Manual (Project PARA), informe VG-1196-G-5 del Cornell Aeronautical Laboratory (sección 7.5, apéndice A.1 a A.4 y A.10)', authors: 'Hay, J. C., Lynch, B. E., Smith, D. R.', year: 1960, url: 'https://apps.dtic.mil/sti/citations/tr/AD0236965' },
+    { title: 'On convergence proofs on perceptrons (charla del Symposium on the Mathematical Theory of Automata, vol. 12, pp. 615–622, 1962; la copia en línea es el informe técnico del Stanford Research Institute, enero de 1963)', authors: 'Novikoff, A. B. J.', year: 1962, url: 'https://archive.org/details/DTIC_AD0298258' },
     { title: 'Electronic Neural Network, Mark I Perceptron (objeto de colección)', authors: 'Smithsonian National Museum of American History', year: 1958, url: 'https://americanhistory.si.edu/collections/object/nmah_334414' },
-    { title: 'Professor’s perceptron paved the way for AI – 60 years too soon', authors: 'Cornell Chronicle', year: 2019, url: 'https://news.cornell.edu/stories/2019/09/professors-perceptron-paved-way-ai-60-years-too-soon' },
-    { title: 'New Navy Device Learns by Doing; Psychologist Shows Embryo of Computer Designed to Read and Grow Wiser', authors: 'The New York Times, 8 de julio de 1958', year: 1958 },
+    { title: 'Professor’s perceptron paved the way for AI – 60 years too soon', authors: 'Lefkowitz, M., Cornell Chronicle', year: 2019, url: 'https://news.cornell.edu/stories/2019/09/professors-perceptron-paved-way-ai-60-years-too-soon' },
+    { title: 'New Navy Device Learns by Doing; Psychologist Shows Embryo of Computer Designed to Read and Grow Wiser (despacho de UPI, The New York Times, 8 de julio de 1958, p. 25)', authors: 'United Press International', year: 1958, url: 'https://www.nytimes.com/1958/07/08/archives/new-navy-device-learns-by-doing-psychologist-shows-embryo-of.html' },
     { title: 'Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain', authors: 'Azevedo, F. A. C. et al.', year: 2009, url: 'https://doi.org/10.1002/cne.21974' },
     { title: 'Single cortical neurons as deep artificial neural networks', authors: 'Beniaguev, D., Segev, I., London, M.', year: 2021, url: 'https://doi.org/10.1016/j.neuron.2021.07.002' },
   ],

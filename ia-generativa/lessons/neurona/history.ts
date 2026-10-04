@@ -31,6 +31,7 @@ export function drawRosenblatt(S: Frame, D: Rect) {
     txt(S, 'Cornell Aeronautical Laboratory', D.x + (port ? 150 : 190) * u, D.y + (port ? 26 : 30) * u, { size: 13, weight: 600, color: p.ink2, base: 'top', w: D.w - (port ? 156 : 196) * u });
   });
   const area: Rect = { x: D.x, y: D.y + head, w: D.w, h: D.h - head };
+  const mk = S.at('mark1', 0, 0.8, 'io');
   const cell = clamp(Math.min((area.h - 54 * u) / 20, (port ? area.w * 0.42 : area.w * 0.32) / 20), 4 * u, 12 * u);
   const rx = area.x + 8 * u, ry = area.y + (area.h - 54 * u - cell * 20) / 2 + 4 * u;
   // retina de 20 × 20
@@ -38,10 +39,10 @@ export function drawRosenblatt(S: Frame, D: Rect) {
   d.withAlpha(aR, () => {
     for (let r = 0; r < 20; r++) for (let c = 0; c < 20; c++) d.rect(rx + c * cell, ry + r * cell, cell - 0.8, cell - 0.8, { fill: RETINA[r][c] ? alpha(sg.c, 0.9) : p.surface2 });
     d.rect(rx - 1, ry - 1, cell * 20 + 1.6, cell * 20 + 1.6, { stroke: p.lineStrong, lw: 1.5 });
-    tag(S, S.l('400 entradas', '400 inputs'), rx + cell * 10, ry + cell * 20 + 20 * u, { tone: 'sig' });
+    d.withAlpha(1 - mk, () => tag(S, S.l('400 entradas', '400 inputs'), rx + cell * 10, ry + cell * 20 + 20 * u, { tone: 'sig' }));
+    d.withAlpha(mk, () => tag(S, S.l('400 fotoceldas', '400 photocells'), rx + cell * 10, ry + cell * 20 + 20 * u, { tone: 'sig' }));
   });
   // destino: neurona (1958) o panel de perillas (Mark I)
-  const mk = S.at('mark1', 0, 0.8, 'io');
   const tx = area.x + area.w * (port ? 0.76 : 0.74), ty = ry + cell * 10;
   const aN = S.reveal('rosenblatt', 1.1, 0.7);
   // abanico de conexiones con peso (ámbar)
@@ -54,7 +55,7 @@ export function drawRosenblatt(S: Frame, D: Rect) {
     d.circle(tx, ty, R, { fill: alpha(sg.c, 0.14), stroke: sg.c, lw: 2.5 });
     d.text('Σ f', tx, ty, { size: fs(S, 18), weight: 800, color: sg.ink, align: 'center', base: 'middle' });
     arrow(S, tx + R, ty, tx + R + (port ? 14 : 26) * u, ty, p.ink2, 2, 8);
-    tag(S, S.l('perceptrón', 'perceptron'), tx, ty + R + 20 * u, { tone: 'sig' });
+    tag(S, S.l('perceptrón simple', 'simple perceptron'), tx, ty + R + 20 * u, { tone: 'sig' });
   });
   if (mk > 0) d.withAlpha(mk, () => {
     // panel de potenciómetros: cada perilla es un peso
@@ -63,8 +64,9 @@ export function drawRosenblatt(S: Frame, D: Rect) {
     d.rect(px0 - gx * 0.62, py0 - gy * 0.7, cols * gx + gx * 0.24, rows * gy + gy * 0.15, { fill: alpha(p.surface, 0.7), stroke: p.lineStrong, lw: 1.5, r: 6 * u });
     const T = S.reduced ? 0 : S.clock;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const i = r * cols + c; knob(S, px0 + c * gx, py0 + r * gy, kr, Math.sin(T * 0.9 + i * 1.7) * 1.9 + (i % 3 - 1) * 0.3); }
-    tag(S, S.l('pesos = perillas', 'weights = knobs'), px0 + ((cols - 1) * gx) / 2, py0 + rows * gy - gy * 0.2 + 12 * u, { tone: 'w' });
-    tag(S, S.l('giradas por motores', 'turned by motors'), px0 + ((cols - 1) * gx) / 2, py0 + rows * gy - gy * 0.2 + 38 * u, { size: 12 });
+    tag(S, S.l('512 potenciómetros', '512 potentiometers'), px0 + ((cols - 1) * gx) / 2, py0 + rows * gy - gy * 0.2 + 12 * u, { tone: 'w' });
+    tag(S, S.l('pesos girados por motores', 'weights turned by motors'), px0 + ((cols - 1) * gx) / 2, py0 + rows * gy - gy * 0.2 + 38 * u, { size: 12 });
+    tag(S, S.l('conexiones al azar', 'random wiring'), (rx + cell * 20 + px0 - gx * 0.62) / 2, ry - 12 * u, { size: 12 });
   });
   d.withAlpha(S.reveal('rosenblatt', 1.6, 0.6) * (1 - mk), () => tag(S, S.l('esquema simplificado', 'simplified sketch'), area.x + area.w / 2, area.y + area.h - 8 * u, { size: 12 }));
   d.withAlpha(S.reveal('mark1', 0.6, 0.6), () => tag(S, 'Mark I Perceptron', area.x + area.w / 2, area.y + area.h - 8 * u, { tone: 'w', size: 13 }));
@@ -121,8 +123,8 @@ export function drawReal(S: Frame, D: Rect) {
   const { d, pal: p } = S, u = S.u, port = S.portrait;
   const cards: { v: string; l: string; src: string; t: 'w' | 'sig' | 'lat' }[] = [
     { v: '3', l: S.l('parámetros en nuestra neurona', 'parameters in our neuron'), src: S.l('esta lección', 'this lesson'), t: 'w' },
-    { v: S.l('86 000 000 000', '86,000,000,000'), l: S.l('neuronas en un cerebro humano adulto', 'neurons in an adult human brain'), src: 'Azevedo et al., 2009', t: 'sig' },
-    { v: S.l('5 a 8', '5 to 8'), l: S.l('capas de red artificial para imitar a una sola neurona cortical simulada', 'layers of artificial network to imitate one simulated cortical neuron'), src: 'Beniaguev et al., 2021', t: 'lat' },
+    { v: S.l('86 000 000 000', '86,000,000,000'), l: S.l('neuronas en un cerebro humano adulto (promedio de varones, ± 8 mil millones)', 'neurons in an adult human brain (male average, ± 8 billion)'), src: 'Azevedo et al., 2009', t: 'sig' },
+    { v: S.l('5 a 8', '5 to 8'), l: S.l('capas de una red artificial para imitar un modelo detallado de una neurona piramidal de la corteza', 'layers of an artificial network to imitate a detailed model of one cortical pyramidal neuron'), src: 'Beniaguev et al., 2021', t: 'lat' },
   ];
   const gap = 12 * u, n = cards.length, H = port ? D.h : D.h * 0.62, oy = D.y + (D.h - H) / 2;
   cards.forEach((c, i) => {
@@ -145,24 +147,27 @@ export function drawReal(S: Frame, D: Rect) {
 // ═════════════════════════════════════════════════════════════════════════
 export function drawHype(S: Frame, D: Rect) {
   const { d, pal: p } = S, u = S.u, port = S.portrait, er = tone(S, 'err'), dt = tone(S, 'dat');
-  const gap = 14 * u, H = port ? D.h : D.h * 0.74, oy = D.y + (D.h - H) / 2;
+  const gap = 14 * u, H = port ? D.h : D.h * (D.h > 420 ? 0.6 : 0.74), oy = D.y + (D.h - H) / 2;
   const A: Rect = port ? { x: D.x, y: oy, w: D.w, h: H * 0.5 - gap / 2 } : { x: D.x, y: oy, w: D.w * 0.5 - gap / 2, h: H };
   const B: Rect = port ? { x: D.x, y: oy + H * 0.5 + gap / 2, w: D.w, h: H * 0.5 - gap / 2 } : { x: D.x + D.w * 0.5 + gap / 2, y: oy, w: D.w * 0.5 - gap / 2, h: H };
-  const a1 = S.reveal('hype', 0.2, 0.6), a2 = tr(tau(S, 'hype'), 0.5, 0.62);
+  const a1 = S.reveal('hype', 0.2, 0.6), a2 = S.reveal('demo', 0.2, 0.6);
   const pad = 14 * u, qs = port ? 15 : 18;
   d.withAlpha(a1, () => {
     d.rect(A.x, A.y, A.w, A.h, { fill: alpha(p.surface, 0.7), stroke: er.c, lw: 1.5, r: 8 * u });
     tag(S, S.l('Lo que dijo la prensa', 'What the press said'), A.x + pad, A.y + 22 * u, { tone: 'err', align: 'left', size: 12 });
-    txt(S, S.l('The New York Times · 8 de julio de 1958', 'The New York Times · July 8, 1958'), A.x + pad, A.y + 46 * u, { size: 12, weight: 600, color: p.mute, base: 'top', w: A.w - 2 * pad });
+    const dl = S.l('The New York Times (UPI) · 8 de julio de 1958', 'The New York Times (UPI) · July 8, 1958');
+    const wraps = d.measure(dl, { size: fs(S, 12), weight: 600 }) > A.w - 2 * pad;
+    txt(S, dl, A.x + pad, A.y + 46 * u, { size: 12, weight: 600, color: p.mute, base: 'top', w: A.w - 2 * pad });
     const q = S.l('«…que espera que sea capaz de caminar, hablar, ver, escribir, reproducirse y ser consciente de su existencia.»', '“…that it expects will be able to walk, talk, see, write, reproduce itself and be conscious of its existence.”');
-    txt(S, q, A.x + pad, A.y + 74 * u, { size: qs, weight: 600, color: p.ink, base: 'top', w: A.w - 2 * pad, lh: 1.35 });
+    txt(S, q, A.x + pad, A.y + (wraps ? 92 : 74) * u, { size: qs, weight: 600, color: p.ink, base: 'top', w: A.w - 2 * pad, lh: 1.35 });
     if (S.lang === 'es') txt(S, '(traducción)', A.x + pad, A.y + A.h - 10 * u, { size: 12, color: p.mute, base: 'bottom' });
   });
   d.withAlpha(a2, () => {
     d.rect(B.x, B.y, B.w, B.h, { fill: alpha(p.surface, 0.7), stroke: dt.c, lw: 1.5, r: 8 * u });
     tag(S, S.l('Lo que se demostró', 'What was demonstrated'), B.x + pad, B.y + 22 * u, { tone: 'dat', align: 'left', size: 12 });
     const q = S.l('Tras 50 ensayos, un IBM 704 aprendió a distinguir tarjetas marcadas a la izquierda de las marcadas a la derecha.', 'After 50 trials, an IBM 704 learned to tell cards marked on the left from cards marked on the right.');
-    txt(S, q, B.x + pad, B.y + 50 * u, { size: qs, weight: 600, color: p.ink, base: 'top', w: B.w - 2 * pad, lh: 1.35 });
+    txt(S, 'Cornell Chronicle · 2019', B.x + pad, B.y + 46 * u, { size: 12, weight: 600, color: p.mute, base: 'top', w: B.w - 2 * pad });
+    txt(S, q, B.x + pad, B.y + 74 * u, { size: qs, weight: 600, color: p.ink, base: 'top', w: B.w - 2 * pad, lh: 1.35 });
     // dos tarjetas: marca a la izquierda y a la derecha
     const cw = Math.min(58 * u, B.w * 0.17), ch = cw * 0.64, cy = B.y + B.h - ch - (port ? 12 : 28) * u, cx0 = B.x + B.w / 2 - cw - 16 * u;
     [0, 1].forEach((k) => {
