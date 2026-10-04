@@ -32,7 +32,7 @@ export function drawTricks(S: Frame) {
 // ═════════ ReLU frente a tanh: la pendiente ═════════
 export function drawRelu(S: Frame) {
   const { d, pal: p } = S, u = S.u, B = strip(S, 2), vertical = S.portrait;
-  const bars = 58 * u, ph = B.h - bars - 4 * u;
+  const bars = (vertical ? 104 : 58) * u, ph = B.h - bars - 4 * u;
   const rects: Rect[] = vertical
     ? [{ x: B.x, y: B.y, w: B.w, h: (ph - 6 * u) / 2 }, { x: B.x, y: B.y + (ph + 6 * u) / 2, w: B.w, h: (ph - 6 * u) / 2 }]
     : [{ x: B.x, y: B.y, w: (B.w - 12 * u) / 2, h: ph }, { x: B.x + (B.w + 12 * u) / 2, y: B.y, w: (B.w - 12 * u) / 2, h: ph }];
@@ -69,10 +69,12 @@ export function drawRelu(S: Frame) {
   // seis veces más rápido (prueba del artículo de AlexNet)
   const sx = fa(S, 'relu', 0.68, 0.82);
   if (sx > 0) d.withAlpha(sx, () => {
-    const w = Math.min(B.w * 0.46, 230 * u), x = B.x + B.w - w - 2 * u, labW = 40 * u, bwMax = w - labW - 30 * u;
-    d.text(S.l('iteraciones hasta 25 % de error (relativo)', 'iterations to reach 25% error (relative)'), B.x + B.w - 2 * u, ly0 + 2 * u, { size: 12, weight: 600, color: p.mute, align: 'right', base: 'top' });
+    // en vertical la leyenda ocupa el ancho: las barras van debajo de ella; en horizontal, a la derecha
+    const w = vertical ? Math.min(B.w * 0.8, 260 * u) : Math.min(B.w * 0.46, 230 * u), x = vertical ? B.x + 2 * u : B.x + B.w - w - 2 * u, labW = 40 * u, bwMax = w - labW - 30 * u;
+    const y0 = vertical ? ly0 + 46 * u : ly0 + 2 * u;
+    d.text(S.l('CIFAR-10: iteraciones hasta 25 % de error', 'CIFAR-10: iterations to 25% error'), vertical ? B.x + 2 * u : B.x + B.w - 2 * u, y0, { size: 12, weight: 600, color: p.mute, align: vertical ? 'left' : 'right', base: 'top' });
     ([['tanh', 6, 'mute'], ['ReLU', 1, 'sig']] as const).forEach(([nm, v, t], i) => {
-      const yy = ly0 + 20 * u + i * 17 * u, c = tone(S, t), bl = (bwMax * v) / 6 * sx;
+      const yy = y0 + 18 * u + i * 17 * u, c = tone(S, t), bl = (bwMax * v) / 6 * sx;
       d.text(nm, x + labW - 6 * u, yy + 6 * u, { size: 12, weight: 700, color: c.ink, align: 'right', base: 'middle' });
       d.rect(x + labW, yy, bl, 12 * u, { fill: alpha(c.c, 0.6), stroke: c.c, lw: 1 });
       d.text(`${v}×`, x + labW + bl + 6 * u, yy + 6 * u, { size: 13, weight: 800, font: 'mono', color: c.ink, base: 'middle' });
@@ -166,7 +168,7 @@ export function drawAlex(S: Frame) {
       d.rect(xr - 112 * u, y1 + 24 * u, 11 * u, 11 * u, { fill: alpha(g2.c, 0.4), stroke: g2.c, lw: 1.5, dash: [3, 2] });
       d.text('GPU 2 · 3 GB', xr, y1 + 30 * u, { size: 13, weight: 800, color: g2.ink, align: 'right', base: 'middle' });
     });
-    d.withAlpha(fa(S, 'memory', 0.4, 0.55), () => badge(S, S.l('en una sola GPU: no cabe', 'on a single GPU: does not fit'), B.x + B.w - 4 * u, B.y + B.h - 10 * u, { tone: 'err', align: 'right' }));
+    d.withAlpha(fa(S, 'memory', 0.4, 0.55), () => badge(S, S.l('en una sola GPU: no cabe', 'on a single GPU: does not fit'), B.x + B.w - 4 * u, B.y + 70 * u, { tone: 'err', align: 'right' }));
   }
   void clamp; void neu;
 }
@@ -179,7 +181,7 @@ export function drawResults(S: Frame) {
   const items = jump
     ? [{ lab: '2010', sub: 'NEC', v: WINNERS[0].err, t: 'mute' as const, at: 0.06 }, { lab: '2011', sub: 'XRCE', v: WINNERS[1].err, t: 'mute' as const, at: 0.2 }, { lab: '2012', sub: 'AlexNet', v: WINNERS[2].err, t: 'sig' as const, at: 0.42 }]
     : [{ lab: 'AlexNet', sub: S.l('red convolucional', 'convolutional net'), v: WINNERS[2].err, t: 'sig' as const, at: 0.12 }, { lab: S.l('2.º lugar', 'Runner-up'), sub: S.l('métodos clásicos', 'classic methods'), v: SECOND_2012, t: 'mute' as const, at: 0.3 }];
-  const vmax = 30, n = items.length, areaH = B.h - 74 * u, base = B.y + 22 * u + areaH, cw = B.w / Math.max(n, 3);
+  const vmax = 30, n = items.length, areaH = B.h - (jump ? 104 : 86) * u, base = B.y + 22 * u + areaH, cw = B.w / Math.max(n, 3);
   const bw = Math.min(cw * 0.56, 110 * u);
   d.line(B.x + 4 * u, base, B.x + B.w - 4 * u, base, p.lineStrong, 1.5);
   const xs = items.map((_, i) => B.x + (jump ? i * cw + cw / 2 : B.w * (0.27 + i * 0.46)) );
@@ -198,7 +200,7 @@ export function drawResults(S: Frame) {
     neu(S, xs[0] + bw / 2 + 6 * u, B.y + 8 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'wow', a: fa(S, 'result', 0.3, 0.45) });
     d.withAlpha(fa(S, 'result', 0.6, 0.75), () => {
       const y = base - (areaH * SECOND_2012) / vmax + 4 * u;
-      badge(S, S.l('−10,9 puntos', '−10.9 points'), (xs[0] + xs[1]) / 2, Math.max(B.y + 30 * u, y - 14 * u), { tone: 'err' });
+      badge(S, S.l('−10,9 puntos', '−10.9 points'), (xs[0] + xs[1]) / 2, Math.max(B.y + 54 * u, y - 14 * u), { tone: 'err' });
     });
   } else {
     // deltas entre años

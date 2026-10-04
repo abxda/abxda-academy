@@ -23,7 +23,8 @@ export interface Winner { year: number; err: number; who: string; depth?: number
 export const WINNERS: Winner[] = [
   { year: 2010, err: 28.2, who: 'NEC' },
   { year: 2011, err: 25.8, who: 'XRCE' },
-  // 2012: 16,4 % con solo los datos del concurso; 15,3 % con datos extra de ImageNet (versión de otoño de 2011) [K12, tabla 2; R15, tabla 5]
+  // 2012: 16,4 % con solo los datos del concurso; 15,3 % con datos extra de ImageNet (versión de otoño de 2011) [K12, tabla 2; R15, tabla 5].
+  // Se usa 15,3 (la cifra del resumen de K12 y de «ganó») y la fila lo rotula en la escena; 2013: 11,74 % (11,2 % con datos externos, fuera del concurso oficial) [R15, tablas 6 y 8].
   { year: 2012, err: 15.3, who: 'AlexNet', depth: 8 },
   { year: 2013, err: 11.7, who: 'Clarifai' },
   { year: 2014, err: 6.7, who: 'GoogLeNet', depth: 22 },   // 6,66 % en [R15], 6,67 % en [S14]; 22 capas con parámetros [S14]
@@ -53,5 +54,5 @@ export const RAINA = [
   { vis: 4096, hid: 11008, speedup: 72.6 },
 ].map((r) => ({ ...r, weights: r.vis * r.hid }));
 
-/** «AI and Compute» [AH18]: doblamiento cada 3,4 meses entre 2012 y 2018; > 300 000×; con la ley de Moore (2 años) solo ≈ 7×. */
+/** «AI and Compute» [AH18]: doblamiento cada 3,4 meses desde 2012 (de AlexNet a AlphaGo Zero, finales de 2017; el texto es de mayo de 2018); > 300 000×; con la ley de Moore (2 años) solo ≈ 7×. */
 export const COMPUTE = { doublingMonths: 3.4, factor: 300_000, moore: 7 };

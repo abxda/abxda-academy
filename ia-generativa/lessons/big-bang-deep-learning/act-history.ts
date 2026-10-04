@@ -66,7 +66,6 @@ export function drawTime(S: Frame) {
       d.withAlpha(a, () => {
         if (vertical) {
           d.rect(x0 - 8 * u, y0, 16 * u, y1 - y0, { fill: alpha(tone(S, 'mute').c, 0.5), stroke: tone(S, 'mute').c, lw: 1.5 });
-          d.text(S.l('2010–2011', '2010–2011'), x0 - 14 * u, (y0 + y1) / 2, { size: 12, font: 'mono', color: p.ink2, align: 'right', base: 'middle' });
         } else {
           d.rect(x0, y0 - 8 * u, x1 - x0, 16 * u, { fill: alpha(tone(S, 'mute').c, 0.5), stroke: tone(S, 'mute').c, lw: 1.5 });
         }
@@ -76,11 +75,15 @@ export function drawTime(S: Frame) {
         const lab = S.l('características diseñadas a mano', 'hand-designed features');
         const lab2 = S.l('+ clasificador clásico', '+ classic classifier');
         if (vertical) {
-          const cy = (y0 + y1) / 2 + 4 * u;
-          d.text(lab, x0 + 20 * u, cy - 16 * u, { size: 13, weight: 700, color: tone(S, 'mute').ink, base: 'middle', w: R.x + R.w - (x0 + 20 * u) });
-          d.text(lab2, x0 + 20 * u, cy + 14 * u, { size: 13, weight: 700, color: tone(S, 'mute').ink, base: 'middle', w: R.x + R.w - (x0 + 20 * u) });
+          // en vertical el texto va ENCIMA de la banda (hacia los años anteriores): debajo chocaría con «Despegue 2012»
+          const tx = x0 + 20 * u, ww = R.x + R.w - tx;
+          d.text('2010–2011', tx, y0 - 66 * u, { size: 13, weight: 800, font: 'mono', color: p.ink2, base: 'middle' });
+          d.text(lab, tx, y0 - 46 * u, { size: 13, weight: 700, color: tone(S, 'mute').ink, base: 'middle', w: ww });
+          d.text(lab2, tx, y0 - 26 * u, { size: 13, weight: 700, color: tone(S, 'mute').ink, base: 'middle', w: ww });
         } else {
-          const cx = (x0 + x1) / 2;
+          // centrado en la banda, pero sin salirse del área (la banda está junto al borde derecho)
+          const half = Math.max(d.measure(lab, { size: 15, weight: 700 }), d.measure(lab2, { size: 15, weight: 700 })) / 2;
+          const cx = Math.min((x0 + x1) / 2, R.x + R.w - half - 4 * u);
           d.text(lab, cx, y0 + 44 * u, { size: 15, weight: 700, color: tone(S, 'mute').ink, align: 'center', base: 'top' });
           d.text(lab2, cx, y0 + 64 * u, { size: 15, weight: 700, color: tone(S, 'mute').ink, align: 'center', base: 'top' });
         }
@@ -111,12 +114,14 @@ export function drawThree(S: Frame) {
     const c = tone(S, it.t);
     d.withAlpha(a, () => {
       d.rect(x, y, tw, th, { fill: c.soft, stroke: c.c, lw: 1.5, r: 3 });
-      const gs = vertical ? Math.min(th * 0.62, 64 * u) : Math.min(tw * 0.55, th * 0.42);
-      const gx = vertical ? x + 14 * u + gs / 2 : x + tw / 2, gy = vertical ? y + th / 2 : y + th * 0.38;
+      const gs0 = vertical ? Math.min(th * 0.62, 64 * u) : Math.min(tw * 0.55, th * 0.42);
+      const gs = it.k === 'tricks' && vertical ? gs0 * 0.8 : gs0;
+      const gwid = it.k === 'tricks' ? gs * 1.8 : gs;                         // ancho real del pictograma (tres iconos para «Trucos»)
+      const gx = vertical ? x + 14 * u + gwid / 2 : x + tw / 2, gy = vertical ? y + th / 2 : y + th * 0.38;
       if (it.k === 'data') glyph(S, 'data', gx, gy, gs);
       else if (it.k === 'compute') glyph(S, 'compute', gx, gy, gs);
       else { const q = gs * 0.62; glyph(S, 'relu', gx - q * 1.05, gy, q * 0.8); glyph(S, 'drop', gx, gy, q * 0.8); glyph(S, 'skip', gx + q * 1.05, gy, q * 0.8); }
-      const tx = vertical ? x + 14 * u + gs + 14 * u : x + tw / 2, ty = vertical ? y + th / 2 - 12 * u : y + th * 0.72;
+      const tx = vertical ? x + 14 * u + gwid + 14 * u : x + tw / 2, ty = vertical ? y + th / 2 - 12 * u : y + th * 0.72;
       d.text(S.l(it.es, it.en), tx, ty, { size: 22, weight: 800, color: c.ink, align: vertical ? 'left' : 'center', base: 'middle' });
       d.text(S.l(it.sub[0], it.sub[1]), tx, ty + 28 * u, { size: 15, weight: 600, color: p.ink2, align: vertical ? 'left' : 'center', base: 'middle', w: vertical ? tw - (tx - x) - 8 * u : tw - 12 * u });
     });

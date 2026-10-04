@@ -10,7 +10,7 @@ export function drawMatmul(S: Frame) {
   const { d, pal: p } = S, u = S.u, B = strip(S, 1), k = S.is('matmul') || !S.on('parallel') ? 'matmul' : 'parallel';
   const vertical = S.portrait, opW = 26 * u;
   const cs = vertical
-    ? Math.floor(Math.min((B.w - opW) / 8, (B.h - 118 * u) / 8, 44 * u))
+    ? Math.floor(Math.min((B.w - opW) / 8, (B.h - 150 * u) / 8, 44 * u))
     : Math.floor(Math.min((B.w - 2 * opW - 8 * u) / 12, (B.h - 112 * u) / 4, 58 * u));
   const gw = 4 * cs;
   const ax = vertical ? B.x + (B.w - (2 * gw + opW)) / 2 : B.x + (B.w - (3 * gw + 2 * opW)) / 2, ay = B.y + 22 * u;
@@ -59,7 +59,7 @@ export function drawMatmul(S: Frame) {
 export function drawCores(S: Frame) {
   const { d, pal: p } = S, u = S.u, B = strip(S, 1), vertical = S.portrait;
   const chips: { t: 'sig' | 'dat' | 'lat'; es: string; en: string; sub: [string, string]; n: number; at: number; maxCell?: number }[] = [
-    { t: 'sig', es: 'CPU', en: 'CPU', sub: ['8 núcleos (supuesto ilustrativo)', '8 cores (illustrative assumption)'], n: CPU_CORES, at: 0.05, maxCell: 40 * u },
+    { t: 'sig', es: 'CPU', en: 'CPU', sub: S.portrait ? ['8 núcleos (supuesto)', '8 cores (assumed)'] : ['8 núcleos (supuesto ilustrativo)', '8 cores (illustrative assumption)'], n: CPU_CORES, at: 0.05, maxCell: 40 * u },
     { t: 'dat', es: 'GPU GTX 580 · 2010', en: 'GPU GTX 580 · 2010', sub: [`${fmtInt(S, GPUS.gtx580.cores)} núcleos`, `${fmtInt(S, GPUS.gtx580.cores)} cores`], n: GPUS.gtx580.cores, at: 0.3 },
     { t: 'lat', es: 'GPU RTX 3060 · 2021', en: 'GPU RTX 3060 · 2021', sub: [`${fmtInt(S, GPUS.rtx3060.cores)} núcleos`, `${fmtInt(S, GPUS.rtx3060.cores)} cores`], n: GPUS.rtx3060.cores, at: 0.55 },
   ];
@@ -163,7 +163,7 @@ export function drawRace(S: Frame) {
   const { d, pal: p } = S, u = S.u, B = strip(S, 1), vertical = S.portrait;
   const cur = currentRace(S), m = raceModel(cur.n, cur.hw), t = Math.max(0, cur.t), b = t / m.secPerBatch;
   const g = GPUS[cur.hw], gap = 12 * u;
-  const banner = 30 * u;
+  const banner = 46 * u;                                      // dos filas: la nota (arriba) y el pie con n y la ventaja (abajo)
   const body: Rect = { x: B.x, y: B.y, w: B.w, h: B.h - banner };
   const laneW = vertical ? body.w : (body.w - gap) / 2, laneH = vertical ? (body.h - gap) / 2 : body.h;
   const cpu: Rect = { x: body.x, y: body.y, w: laneW, h: laneH }, gpu: Rect = vertical ? { x: body.x, y: body.y + laneH + gap, w: laneW, h: laneH } : { x: body.x + laneW + gap, y: body.y, w: laneW, h: laneH };
@@ -171,13 +171,16 @@ export function drawRace(S: Frame) {
   lane(S, gpu, { title: `${g.name} · ${fmtInt(S, g.cores)} ${S.l('núcleos', 'cores')}`, cores: g.cores, coresNote: fmtInt(S, g.cores), cells: m.cells, n: cur.n, b, tn: 'dat', steps: m.stepsGpu, showUtil: m.util, gpu: true });
   // pie: n, celdas y ventaja cuando termina la GPU
   const fin = b >= m.nbGpu;
-  const by = B.y + B.h - banner / 2;
+  const by = B.y + B.h - 12 * u;
   d.text(`n = ${cur.n}  ·  ${fmtInt(S, m.cells)} ${S.l('celdas', 'cells')}`, B.x + 2 * u, by, { size: 13, weight: 700, font: 'mono', color: p.ink2, base: 'middle' });
   if (fin) d.withAlpha(clamp((b - m.nbGpu) / 0.4 + 0.2), () => {
-    const lab = S.l(`la GPU necesita ${dec(S, m.speedup, m.speedup < 10 ? 1 : 0)}× menos pasos`, `the GPU needs ${dec(S, m.speedup, m.speedup < 10 ? 1 : 0)}× fewer steps`);
+    const x = dec(S, m.speedup, m.speedup < 10 ? 1 : 0);
+    // en el teléfono el texto largo no cabe junto a n y a las celdas: versión corta
+    const lab = S.portrait ? S.l(`GPU: ${x}× menos pasos`, `GPU: ${x}× fewer steps`) : S.l(`la GPU necesita ${x}× menos pasos`, `the GPU needs ${x}× fewer steps`);
     badge(S, lab, B.x + B.w - 2 * u, by, { tone: 'dat', align: 'right', size: 13 });
   });
-  if (!cur.user) d.withAlpha(fa(S, 'race-try', 0.5, 0.65) * 0.9, () => d.text(S.l('conteo ideal, no un cronómetro', 'ideal count, not a stopwatch'), B.x + B.w / 2, B.y + B.h - banner - 2 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'bottom' }));
+  // la nota va siempre (no solo antes de tocar): es lo que distingue este conteo de un cronómetro
+  d.withAlpha(fa(S, 'race-try', 0.3, 0.45) * 0.95, () => d.text(S.l('conteo ideal de pasos, no un cronómetro', 'ideal step count, not a stopwatch'), B.x + B.w / 2, B.y + B.h - 34 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'middle' }));
   void lerp; void mark;
 }
 

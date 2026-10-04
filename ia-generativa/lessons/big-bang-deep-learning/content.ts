@@ -142,11 +142,11 @@ export default defineLesson({
     },
     {
       id: 'dropout',
-      es: 'Dropout, que ya conoces: en cada paso se apaga al azar la mitad de las neuronas, y ninguna puede apoyarse en otra. AlexNet lo usó en sus dos primeras capas densas.',
-      en: 'Dropout, which you know: at each step half the neurons are switched off at random, so none can lean on another. AlexNet used it in its first two dense layers.',
+      es: 'Dropout: en cada paso, cada neurona se apaga al azar con probabilidad un medio, y así ninguna puede apoyarse en otra. AlexNet lo usó en sus dos primeras capas densas.',
+      en: 'Dropout: at each step, every neuron is switched off at random with probability one half, so none can lean on another. AlexNet used it in its first two dense layers.',
       tts: {
-        es: 'Drop aut, que ya conoces: en cada paso se apaga al azar la mitad de las neuronas, y ninguna puede apoyarse en otra. Alex net lo usó en sus dos primeras capas densas.',
-        en: 'Dropout, which you know: at each step half the neurons are switched off at random, so none can lean on another. Alex net used it in its first two dense layers.',
+        es: 'Drop aut: en cada paso, cada neurona se apaga al azar con probabilidad un medio, y así ninguna puede apoyarse en otra. Alex net lo usó en sus dos primeras capas densas.',
+        en: 'Dropout: at each step, every neuron is switched off at random with probability one half, so none can lean on another. Alex net used it in its first two dense layers.',
       },
       pad: 0.4,
     },
@@ -183,11 +183,11 @@ export default defineLesson({
     },
     {
       id: 'jump',
-      es: 'Entre 2010 y 2011, el mejor error bajó unos dos puntos. Entre 2011 y 2012, unos diez. Al año siguiente, la gran mayoría de los equipos usaba redes convolucionales profundas.',
-      en: 'Between 2010 and 2011, the best error fell by about two points. Between 2011 and 2012, by about ten. The next year, the vast majority of teams used deep convolutional networks.',
+      es: 'Entre 2010 y 2011, el mejor error bajó unos dos puntos. Entre 2011 y 2012, unos diez. Al año siguiente, la gran mayoría de las participaciones usaba redes convolucionales profundas.',
+      en: 'Between 2010 and 2011, the best error fell by about two points. Between 2011 and 2012, by about ten. The next year, the vast majority of entries used deep convolutional networks.',
       tts: {
-        es: 'Entre dos mil diez y dos mil once, el mejor error bajó unos dos puntos. Entre dos mil once y dos mil doce, unos diez. Al año siguiente, la gran mayoría de los equipos usaba redes convolucionales profundas.',
-        en: 'Between twenty ten and twenty eleven, the best error fell by about two points. Between twenty eleven and twenty twelve, by about ten. The next year, the vast majority of teams used deep convolutional networks.',
+        es: 'Entre dos mil diez y dos mil once, el mejor error bajó unos dos puntos. Entre dos mil once y dos mil doce, unos diez. Al año siguiente, la gran mayoría de las participaciones usaba redes convolucionales profundas.',
+        en: 'Between twenty ten and twenty eleven, the best error fell by about two points. Between twenty eleven and twenty twelve, by about ten. The next year, the vast majority of entries used deep convolutional networks.',
       },
       pad: 0.5,
     },
@@ -285,13 +285,13 @@ export default defineLesson({
     },
     {
       id: 'compute-growth',
-      es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada 3,4 meses entre 2012 y 2018, según OpenAI: más de 300 000 veces en total.',
-      en: 'Counted in operations, the compute of the largest training runs doubled every 3.4 months between 2012 and 2018, according to OpenAI: over 300,000 times in all.',
+      es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada 3,4 meses entre 2012 y 2017, según OpenAI: más de 300 000 veces en total.',
+      en: 'Counted in operations, the compute of the largest training runs doubled every 3.4 months between 2012 and 2017, according to OpenAI: over 300,000 times in all.',
       tts: {
-        es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada tres coma cuatro meses entre dos mil doce y dos mil dieciocho, según OpenAI: más de trescientas mil veces en total.',
-        en: 'Counted in operations, the compute of the largest training runs doubled every three point four months between twenty twelve and twenty eighteen, according to OpenAI: over three hundred thousand times in all.',
+        es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada tres coma cuatro meses entre dos mil doce y dos mil diecisiete, según OpenAI: más de trescientas mil veces en total.',
+        en: 'Counted in operations, the compute of the largest training runs doubled every three point four months between twenty twelve and twenty seventeen, according to OpenAI: over three hundred thousand times in all.',
       },
-      note: { es: 'Cómputo: se duplicó cada 3,4 meses entre 2012 y 2018 (OpenAI).', en: 'Compute: doubled every 3.4 months between 2012 and 2018 (OpenAI).' },
+      note: { es: 'Cómputo: se duplicó cada 3,4 meses entre 2012 y 2017 (OpenAI).', en: 'Compute: doubled every 3.4 months between 2012 and 2017 (OpenAI).' },
       pad: 0.6,
     },
     {
@@ -341,7 +341,7 @@ export default defineLesson({
   deeper: {
     es: `## Los números de 2012
 
-Del artículo de AlexNet (Krizhevsky, Sutskever y Hinton, 2012): ocho capas con pesos (cinco convolucionales y tres densas), unos 60 millones de parámetros, unas 650 000 neuronas, más de 1,2 millones de imágenes de entrenamiento y entre cinco y seis días en dos GPU GTX 580 de 3 GB. La entrada tiene 150 528 valores ($224\\times224\\times3$).
+Del artículo de AlexNet (Krizhevsky, Sutskever y Hinton, 2012): ocho capas con pesos (cinco convolucionales y tres densas), unos 60 millones de parámetros, unas 650 000 neuronas, más de 1,2 millones de imágenes de entrenamiento y entre cinco y seis días en dos GPU GTX 580 de 3 GB. La entrada tiene 150 528 valores ($224\\times224\\times3$). Dos detalles del mismo artículo: en su figura 1, una red de cuatro capas en CIFAR-10 llegó a 25 % de error de entrenamiento seis veces más rápido con ReLU que con tanh (los autores aclaran que el efecto varía con la arquitectura), y el dropout, con probabilidad 0,5 en las dos primeras capas densas, se usó porque sin él la red sufría un sobreajuste considerable, a costa de duplicar más o menos las iteraciones necesarias.
 
 | Modelo en ILSVRC 2012 | Error top-5 |
 |---|---|
@@ -372,7 +372,7 @@ Según la estimación de Amodei y Hernandez (OpenAI, 2018), el pase hacia delant
 
 $$1{,}2\\times10^{6}\\cdot 90\\cdot 0{,}75\\times10^{9}\\cdot 2\\cdot 3\\approx 4{,}9\\times10^{17}\\ \\text{FLOP}.$$
 
-Es coherente con dos GTX 580 durante 5,5 días al 33 % de su pico, que es lo que supone OpenAI: $2\\cdot1{,}58\\times10^{12}\\cdot5{,}5\\cdot86\\,400\\cdot0{,}33\\approx5\\times10^{17}$. Entre 2012 y 2018, OpenAI midió que el cómputo de los mayores entrenamientos se duplicaba cada 3,4 meses; estimaciones posteriores (Sevilla et al., 2022) dan alrededor de 6 meses para la era del deep learning. En ambos casos, el crecimiento es exponencial.
+Es coherente con dos GTX 580 durante 5,5 días al 33 % de su pico, que es lo que supone OpenAI: $2\\cdot1{,}58\\times10^{12}\\cdot5{,}5\\cdot86\\,400\\cdot0{,}33\\approx5\\times10^{17}$. Desde 2012 (de AlexNet a AlphaGo Zero, a finales de 2017), OpenAI midió que el cómputo de los mayores entrenamientos se duplicaba cada 3,4 meses; estimaciones posteriores (Sevilla et al., 2022) dan alrededor de 6 meses para la era del deep learning. En ambos casos, el crecimiento es exponencial.
 
 ## El gradiente a través de las capas
 
@@ -390,7 +390,7 @@ El término $I$ lleva el gradiente de la salida a cualquier capa sin pasar por n
 
 ## Lo que el juguete no dice
 
-La red del juguete no está entrenada, no usa normalización y todas sus capas son iguales. En redes reales, la inicialización y la normalización por lotes mantienen sanas las señales. De hecho, He et al. (2015, §4.1) argumentan que la dificultad de entrenar redes simples profundas *no* parece deberse a gradientes que se desvanecen: sus redes simples tenían gradientes de norma sana y, aun así, la de 34 capas tenía más error de entrenamiento que la de 18, y la de 56 más que la de 20 en CIFAR-10. Lo llamaron el problema de la degradación. Su hipótesis es que es más fácil que un bloque aprenda $F\\approx0$ (identidad) que ajustar una identidad con capas no lineales; los propios autores dejan esa explicación como pregunta abierta. Lo medido es claro: con atajos, las redes de 50, 101 y 152 capas mejoraron con la profundidad. La ResNet-152 (11,3 mil millones de multiplicaciones-suma) cuesta menos que una VGG-19 (19,6 mil millones); sola logró 4,49 % de error top-5 en validación, y un conjunto de seis modelos, 3,57 % en prueba.
+La red del juguete no está entrenada, no usa normalización y todas sus capas son iguales. En redes reales, la inicialización y la normalización por lotes mantienen sanas las señales. De hecho, He et al. (2015, §4.1 y figura 1) argumentan que la dificultad de entrenar redes simples profundas *no* parece deberse a gradientes que se desvanecen: sus redes simples tenían gradientes de norma sana y, aun así, la de 34 capas tenía más error de entrenamiento que la de 18, y la de 56 más que la de 20 en CIFAR-10. Lo llamaron el problema de la degradación. Su hipótesis es que es más fácil que un bloque aprenda $F\\approx0$ (identidad) que ajustar una identidad con capas no lineales; los propios autores dejan esa explicación como pregunta abierta. Lo medido es claro: con atajos, las redes de 50, 101 y 152 capas mejoraron con la profundidad. La ResNet-152 (11,3 mil millones de multiplicaciones-suma) cuesta menos que una VGG-19 (19,6 mil millones); sola logró 4,49 % de error top-5 en validación, y un conjunto de seis modelos, 3,57 % en prueba.
 
 ## En código
 
@@ -438,7 +438,7 @@ print(pasos(64, 8), pasos(64, 512), pasos(64, 3584))   # CPU de 8 núcleos, GTX 
 Las conexiones residuales y la normalización reaparecen en cada bloque del transformer (lección 22). La lección 14 pasa de ver a representar significado con embeddings. Las cuentas de FLOPs, datos y costo se formalizan en la lección 24, y la memoria de la GPU, que ya limitaba a AlexNet, manda en la lección 25.`,
     en: `## The 2012 numbers
 
-From the AlexNet paper (Krizhevsky, Sutskever and Hinton, 2012): eight layers with weights (five convolutional and three dense), about 60 million parameters, about 650,000 neurons, more than 1.2 million training images, and five to six days on two GTX 580 3 GB GPUs. The input has 150,528 values ($224\\times224\\times3$).
+From the AlexNet paper (Krizhevsky, Sutskever and Hinton, 2012): eight layers with weights (five convolutional and three dense), about 60 million parameters, about 650,000 neurons, more than 1.2 million training images, and five to six days on two GTX 580 3 GB GPUs. The input has 150,528 values ($224\\times224\\times3$). Two more details from the same paper: in its figure 1, a four-layer network on CIFAR-10 reached 25% training error six times faster with ReLU than with tanh (the authors note the effect varies with the architecture), and dropout, with probability 0.5 in the first two dense layers, was used because without it the network overfit substantially, at the cost of roughly doubling the iterations needed.
 
 | Model in ILSVRC 2012 | Top-5 error |
 |---|---|
@@ -469,7 +469,7 @@ According to the estimate by Amodei and Hernandez (OpenAI, 2018), the forward pa
 
 $$1.2\\times10^{6}\\cdot 90\\cdot 0.75\\times10^{9}\\cdot 2\\cdot 3\\approx 4.9\\times10^{17}\\ \\text{FLOP}.$$
 
-That is consistent with two GTX 580s for 5.5 days at 33% of their peak, which is what OpenAI assumes: $2\\cdot1.58\\times10^{12}\\cdot5.5\\cdot86{,}400\\cdot0.33\\approx5\\times10^{17}$. Between 2012 and 2018, OpenAI measured the compute of the largest training runs doubling every 3.4 months; later estimates (Sevilla et al., 2022) give about 6 months for the deep learning era. Either way, growth is exponential.
+That is consistent with two GTX 580s for 5.5 days at 33% of their peak, which is what OpenAI assumes: $2\\cdot1.58\\times10^{12}\\cdot5.5\\cdot86{,}400\\cdot0.33\\approx5\\times10^{17}$. Since 2012 (from AlexNet to AlphaGo Zero, in late 2017), OpenAI measured the compute of the largest training runs doubling every 3.4 months; later estimates (Sevilla et al., 2022) give about 6 months for the deep learning era. Either way, growth is exponential.
 
 ## The gradient through the layers
 
@@ -487,7 +487,7 @@ The $I$ term carries the gradient from the output to any layer without passing t
 
 ## What the toy does not say
 
-The toy network is untrained, uses no normalization, and all its layers are alike. In real networks, initialization and batch normalization keep signals healthy. In fact, He et al. (2015, §4.1) argue that the difficulty of training deep plain networks does *not* seem to come from vanishing gradients: their plain networks had gradients of healthy norm and still the 34-layer one had higher training error than the 18-layer one, and the 56-layer one more than the 20-layer one on CIFAR-10. They called it the degradation problem. Their hypothesis is that it is easier for a block to learn $F\\approx0$ (identity) than to fit an identity with nonlinear layers; the authors themselves leave that explanation as an open question. What was measured is clear: with shortcuts, networks of 50, 101, and 152 layers improved with depth. ResNet-152 (11.3 billion multiply-adds) costs less than VGG-19 (19.6 billion); on its own it reached 4.49% top-5 error on validation, and an ensemble of six models, 3.57% on the test set.
+The toy network is untrained, uses no normalization, and all its layers are alike. In real networks, initialization and batch normalization keep signals healthy. In fact, He et al. (2015, §4.1 and figure 1) argue that the difficulty of training deep plain networks does *not* seem to come from vanishing gradients: their plain networks had gradients of healthy norm and still the 34-layer one had higher training error than the 18-layer one, and the 56-layer one more than the 20-layer one on CIFAR-10. They called it the degradation problem. Their hypothesis is that it is easier for a block to learn $F\\approx0$ (identity) than to fit an identity with nonlinear layers; the authors themselves leave that explanation as an open question. What was measured is clear: with shortcuts, networks of 50, 101, and 152 layers improved with depth. ResNet-152 (11.3 billion multiply-adds) costs less than VGG-19 (19.6 billion); on its own it reached 4.49% top-5 error on validation, and an ensemble of six models, 3.57% on the test set.
 
 ## In code
 
@@ -613,13 +613,14 @@ Residual connections and normalization reappear in every block of the transforme
     },
   ],
 
-  glossary: ['backpropagation', 'gradient', 'vanishing-gradient', 'relu', 'overfitting', 'regularization', 'cnn', 'layer', 'deep-network', 'forward-pass', 'weight', 'parameter', 'gpu', 'imagenet', 'deep-learning', 'residual-connection', 'compute'],
+  glossary: ['backpropagation', 'gradient', 'vanishing-gradient', 'relu', 'overfitting', 'regularization', 'cnn', 'layer', 'deep-network', 'forward-pass', 'weight', 'parameter', 'gpu', 'imagenet', 'deep-learning', 'residual-connection', 'compute', 'dropout'],
 
   terms: [
     { id: 'gpu', term: { es: 'GPU', en: 'GPU' }, def: { es: 'Unidad de procesamiento gráfico: un chip con cientos o miles de núcleos sencillos, creado para dibujar gráficos y muy eficiente para multiplicar matrices en paralelo, la operación central del entrenamiento.', en: 'Graphics processing unit: a chip with hundreds or thousands of simple cores, built to draw graphics and very efficient at multiplying matrices in parallel, the central operation of training.' } },
     { id: 'imagenet', term: { es: 'ImageNet', en: 'ImageNet' }, def: { es: 'Base de más de catorce millones de imágenes etiquetadas por personas, en más de veintiún mil categorías. Su subconjunto del concurso ILSVRC (mil clases, más de 1,2 millones de fotos de entrenamiento) fue el banco de pruebas de la visión por computador.', en: 'A database of more than fourteen million images labeled by people, in more than twenty-one thousand categories. Its ILSVRC contest subset (a thousand classes, more than 1.2 million training photos) was the proving ground of computer vision.' } },
     { id: 'deep-learning', term: { es: 'Aprendizaje profundo (deep learning)', en: 'Deep learning' }, def: { es: 'Aprendizaje automático con redes neuronales de muchas capas que aprenden por sí mismas las características útiles, de bordes a objetos, a partir de grandes cantidades de datos y cómputo.', en: 'Machine learning with many-layered neural networks that learn the useful features themselves, from edges to objects, from large amounts of data and compute.' } },
     { id: 'residual-connection', term: { es: 'Conexión residual (atajo)', en: 'Residual connection (shortcut)' }, def: { es: 'Suma de la entrada de un bloque a su salida: y = x + F(x). Da al gradiente un camino directo hacia atrás y permitió apilar muchas más capas.', en: 'Adding a block’s input to its output: y = x + F(x). It gives the gradient a direct path backward and made it possible to stack many more layers.' } },
+    { id: 'dropout', term: { es: 'Dropout', en: 'Dropout' }, def: { es: 'Técnica contra el sobreajuste: en cada paso de entrenamiento se apaga al azar cada neurona de una capa con cierta probabilidad (0,5 en AlexNet), de modo que ninguna puede depender de otra en concreto.', en: 'A technique against overfitting: at each training step every neuron of a layer is switched off at random with some probability (0.5 in AlexNet), so no neuron can depend on a particular other one.' } },
     { id: 'compute', term: { es: 'Cómputo (compute)', en: 'Compute' }, def: { es: 'Cantidad de operaciones aritméticas que exige entrenar o ejecutar un modelo. Junto con los datos y los algoritmos, es uno de los tres motores del progreso del aprendizaje automático.', en: 'The amount of arithmetic operations needed to train or run a model. Along with data and algorithms, it is one of the three engines of progress in machine learning.' } },
   ],
 

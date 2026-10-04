@@ -51,7 +51,10 @@ export function gradView(S: Frame, B: Rect, o: GradOpts) {
     [10, 40].forEach((k) => {
       const c = D - k, v = logn(run, c);
       plot.dot(c, v, 5, 'err');
-      d.text(`${k} ${S.l('capas', 'layers')}: ${sci(S, normAt(run, c))}`, plot.X(c) + (k === 40 ? 10 : 8) * u, plot.Y(v) - (k === 40 ? 14 : 12) * u, { size: 13, weight: 800, font: 'mono', color: err.ink, base: 'middle', halo: p.stage, haloW: 5 });
+      // la curva sube hacia la derecha: la etiqueta va debajo-derecha del punto y, si no cabe (teléfono), arriba-izquierda
+      const txt = `${k} ${S.l('capas', 'layers')}: ${sci(S, normAt(run, c))}`, tw = d.measure(txt, { size: 13, weight: 800, font: 'mono' }), px = plot.X(c), py2 = plot.Y(v);
+      if (px + 8 * u + tw <= B.x + B.w - 2 * u) d.text(txt, px + 8 * u, py2 + 16 * u, { size: 13, weight: 800, font: 'mono', color: err.ink, base: 'middle', halo: p.stage, haloW: 5 });
+      else d.text(txt, px - 8 * u, py2 - 14 * u, { size: 13, weight: 800, font: 'mono', color: err.ink, align: 'right', base: 'middle', halo: p.stage, haloW: 5 });
     });
   }
   // lectura
@@ -204,7 +207,7 @@ export function drawSkipTry(S: Frame) {
 // ═════════ la degradación: más capas, peor error de entrenamiento (esquema) ═════════
 export function drawDegradation(S: Frame) {
   const { d, pal: p } = S, u = S.u, B = strip(S, 2);
-  const plot = new Plot(S, { x: B.x, y: B.y, w: B.w, h: B.h - 30 * u }, { xr: [0, 1], yr: [0, 1], xLabel: S.l('iteraciones de entrenamiento', 'training iterations'), yLabel: S.l('error de entrenamiento', 'training error'), pad: { l: 14, t: 20, b: 34 } });
+  const plot = new Plot(S, { x: B.x, y: B.y, w: B.w, h: B.h - 30 * u }, { xr: [0, 1], yr: [0, 1], xLabel: S.l('iteraciones de entrenamiento', 'training iterations'), yLabel: S.l('error de entrenamiento', 'training error'), pad: { l: 14, t: 48, b: 34 } });
   const a = fa(S, 'degradation', 0.04, 0.16);
   plot.axes(a);
   const c20 = (t: number) => 0.1 + 0.8 * Math.exp(-3.4 * t) - 0.05 * clamp((t - 0.5) / 0.1), c56 = (t: number) => 0.3 + 0.62 * Math.exp(-2.6 * t) - 0.05 * clamp((t - 0.5) / 0.1);
@@ -218,7 +221,7 @@ export function drawDegradation(S: Frame) {
       plot.line(0.62, c20(0.62), 0.62, c56(0.62), 'ink', 2);
       plot.label(S.l('más error', 'more error'), 0.6, (c20(0.62) + c56(0.62)) / 2, 'ink', { size: 13, align: 'right' });
     });
-    d.withAlpha(fa(S, 'degradation', 0.72, 0.85), () => badge(S, S.l('redes simples, no overfitting: el error de entrenamiento también sube', 'plain networks, not overfitting: training error also rises'), B.x + B.w / 2, B.y + 10 * u, { tone: 'err', size: 12 }));
+    d.withAlpha(fa(S, 'degradation', 0.72, 0.85), () => badge(S, S.l('no es sobreajuste: también sube el error de entrenamiento', 'not overfitting: training error rises too'), B.x + B.w / 2, B.y + 12 * u, { tone: 'err', size: 12 }));
   }
   d.withAlpha(a * 0.9, () => d.text(S.l('esquema: forma según He et al. (2015), figura 1, CIFAR-10', 'sketch: shape after He et al. (2015), figure 1, CIFAR-10'), B.x + B.w / 2, B.y + B.h - 2 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'bottom', w: B.w }));
 }

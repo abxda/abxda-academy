@@ -7,7 +7,8 @@ import { dec, fa, fmtInt, mark, miniPic, strip } from './shared';
 export function drawMosaic(S: Frame) {
   const { d, pal: p } = S, u = S.u, B = strip(S, 0);
   const panelH = (S.portrait ? 84 : 78) * u;
-  const mr: Rect = { x: B.x, y: B.y, w: B.w, h: B.h - panelH - 6 * u };
+  const noteH = 16 * u;                                           // fila propia para la nota «ilustrativo» (antes tapaba la última fila de fotos)
+  const mr: Rect = { x: B.x, y: B.y, w: B.w, h: B.h - panelH - 6 * u - noteH };
   const ts = Math.max(16 * u, Math.sqrt((mr.w * mr.h) / (S.portrait ? 120 : 190)));
   const cols = Math.max(1, Math.floor(mr.w / ts)), rows = Math.max(1, Math.floor(mr.h / ts)), N = cols * rows;
   const cs = Math.min(mr.w / cols, mr.h / rows), x0 = mr.x + (mr.w - cs * cols) / 2, y0 = mr.y;
@@ -19,14 +20,14 @@ export function drawMosaic(S: Frame) {
   }
   d.rect(x0 - 1, y0 - 1, cs * cols + 2, cs * rows + 2, { stroke: p.line, lw: 1 });
   // contador y categorías
-  const py = mr.y + mr.h + 8 * u;
+  const py = mr.y + mr.h + noteH + 8 * u;
   d.text(fmtInt(S, SETS.imagenet * prog), B.x + B.w / 2, py + 4 * u, { size: S.portrait ? 30 : 38, weight: 800, font: 'mono', color: tone(S, 'dat').ink, align: 'center', base: 'top' });
   const lab = fa(S, 'imagenet', 0.45, 0.6);
   d.withAlpha(lab, () => {
     d.text(S.l('fotos etiquetadas por personas', 'photos labeled by people'), B.x + B.w / 2, py + (S.portrait ? 40 : 48) * u, { size: 13, weight: 700, color: p.ink2, align: 'center', base: 'top' });
     badge(S, S.l(`${fmtInt(S, SETS.synsets)} categorías`, `${fmtInt(S, SETS.synsets)} categories`), B.x + B.w / 2, py + (S.portrait ? 70 : 78) * u, { tone: 'dat' });
   });
-  d.withAlpha(fa(S, 'imagenet', 0.6, 0.72), () => d.text(S.l('ilustrativo: no son las fotos reales', 'illustrative: not the real photos'), mr.x + mr.w - 4 * u, mr.y + mr.h - 3 * u, { size: 12, weight: 600, color: p.mute, align: 'right', base: 'bottom', halo: p.stage, haloW: 5 }));
+  d.withAlpha(fa(S, 'imagenet', 0.6, 0.72), () => d.text(S.l('ilustrativo: no son las fotos reales', 'illustrative: not the real photos'), mr.x + mr.w - 2 * u, mr.y + mr.h + 3 * u, { size: 12, weight: 600, color: p.mute, align: 'right', base: 'top' }));
 }
 
 // ═════════ el concurso: tamaños comparados en escala lineal ═════════

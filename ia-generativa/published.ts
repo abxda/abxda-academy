@@ -18,4 +18,5 @@ export const PUBLISHED: string[] = [
   'generar-distribuciones',
   'secuencias-y-memoria',
   'inferencia',
+  'big-bang-deep-learning',
 ];
