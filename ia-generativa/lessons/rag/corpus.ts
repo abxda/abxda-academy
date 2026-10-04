@@ -2,7 +2,7 @@
 //
 // Cómo se hizo: texto ORIGINAL escrito para este curso (no copia nada de ninguna empresa ni de ninguna fuente). Todo lo que
 // dice —plazos, montos, políticas— es inventado para la demostración; no describe a ninguna tienda real. Se redistribuye
-// con la licencia del contenido del curso (CC BY-NC-ND 4.0). Cada idioma se escribió por separado, con los mismos hechos.
+// con la licencia del contenido del curso (CC BY-NC 4.0). Cada idioma se escribió por separado, con los mismos hechos.
 //
 // Estructura: documentos → párrafos. Cada párrafo es un fragmento (chunk) del índice. Además hay tres piezas aparte que
 // solo se usan en demostraciones concretas (no están en el índice principal):

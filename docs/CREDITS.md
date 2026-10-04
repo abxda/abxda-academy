@@ -13,6 +13,6 @@
 | [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | Números y código, vía Fontsource | SIL OFL 1.1 |
 | Playwright, axe-core, Lighthouse | Solo desarrollo y verificación (capturas, accesibilidad, rendimiento) | Apache-2.0 / MPL-2.0 |
 
-El guion, el arte, las animaciones y el audio del curso: CC BY-NC-ND 4.0. El código del motor y las herramientas: MIT (ver `LICENSE`).
+El guion, el arte, las animaciones y el audio del curso: CC BY-NC 4.0. El código del motor y las herramientas: MIT (ver `LICENSE`).
 
 Voz sintética: las lecciones lo indican en «Acerca de». Los datos de demostración que no son reales se rotulan como «ilustrativos» dentro de cada lección.

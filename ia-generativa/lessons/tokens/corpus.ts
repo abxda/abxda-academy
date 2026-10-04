@@ -2,7 +2,7 @@
 //
 // Procedencia y licencia: todo el texto de este archivo fue escrito expresamente para esta lección (no se copió de
 // ningún libro, web ni conjunto de datos), así que se redistribuye bajo la misma licencia que el resto del contenido
-// del curso (CC BY-NC-ND 4.0). Son párrafos cotidianos y paralelos: la versión en español dice lo mismo que la
+// del curso (CC BY-NC 4.0). Son párrafos cotidianos y paralelos: la versión en español dice lo mismo que la
 // versión en inglés. Es adrede muy pequeño (unos cuantos miles de caracteres por idioma): sirve para ver el algoritmo
 // funcionar, no para competir con un tokenizador real.
 //
