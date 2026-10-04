@@ -123,7 +123,7 @@ function drawPiles(S: Frame, all: Rect) {
 export function drawToy(S: Frame, vis: number) {
   const { d, pal: p } = S, u = S.u;
   const R = regions(S, S.portrait ? 0.7 : 0.6);
-  const cap = (S.portrait ? 20 : 24) * u;
+  const cap = (S.portrait ? 38 : 24) * u;
   const mapR = squareIn(R.main, 0, cap, 'l');
   const run = getRun(FULL_A);
   const step = S.on('full-ft') ? stepAt(S, 'full-ft') : 0;
@@ -194,7 +194,7 @@ export function drawCopies(S: Frame, vis: number) {
     }
     const a2 = S.reveal('cost-copies', 2.0, 0.6);
     d.text(S.l('GPT-3: una copia completa por cliente o tarea', 'GPT-3: one full copy per customer or task'), all.x + all.w / 2, y0 + side + 52 * u, { size: FS(S, 14), weight: 700, color: p.ink2, align: 'center', base: 'top', a: a2, w: all.w });
-    d.text(S.l('350 GB = 175 mil millones de parámetros × 2 bytes (Hu et al., 2021)', '350 GB = 175 billion parameters × 2 bytes (Hu et al., 2021)'), all.x + all.w / 2, y0 + side + 76 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'center', base: 'top', a: a2, w: all.w });
+    d.text(S.l('350 GB ≈ 175 mil millones de parámetros × 2 bytes (FP16) · cifra de Hu et al., 2021', '350 GB ≈ 175 billion parameters × 2 bytes (FP16) · figure from Hu et al., 2021'), all.x + all.w / 2, y0 + side + 76 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'center', base: 'top', a: a2, w: all.w });
   });
   void ease;
 }

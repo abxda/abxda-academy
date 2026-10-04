@@ -65,8 +65,8 @@ export default defineLesson({
     },
     {
       id: 'forget-name',
-      es: 'Los puntos oscuros son aciertos perdidos en zonas sin ejemplos: los mismos pesos sirven a todo el plano. Es el olvido catastrófico, descrito en mil novecientos ochenta y nueve.',
-      en: 'The dark dots are lost answers in zones with no examples: the same weights serve the whole plane. This is catastrophic forgetting, described back in nineteen eighty-nine.',
+      es: 'Los puntos oscuros son aciertos perdidos, casi todos en zonas sin ejemplos: los mismos pesos sirven a todo el plano. Es el olvido catastrófico, descrito en mil novecientos ochenta y nueve.',
+      en: 'The dark dots are lost answers, almost all in zones with no examples: the same weights serve the whole plane. This is catastrophic forgetting, described back in nineteen eighty-nine.',
       note: { es: 'Olvido catastrófico: aprender lo nuevo pisa lo viejo.', en: 'Catastrophic forgetting: learning the new overwrites the old.' },
       pad: 0.3,
     },
@@ -140,11 +140,11 @@ export default defineLesson({
     },
     {
       id: 'gpt3-scale',
-      es: 'Una matriz de GPT-3 mide doce mil doscientos ochenta y ocho por lado. Con rango ocho, la corrección tiene unos ciento noventa y siete mil números, no ciento cincuenta y un millones.',
-      en: 'A GPT-3 matrix is twelve thousand two hundred eighty-eight on each side. With rank eight, the correction has about one hundred ninety-seven thousand numbers, not one hundred fifty-one million.',
+      es: 'Una matriz de atención de GPT-3 mide doce mil doscientos ochenta y ocho por lado. Con rango ocho, la corrección tiene unos ciento noventa y siete mil números, no ciento cincuenta y un millones.',
+      en: 'A GPT-3 attention matrix is twelve thousand two hundred eighty-eight on each side. With rank eight, the correction has about one hundred ninety-seven thousand numbers, not one hundred fifty-one million.',
       tts: {
-        es: 'Una matriz de ge pe te tres mide doce mil doscientos ochenta y ocho por lado. Con rango ocho, la corrección tiene unos ciento noventa y siete mil números, no ciento cincuenta y un millones.',
-        en: 'A G P T three matrix is twelve thousand two hundred eighty-eight on each side. With rank eight, the correction has about one hundred ninety-seven thousand numbers, not one hundred fifty-one million.',
+        es: 'Una matriz de atención de ge pe te tres mide doce mil doscientos ochenta y ocho por lado. Con rango ocho, la corrección tiene unos ciento noventa y siete mil números, no ciento cincuenta y un millones.',
+        en: 'A G P T three attention matrix is twelve thousand two hundred eighty-eight on each side. With rank eight, the correction has about one hundred ninety-seven thousand numbers, not one hundred fifty-one million.',
       },
       pad: 0.4,
     },
@@ -231,9 +231,8 @@ export default defineLesson({
     // ── 6 · Cuándo sí y cuándo no ─────────────────────────────────────────────
     {
       id: 'ladder',
-      es: 'Lo difícil no es cómo ajustar, sino cuándo. Sube la escalera: primero el prompt; después RAG, que pone documentos relevantes en el prompt; y el ajuste fino, solo al final.',
-      en: 'The hard part is not how to fine-tune but when. Climb the ladder: prompt first; then RAG, which puts relevant documents into the prompt; and fine-tuning only at the end.',
-      note: { es: 'Escalera: prompt, luego RAG, al final ajuste fino.', en: 'Ladder: prompt, then RAG, fine-tuning last.' },
+      es: 'Lo difícil no es cómo ajustar, sino cuándo. Regla práctica: empieza por lo barato. Primero el prompt; si falta información, RAG, que pone documentos en el prompt; el ajuste fino, al final.',
+      en: 'The hard part is not how to fine-tune but when. Rule of thumb: start cheap. Prompt first; if information is missing, RAG, which puts documents into the prompt; fine-tuning last.',
       pad: 0.4,
     },
     {
@@ -273,8 +272,8 @@ export default defineLesson({
     },
     {
       id: 'bridge',
-      es: 'Pero ajustar con pares de entrada y salida aún no explica cómo un modelo base aprende a seguir instrucciones, a ser útil y a negarse cuando toca. Esa es la siguiente pregunta.',
-      en: 'But tuning on input-output pairs does not yet explain how a base model learns to follow instructions, to be helpful, and to decline when it should. That is the next question.',
+      es: 'Ajustar con ejemplos ya cambia el comportamiento. Pero ¿qué ejemplos y qué señal convierten un modelo que solo completa texto en un asistente que sigue instrucciones, ayuda y sabe negarse?',
+      en: 'Tuning on examples already changes behavior. But which examples, and which signal, turn a model that only completes text into an assistant that follows instructions, helps, and knows when to decline?',
     },
   ],
 
@@ -284,14 +283,14 @@ export default defineLesson({
       'Mover todos los pesos con datos estrechos puede borrar habilidades previas (olvido catastrófico). Mezclar ejemplos originales y evaluar lo anterior es la defensa básica.',
       'LoRA congela los pesos originales y entrena una corrección ΔW = B·A de bajo rango: r·(filas + columnas) números en vez de filas·columnas. En GPT-3, unas diez mil veces menos parámetros entrenables.',
       'Como la base no se toca, el adaptador se puede quitar o cambiar: un modelo base y muchos adaptadores de megabytes. QLoRA añade una base en cuatro bits para ajustar modelos enormes en una sola GPU.',
-      'El ajuste fino cambia comportamiento y estilo; para conocimiento que cambia, empieza por RAG. La escalera es prompt, RAG y, al final, ajuste fino, con evaluación propia en cada paso.',
+      'El ajuste fino cambia comportamiento y estilo; para conocimiento que cambia, empieza por RAG. Como regla práctica, se prueba primero el prompt y RAG, y el ajuste fino queda para lo que siga fallando, con evaluación propia en cada paso.',
     ],
     en: [
       'Fine-tuning keeps training a pretrained model on your own examples: the same gradient descent, with little data and small steps.',
       'Moving every weight on narrow data can erase earlier skills (catastrophic forgetting). Mixing in original examples and testing what came before is the basic defense.',
       'LoRA freezes the original weights and trains a low-rank correction ΔW = B·A: r·(rows + columns) numbers instead of rows·columns. On GPT-3, about ten thousand times fewer trainable parameters.',
       'Because the base is untouched, the adapter can be removed or swapped: one base model and many megabyte-sized adapters. QLoRA adds a four-bit base to tune huge models on a single GPU.',
-      'Fine-tuning changes behavior and style; for knowledge that changes, start with RAG. The ladder is prompt, RAG, and only then fine-tuning, with your own evaluation at every step.',
+      'Fine-tuning changes behavior and style; for knowledge that changes, start with RAG. As a rule of thumb, try the prompt and RAG first and leave fine-tuning for what keeps failing, with your own evaluation at every step.',
     ],
   },
 
@@ -331,15 +330,19 @@ Con GPT-3 175B ($d_{\\text{model}}=12\\,288$, 96 capas), adaptar solo $W_q$ y $W
 
 ## Por qué el cambio es de bajo rango
 
-Si $M=\\sum_i \\sigma_i u_i v_i^\\top$ es la descomposición en valores singulares, el teorema de Eckart y Young dice que la mejor matriz de rango $r$ (en norma de Frobenius) es la suma de los $r$ primeros términos, y su error es $\\sum_{i>r}\\sigma_i^2$. En la lección, el cambio que deja el ajuste completo en la capa de 32×32 tiene valores singulares que caen rápido: los cuatro primeros reúnen alrededor de 97 % de $\\sum\\sigma_i^2$. Eso es lo que LoRA supone y aprovecha. No es una ley: Hu et al. no esperan que un rango pequeño sirva para cualquier tarea (por ejemplo, un idioma distinto del preentrenamiento), y en nuestro modelo, con dos cambios independientes, el rango uno no alcanza.
+Si $M=\\sum_i \\sigma_i u_i v_i^\\top$ es la descomposición en valores singulares, el teorema de Eckart y Young dice que la mejor matriz de rango $r$ (en norma de Frobenius) es la suma de los $r$ primeros términos, y su error es $\\sum_{i>r}\\sigma_i^2$. En la lección, el cambio que deja el ajuste completo en la capa de 32×32 tiene valores singulares que caen rápido: los cuatro primeros reúnen alrededor de 97 % de $\\sum\\sigma_i^2$. Eso es lo que LoRA supone y aprovecha. No es una ley: Hu et al. no esperan que un rango pequeño sirva para cualquier tarea (por ejemplo, un idioma distinto del preentrenamiento), y en nuestro modelo, con dos cambios independientes, el rango uno no alcanza. En modelos grandes, Biderman et al. (2024) midieron que, en programación y matemáticas, el ajuste completo aprende cambios de un rango 10 a 100 veces mayor que las configuraciones típicas de LoRA, lo que puede explicar parte de su peor rendimiento allí.
 
 ## Olvido, repaso y qué dice la evidencia
 
-Con datos estrechos, mover pesos compartidos desplaza lo que esos datos no cubren. Mezclar ejemplos del comportamiento original («repaso») es la defensa básica. En modelos grandes, Biderman et al. (2024) hallaron que, en programación y matemáticas, LoRA aprende menos que el ajuste completo pero olvida menos fuera del dominio. En el modelo diminuto de esta lección, con LoRA en una sola capa, el olvido sin repaso no fue menor que con el ajuste completo. Moraleja: es un riesgo en ambos métodos, y se mide con datos que el ajuste no vio.
+Con datos estrechos, mover pesos compartidos desplaza lo que esos datos no cubren. Mezclar ejemplos del comportamiento original («repaso») es la defensa básica. En modelos grandes, Biderman et al. (2024) hallaron que, en programación y matemáticas, LoRA aprende menos que el ajuste completo pero olvida menos fuera del dominio. En el modelo diminuto de esta lección (70 ejemplos nuevos, 300 pasos, una sola corrida con semillas fijas) el ajuste completo llega a 98 % en la regla nueva y baja de 100 a 93 % en la original: poco, pero es el mismo mecanismo que da nombre al olvido «catastrófico». LoRA de rango 2 sin repaso llega a 91 % y 87 %: aquí olvida más que el ajuste completo. Con 30 ejemplos originales de repaso llega a 93 % y 98 %. Moraleja: el olvido es un riesgo en ambos métodos, y se mide con datos que el ajuste no vio.
 
 ## Memoria: de dieciséis bytes por parámetro a menos
 
 Entrenar con Adam en precisión mixta guarda por parámetro: pesos FP16 (2 bytes), gradientes FP16 (2) y, en FP32, copia de los pesos, momento y varianza ($4+4+4$): $2+2+12=16$ bytes (Rajbhandari et al., 2019). Con LoRA, los pesos congelados solo necesitan su copia (2 bytes en FP16) y los 16 bytes se pagan solo por $A$ y $B$. QLoRA guarda además la base en 4 bits (formato NF4, con «doble cuantización» de las constantes) y entrena el adaptador en 16 bits. Cuenta propia para un modelo de 7 mil millones, sin activaciones: ajuste completo $7\\cdot 16=112$ GB; base en FP16, 14 GB; base en 4 bits, unos 3,5 GB, más adaptador y activaciones.
+
+Las cifras de los artículos no salen de esta cuenta, porque dependen de qué se guarde y cómo se reparta: el de LoRA da, para GPT-3 175B, de 1,2 TB a 350 GB (con 16 bytes por parámetro serían unos 2,8 TB; el texto no detalla su configuración), y el de QLoRA cuenta más de 780 GB para ajustar 65 mil millones en 16 bits (unos 12 bytes por parámetro). Compara siempre bajo la misma cuenta.
+
+En el modelo diminuto se puede medir la parte «Q»: con las tres matrices en 4 bits (NF4, bloques de 64), el mapa de decisión cambia en 22 de 1 600 celdas y LoRA de rango 2 con repaso llega a 91 % en la regla nueva y 98 % en la original, frente a 93 % y 98 % con la base en 16 bits. Es un juguete: no demuestra nada sobre modelos grandes, solo reproduce la idea.
 
 ## En código
 
@@ -369,7 +372,7 @@ print(np.linalg.matrix_rank(B @ A))        # 2
 
 ## Lo que viene
 
-Ajustar con pares de entrada y salida enseña formato y estilo, pero no explica cómo un modelo base aprende a seguir instrucciones, a ser útil y a rechazar lo que no debe. Eso es el ajuste con instrucciones y el aprendizaje por refuerzo con retroalimentación humana (lección 28); ambos se pueden hacer con LoRA.`,
+Ajustar con pares de entrada y salida cambia formato, estilo y tarea. Convertir un modelo que solo completa texto en un asistente usa ese mismo mecanismo, pero la pregunta es qué pares y qué señal: el ajuste con instrucciones y el aprendizaje por refuerzo con retroalimentación humana (lección 28). Y es práctico: con QLoRA se ajustó con instrucciones la familia Guanaco (Dettmers et al., 2023), y esos autores hallaron que la calidad de los datos pesa mucho más que su cantidad (9 mil ejemplos de OASST1 superaron a 450 mil de FLAN v2).`,
 
     en: `## What supervised fine-tuning minimizes
 
@@ -395,15 +398,19 @@ For GPT-3 175B ($d_{\\text{model}}=12{,}288$, 96 layers), adapting only $W_q$ an
 
 ## Why the change has low rank
 
-If $M=\\sum_i \\sigma_i u_i v_i^\\top$ is the singular value decomposition, the Eckart–Young theorem says the best rank-$r$ matrix (in Frobenius norm) is the sum of the first $r$ terms, and its error is $\\sum_{i>r}\\sigma_i^2$. In the lesson, the change that full fine-tuning leaves in the 32×32 layer has singular values that fall quickly: the first four gather about 97% of $\\sum\\sigma_i^2$. That is what LoRA assumes and exploits. It is not a law: Hu et al. do not expect a small rank to work for every task (for example, a language different from the pretraining one), and in our model, with two independent changes, rank one is not enough.
+If $M=\\sum_i \\sigma_i u_i v_i^\\top$ is the singular value decomposition, the Eckart–Young theorem says the best rank-$r$ matrix (in Frobenius norm) is the sum of the first $r$ terms, and its error is $\\sum_{i>r}\\sigma_i^2$. In the lesson, the change that full fine-tuning leaves in the 32×32 layer has singular values that fall quickly: the first four gather about 97% of $\\sum\\sigma_i^2$. That is what LoRA assumes and exploits. It is not a law: Hu et al. do not expect a small rank to work for every task (for example, a language different from the pretraining one), and in our model, with two independent changes, rank one is not enough. In large models, Biderman et al. (2024) measured that, in programming and math, full fine-tuning learns changes whose rank is 10 to 100 times higher than typical LoRA configurations, which may explain part of LoRA’s weaker performance there.
 
 ## Forgetting, replay, and what the evidence says
 
-With narrow data, moving shared weights shifts whatever that data does not cover. Mixing in examples of the original behavior (“replay”) is the basic defense. In large models, Biderman et al. (2024) found that, in programming and math, LoRA learns less than full fine-tuning but forgets less outside the domain. In this lesson’s tiny model, with LoRA on a single layer, forgetting without replay was not smaller than with full fine-tuning. Moral: it is a risk with both methods, and you measure it with data the tuning did not see.
+With narrow data, moving shared weights shifts whatever that data does not cover. Mixing in examples of the original behavior (“replay”) is the basic defense. In large models, Biderman et al. (2024) found that, in programming and math, LoRA learns less than full fine-tuning but forgets less outside the domain. In this lesson’s tiny model (70 new examples, 300 steps, a single run with fixed seeds) full fine-tuning reaches 98% on the new rule and drops from 100 to 93% on the original: a little, but it is the same mechanism that gives “catastrophic” forgetting its name. Rank-2 LoRA without replay reaches 91% and 87%: here it forgets more than full fine-tuning. With 30 original examples of replay it reaches 93% and 98%. Moral: forgetting is a risk with both methods, and you measure it with data the tuning did not see.
 
 ## Memory: from sixteen bytes per parameter to less
 
 Training with Adam in mixed precision stores, per parameter: FP16 weights (2 bytes), FP16 gradients (2) and, in FP32, a copy of the weights, momentum, and variance ($4+4+4$): $2+2+12=16$ bytes (Rajbhandari et al., 2019). With LoRA, frozen weights only need their copy (2 bytes in FP16) and the 16 bytes are paid only for $A$ and $B$. QLoRA also stores the base in 4 bits (NF4 format, with “double quantization” of the constants) and trains the adapter in 16 bits. Our own count for a 7-billion-parameter model, without activations: full fine-tuning $7\\cdot 16=112$ GB; FP16 base, 14 GB; 4-bit base, about 3.5 GB, plus the adapter and activations.
+
+The papers’ figures do not come out of this count, because they depend on what is stored and how it is split: the LoRA paper gives, for GPT-3 175B, from 1.2 TB to 350 GB (at 16 bytes per parameter it would be about 2.8 TB; the text does not detail its setup), and the QLoRA paper counts more than 780 GB to fine-tune 65 billion parameters in 16 bits (about 12 bytes per parameter). Always compare under the same count.
+
+The “Q” part can be measured in the tiny model: with all three matrices in 4 bits (NF4, blocks of 64), the decision map changes in 22 of 1,600 cells and rank-2 LoRA with replay reaches 91% on the new rule and 98% on the original, versus 93% and 98% with the 16-bit base. It is a toy: it proves nothing about large models, it only reproduces the idea.
 
 ## In code
 
@@ -433,18 +440,18 @@ print(np.linalg.matrix_rank(B @ A))        # 2
 
 ## What comes next
 
-Tuning on input-output pairs teaches format and style, but it does not explain how a base model learns to follow instructions, to be helpful, and to refuse what it should not do. That is instruction tuning and reinforcement learning from human feedback (lesson 28); both can be done with LoRA.`,
+Tuning on input-output pairs changes format, style, and task. Turning a model that only completes text into an assistant uses that same mechanism, but the question is which pairs and which signal: instruction tuning and reinforcement learning from human feedback (lesson 28). And it is practical: QLoRA was used to instruction-tune the Guanaco family (Dettmers et al., 2023), and those authors found that data quality matters far more than quantity (9 thousand OASST1 examples beat 450 thousand from FLAN v2).`,
   },
 
   lens: {
     es: [
-      'Exige la escalera antes del ajuste: ¿qué logra un buen prompt? ¿y RAG? Si el equipo no muestra esa línea base con números sobre casos tuyos, ajustar es una apuesta a ciegas.',
+      'Exige la línea base antes del ajuste: ¿qué logra un buen prompt? ¿y RAG? Si el equipo no muestra esos números sobre casos tuyos, ajustar es una apuesta a ciegas.',
       'El ajuste fino cambia comportamiento y estilo, no es un buen modo de «meter conocimiento fresco». Para precios, políticas o catálogos que cambian, RAG se actualiza sin reentrenar y permite citar la fuente.',
       'Pregunta por los datos y la evaluación primero: cuántos ejemplos, quién los revisó, con qué conjunto de prueba se mide la mejora y cómo se comprueba lo que el modelo pudo olvidar.',
       'LoRA abarata entrenar y guardar (adaptadores de megabytes, no copias de cientos de gigabytes), pero cada adaptador debe seguir al modelo base que lo recibió: pide quién lo mantiene, y trata los datos de ajuste como sensibles.',
     ],
     en: [
-      'Demand the ladder before tuning: what does a good prompt achieve? And RAG? If the team cannot show that baseline with numbers on your own cases, tuning is a blind bet.',
+      'Demand the baseline before tuning: what does a good prompt achieve? And RAG? If the team cannot show those numbers on your own cases, tuning is a blind bet.',
       'Fine-tuning changes behavior and style; it is not a good way to “stuff in fresh knowledge.” For prices, policies, or catalogs that change, RAG updates without retraining and lets you cite the source.',
       'Ask about data and evaluation first: how many examples, who reviewed them, which test set measures the improvement, and how you check what the model may have forgotten.',
       'LoRA makes training and storage cheap (megabyte adapters, not hundred-gigabyte copies), but each adapter must follow the base model that received it: ask who maintains it, and treat tuning data as sensitive.',
@@ -481,8 +488,8 @@ Tuning on input-output pairs teaches format and style, but it does not explain h
       ],
       answer: 3,
       why: {
-        es: 'Los mismos pesos sirven a todas las tareas; moverlos con datos estrechos desplaza lo que esos datos no cubren. Mezclar ejemplos originales y medir lo anterior es la defensa básica. Más épocas con los mismos datos lo empeora.',
-        en: 'The same weights serve every task; moving them with narrow data shifts what that data does not cover. Mixing in original examples and measuring what came before is the basic defense. More epochs on the same data makes it worse.',
+        es: 'Los mismos pesos sirven a todas las tareas; moverlos con datos estrechos desplaza lo que esos datos no cubren. Mezclar ejemplos originales y medir lo anterior es la defensa básica. Más épocas con los mismos datos no lo arregla y suele empeorarlo.',
+        en: 'The same weights serve every task; moving them with narrow data shifts what that data does not cover. Mixing in original examples and measuring what came before is the basic defense. More epochs on the same data does not fix it and tends to make it worse.',
       },
     },
     {
@@ -564,13 +571,13 @@ Tuning on input-output pairs teaches format and style, but it does not explain h
     { title: 'LoRA: Low-Rank Adaptation of Large Language Models', authors: 'Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., Chen, W.', year: 2021, url: 'https://arxiv.org/abs/2106.09685' },
     { title: 'QLoRA: Efficient Finetuning of Quantized LLMs', authors: 'Dettmers, T., Pagnoni, A., Holtzman, A., Zettlemoyer, L.', year: 2023, url: 'https://arxiv.org/abs/2305.14314' },
     { title: 'Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning', authors: 'Aghajanyan, A., Zettlemoyer, L., Gupta, S.', year: 2020, url: 'https://arxiv.org/abs/2012.13255' },
-    { title: 'LoRA Learns Less and Forgets Less', authors: 'Biderman, D. et al.', year: 2024, url: 'https://arxiv.org/abs/2405.09673' },
-    { title: 'Catastrophic Interference in Connectionist Networks: The Sequential Learning Problem', authors: 'McCloskey, M., Cohen, N. J.', year: 1989 },
+    { title: 'LoRA Learns Less and Forgets Less', authors: 'Biderman, D., Portes, J., Gonzalez Ortiz, J. J., Paul, M., Greengard, P., Jennings, C., King, D., Havens, S., Chiley, V., Frankle, J., Blakeney, C., Cunningham, J. P.', year: 2024, url: 'https://arxiv.org/abs/2405.09673' },
+    { title: 'Catastrophic Interference in Connectionist Networks: The Sequential Learning Problem (Psychology of Learning and Motivation 24, 109–165)', authors: 'McCloskey, M., Cohen, N. J.', year: 1989, url: 'https://doi.org/10.1016/S0079-7421(08)60536-8' },
     { title: 'Fine-Tuning or Retrieval? Comparing Knowledge Injection in LLMs', authors: 'Ovadia, O., Brief, M., Mishaeli, M., Elisha, O.', year: 2023, url: 'https://arxiv.org/abs/2312.05934' },
-    { title: 'Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?', authors: 'Gekhman, Z. et al.', year: 2024, url: 'https://arxiv.org/abs/2405.05904' },
-    { title: 'LIMA: Less Is More for Alignment', authors: 'Zhou, C. et al.', year: 2023, url: 'https://arxiv.org/abs/2305.11206' },
+    { title: 'Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?', authors: 'Gekhman, Z., Yona, G., Aharoni, R., Eyal, M., Feder, A., Reichart, R., Herzig, J.', year: 2024, url: 'https://arxiv.org/abs/2405.05904' },
+    { title: 'LIMA: Less Is More for Alignment', authors: 'Zhou, C., Liu, P., Xu, P., Iyer, S., Sun, J., Mao, Y., Ma, X., Efrat, A., Yu, P., Yu, L., Zhang, S., Ghosh, G., Lewis, M., Zettlemoyer, L., Levy, O.', year: 2023, url: 'https://arxiv.org/abs/2305.11206' },
     { title: 'Language Models are Few-Shot Learners', authors: 'Brown, T. B. et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
     { title: 'ZeRO: Memory Optimizations Toward Training Trillion Parameter Models', authors: 'Rajbhandari, S., Rasley, J., Ruwase, O., He, Y.', year: 2019, url: 'https://arxiv.org/abs/1910.02054' },
-    { title: 'The approximation of one matrix by another of lower rank', authors: 'Eckart, C., Young, G.', year: 1936 },
+    { title: 'The approximation of one matrix by another of lower rank (Psychometrika 1, 211–218)', authors: 'Eckart, C., Young, G.', year: 1936, url: 'https://doi.org/10.1007/BF02288367' },
   ],
 });

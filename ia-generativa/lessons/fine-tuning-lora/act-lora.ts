@@ -19,7 +19,7 @@ export function drawSvd(S: Frame, vis: number) {
   const dW = getRun(FULL_A).at(STEPS).dW, sv = svOf(dW, singularValues), tot = sv.reduce((q, v) => q + v * v, 0);
   const top4 = sv.slice(0, 4).reduce((q, v) => q + v * v, 0) / tot;
   d.withAlpha(a, () => {
-    const gridSide = S.portrait ? Math.min(all.w * 0.5, all.h * 0.36) : Math.min(all.h * 0.7, all.w * 0.36), cs = gridSide / 32;
+    const narrow = S.portrait || S.W < 700, gridSide = S.portrait ? Math.min(all.w * 0.5, all.h * 0.36) : Math.min(all.h * (narrow ? 0.56 : 0.7), all.w * 0.36), cs = gridSide / 32;
     const gx = all.x + (S.portrait ? (all.w - gridSide) / 2 : 6 * u), gy = all.y + (S.portrait ? 28 : 40) * u;
     const aG = S.reveal('insight', 0, 0.8);
     drawSigned(S, gx, gy, dW, 32, 32, cs, { range: maxAbs(dW) * 0.8, a: aG });
@@ -28,7 +28,7 @@ export function drawSvd(S: Frame, vis: number) {
 
     // barras de valores singulares
     const bx = S.portrait ? all.x + 6 * u : gx + gridSide + 36 * u, bw = S.portrait ? all.w - 12 * u : all.x + all.w - bx - 6 * u;
-    const by = S.portrait ? gy + gridSide + 54 * u : gy, bh = S.portrait ? all.y + all.h - by - 40 * u : gridSide * 0.72;
+    const by = S.portrait ? gy + gridSide + 54 * u : gy, bh = S.portrait ? all.y + all.h - by - 84 * u : gridSide * 0.72;
     const nB = 32, gap = 2, w1 = (bw - gap * (nB - 1)) / nB, max = sv[0];
     d.withAlpha(S.reveal('insight', 1.0, 0.5), () => d.text(S.l('tamaño de cada dirección (valor singular)', 'size of each direction (singular value)'), bx, by - 8 * u, { size: FS(S, 12), weight: 700, color: p.ink2, base: 'bottom' }));
     d.line(bx, by + bh, bx + bw, by + bh, p.lineStrong, 1.5);
@@ -53,8 +53,8 @@ export function drawSvd(S: Frame, vis: number) {
     if (S.on('lowrank-claim')) {
       const ac = S.reveal('lowrank-claim', 0.2, 0.6), cy = all.y + all.h - 14 * u;
       d.withAlpha(ac, () => {
-        const c1 = chip(S, S.l('Aghajanyan et al., 2020 · pocas dimensiones efectivas', 'Aghajanyan et al., 2020 · few effective dimensions'), all.x + 4 * u, cy - (S.portrait ? 30 * u : 0), { align: 'left', tone: 'lat', size: FS(S, 12) });
-        chip(S, S.l('Hu et al., 2021 · LoRA: el cambio tiene bajo rango', 'Hu et al., 2021 · LoRA: the change has low rank'), S.portrait ? all.x + 4 * u : c1.x + c1.w + 12 * u, cy, { align: 'left', tone: 'w', size: FS(S, 12) });
+        const c1 = chip(S, S.l('Aghajanyan et al., 2020 · pocas dimensiones efectivas', 'Aghajanyan et al., 2020 · few effective dimensions'), all.x + 4 * u, cy - (narrow ? 30 * u : 0), { align: 'left', tone: 'lat', size: FS(S, 12) });
+        chip(S, S.l('Hu et al., 2021 · LoRA: el cambio tiene bajo rango', 'Hu et al., 2021 · LoRA: the change has low rank'), narrow ? all.x + 4 * u : c1.x + c1.w + 12 * u, cy, { align: 'left', tone: 'w', size: FS(S, 12) });
       });
     }
   });
@@ -116,7 +116,7 @@ function numMat(S: Frame, x: number, y: number, M: number[], n: number, m: numbe
   d.withAlpha(o.a ?? 1, () => {
     const cells = Math.ceil((o.show ?? 1) * n * m);
     drawSigned(S, x, y, M.map((v, k) => (k < cells ? v : 0)), n, m, cs, { range: rng, neutral: o.plain });
-    for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) if (i * m + j < cells) d.text(String(M[i * m + j]).replace('-', '−'), x + j * cs + cs / 2, y + i * cs + cs / 2, { size: Math.min(15, cs / S.u * 0.34), weight: 700, font: 'mono', color: p.ink, align: 'center', base: 'middle' });
+    for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) if (i * m + j < cells) d.text(String(M[i * m + j]).replace('-', '−'), x + j * cs + cs / 2, y + i * cs + cs / 2, { size: Math.min(15, Math.max(cs / S.u * 0.4, 12.2 / S.u)), weight: 700, font: 'mono', color: p.ink, align: 'center', base: 'middle' });
   });
 }
 
@@ -148,7 +148,7 @@ export function drawRankSum(S: Frame, vis: number) {
   const a = vis * S.at('rank-sum', 0, 0.6) * (1 - S.at('count', 0, 0.5)); if (a < 0.01) return;
   const toggle = S.at('rank-sum', 3.4, 4.1);
   d.withAlpha(a, () => {
-    const cs = Math.min(46 * u, (all.w - 8 * 22 * u) / 12, (all.h - 120 * u) / 7.2), W3 = cs * 3, gap = 24 * u;
+    const gap = 24 * u, cs = Math.min(46 * u, (all.w - 2 * gap - 4 * u) / 9, (all.h - 120 * u) / 7.2), W3 = cs * 3;
     // fila 1: M1 + M2 = S
     const rowW = W3 * 3 + gap * 2 + 22 * u, x1 = all.x + (all.w - rowW) / 2, y1 = all.y + 28 * u;
     d.withAlpha(1 - toggle * 0.0, () => {
@@ -171,7 +171,7 @@ export function drawRankSum(S: Frame, vis: number) {
       numMat(S, x2 + bW + gap, y2 + cs * 0.5, Am, 2, 3, cs);
       d.text('=', x2 + bW + gap + 3 * cs + gap / 2, y2 + 1.5 * cs, { size: FS(S, 22), weight: 800, color: p.ink2, align: 'center', base: 'middle' });
       numMat(S, x2 + bW + 2 * gap + 3 * cs + 4 * u, y2, MS, 3, 3, cs);
-      chip(S, S.l('B: 2 columnas (r = 2)', 'B: 2 columns (r = 2)'), x2 + bW / 2, y2 - 14 * u, { tone: 'w', size: FS(S, 12) });
+      chip(S, S.l('B: 2 columnas', 'B: 2 columns'), x2 + bW / 2, y2 - 14 * u, { tone: 'w', size: FS(S, 12) });
       chip(S, S.l('A: 2 filas', 'A: 2 rows'), x2 + bW + gap + 1.5 * cs, y2 + cs * 0.5 - 14 * u, { tone: 'w', size: FS(S, 12) });
     });
   });
@@ -190,7 +190,7 @@ export function drawAreas(S: Frame, vis: number) {
     // geometría: ranuras fijas para que nada salte al mover r (B pegada a la × por la derecha, A por la izquierda)
     let cs: number, wx: number, wy: number, bSlotX: number, bY: number, aX: number, aY: number;
     if (S.portrait) {
-      cs = Math.min((all.w - gap) / 64, (all.h - 140 * u) / 64);
+      cs = Math.min((all.w - gap) / 64, (all.h - 218 * u) / 64);
       wx = all.x + (all.w - 32 * cs) / 2; wy = all.y + 22 * u;
       bSlotX = all.x + (all.w - (64 * cs + gap)) / 2; bY = wy + 32 * cs + 40 * u; aX = bSlotX + 32 * cs + gap; aY = bY;
     } else {
@@ -229,7 +229,7 @@ export function drawAreas(S: Frame, vis: number) {
       const verdict = over ? S.l('más que la matriz completa: no conviene', 'more than the full matrix: not worth it')
         : tie ? S.l('r = d/2: B y A ocupan lo mismo que W₀', 'r = d/2: B and A take as much room as W₀')
           : S.l(`${S.n(ratio, ratio < 10 ? 1 : 0)} veces menos que la matriz completa`, `${S.n(ratio, ratio < 10 ? 1 : 0)} times fewer than the full matrix`);
-      d.text(verdict, gx, by + bh + 8 * u, { size: FS(S, 13), weight: 800, color: tn.ink, base: 'top', w: gw * 0.6 });
+      d.text(verdict, gx, by + bh + (S.portrait ? 26 : 8) * u, { size: FS(S, 13), weight: 800, color: tn.ink, base: 'top', w: S.portrait ? gw : gw * 0.6 });
     });
   });
 }
@@ -248,7 +248,7 @@ export function drawGpt3(S: Frame, vis: number) {
     d.withAlpha(aW, () => {
       d.rect(wx, wy, side, side, { fill: p.surface2, stroke: p.lineStrong, lw: 1.5 });
       d.dither(wx + 1, wy + 1, side - 2, side - 2, p.ink, 0.22, 2);
-      chip(S, S.l('una matriz de GPT-3', 'one GPT-3 matrix'), wx + side / 2, wy - 17 * u, { tone: 'ink', size: FS(S, 12) });
+      chip(S, S.l('una matriz de atención de GPT-3', 'one GPT-3 attention matrix'), wx + side / 2, wy - 17 * u, { tone: 'ink', size: FS(S, 12) });
       d.text('12 288 × 12 288', wx + side / 2, wy + side / 2, { size: S.portrait ? 15 : 17, weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'middle', halo: p.surface2, haloW: 6 });
     });
     const aBA = S.reveal('gpt3-scale', 1.4, 0.8), px = Math.max(2, (R / D) * side);

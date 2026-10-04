@@ -23,4 +23,5 @@ export const PUBLISHED: string[] = [
   'alucinaciones-y-limites',
   'alineacion',
   'que-es-aprender',
+  'fine-tuning-lora',
 ];

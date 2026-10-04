@@ -27,12 +27,12 @@ function flow(S: Frame, items: string[], x: number, y: number, maxW: number, tn:
 // ═════════════════════════════════════════════════════════════════════════════
 // la escalera (ladder, fit-for, not-facts)
 // ═════════════════════════════════════════════════════════════════════════════
-interface Step { name: L2s; sees: L2s; tn: Tone; effort: number }
+interface Step { name: L2s; sees: L2s; cost: L2s; tn: Tone; effort: number }
 type L2s = { es: string; en: string };
 const STEPS3: Step[] = [
-  { name: { es: 'Prompt', en: 'Prompt' }, sees: { es: 'cambia: lo que le pides', en: 'changes: what you ask' }, tn: 'sig', effort: 1 },
-  { name: { es: 'RAG', en: 'RAG' }, sees: { es: 'cambia: lo que puede consultar', en: 'changes: what it can look up' }, tn: 'lat', effort: 2 },
-  { name: { es: 'Ajuste fino', en: 'Fine-tuning' }, sees: { es: 'cambia: cómo se comporta', en: 'changes: how it behaves' }, tn: 'w', effort: 3 },
+  { name: { es: 'Prompt', en: 'Prompt' }, sees: { es: 'cambia: lo que le pides', en: 'changes: what you ask' }, cost: { es: 'cuesta: casi nada', en: 'costs: almost nothing' }, tn: 'sig', effort: 1 },
+  { name: { es: 'RAG', en: 'RAG' }, sees: { es: 'cambia: lo que puede consultar', en: 'changes: what it can look up' }, cost: { es: 'cuesta: un índice de documentos que mantener', en: 'costs: a document index to maintain' }, tn: 'lat', effort: 2 },
+  { name: { es: 'Ajuste fino', en: 'Fine-tuning' }, sees: { es: 'cambia: cómo se comporta', en: 'changes: how it behaves' }, cost: { es: 'cuesta: datos, entrenamiento y mantenimiento', en: 'costs: data, training, and upkeep' }, tn: 'w', effort: 3 },
 ];
 
 function stairGeom(S: Frame, all: Rect): { cards: Rect[]; bottom: number } {
@@ -42,7 +42,7 @@ function stairGeom(S: Frame, all: Rect): { cards: Rect[]; bottom: number } {
     const cards = [0, 1, 2].map((i) => ({ x: all.x + i * ind, y: all.y + i * (h + gap), w: all.w - 2 * ind, h }));
     return { cards, bottom: all.y + n * (h + gap) };
   }
-  const gap = 16 * u, w = (all.w - 2 * gap) / 3, h = 96 * u, step = 24 * u;
+  const gap = 16 * u, w = (all.w - 2 * gap) / 3, h = (S.W < 700 ? 140 : 118) * u, step = 24 * u;
   const cards = [0, 1, 2].map((i) => ({ x: all.x + i * (w + gap), y: all.y + 8 * u + (2 - i) * step, w, h }));
   return { cards, bottom: all.y + 8 * u + 2 * step + h };
 }
@@ -60,15 +60,18 @@ export function drawLadder(S: Frame, vis: number) {
         box(S, r, s.tn, { lw: 1.6 + 1.6 * hot });
         d.rect(r.x, r.y, 6 * u, r.h, { fill: t.c, r: 2 });
         d.text(L(S, s.name), r.x + 16 * u, r.y + 12 * u, { size: FS(S, 16), weight: 800, color: t.ink, base: 'top' });
-        d.text(L(S, s.sees), r.x + 16 * u, r.y + (S.portrait ? 32 : 38) * u, { size: FS(S, 13), weight: 600, color: p.ink2, base: 'top', w: r.w - 30 * u });
+        const hs = d.text(L(S, s.sees), r.x + 16 * u, r.y + (S.portrait ? 32 : 38) * u, { size: FS(S, 13), weight: 600, color: p.ink2, base: 'top', w: r.w - 30 * u }).h, yc = r.y + 38 * u + hs + 6 * u;
         // esfuerzo: tres cuadritos (cualitativo)
-        const ex = r.x + r.w - 14 * u - 3 * 13 * u, ey = r.y + 14 * u;
-        for (let q = 0; q < 3; q++) d.rect(ex + q * 13 * u, ey, 10 * u, 10 * u, q < s.effort ? { fill: alp(t.c, 0.85) } : { stroke: t.c, lw: 1.2 });
-        if (!S.portrait) d.text(S.l('esfuerzo', 'effort'), r.x + r.w - 14 * u, r.y + r.h - 12 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'right', base: 'bottom' });
+        const showTag = i >= 1 ? tFacts : 0, ex = r.x + r.w - 14 * u - 3 * 13 * u, ey = r.y + 14 * u;
+        d.withAlpha(1 - showTag, () => {
+          for (let q = 0; q < 3; q++) d.rect(ex + q * 13 * u, ey, 10 * u, 10 * u, q < s.effort ? { fill: alp(t.c, 0.85) } : { stroke: t.c, lw: 1.2 });
+          if (!S.portrait && S.W >= 700) d.text(S.l('esfuerzo (cualitativo)', 'effort (qualitative)'), r.x + r.w - 14 * u, r.y + r.h - 12 * u, { size: FS(S, 12), weight: 600, color: p.mute, align: 'right', base: 'bottom' });
+        });
+        if (!S.portrait) d.text(L(S, s.cost), r.x + 16 * u, yc, { size: FS(S, 13), weight: 600, color: p.ink2, base: 'top', w: r.w - 30 * u, a: 1 - showTag });
         // etiqueta de hechos nuevos (not-facts)
         if (i >= 1 && tFacts > 0.01) {
           const ok = i === 1;
-          d.withAlpha(tFacts, () => chip(S, ok ? S.l('✓ hechos nuevos', '✓ new facts') : S.l('✗ hechos nuevos', '✗ new facts'), r.x + 16 * u, r.y + r.h - 16 * u - (S.portrait ? 0 : 0), { tone: ok ? 'dat' : 'err', align: 'left', dashed: !ok, size: 12 }));
+          d.withAlpha(tFacts, () => chip(S, ok ? S.l('✓ hechos nuevos', '✓ new facts') : S.l('✗ hechos nuevos', '✗ new facts'), S.portrait ? r.x + r.w - 10 * u : r.x + 16 * u, S.portrait ? r.y + 18 * u : yc + 12 * u, { tone: ok ? 'dat' : 'err', align: S.portrait ? 'right' : 'left', dashed: !ok, size: 12 }));
         }
       });
       if (i < 2) {
@@ -147,7 +150,7 @@ export function decideGeom(S: Frame): DG {
     const ly = card.y + card.h + 8 * u;
     return { card, btns, fb: { x: card.x + 10 * u, y: by + bh + 8 * u, w: card.w - 20 * u, h: card.y + card.h - by - bh - 10 * u }, list: { x: all.x, y: ly, w: all.w, h: all.y + all.h - ly }, row: Math.min(44 * u, (all.y + all.h - ly) / 4) };
   }
-  const lw = all.w * 0.5, card: Rect = { x: all.x, y: all.y, w: lw, h: all.h };
+  const lw = all.w * 0.5, card: Rect = { x: all.x, y: all.y, w: lw, h: Math.min(all.h, 312 * u) };
   const bg = 8 * u, bw = (lw - 24 * u - 2 * bg) / 3, by = card.y + 176 * u;
   const btns = [0, 1, 2].map((i) => ({ x: card.x + 12 * u + i * (bw + bg), y: by, w: bw, h: bh }));
   const lx = all.x + lw + 18 * u;
@@ -215,7 +218,7 @@ export function drawEvidence(S: Frame, vis: number) {
   if (vis < 0.01) return;
   const { d, pal: p } = S, u = S.u, all = inset(S.full(), 14 * u), gap = 14 * u;
   const foot = (S.portrait ? 46 : 40) * u;
-  const cw = S.portrait ? all.w : (all.w - 2 * gap) / 3, ch = S.portrait ? (all.h - foot - 2 * gap) / 3 : all.h - foot;
+  const cw = S.portrait ? all.w : (all.w - 2 * gap) / 3, ch = S.portrait ? (all.h - foot - 2 * gap) / 3 : Math.min(all.h - foot, 270 * u);
   const titles = [S.l('pocos ejemplos, pero buenos', 'few examples, but good ones'), S.l('tu propia evaluación', 'your own evaluation'), S.l('una línea base', 'a baseline')];
   const caps = [S.l('revisados por quien conoce la tarea', 'reviewed by someone who knows the task'), S.l('con datos que el ajuste no vio, y también de lo anterior', 'on data the tuning did not see, and on what came before too'), S.l('lo que logran un prompt o RAG, medido', 'what a prompt or RAG achieves, measured')];
   const tns: Tone[] = ['dat', 'sig', 'w'];
@@ -224,14 +227,14 @@ export function drawEvidence(S: Frame, vis: number) {
       const r: Rect = S.portrait ? { x: all.x, y: all.y + i * (ch + gap), w: cw, h: ch } : { x: all.x + i * (cw + gap), y: all.y, w: cw, h: ch }, a = S.reveal('evidence-first', 0.3 + i * 2.4, 0.6), t = tone(S, tns[i]);
       d.withAlpha(a, () => {
         box(S, r, tns[i]);
-        d.text(titles[i], r.x + 12 * u, r.y + 10 * u, { size: FS(S, 14), weight: 800, color: t.ink, base: 'top', w: r.w - 24 * u });
-        const vis2: Rect = S.portrait ? { x: r.x + 12 * u, y: r.y + 34 * u, w: 108 * u, h: r.h - 42 * u } : { x: r.x + 14 * u, y: r.y + 50 * u, w: r.w - 28 * u, h: r.h * 0.4 };
+        const th = d.text(titles[i], r.x + 12 * u, r.y + 10 * u, { size: FS(S, 14), weight: 800, color: t.ink, base: 'top', w: r.w - 24 * u }).h, ty = r.y + 10 * u + th + 8 * u;
+        const vis2: Rect = S.portrait ? { x: r.x + 12 * u, y: ty, w: 108 * u, h: r.y + r.h - ty - 8 * u } : { x: r.x + 14 * u, y: ty, w: r.w - 28 * u, h: Math.min(r.h * 0.4, 100 * u) };
         miniVis(S, i, vis2, a);
-        const cap: Rect = S.portrait ? { x: vis2.x + vis2.w + 12 * u, y: r.y + 34 * u, w: r.x + r.w - (vis2.x + vis2.w) - 24 * u, h: r.h - 40 * u } : { x: r.x + 12 * u, y: vis2.y + vis2.h + 14 * u, w: r.w - 24 * u, h: r.h * 0.3 };
+        const cap: Rect = S.portrait ? { x: vis2.x + vis2.w + 12 * u, y: ty, w: r.x + r.w - (vis2.x + vis2.w) - 24 * u, h: r.h - 40 * u } : { x: r.x + 12 * u, y: vis2.y + vis2.h + 14 * u, w: r.w - 24 * u, h: r.h * 0.3 };
         para(S, caps[i], cap.x, cap.y, cap.w, { size: 13, weight: 600, color: p.ink2, lh: 1.28 });
       });
     });
-    d.text(S.l('Sin evaluación, ajustar cambia el modelo sin demostrar que mejoró.', 'Without evaluation, tuning changes the model without proving it improved.'), all.x, all.y + all.h - foot + 12 * u, { size: FS(S, 14), weight: 800, color: p.ink, base: 'top', w: all.w, a: S.reveal('evidence-first', 8.0, 0.6) });
+    d.text(S.l('Sin evaluación, ajustar cambia el modelo sin demostrar que mejoró.', 'Without evaluation, tuning changes the model without proving it improved.'), all.x, (S.portrait ? all.y + all.h - foot : all.y + ch) + 16 * u, { size: FS(S, 14), weight: 800, color: p.ink, base: 'top', w: all.w, a: S.reveal('evidence-first', 8.0, 0.6) });
   });
 }
 
@@ -261,7 +264,7 @@ function miniVis(S: Frame, i: number, r: Rect, a: number) {
     });
   } else {                                         // línea base: prompt y RAG medidos; el ajuste fino, por demostrar (ilustrativo)
     const bars = [{ l: 'prompt', v: 0.62, g: false }, { l: 'RAG', v: 0.71, g: false }, { l: S.l('ajuste fino', 'fine-tuning'), v: 0.85, g: true }];
-    const bh = Math.min(14 * u, r.h / 4.2), lw = 76 * u;
+    const bh = Math.min(14 * u, r.h / 4.2), lw = Math.max(76 * u, ...bars.map((b) => d.measure(b.l, { size: FS(S, 12), weight: 700 })) ) + 10 * u;
     bars.forEach((b, k) => {
       const y = r.y + k * (bh + 8 * u), w = r.w - lw;
       d.text(b.l, r.x, y + bh / 2, { size: FS(S, 12), weight: 700, color: p.ink2, base: 'middle' });
@@ -278,7 +281,7 @@ function miniVis(S: Frame, i: number, r: Rect, a: number) {
 export function drawRecap(S: Frame, vis: number) {
   if (vis < 0.01) return;
   const { d, pal: p } = S, u = S.u, all = inset(S.full(), 14 * u), gap = 12 * u, rh = (all.h - 2 * gap) / 3;
-  const caps = [S.l('Ajustar es seguir entrenando, con tus ejemplos.', 'Tuning is more training, on your examples.'), S.l('LoRA entrena solo una corrección de bajo rango: cuesta una fracción y se puede quitar.', 'LoRA trains only a low-rank correction: it costs a fraction and can be removed.'), S.l('Sirve para cambiar comportamiento, no para meter hechos frescos: ahí, RAG.', 'It is for changing behavior, not for stuffing in fresh facts: for those, RAG.')];
+  const caps = [S.l('Ajustar es seguir entrenando, con tus ejemplos.', 'Tuning is more training, on your examples.'), S.l('LoRA entrena solo una corrección de bajo rango: cuesta una fracción y se puede quitar.', 'LoRA trains only a low-rank correction: it costs a fraction and can be removed.'), S.l('Sirve para cambiar comportamiento, no para meter hechos frescos: para eso, RAG.', 'It is for changing behavior, not for stuffing in fresh facts: for those, RAG.')];
   const tns: Tone[] = ['err', 'w', 'lat'];
   d.withAlpha(vis, () => {
     [0, 1, 2].forEach((i) => {
@@ -286,9 +289,15 @@ export function drawRecap(S: Frame, vis: number) {
       d.withAlpha(a, () => {
         box(S, r, tns[i]);
         d.rect(r.x, r.y, 6 * u, r.h, { fill: t.c, r: 2 });
-        const vw = S.portrait ? 96 * u : 220 * u, vr: Rect = { x: r.x + 18 * u, y: r.y + 8 * u, w: vw, h: r.h - 16 * u };
-        recapVis(S, i, vr);
-        para(S, caps[i], vr.x + vr.w + 16 * u, r.y + r.h / 2 - (S.portrait ? 24 : 18) * u, r.x + r.w - (vr.x + vr.w) - 30 * u, { size: 14, weight: 700, color: p.ink, lh: 1.28 });
+        if (S.portrait) {
+          const vr: Rect = { x: r.x + 18 * u, y: r.y + 10 * u, w: r.w - 32 * u, h: 52 * u };
+          recapVis(S, i, vr);
+          para(S, caps[i], vr.x, r.y + 78 * u, vr.w, { size: 14, weight: 700, color: p.ink, lh: 1.28 });
+        } else {
+          const vr: Rect = { x: r.x + 20 * u, y: r.y + 8 * u, w: 360 * u, h: r.h - 16 * u }, cx = vr.x + vr.w + 24 * u;
+          recapVis(S, i, vr);
+          para(S, caps[i], cx, r.y + r.h / 2 - 20 * u, r.x + r.w - cx - 18 * u, { size: 15, weight: 700, color: p.ink, lh: 1.28 });
+        }
       });
     });
   });
@@ -298,43 +307,54 @@ function recapVis(S: Frame, i: number, r: Rect) {
   const { d, pal: p } = S, u = S.u, cy = r.y + r.h / 2;
   if (i === 0) {
     const labels = [S.l('ejemplo', 'example'), S.l('error', 'error'), S.l('gradiente', 'gradient'), S.l('actualizar', 'update')], tns: Tone[] = ['dat', 'err', 'err', 'w'];
-    if (S.portrait) { for (let k = 0; k < 4; k++) { const x = r.x + (k % 2) * (r.w / 2), y = r.y + 4 * u + Math.floor(k / 2) * (r.h / 2 - 2 * u), t = tone(S, tns[k]); d.rect(x, y, r.w / 2 - 4 * u, r.h / 2 - 8 * u, { fill: t.soft, stroke: t.c, lw: 1.2, r: 3 }); d.text(labels[k], x + r.w / 4 - 2 * u, y + (r.h / 2 - 8 * u) / 2, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'middle' }); } }
-    else { const bw = (r.w - 3 * 14 * u) / 4; for (let k = 0; k < 4; k++) { const x = r.x + k * (bw + 14 * u), t = tone(S, tns[k]); d.rect(x, cy - 16 * u, bw, 32 * u, { fill: t.soft, stroke: t.c, lw: 1.3, r: 3 }); d.text(labels[k], x + bw / 2, cy, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'middle' }); if (k < 3) d.arrow(x + bw + 1, cy, x + bw + 13 * u, cy, p.ink2, 1.4, 4); } }
+    const g = (S.portrait ? 8 : 14) * u, bw = (r.w - 3 * g) / 4, bh = 32 * u;
+    for (let k = 0; k < 4; k++) {
+      const x = r.x + k * (bw + g), t = tone(S, tns[k]);
+      d.rect(x, cy - bh / 2, bw, bh, { fill: t.soft, stroke: t.c, lw: 1.3, r: 3 });
+      d.text(labels[k], x + bw / 2, cy, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'middle' });
+      if (k < 3) d.arrow(x + bw + 1, cy, x + bw + g - 1, cy, p.ink2, 1.4, 4);
+    }
   } else if (i === 1) {
-    const s = Math.min(r.h - 8 * u, 56 * u), t = tone(S, 'w'), x0 = r.x + 4 * u, y0 = cy - s / 2;
+    const s = Math.min(r.h - 6 * u, 44 * u), t = tone(S, 'w'), x0 = r.x + 4 * u, y0 = cy - s / 2;
     d.rect(x0, y0, s, s, { fill: p.surface2, stroke: p.ink2, lw: 1.5 });
     d.dither(x0 + 1, y0 + 1, s - 2, s - 2, p.ink, 0.3, 2);
     d.text('W₀', x0 + s / 2, cy, { size: FS(S, 14), weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'middle', halo: p.surface2, haloW: 5 });
-    d.text('+', x0 + s + 12 * u, cy, { size: 20, weight: 800, color: p.ink2, align: 'center', base: 'middle' });
-    d.rect(x0 + s + 24 * u, y0, 7 * u, s, { fill: t.c });
-    d.text('·', x0 + s + 40 * u, cy, { size: 20, weight: 800, color: p.ink2, align: 'center', base: 'middle' });
-    d.rect(x0 + s + 48 * u, cy - 3.5 * u, s, 7 * u, { fill: t.c });
-    d.text('B', x0 + s + 27.5 * u, y0 - 4 * u, { size: FS(S, 12), weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'bottom' });
-    d.text('A', x0 + s + 48 * u + s / 2, cy - 8 * u, { size: FS(S, 12), weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'bottom' });
+    d.text('+', x0 + s + 14 * u, cy, { size: 20, weight: 800, color: p.ink2, align: 'center', base: 'middle' });
+    const bx = x0 + s + 28 * u, ax = bx + 30 * u;
+    d.rect(bx, y0, 8 * u, s, { fill: t.c });
+    d.text('B', bx + 4 * u, y0 + s + 3 * u, { size: FS(S, 12), weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'top' });
+    d.text('·', bx + 19 * u, cy, { size: 20, weight: 800, color: p.ink2, align: 'center', base: 'middle' });
+    d.rect(ax, cy - 4 * u, s, 8 * u, { fill: t.c });
+    d.text('A', ax + s / 2, cy + 7 * u, { size: FS(S, 12), weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'top' });
   } else {
     const rows = [{ t: S.l('comportamiento → ajuste fino', 'behavior → fine-tuning'), tn: 'w' as Tone }, { t: S.l('hechos que cambian → RAG', 'changing facts → RAG'), tn: 'lat' as Tone }];
-    rows.forEach((q, k) => chip(S, q.t, r.x + 4 * u, cy + (k - 0.5) * 34 * u, { tone: q.tn, align: 'left', size: 13 }));
+    rows.forEach((q, k) => chip(S, q.t, r.x + 4 * u, cy + (k - 0.5) * 32 * u, { tone: q.tn, align: 'left', size: 13 }));
   }
 }
 
 export function drawBridge(S: Frame, vis: number) {
   if (vis < 0.01) return;
-  const { d, pal: p } = S, u = S.u, all = inset(S.full(), 14 * u);
+  const { d, pal: p } = S, u = S.u, all = inset(S.full(), 14 * u), cx = all.x + all.w / 2;
   d.withAlpha(vis, () => {
-    const a0 = S.reveal('bridge', 0.2, 0.6), a1 = S.reveal('bridge', 2.0, 0.7), a2 = S.reveal('bridge', 5.0, 0.6);
-    const cx = all.x + all.w / 2;
-    chip(S, S.l('ajuste fino: tus ejemplos', 'fine-tuning: your examples'), S.portrait ? cx : cx - 130 * u, all.y + 20 * u, { tone: 'w', a: a0, size: 13 });
-    chip(S, S.l('LoRA: barato y reversible', 'LoRA: cheap and reversible'), S.portrait ? cx : cx + 130 * u, all.y + (S.portrait ? 54 : 20) * u, { tone: 'w', a: a0, size: 13 });
-    const qy = all.y + (S.portrait ? 96 : 76) * u;
+    const a0 = S.reveal('bridge', 0.2, 0.6), a1 = S.reveal('bridge', 2.0, 0.7);
+    // lo que ya sabemos hacer
+    const known = [S.l('ajuste fino: tus ejemplos', 'fine-tuning: your examples'), S.l('LoRA: barato y reversible', 'LoRA: cheap and reversible')];
+    if (S.portrait) known.forEach((t, k) => chip(S, t, cx, all.y + 18 * u + k * 32 * u, { tone: 'w', a: a0, size: 13 }));
+    else known.forEach((t, k) => chip(S, t, cx + (k ? 1 : -1) * 120 * u, all.y + 18 * u, { tone: 'w', a: a0, size: 13 }));
+    // la pregunta
+    const qy = all.y + (S.portrait ? 92 : 72) * u;
     d.withAlpha(a1, () => {
-      d.text('?', cx, qy + (S.portrait ? 30 : 36) * u, { size: S.portrait ? 64 : 84, weight: 800, font: 'mono', color: tone(S, 'lat').ink, align: 'center', base: 'middle' });
-      para(S, S.l('¿Qué ejemplos y qué señal convierten un modelo que solo completa texto en un asistente?', 'Which examples and which signal turn a model that only completes text into an assistant?'), all.x + 10 * u, qy + (S.portrait ? 76 : 92) * u, all.w - 20 * u, { size: S.portrait ? 16 : 19, weight: 800, color: p.ink, align: 'center', lh: 1.28 });
+      d.text('?', cx, qy + (S.portrait ? 30 : 38) * u, { size: S.portrait ? 64 : 84, weight: 800, font: 'mono', color: tone(S, 'lat').ink, align: 'center', base: 'middle' });
+      para(S, S.l('¿Qué ejemplos y qué señal convierten un modelo que solo completa texto en un asistente?', 'Which examples and which signal turn a model that only completes text into an assistant?'), cx, qy + (S.portrait ? 74 : 92) * u, all.w - (S.portrait ? 16 : 120) * u, { size: S.portrait ? 16 : 19, weight: 800, color: p.ink, align: 'center', lh: 1.28 });
     });
+    // lo que un asistente hace (se verá en la lección siguiente)
     const items = [S.l('seguir instrucciones', 'follow instructions'), S.l('ser útil', 'be helpful'), S.l('negarse cuando toca', 'decline when it should')];
-    const y = all.y + all.h - (S.portrait ? 78 : 40) * u;
-    let x = S.portrait ? cx : cx - 190 * u;
-    items.forEach((t, i) => { chip(S, t, S.portrait ? cx : x + (i === 0 ? 0 : i === 1 ? 190 * u : 360 * u) - (S.portrait ? 0 : 0) + (S.portrait ? 0 : 0), S.portrait ? y + i * 26 * u : y, { tone: 'lat', a: a2 * S.reveal('bridge', 5.0 + i * 0.6, 0.5), size: 13 }); });
-    if (!S.portrait) neu(S, all.x + 46 * u, all.y + all.h - 50 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'think', a: a1 });
-    void x;
+    const ws = items.map((t) => d.measure(t, { size: FS(S, 13), weight: 700 }) + 14 * u), gap = 12 * u, total = ws.reduce((a, b) => a + b, 0) + gap * 2;
+    const by = all.y + all.h - (S.portrait ? 76 : 30) * u;
+    if (!S.portrait && total <= all.w - 120 * u) {
+      let x = cx - total / 2;
+      items.forEach((t, k) => { chip(S, t, x, by, { tone: 'lat', align: 'left', a: S.reveal('bridge', 5.0 + k * 0.6, 0.5), size: 13 }); x += ws[k] + gap; });
+    } else items.forEach((t, k) => chip(S, t, cx, by + k * 30 * u, { tone: 'lat', a: S.reveal('bridge', 5.0 + k * 0.6, 0.5), size: 13 }));
+    if (!S.portrait) neu(S, all.x + 40 * u, all.y + all.h - 54 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'think', a: a1 });
   });
 }

@@ -21,12 +21,12 @@ const spec = (mode: number, replay: boolean, rule: RuleId = 'A'): Spec => ({ mod
 const WRONG = new WeakMap<Snap, Uint8Array>();
 const wrongOf = (s: Snap, rule: RuleId): Uint8Array => { let w = WRONG.get(s); if (!w) { w = wrongCells(s.pred, TARGET[rule], TARGET_BASE, CHANGED[rule], 'old'); WRONG.set(s, w); } return w; };
 const stepIn = (S: Frame, seg: string, delay: number) => (S.on(seg) ? clamp(Math.floor((S.since(seg) - delay) * RATE), 0, STEPS) : 0);
-const pct = (S: Frame, v: number) => S.n(v * 100, 0) + ' %';
+const pct = (S: Frame, v: number) => S.n(v * 100, 0) + '\u00a0%';
 
 // ── reparto: mapa cuadrado + lateral (escritorio) o mapa arriba a la izquierda + lateral derecho + panel abajo (teléfono) ──
 interface Lay { map: Rect; panel: Rect; right: Rect | null; cap: number }
 function toyLay(S: Frame, wantRight: boolean): Lay {
-  const u = S.u, all = inset(S.full(), 14 * u), cap = 22 * u;
+  const u = S.u, all = inset(S.full(), 14 * u), cap = (S.portrait ? 38 : 22) * u;
   if (S.portrait) {
     const side = Math.min(all.w * (wantRight ? 0.56 : 0.6), all.h * 0.46 - cap);
     const map: Rect = { x: all.x, y: all.y, w: side, h: side };
@@ -54,8 +54,8 @@ function falk(S: Frame, r: Rect, snap: Snap, fin: Snap, a: number) {
     drawSigned(S, x, by, B, 32, rk, cs, { range: rB });
     drawSigned(S, ax, by, snap.dW, 32, 32, cs, { range: rD });
     const t = tone(S, 'w');
-    d.text('A  (r × 32)', ax + 16 * cs, y - 6 * u, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'bottom' });
-    d.text('B  (32 × r)', x + rk * cs / 2, by + 32 * cs + 6 * u, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'top', w: Math.max(60 * u, rk * cs + gap) });
+    d.text('A', ax + 16 * cs, y - 6 * u, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'bottom' });
+    d.text('B', x + rk * cs / 2, by + 32 * cs + 6 * u, { size: FS(S, 12), weight: 700, color: t.ink, align: 'center', base: 'top' });
     d.text('ΔW = B·A', ax + 16 * cs, by + 32 * cs + 6 * u, { size: FS(S, 12), weight: 700, color: p.ink, align: 'center', base: 'top' });
   });
 }
@@ -75,10 +75,10 @@ export function drawLoraDemo(S: Frame, vis: number) {
     if (S.portrait) {
       drawPanel(S, L.panel, { a: a2, trainable: 128, frozen: 1251, newSk: snap.newSk, oldSk: snap.oldSk, oldRef: 1, showLoss: false });
     } else {
-      const ph = 180 * u;
-      drawPanel(S, { ...L.panel, h: ph }, { a: a2, trainable: 128, frozen: 1251, newSk: snap.newSk, oldSk: snap.oldSk, oldRef: 1, showLoss: false, title: S.l('LoRA r = 2 · capa central', 'LoRA r = 2 · middle layer') });
+      const compact = S.H < 360, ph = (compact ? 158 : 180) * u;
+      drawPanel(S, { ...L.panel, h: ph }, { a: a2, trainable: 128, frozen: 1251, newSk: snap.newSk, oldSk: snap.oldSk, oldRef: 1, showLoss: false, title: compact ? undefined : S.l('LoRA r = 2 · capa central', 'LoRA r = 2 · middle layer') });
     }
-    const fr = L.right!, fr2: Rect = S.portrait ? fr : { x: fr.x, y: fr.y + 180 * u + 6 * u, w: fr.w, h: fr.h - 180 * u - 6 * u };
+    const fr = L.right!, phh = (S.H < 360 ? 158 : 180) * u, fr2: Rect = S.portrait ? fr : { x: fr.x, y: fr.y + phh + 6 * u, w: fr.w, h: fr.h - phh - 6 * u };
     falk(S, fr2, snap, fin, S.reveal('demo-lora', 1.6, 0.7));
     const blank = S.reveal('demo-lora', 2.4, 0.5) * (1 - clamp(step / 10));
     if (blank > 0.01) d.text(S.l('B = 0: la corrección empieza en blanco', 'B = 0: the correction starts blank'), fr2.x + fr2.w / 2, fr2.y + fr2.h - 2 * u, { size: FS(S, 12), weight: 700, color: tone(S, 'w').ink, align: 'center', base: 'bottom', w: fr2.w, a: blank });
@@ -102,7 +102,7 @@ export function drawRanks(S: Frame, vis: number) {
       const run = getRun(spec(r, false)), snap = run.at(step);
       d.withAlpha(ai, () => {
         chip(S, S.l(`rango ${r}`, `rank ${r}`), cx, y0 + 12 * u, { tone: 'w', mono: false });
-        para(S, S.l(`${r * 64} números`, `${r * 64} numbers`), x, y0 + 30 * u, colW, { align: 'left', size: 12, weight: 700, color: tone(S, 'w').ink });
+        para(S, S.l(`${r * 64} números`, `${r * 64} numbers`), cx, y0 + 30 * u, colW, { align: 'center', size: 12, weight: 700, color: tone(S, 'w').ink });
         const mx = x + (colW - side) / 2, my = y0 + head - 10 * u;
         drawMap(S, { x: mx, y: my, w: side, h: side }, snap.pred, { hatch: CHANGED.A, reveal: 1 });
         const my2 = my + side + 10 * u;
@@ -126,7 +126,7 @@ export function drawTrain(S: Frame, vis: number) {
   const wrongNow = tr && tr.step >= STEPS ? wrongOf(snap, 'A') : null;
   d.withAlpha(vis, () => {
     drawMap(S, L.map, snap.pred, { reveal: S.reveal('try-train', 0, 0.8), hatch: CHANGED.A, data: FT.A, extra: rp ? REPLAY.A : undefined, wrong: wrongNow, dataA: 0.95 });
-    d.text(rp ? S.l('rayado = regla nueva · ■ huecos = ejemplos originales', 'hatched = new rule · hollow ■ = original examples') : S.l('rayado = regla nueva · marcas = tus ejemplos', 'hatched = new rule · marks = your examples'), L.map.x, L.map.y + L.map.h + 6 * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top', w: Math.max(L.map.w, 150 * u) });
+    d.text(rp ? S.l('rayado = nueva · ■ = ejemplos originales', 'hatched = new · ■ = original examples') : S.l('rayado = regla nueva · marcas = tus ejemplos', 'hatched = new rule · marks = your examples'), L.map.x, L.map.y + L.map.h + 6 * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top', w: Math.max(L.map.w, 150 * u) });
     // veredicto
     let verdict: { t: string; tn: 'dat' | 'err' | 'ink' };
     if (!tr) verdict = { t: S.l('Elige el rango y si repasas; luego pulsa «Entrenar adaptador».', 'Pick the rank and whether to replay; then press “Train adapter”.'), tn: 'ink' };
@@ -164,7 +164,7 @@ export function drawReplay(S: Frame, vis: number) {
       const snap = getRun(c.sp).at(step);
       d.withAlpha(ai, () => {
         chip(S, c.title, cx, y0 + 12 * u, { tone: c.extra ? 'dat' : 'err' });
-        para(S, c.sub, x, y0 + 30 * u, colW, { align: 'center', size: 12, weight: 600, color: p.mute });
+        para(S, c.sub, cx, y0 + 30 * u, colW, { align: 'center', size: 12, weight: 600, color: p.mute });
         const mx = x + (colW - side) / 2, my = y0 + head - 6 * u;
         drawMap(S, { x: mx, y: my, w: side, h: side }, snap.pred, { hatch: CHANGED.A, wrong: wrongOf(snap, 'A'), extra: c.extra ? REPLAY.A : undefined, reveal: 1 });
         const my2 = my + side + 10 * u;
@@ -195,7 +195,7 @@ export function drawSwap(S: Frame, vis: number) {
       const x = all.x + i * (colW + gap), cx = x + colW / 2, ai = S.reveal('swap', c.at, 0.6);
       d.withAlpha(ai, () => {
         chip(S, c.title, cx, y0 + 12 * u, { tone: c.tn });
-        para(S, c.sub, x, y0 + 30 * u, colW, { align: 'center', size: 12, weight: 600, color: c.rule ? tone(S, 'w').ink : p.mute });
+        para(S, c.sub, cx, y0 + 30 * u, colW, { align: 'center', size: 12, weight: 600, color: c.rule ? tone(S, 'w').ink : p.mute });
         const mx = x + (colW - side) / 2, my = y0 + head - 6 * u;
         if (!c.rule) {
           drawMap(S, { x: mx, y: my, w: side, h: side }, BASE_MAP, { reveal: clamp((S.since('swap') - c.at) / 0.9) });
