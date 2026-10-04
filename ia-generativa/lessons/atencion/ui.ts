@@ -107,3 +107,45 @@ export const actAlpha = (S: Frame, from: string, to?: string) => {
   const a = S.at(from, 0, 0.9), b = to ? S.at(to, 0, 0.9) : 0;
   return a * (1 - b);
 };
+
+/** Mayor tamaño (hasta `px`) con el que `str` cabe en `maxW`; nunca baja de 12 px efectivos. */
+export function fitSize(S: Frame, str: string, maxW: number, px: number, o: { weight?: number; font?: 'ui' | 'mono' } = {}) {
+  let size = fs(S, px);
+  const min = fs(S, 12);
+  while (size > min && S.d.measure(str, { size, weight: o.weight ?? 600, font: o.font }) > maxW) size -= 0.5;
+  return size;
+}
+
+/** Panel: rectángulo con borde fino y fondo de superficie. */
+export function panel(S: Frame, r: Rect, o: { a?: number; dash?: number[]; stroke?: string; fill?: string } = {}) {
+  S.d.rect(r.x, r.y, r.w, r.h, { fill: o.fill ?? S.pal.surface, stroke: o.stroke ?? S.pal.line, lw: 1.25, r: 3, a: o.a, dash: o.dash });
+}
+
+/** Rótulo pequeño de panel (arriba a la izquierda de un rectángulo). */
+export function title(S: Frame, str: string, x: number, y: number, o: { tone?: Tone; align?: CanvasTextAlign; a?: number; w?: number } = {}) {
+  const t = tone(S, o.tone ?? 'mute');
+  S.d.text(str, x, y, { size: fs(S, 12), weight: 700, color: o.tone ? t.ink : S.pal.mute, align: o.align, base: 'top', a: o.a, w: o.w });
+}
+
+/** Rectángulo interior con relación de aspecto cuadrada, centrado en `r`. */
+export function squareIn(r: Rect): Rect {
+  const side = Math.min(r.w, r.h);
+  return { x: r.x + (r.w - side) / 2, y: r.y + (r.h - side) / 2, w: side, h: side };
+}
+
+/** Texto en varias líneas, centrado en vertical alrededor de `yc` (d.text con `w` crece hacia abajo). Devuelve {w,h}. */
+export function textBlock(S: Frame, str: string, x: number, yc: number, w: number, o: { size?: number; weight?: number; color?: string; align?: CanvasTextAlign; lh?: number; font?: 'ui' | 'mono'; halo?: string; a?: number } = {}) {
+  const size = o.size ?? fs(S, 12), lh = (o.lh ?? 1.2) * size * S.u, lines = S.d.wrap(str, w, { size, weight: o.weight ?? 600, font: o.font });
+  const y0 = yc - ((lines.length - 1) * lh) / 2;
+  let mw = 0;
+  lines.forEach((ln, i) => { const r = S.d.text(ln, x, y0 + i * lh, { size, weight: o.weight ?? 600, color: o.color ?? S.pal.ink2, align: o.align, base: 'middle', font: o.font, halo: o.halo, a: o.a }); mw = Math.max(mw, r.w); });
+  return { w: mw, h: lines.length * lh };
+}
+
+/** Texto en varias líneas que empieza en `y` (borde superior) y crece hacia abajo. Devuelve {w,h}. */
+export function textTop(S: Frame, str: string, x: number, y: number, w: number, o: { size?: number; weight?: number; color?: string; align?: CanvasTextAlign; lh?: number; font?: 'ui' | 'mono'; a?: number } = {}) {
+  const size = o.size ?? fs(S, 12), lh = (o.lh ?? 1.2) * size * S.u, lines = S.d.wrap(str, w, { size, weight: o.weight ?? 600, font: o.font });
+  let mw = 0;
+  lines.forEach((ln, i) => { const r = S.d.text(ln, x, y + lh / 2 + i * lh, { size, weight: o.weight ?? 600, color: o.color ?? S.pal.ink2, align: o.align, base: 'middle', font: o.font, a: o.a }); mw = Math.max(mw, r.w); });
+  return { w: mw, h: lines.length * lh };
+}

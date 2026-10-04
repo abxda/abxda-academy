@@ -28,12 +28,16 @@ export function chip(S: Frame, r: Rect, text: string, o: { size: number; fill?: 
   });
 }
 
-/** Tamaño de ficha: el mayor (hasta 18 px) con el que las dos frases caben en una sola línea; si no, 14. */
+/** Tamaño de ficha: el mayor (hasta 18 px) con el que las dos frases caben en una sola línea; en teléfono vertical, el mayor con el que caben en dos. */
 export function chipSize(S: Frame, maxW: number, gap: number) {
   const words = [...TOK[S.lang], ...TOK_TIRED[S.lang].slice(7)];
-  for (const px of [18, 17, 16, 15]) {
+  for (const px of [18, 17, 16, 15, 14, 13]) {
     const size = fs(S, px), l = layoutChips(S, words, 0, 0, 1e6, size, 30 * S.u, gap, 6 * S.u);
     if (l.width <= maxW) return size;
+  }
+  if (S.portrait) for (const px of [18, 17, 16, 15]) {
+    const size = fs(S, px), h = 30 * S.u;
+    if (layoutChips(S, TOK[S.lang], 0, 0, maxW, size, h, gap, 6 * S.u).lines <= 2 && layoutChips(S, TOK_TIRED[S.lang], 0, 0, maxW, size, h, gap, 6 * S.u).lines <= 2) return size;
   }
   return fs(S, 14);
 }

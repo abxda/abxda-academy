@@ -16,6 +16,9 @@ Qué es (idéntico en español y en inglés, solo cambian las palabras):
     salida con la misma matriz que el embedding de entrada (weight tying), con sesgos. Sin dropout.
   · Entrenamiento: predicción de la siguiente palabra en todas las posiciones a la vez (con máscara causal),
     AdamW, 4000 pasos, lote de 256 secuencias muestreadas de la gramática, semilla fija (0).
+  · Experimento de la máscara causal: se entrena OTRO modelo idéntico (misma semilla, mismos datos, mismos pasos) pero SIN
+    máscara causal. Se guardan las dos curvas de pérdida de entrenamiento y la atención del modelo sin máscara.
+    Cota inferior de la pérdida con máscara: la entropía condicional media de la gramática (FLOOR, en nats).
   · Se guarda: pesos redondeados a 4 decimales (el modelo que corre el navegador es ESTE, redondeado), y, como
     comprobación, los logits de PyTorch (sin redondear) para cuatro frases, que `verify-forward.mts` compara
     con la implementación en TypeScript de `model.ts`.
@@ -26,6 +29,7 @@ Licencia de los datos y pesos: se generan aquí mismo; no hay corpus de terceros
 import json, math, pathlib, sys
 import numpy as np
 import torch, torch.nn as nn, torch.nn.functional as F
+torch.set_num_threads(4)
 
 HERE = pathlib.Path(__file__).parent
 D, H, L, FF, T = 8, 2, 2, 32, 12
@@ -62,13 +66,20 @@ def index_map(lg):
     return V, dict(det=ix[c['det']], nouns=[ix[w] for w in c['nouns']], verbs=[ix[w] for w in c['verbs']], objs=[ix[w] for w in c['objs']], **{'.': ix['.']})
 
 
+# Probabilidades acumuladas del objeto para cada (sujeto, verbo): CUM[s, v, o]
+CUM = np.zeros((3, 2, 5))
+for (_s, _v), _d in GRAMMAR.items():
+    for _o, _p in _d.items(): CUM[_s, _v, _o] = _p
+CUM = CUM.cumsum(-1)
+
+
 def batch(rng, ids, n):
-    out = np.zeros((n, T + 1), dtype=np.int64)
-    for i in range(n):
-        seq = []
-        while len(seq) < T + 1: seq += sample_sentence(rng, ids)
-        out[i] = seq[:T + 1]
-    return torch.from_numpy(out)
+    """n secuencias de T+1 palabras: 3 frases «el SUJETO VERBO OBJETO .» seguidas, muestreadas de GRAMMAR (vectorizado)."""
+    s = rng.integers(0, 3, (n, 3)); v = rng.integers(0, 2, (n, 3)); u = rng.random((n, 3))
+    o = np.minimum((u[..., None] > CUM[s, v]).sum(-1), 4)
+    nouns = np.array(ids['nouns']); verbs = np.array(ids['verbs']); objs = np.array(ids['objs'])
+    sent = np.stack([np.full((n, 3), ids['det']), nouns[s], verbs[v], objs[o], np.full((n, 3), ids['.'])], -1)   # (n, 3, 5)
+    return torch.from_numpy(sent.reshape(n, 15)[:, :T + 1].astype(np.int64))
 
 
 def sinusoid(T_, d):
@@ -114,16 +125,28 @@ class Tiny(nn.Module):
         return s.lnf(x) @ s.E.weight.T
 
 
-def train(lg, steps=4000):
+def train(lg, steps=4000, mask=True):
     torch.manual_seed(0)
     V, ids = index_map(lg); rng = np.random.default_rng(0)
     m = Tiny(len(V)); opt = torch.optim.AdamW(m.parameters(), lr=3e-3, weight_decay=0.0)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=3e-3, total_steps=steps, pct_start=0.1)
+    curve = []   # pérdida de entrenamiento (nats por palabra), cada 50 pasos: promedio de los últimos 50
+    acc = 0.0
     for st in range(steps):
-        b = batch(rng, ids, 256); loss = F.cross_entropy(m(b[:, :-1]).reshape(-1, len(V)), b[:, 1:].reshape(-1))
+        b = batch(rng, ids, 256); loss = F.cross_entropy(m(b[:, :-1], mask=mask).reshape(-1, len(V)), b[:, 1:].reshape(-1))
         opt.zero_grad(); loss.backward(); opt.step(); sched.step()
-        if st % 1000 == 0 or st == steps - 1: print(lg, st, round(loss.item(), 4))
-    return m, V, ids
+        acc += loss.item()
+        if (st + 1) % 50 == 0: curve.append(round(acc / 50, 3)); acc = 0.0
+        if st % 1000 == 0 or st == steps - 1: print(lg, 'mask' if mask else 'SIN máscara', st, round(loss.item(), 4))
+    return m, V, ids, curve
+
+
+def floor_nats():
+    """Entropía condicional media (nats) de las 12 palabras que se predicen en una secuencia de entrenamiento."""
+    H = lambda p: -sum(q * math.log(q) for q in p if q > 0)
+    h_obj = np.mean([H(list(GRAMMAR[(s, v)].values())) for s in range(3) for v in range(2)])
+    # objetivos (tokens 1..12): sujeto×3, verbo×3, objeto×2, «.»×2, «el»×2  (las dos últimas son deterministas)
+    return (3 * math.log(3) + 3 * math.log(2) + 2 * h_obj) / 12
 
 
 def true_dist(ids, sidx, vidx, nv):
@@ -152,11 +175,19 @@ def round_model(m):
         for p in m.parameters(): p.copy_(torch.round(p * 1e4) / 1e4)
 
 
+def attn_of(m, words, V, mask):
+    idx = torch.tensor([[V.index(w) for w in words]]); tr = []
+    lo = m(idx, mask=mask, trace=tr)[0]
+    return lo, [[[[round(float(x), 5) for x in row] for row in hd] for hd in a[0]] for a in tr]
+
+
 def main():
-    out = {}; refs = {}
+    out = {}; refs = {}; exp = {}
+    fl = floor_nats(); print('cota inferior de la pérdida (entropía condicional media de la gramática):', round(fl, 4), 'nats')
     for lg in ('es', 'en'):
-        m, V, ids = train(lg)
+        m, V, ids, curve = train(lg)
         round_model(m); m.eval()
+        mu, _, _, curve_u = train(lg, mask=False); round_model(mu); mu.eval()
         # calidad: distancia a la distribución verdadera en los 6 contextos «el SUJETO VERBO»
         worst = 0
         for s in range(3):
@@ -172,19 +203,27 @@ def main():
                    'en': [['the', 'cat', 'drinks'], ['the', 'dog', 'eats'], ['the', 'parrot', 'eats'], ['the', 'cat', 'eats', 'fish', '.']]}[lg]
         r = []
         for pr in prompts:
-            idx = torch.tensor([[V.index(w) for w in pr]]); tr = []
-            lo = m(idx, trace=tr)[0]
-            r.append(dict(words=pr, logits=[[round(float(x), 5) for x in row] for row in lo.detach()], attn=[[[[round(float(x), 5) for x in row] for row in hd] for hd in a[0]] for a in tr]))
+            lo, at = attn_of(m, pr, V, True)
+            r.append(dict(words=pr, logits=[[round(float(x), 5) for x in row] for row in lo.detach()], attn=at))
         refs[lg] = r
-        # sin máscara (solo para la lección: cuánta atención cae en el futuro)
-        tr = []; m(torch.tensor([[V.index(w) for w in prompts[0]]]), mask=False, trace=tr)
-    # cabeza de mensaje
+        # experimento de la máscara: curvas de pérdida y atención del modelo entrenado SIN máscara (frase de 5 palabras)
+        _, at_u = attn_of(mu, prompts[3], V, False)
+        # pérdida de validación (frases nuevas, semilla distinta) de cada modelo, SIN trampa: con máscara en ambos
+        rv = np.random.default_rng(123); bv = batch(rv, ids, 4096)
+        with torch.no_grad():
+            lv_m = F.cross_entropy(m(bv[:, :-1]).reshape(-1, len(V)), bv[:, 1:].reshape(-1)).item()
+            lv_u = F.cross_entropy(mu(bv[:, :-1], mask=True).reshape(-1, len(V)), bv[:, 1:].reshape(-1)).item()
+            lv_u_nomask = F.cross_entropy(mu(bv[:, :-1], mask=False).reshape(-1, len(V)), bv[:, 1:].reshape(-1)).item()
+        print(lg, f'pérdida en frases nuevas: con máscara={lv_m:.3f}  | modelo sin máscara usado SIN trampa (con máscara)={lv_u:.3f}  | usado con trampa={lv_u_nomask:.3f}')
+        exp[lg] = dict(masked=curve, unmasked=curve_u, valMasked=round(lv_m, 3), valUnmaskedHonest=round(lv_u, 3), valUnmaskedCheat=round(lv_u_nomask, 3), attnU=at_u)
     ts = ("// GENERADO por train_tiny.py (no editar a mano). Transformer diminuto entrenado de verdad; ver ese archivo para el método.\n"
           "export interface TinyBlockW { ln1g: number[]; ln1b: number[]; ln2g: number[]; ln2b: number[]; wq: number[]; bq: number[]; wk: number[]; bk: number[]; wv: number[]; bv: number[]; wo: number[]; bo: number[]; w1: number[]; b1: number[]; w2: number[]; b2: number[] }\n"
           "export interface TinyWeights { vocab: string[]; E: number[]; lnfg: number[]; lnfb: number[]; blocks: TinyBlockW[] }\n"
           f"export const TINY_CFG = {{ d: {D}, heads: {H}, layers: {L}, ff: {FF}, ctx: {T} }};\n"
           f"export const TINY: Record<'es' | 'en', TinyWeights> = {json.dumps(out, ensure_ascii=False, separators=(',', ':'))};\n"
-          f"export const TINY_REF: Record<'es' | 'en', {{ words: string[]; logits: number[][]; attn: number[][][][] }}[]> = {json.dumps(refs, ensure_ascii=False, separators=(',', ':'))};\n")
+          f"export const TINY_REF: Record<'es' | 'en', {{ words: string[]; logits: number[][]; attn: number[][][][] }}[]> = {json.dumps(refs, ensure_ascii=False, separators=(',', ':'))};\n"
+          f"export const MASK_FLOOR = {round(fl, 4)};   // nats por palabra: entropía condicional media de la gramática (cota inferior con máscara)\n"
+          f"export const MASK_EXP: Record<'es' | 'en', {{ masked: number[]; unmasked: number[]; valMasked: number; valUnmaskedHonest: number; valUnmaskedCheat: number; attnU: number[][][][] }}> = {json.dumps(exp, ensure_ascii=False, separators=(',', ':'))};\n")
     (HERE / 'weights.ts').write_text(ts)
     print('escrito weights.ts', len(ts), 'bytes')
     verify_formula()

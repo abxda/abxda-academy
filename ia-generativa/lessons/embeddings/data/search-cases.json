@@ -1,0 +1,284 @@
+{
+ "_": "Casos de la búsqueda de juguete de la lección 14: 10 documentos y 36 consultas con su documento correcto. Los escribió el autor de la lección (ilustrativos). Fuente única para search.ts y eval-search.py.",
+ "docs": [
+  {
+   "id": "pass",
+   "title": {
+    "es": "Cambiar contraseña",
+    "en": "Change password"
+   },
+   "en": "Keep your account safe: change your password from the security screen.",
+   "es": "Protege tu cuenta: cambia tu contraseña desde la pantalla de seguridad."
+  },
+  {
+   "id": "refund",
+   "title": {
+    "es": "Reembolsos",
+    "en": "Refunds"
+   },
+   "en": "Return a product and get a refund of your payment within days.",
+   "es": "Devuelve un producto y recibe el reembolso de tu pago en pocos días."
+  },
+  {
+   "id": "hours",
+   "title": {
+    "es": "Horario de soporte",
+    "en": "Support hours"
+   },
+   "en": "Our support team is open Monday to Friday during office hours.",
+   "es": "Nuestro equipo de soporte abre de lunes a viernes en horario de oficina."
+  },
+  {
+   "id": "card",
+   "title": {
+    "es": "Tarjeta de pago",
+    "en": "Payment card"
+   },
+   "en": "Update the credit card you use to pay online.",
+   "es": "Actualiza la tarjeta de crédito con la que pagas en línea."
+  },
+  {
+   "id": "cancel",
+   "title": {
+    "es": "Cancelar suscripción",
+    "en": "Cancel subscription"
+   },
+   "en": "Cancel your subscription at any time; you will not be charged next month.",
+   "es": "Cancela tu suscripción cuando quieras; no se te cobrará el mes siguiente."
+  },
+  {
+   "id": "install",
+   "title": {
+    "es": "Instalar la app",
+    "en": "Install the app"
+   },
+   "en": "Download the app and install it on your phone or computer.",
+   "es": "Descarga la aplicación e instálala en tu teléfono o computadora."
+  },
+  {
+   "id": "delivery",
+   "title": {
+    "es": "Tiempo de entrega",
+    "en": "Delivery time"
+   },
+   "en": "Delivery takes between three and five days after your order.",
+   "es": "La entrega tarda de tres a cinco días después de tu pedido."
+  },
+  {
+   "id": "address",
+   "title": {
+    "es": "Dirección de envío",
+    "en": "Shipping address"
+   },
+   "en": "Change the shipping address of an order before it is sent.",
+   "es": "Cambia la dirección de envío de un pedido antes de que se envíe."
+  },
+  {
+   "id": "invoice",
+   "title": {
+    "es": "Facturas",
+    "en": "Invoices"
+   },
+   "en": "Find your invoices in your account and download them as a file.",
+   "es": "Encuentra tus facturas en tu cuenta y descárgalas como archivo."
+  },
+  {
+   "id": "problem",
+   "title": {
+    "es": "Reportar un problema",
+    "en": "Report a problem"
+   },
+   "en": "Report a technical problem or a broken feature in the app.",
+   "es": "Reporta un problema técnico o una función descompuesta en la aplicación."
+  }
+ ],
+ "queries": [
+  {
+   "want": "pass",
+   "en": "I forgot my login",
+   "es": "olvidé mi acceso"
+  },
+  {
+   "want": "pass",
+   "en": "I lost the key to my account",
+   "es": "perdí la clave de mi cuenta"
+  },
+  {
+   "want": "pass",
+   "en": "how do I reset my login",
+   "es": "cómo restablezco mi acceso"
+  },
+  {
+   "want": "pass",
+   "en": "someone knows my password",
+   "es": "alguien sabe mi contraseña"
+  },
+  {
+   "want": "refund",
+   "en": "I want my money back",
+   "es": "quiero mi dinero de vuelta"
+  },
+  {
+   "want": "refund",
+   "en": "return the product",
+   "es": "devolver el producto"
+  },
+  {
+   "want": "refund",
+   "en": "give me my money for the purchase",
+   "es": "quiero que me regresen el dinero de la compra"
+  },
+  {
+   "want": "refund",
+   "en": "I bought it by mistake",
+   "es": "compré esto por error"
+  },
+  {
+   "want": "hours",
+   "en": "when are you open",
+   "es": "cuándo abren"
+  },
+  {
+   "want": "hours",
+   "en": "is someone there on friday",
+   "es": "hay alguien el viernes"
+  },
+  {
+   "want": "hours",
+   "en": "what time do you work",
+   "es": "a qué hora trabajan"
+  },
+  {
+   "want": "hours",
+   "en": "office schedule",
+   "es": "horario de la oficina"
+  },
+  {
+   "want": "card",
+   "en": "my credit card changed",
+   "es": "cambió mi tarjeta de crédito"
+  },
+  {
+   "want": "card",
+   "en": "how do I pay on the website",
+   "es": "cómo pago en el sitio web"
+  },
+  {
+   "want": "card",
+   "en": "payment method",
+   "es": "método de pago"
+  },
+  {
+   "want": "card",
+   "en": "I need to pay with another card",
+   "es": "necesito pagar con otra tarjeta"
+  },
+  {
+   "want": "cancel",
+   "en": "I want to stop paying",
+   "es": "quiero dejar de pagar"
+  },
+  {
+   "want": "cancel",
+   "en": "end my subscription",
+   "es": "terminar mi suscripción"
+  },
+  {
+   "want": "cancel",
+   "en": "do not charge me next month",
+   "es": "no me cobren el próximo mes"
+  },
+  {
+   "want": "cancel",
+   "en": "leave the service",
+   "es": "dejar el servicio"
+  },
+  {
+   "want": "install",
+   "en": "get the app on my phone",
+   "es": "conseguir la aplicación en mi teléfono"
+  },
+  {
+   "want": "install",
+   "en": "put the software on my computer",
+   "es": "poner el software en mi computadora"
+  },
+  {
+   "want": "install",
+   "en": "how do I install it",
+   "es": "cómo la instalo"
+  },
+  {
+   "want": "delivery",
+   "en": "when will my package arrive",
+   "es": "cuándo llega mi paquete"
+  },
+  {
+   "want": "delivery",
+   "en": "how many days for shipping",
+   "es": "cuántos días tarda el envío"
+  },
+  {
+   "want": "delivery",
+   "en": "my package is late",
+   "es": "mi paquete está retrasado"
+  },
+  {
+   "want": "address",
+   "en": "I moved to a new house",
+   "es": "me mudé a otra casa"
+  },
+  {
+   "want": "address",
+   "en": "wrong street on my order",
+   "es": "calle equivocada en mi pedido"
+  },
+  {
+   "want": "address",
+   "en": "send it somewhere else",
+   "es": "enviarlo a otro lugar"
+  },
+  {
+   "want": "invoice",
+   "en": "where is my bill",
+   "es": "dónde está mi recibo"
+  },
+  {
+   "want": "invoice",
+   "en": "I need a receipt for tax",
+   "es": "necesito un recibo para los impuestos"
+  },
+  {
+   "want": "invoice",
+   "en": "get my receipts",
+   "es": "obtener mis recibos"
+  },
+  {
+   "want": "problem",
+   "en": "the app is broken",
+   "es": "la aplicación está descompuesta"
+  },
+  {
+   "want": "problem",
+   "en": "the program has an error",
+   "es": "el programa tiene un error"
+  },
+  {
+   "want": "problem",
+   "en": "it keeps crashing",
+   "es": "se sigue fallando"
+  },
+  {
+   "want": "problem",
+   "en": "the system does not work",
+   "es": "el sistema no funciona"
+  }
+ ],
+ "presets": [
+  4,
+  33,
+  17,
+  23,
+  10
+ ]
+}

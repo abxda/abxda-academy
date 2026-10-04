@@ -40,24 +40,36 @@ export default defineLesson({
     },
     {
       id: 'roles',
-      es: 'Para decidir a quién mirar, cada palabra produce tres vectores: una consulta, una clave y un valor. Usaremos vectores de solo dos números, hechos a mano para poder seguir las cuentas.',
-      en: 'To decide whom to look at, every word produces three vectors: a query, a key, and a value. We will use vectors of just two numbers, made up by hand so you can follow the arithmetic.',
+      es: 'Para decidir a quién mirar, cada palabra genera tres vectores con tres matrices que el modelo aprende: consulta, clave y valor. Aquí serán de dos números, inventados a mano para seguir las cuentas.',
+      en: 'To decide whom to look at, every word produces three vectors using three matrices the model learns: a query, a key, and a value. Here they will have two numbers, made up by hand so you can follow the arithmetic.',
       note: { es: 'Cada palabra produce tres vectores: consulta (q), clave (k) y valor (v).', en: 'Each word produces three vectors: query (q), key (k), and value (v).' },
     },
     {
       id: 'q',
       es: 'La consulta, q, es lo que una palabra busca. Aquí preguntará «este», que busca algo a lo que referirse; las demás palabras también tienen la suya.',
       en: 'The query, q, is what a word is looking for. Here “it” will be the one asking, searching for something to refer to; the other words have a query too.',
+      tts: {
+        es: 'La consulta, cu, es lo que una palabra busca. Aquí preguntará «este», que busca algo a lo que referirse; las demás palabras también tienen la suya.',
+        en: 'The query, cue, is what a word is looking for. Here “it” will be the one asking, searching for something to refer to; the other words have a query too.',
+      },
     },
     {
       id: 'k',
       es: 'La clave, k, es la etiqueta con la que cada palabra se deja encontrar. Cada consulta se compara con las claves de todas las palabras.',
       en: 'The key, k, is the label each word offers so it can be found. Each query is compared against the keys of all the words.',
+      tts: {
+        es: 'La clave, ca, es la etiqueta con la que cada palabra se deja encontrar. Cada consulta se compara con las claves de todas las palabras.',
+        en: 'The key, kay, is the label each word offers so it can be found. Each query is compared against the keys of all the words.',
+      },
     },
     {
       id: 'v',
       es: 'El valor, v, es lo que cada palabra entrega si la eligen. Funciona como un diccionario, pero difuso: en vez de devolver una sola entrada, mezcla varias.',
       en: 'The value, v, is what each word hands over when it is chosen. It works like a dictionary, but a fuzzy one: instead of returning a single entry, it blends several.',
+      tts: {
+        es: 'El valor, uve, es lo que cada palabra entrega si la eligen. Funciona como un diccionario, pero difuso: en vez de devolver una sola entrada, mezcla varias.',
+        en: 'The value, vee, is what each word hands over when it is chosen. It works like a dictionary, but a fuzzy one: instead of returning a single entry, it blends several.',
+      },
     },
     {
       id: 'plane',
@@ -106,8 +118,8 @@ export default defineLesson({
       es: 'Apilando todas las palabras en matrices Q, K y V, todo esto cabe en una línea: softmax de Q por K traspuesta, entre raíz de d, por V.',
       en: 'Stacking all the words into matrices Q, K, and V, all of this fits in one line: softmax of Q times K transposed, divided by the square root of d, times V.',
       tts: {
-        es: 'Apilando todas las palabras en matrices Q, K y V, todo esto cabe en una línea: softmax de Q por K traspuesta, entre raíz de dé, por V.',
-        en: 'Stacking all the words into matrices Q, K, and V, all of this fits in one line: softmax of Q times K transposed, divided by the square root of d, times V.',
+        es: 'Apilando todas las palabras en matrices cu, ca y uve, todo esto cabe en una línea: softmax de cu por ca traspuesta, entre raíz de dé, por uve.',
+        en: 'Stacking all the words into matrices Q, K, and V, all of this fits in one line: softmax of Q times K transposed, divided by the square root of dee, times V.',
       },
       note: { es: 'Atención = softmax(QKᵀ / √d) · V.', en: 'Attention = softmax(QKᵀ / √d) · V.' },
       pad: 0.4,
@@ -124,11 +136,11 @@ export default defineLesson({
     },
     {
       id: 'sqrt-why',
-      es: 'Falta explicar la raíz de d. Con vectores largos, el producto punto suma muchos términos y las puntuaciones se dispersan: crecen en proporción a la raíz de d.',
-      en: 'One piece is still missing: the square root of d. With long vectors, the dot product adds up many terms, so the scores spread out, growing in proportion to the square root of d.',
+      es: 'Falta explicar la raíz de d. Con vectores largos, el producto punto suma muchos términos y las puntuaciones se dispersan: su tamaño típico crece como la raíz de d.',
+      en: 'One piece is still missing: the square root of d. With long vectors, the dot product adds up many terms, so the scores spread out: their typical size grows like the square root of d.',
       tts: {
-        es: 'Falta explicar la raíz de dé. Con vectores largos, el producto punto suma muchos términos y las puntuaciones se dispersan: crecen en proporción a la raíz de dé.',
-        en: 'One piece is still missing: the square root of d. With long vectors, the dot product adds up many terms, so the scores spread out, growing in proportion to the square root of d.',
+        es: 'Falta explicar la raíz de dé. Con vectores largos, el producto punto suma muchos términos y las puntuaciones se dispersan: su tamaño típico crece como la raíz de dé.',
+        en: 'One piece is still missing: the square root of dee. With long vectors, the dot product adds up many terms, so the scores spread out: their typical size grows like the square root of dee.',
       },
       pad: 0.5,
     },
@@ -189,24 +201,24 @@ export default defineLesson({
     },
     {
       id: 'heads-why',
-      es: 'Una sola mezcla fuerza un solo tipo de relación. Por eso hay varias cabezas: cada una, con sus propias matrices, calcula su mapa, y al final sus resultados se pegan y se combinan.',
-      en: 'A single blend forces a single kind of relationship. That is why there are several heads: each, with its own matrices, computes its own map, and in the end their results are joined and combined.',
+      es: 'Con una sola mezcla, cada palabra tiene un único reparto de atención. Por eso hay varias cabezas: cada una, con sus propias matrices, calcula su mapa; al final se pegan sus resultados y se combinan.',
+      en: 'With a single blend, each word gets a single spread of attention. That is why there are several heads: each, with its own matrices, computes its own map; in the end their results are joined and combined.',
       note: { es: 'Varias cabezas: cada una calcula su propio mapa, todas en paralelo.', en: 'Several heads: each computes its own map, all in parallel.' },
       pad: 0.4,
     },
     {
       id: 'heads-real',
-      es: 'Estas son cuatro cabezas reales de un modelo BERT leyendo esta frase. Cada una dibuja un mapa distinto, y lo que ves sale de medir esta frase, no de una regla general.',
-      en: 'These are four real heads of a BERT model reading this sentence. Each draws a different map, and what you see comes from measuring this sentence, not from a general rule.',
+      es: 'Estas son cuatro cabezas reales de un modelo BERT leyendo esta frase, elegidas por lo claro de su patrón. Cada una dibuja un mapa distinto; lo que ves sale de medir esta frase, no de una regla general.',
+      en: 'These are four real heads of a BERT model reading this sentence, picked for how clear their pattern is. Each draws a different map; what you see comes from measuring this sentence, not from a general rule.',
       pad: 0.4,
     },
     {
       id: 'try3',
-      es: 'Tu turno: elige una palabra y cambia de cabeza. Busca la cabeza con la que «este» mira al paquete.',
-      en: 'Your turn: pick a word and switch heads. Find the head with which “it” looks at the package.',
+      es: 'Tu turno: cambia de cabeza y mira adónde va «este». Busca la que lo lleva al paquete. También puedes elegir otra palabra.',
+      en: 'Your turn: switch heads and watch where “it” goes. Find the one that sends it to the package. You can also pick another word.',
       gate: {
         id: 'head',
-        prompt: { es: 'Elige «este» y encuentra la cabeza que lo lleva al paquete.', en: 'Pick “it” and find the head that sends it to the package.' },
+        prompt: { es: 'Con «este» elegido, encuentra la cabeza que lo lleva sobre todo al paquete.', en: 'With “it” selected, find the head that sends it mostly to the package.' },
       },
       pad: 0.4,
     },
@@ -218,8 +230,8 @@ export default defineLesson({
     },
     {
       id: 'real-few',
-      es: 'Pero seamos honestos: elegimos la cabeza más legible de las ciento cuarenta y cuatro. Solo unas pocas giran así, y muchas dejan su mayor peso en marcas como el punto o el final de la frase.',
-      en: 'But let’s be honest: we picked the most readable of the one hundred forty-four heads. Only a few swing like this, and many put their biggest weight on marks like the period or the end of the sentence.',
+      es: 'Pero seamos honestos: elegimos la cabeza más legible de las ciento cuarenta y cuatro. Muy pocas giran así, y en muchas el mayor peso de «este» cae en marcas como el punto o el fin de la frase.',
+      en: 'But let’s be honest: we picked the most readable of the one hundred forty-four heads. Very few swing like this, and in many the biggest weight of “it” lands on marks like the period or the end of the sentence.',
       pad: 0.5,
     },
     {
@@ -229,8 +241,8 @@ export default defineLesson({
     },
     {
       id: 'order',
-      es: 'Otra limitación: la atención sola no sabe el orden. Si barajas las palabras, cada una conserva sus pesos. El transformer le añade la posición.',
-      en: 'Another limit: attention alone does not know word order. Shuffle the words and each one keeps its weights. The transformer adds position on top.',
+      es: 'Otra limitación: la atención sola no sabe el orden. Si barajas las palabras, cada una reparte lo mismo entre las mismas palabras; solo cambia dónde quedan. El transformer le añade la posición.',
+      en: 'Another limit: attention alone does not know word order. Shuffle the words and each one spreads the same weights over the same words; only their places change. The transformer adds position on top.',
       pad: 0.4,
     },
     {

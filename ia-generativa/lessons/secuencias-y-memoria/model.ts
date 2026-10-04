@@ -1,28 +1,38 @@
-// Matemática REAL de la lección «Secuencias y memoria» (a pequeña escala, con semilla fija; nada es una animación inventada).
+// Matemática REAL de la lección «Secuencias y memoria» (a pequeña escala, con semilla fija: nada es una animación inventada).
 //
-// 1) RNN diminuta (Elman, 1990):  h_t = tanh( Wx·x_t + Wh·h_{t-1} ),  h_0 = 0
-//      · estado oculto de H = 6 números; cada palabra es un vector de D = 4 números asignado AL AZAR (con semilla): no hay lenguaje
-//        aprendido, solo la mecánica de arrastrar un estado.
-//      · Wx: matriz H×D con entradas N(0, WXS²).   Wh = g · Q, con Q ortogonal (Gram–Schmidt sobre una matriz gaussiana con semilla):
-//        todos sus valores singulares valen g, así que g es «la magnitud de los pesos recurrentes» y, sin tanh, cada paso multiplicaría
-//        la longitud del estado exactamente por g.
-//      · Medida de influencia: se cambia UNA palabra (la k-ésima) por otra y se mide cuánto cambia el estado final h_T
-//          influencia(k→T) = ‖Δh_T‖ / ‖Δh_k‖      (fracción del cambio inmediato que sobrevive hasta el final),
-//        promediada en cuadrados (raíz de la media) sobre NS = 16 frases de juguete para que la curva no dependa de una frase concreta.
-//        Es la versión «experimental» de ‖∂h_T/∂h_k‖, el producto de jacobianos que multiplica la retropropagación (ver «Por dentro»).
+// 1) RNN diminuta (Elman, 1990):  h_t = tanh( Wx·x_t + Wh·h_{t-1} ),  h_0 = 0.
+//      · Estado oculto de H = 6 números; cada palabra es un vector de D = 4 números asignado AL AZAR (con semilla): no hay lenguaje
+//        aprendido, solo la mecánica de arrastrar un estado. Los pesos tampoco están entrenados.
+//      · Wx: matriz H×D con entradas N(0, WXS²).  Wh = g·Q, con Q ortogonal (Gram–Schmidt sobre una matriz gaussiana con semilla):
+//        todos sus valores singulares valen g, así que g es «la magnitud de los pesos recurrentes».
+//      · Lo que se mide es el jacobiano ∂h_T/∂h_k = J_T ··· J_{k+1}, con J_t = diag(1 − h_t²)·Wh (derivada exacta de tanh).
+//        Es el producto de factores que multiplica la retropropagación (lección 8) a través del tiempo. Se resume con
+//            influencia(k→T) = ‖∂h_T/∂h_k‖_F / √H      (ganancia típica ante un empujón en una dirección al azar; 1 = no se pierde nada).
+//        El mismo número responde dos preguntas: «si muevo un poco el estado en la palabra k, ¿cuánto se mueve el estado final?»
+//        (hacia delante) y «¿cuánta culpa del error final llega hasta k?» (hacia atrás).
+//      · Curva por distancia: se promedia (media geométrica, que es la frase «típica») sobre NS frases de juguete; se guardan
+//        además NL frases sueltas para ver la dispersión. Se descartan BURN pasos iniciales para que el estado ya esté «en régimen».
+//      · Con la escala de entrada elegida (WXS) la influencia típica decae para todo g en [0,3; 2,8], pero cada vez más despacio,
+//        mientras la media (RMS) de las frases explosivas crece: por eso se muestran las frases sueltas y no solo el promedio.
 //
 // 2) Celda LSTM de juguete (Hochreiter y Schmidhuber, 1997; compuerta de olvido: Gers, Schmidhuber y Cummins, 2000), con UNA celda
 //    escalar y compuertas fijadas a mano en lugar de calculadas por la red, para ver qué hace cada una:
-//      c_t = f·c_{t-1} + i·tanh(x_t),    h_t = o·tanh(c_t)
-//    En el paso 1 la celda está vacía (c_0 = 0) y el dato entra con la compuerta de entrada de «escritura».
+//      c_t = f·c_{t-1} + i_t·tanh(v_t),    h_t = o·tanh(c_t)
+//    v_t son «pistas de número gramatical» ILUSTRATIVAS de cada palabra (flores/flowers = plural, mercado/market = singular);
+//    la compuerta de entrada se abre del todo con la palabra clave (una LSTM entrenada aprende a hacerlo) y vale i con las demás.
 //
-// Reproducible: todo sale de rng(semilla) del kit; mismos números en cada carga. Los valores de entrada del juguete LSTM son ilustrativos.
+// Reproducible: todo sale de rng(semilla) del kit; mismos números en cada carga.
 import { gauss, rng } from '../../../../../core/scene/math';
 
-export const H = 6, D = 4, NS = 16, WXS = 0.35, SEED = 1, TMAX = 30;
+export const H = 6, D = 4, WXS = 0.35, SEED = 1;
+export const TMAX = 30, NS = 48, NL = 14, BURN = 10;
 /** Magnitud de los pesos recurrentes por defecto (el estado del control en la lección). */
 export const G_DEFAULT = 0.9;
 export const G_MIN = 0.3, G_MAX = 2.8;
+/** Frase del ejemplo: 7 palabras leídas (la octava, el verbo, es lo que se predice). */
+export const T = 7;
+export const KEY = 2;            // «flores» (1-indexado)
+export const SENT_SEED = 100;
 
 // ═════════ RNN ═════════
 function orthogonal(seed: number, n: number): number[][] {
@@ -38,8 +48,8 @@ const Q = orthogonal(SEED, H);
 const rW = rng(SEED + 1);
 const WX = Array.from({ length: H }, () => Array.from({ length: D }, () => gauss(rW) * WXS));
 
-/** Vector de la palabra en la posición k de la frase s (alt = 1: la palabra de reemplazo). */
-export const wordVec = (s: number, k: number, alt = 0): number[] => { const r = rng(1000 + s * 9973 + k * 7 + alt * 131 + SEED); return Array.from({ length: D }, () => gauss(r)); };
+/** Vector de la palabra en la posición k (0-based) de la frase s. */
+export const wordVec = (s: number, k: number): number[] => { const r = rng(1000 + s * 9973 + k * 7 + SEED); return Array.from({ length: D }, () => gauss(r)); };
 
 export function rnnStep(g: number, h: number[], x: number[]): number[] {
   return Array.from({ length: H }, (_, i) => {
@@ -55,85 +65,101 @@ export function rnnStates(g: number, xs: number[][]): number[][] {
   for (const x of xs) { h = rnnStep(g, h, x); out.push(h); }
   return out;
 }
-const sq = (a: number[], b: number[]) => a.reduce((s, x, i) => s + (x - b[i]) ** 2, 0);
+type Mat = number[][];
+const ident = (): Mat => Array.from({ length: H }, (_, i) => Array.from({ length: H }, (_, j) => (i === j ? 1 : 0)));
+const mm = (A: Mat, B: Mat): Mat => A.map((r) => B[0].map((_, j) => r.reduce((s, a, k) => s + a * B[k][j], 0)));
+/** Jacobiano ∂h_t/∂h_{t-1} dado el estado nuevo h_t. */
+const jac = (g: number, ht: number[]): Mat => ht.map((v, i) => Q[i].map((q) => (1 - v * v) * g * q));
+const fro = (M: Mat) => Math.sqrt(M.reduce((s, r) => s + r.reduce((a, b) => a + b * b, 0), 0) / H);
 
+// ── frase concreta del ejemplo ───────────────────────────────────────────────
+export interface SentenceRun {
+  g: number;
+  /** states[t] = h_t (t = 0..T). */
+  states: number[][];
+  /** amp[k][t] (k, t en 1..T, t ≥ k): influencia de un empujón en h_k sobre h_t. amp[k][k] = 1. */
+  amp: number[][];
+  /** infl[k] = amp[k][T]: lo que sobrevive hasta el final de un empujón en la palabra k. */
+  infl: number[];
+}
+const sentCache = new Map<number, SentenceRun>();
+export function sentenceRun(g: number): SentenceRun {
+  const key = Math.round(g * 1000), hit = sentCache.get(key); if (hit) return hit;
+  const xs = Array.from({ length: T }, (_, k) => wordVec(SENT_SEED, k)), states = rnnStates(g, xs);
+  const Js: Mat[] = [ident(), ...states.slice(1).map((h) => jac(g, h))];
+  const amp: number[][] = [];
+  for (let k = 1; k <= T; k++) {
+    amp[k] = new Array(T + 1).fill(NaN);
+    let P = ident(); amp[k][k] = 1;
+    for (let t = k + 1; t <= T; t++) { P = mm(Js[t], P); amp[k][t] = fro(P); }
+  }
+  const infl = [NaN, ...Array.from({ length: T }, (_, i) => amp[i + 1][T])];
+  const res = { g, states, amp, infl };
+  if (sentCache.size > 80) sentCache.clear();
+  sentCache.set(key, res); return res;
+}
+
+// ── curva por distancia (frases de juguete) ─────────────────────────────────
 export interface Curve {
-  /** c[T]: fracción del cambio de la PRIMERA palabra que sobrevive en el estado tras leer T palabras (c[1] = 1). */
-  c: number[];
-  /** Fracción de unidades con |h| > 0,9, promediada sobre todos los pasos y frases. */
+  /** typ[n]: influencia típica (media geométrica sobre NS frases) a n pasos de distancia (n = 0..TMAX). */
+  typ: number[];
+  /** lines[j][n]: frase suelta j. */
+  lines: number[][];
+  /** Cuantiles 10 y 90 % entre frases a 10 pasos (para describir la dispersión). */
+  p10: number; p90: number;
+  /** Fracción de unidades saturadas (|h| > 0,9). */
   sat: number;
-  /** Cuánto se conserva por paso en los primeros 10 pasos: c[10]^(1/9). */
+  /** Factor típico por paso en los primeros diez pasos: typ[10]^(1/10). */
   factor: number;
 }
 const curveCache = new Map<number, Curve>();
 export function curveFor(g: number): Curve {
-  const key = Math.round(g * 1000);
-  const hit = curveCache.get(key); if (hit) return hit;
-  const num = new Array(TMAX + 1).fill(0); let den = 0, sat = 0, cnt = 0;
+  const key = Math.round(g * 1000), hit = curveCache.get(key); if (hit) return hit;
+  const len = BURN + TMAX + 1, logs = new Array(TMAX + 1).fill(0), lines: number[][] = [], at10: number[] = [];
+  let sat = 0, cnt = 0;
   for (let s = 0; s < NS; s++) {
-    const xs = Array.from({ length: TMAX }, (_, k) => wordVec(s, k)), base = rnnStates(g, xs);
-    const xs2 = xs.slice(); xs2[0] = wordVec(s, 0, 1);
-    const sw = rnnStates(g, xs2);
-    den += sq(sw[1], base[1]);
-    for (let t = 1; t <= TMAX; t++) { num[t] += sq(sw[t], base[t]); for (const v of base[t]) { sat += Math.abs(v) > 0.9 ? 1 : 0; cnt++; } }
+    const xs = Array.from({ length: len }, (_, k) => wordVec(500 + s, k)), st = rnnStates(g, xs);
+    for (const h of st.slice(BURN + 1)) for (const v of h) { sat += Math.abs(v) > 0.9 ? 1 : 0; cnt++; }
+    let P = ident(); const line: number[] = [];
+    for (let n = 0; n <= TMAX; n++) {
+      const f = fro(P); line.push(f); logs[n] += Math.log(Math.max(f, 1e-300));
+      P = mm(P, jac(g, st[len - n]));          // multiplica por J_{T-n}: la distancia crece en uno
+    }
+    at10.push(line[10]); if (s < NL) lines.push(line);
   }
-  const c = num.map((n) => Math.sqrt(n / den)); c[0] = 1;
-  const res = { c, sat: sat / cnt, factor: Math.pow(Math.max(c[10], 1e-12), 1 / 9) };
+  at10.sort((a, b) => a - b);
+  const typ = logs.map((l) => Math.exp(l / NS));
+  const res = { typ, lines, p10: at10[Math.floor(NS * 0.1)], p90: at10[Math.floor(NS * 0.9)], sat: sat / cnt, factor: Math.pow(typ[10], 1 / 10) };
+  if (curveCache.size > 80) curveCache.clear();
   curveCache.set(key, res); return res;
 }
 
-const stripCache = new Map<string, number[]>();
-/** strip[k]: influencia de la palabra k (0-based) sobre el estado tras leer T palabras (la última vale 1). */
-export function stripFor(g: number, T: number): number[] {
-  const key = `${Math.round(g * 1000)}|${T}`;
-  const hit = stripCache.get(key); if (hit) return hit;
-  const num = new Array(T).fill(0), den = new Array(T).fill(0);
-  for (let s = 0; s < NS; s++) {
-    const xs = Array.from({ length: T }, (_, k) => wordVec(s, k)), base = rnnStates(g, xs);
-    for (let k = 0; k < T; k++) {
-      const xs2 = xs.slice(); xs2[k] = wordVec(s, k, 1);
-      const sw = rnnStates(g, xs2);
-      num[k] += sq(sw[T], base[T]); den[k] += sq(sw[k + 1], base[k + 1]);
-    }
-  }
-  const res = num.map((n, k) => Math.sqrt(n / den[k]));
-  if (stripCache.size > 80) stripCache.clear();
-  stripCache.set(key, res); return res;
-}
-
-/** Frase concreta del ejemplo (10 palabras); la 1.ª cambia entre «flores» (A) y «flor» (B). */
-export const SENT_SEED = 100;
-export interface AB { A: number[][]; B: number[][]; delta: number[] }
-const abCache = new Map<number, AB>();
-export function abRun(g: number): AB {
-  const key = Math.round(g * 1000), hit = abCache.get(key); if (hit) return hit;
-  const xs = Array.from({ length: 10 }, (_, k) => wordVec(SENT_SEED, k)), xs2 = xs.slice(); xs2[0] = wordVec(SENT_SEED, 0, 1);
-  const A = rnnStates(g, xs), B = rnnStates(g, xs2);
-  const res = { A, B, delta: A.map((a, t) => Math.sqrt(sq(a, B[t]))) };
-  abCache.set(key, res); return res;
-}
-/** Estados de la frase concreta (para dibujar el recorrido de la red). */
-export const sentenceStates = (g: number, n = 10) => rnnStates(g, Array.from({ length: n }, (_, k) => wordVec(SENT_SEED, k))).slice(0, n + 1);
-
 // ═════════ LSTM de juguete ═════════
-export const STEPS = 10;
-/** Valor que cada palabra aporta al juguete (ilustrativo). La 1.ª es el dato («plural»); las otras nueve son distracciones. */
-export const X_DATUM = 1.2;
-const HAND = [-0.8, 0.5, -1.1, 0.3, -0.7, 0.9, -0.6, -0.9, 0.4];
-export const distractors = (set: number): number[] => {
-  if (set % 4 === 0) return HAND.slice();
-  const r = rng(7000 + set * 31); return HAND.map(() => Math.max(-1.3, Math.min(1.3, gauss(r) * 0.8)));
-};
-export interface LstmGates { f: number; i: number; iw: number; o: number }
-export interface LstmRun { x: number[]; cand: number[]; c: number[]; h: number[]; read: number; ref: number; ratio: number; verdict: 'ok' | 'half' | 'none' | 'wrong' }
-export function lstmRun(gt: LstmGates, set: number): LstmRun {
-  const x = [X_DATUM, ...distractors(set)], cand = x.map(Math.tanh), c: number[] = [], h: number[] = [];
-  let prev = 0;
-  for (let t = 0; t < STEPS; t++) {
-    prev = t === 0 ? gt.iw * cand[0] : gt.f * prev + gt.i * cand[t];
-    c.push(prev); h.push(gt.o * Math.tanh(prev));
-  }
-  const ref = Math.tanh(Math.tanh(X_DATUM)), read = h[STEPS - 1], ratio = read / ref;
-  const verdict = ratio >= 0.7 ? 'ok' : ratio > 0.25 ? 'half' : ratio > -0.1 ? 'none' : 'wrong';
-  return { x, cand, c, h, read, ref, ratio, verdict };
+/** Pistas de número gramatical, ILUSTRATIVAS, de las siete palabras leídas (la 2.ª es la clave; la 7.ª, el distractor). */
+export const CUES = [0, 1.2, 0.3, -0.5, 0.2, -0.1, -0.9];
+export interface LstmGates { f: number; i: number; o: number }
+export const GATES_DEFAULT: LstmGates = { f: 0.6, i: 0.8, o: 1 };
+export interface LstmRun {
+  /** Contenido de la celda tras cada palabra (t = 1..T; c[0] = 0). */
+  c: number[];
+  /** h_T: lo que la red «lee» al final (positivo = plural). */
+  read: number;
+  /** Lectura si la pista clave se hubiera guardado intacta (f = 1, i = 0, o = 1). */
+  ref: number;
+  ratio: number;
+  /** Culpa que llega de la salida a la palabra clave a lo largo de la cinta: producto de f entre la clave y el final. */
+  blame: number;
+  /** ok = plural claro · weak = plural débil · none = sin señal · wrong = la red leería «singular». */
+  verdict: 'ok' | 'weak' | 'none' | 'wrong';
+}
+/** Un recorrido de la celda con compuertas distintas en cada paso (fs[t], is[t] para t = 0..T−1; la palabra clave siempre escribe a tope). */
+export function lstmSteps(fs: number[], is: number[], o: number): { c: number[]; read: number } {
+  const c = [0]; let prev = 0;
+  for (let t = 1; t <= T; t++) { const w = t === KEY ? 1 : is[t - 1]; prev = fs[t - 1] * prev + w * Math.tanh(CUES[t - 1]); c.push(prev); }
+  return { c, read: o * Math.tanh(c[T]) };
+}
+export const verdictOf = (ratio: number): LstmRun['verdict'] => (ratio >= 0.6 ? 'ok' : ratio > 0.15 ? 'weak' : ratio >= -0.15 ? 'none' : 'wrong');
+export function lstmRun(gt: LstmGates): LstmRun {
+  const { c, read } = lstmSteps(new Array(T).fill(gt.f), new Array(T).fill(gt.i), gt.o), ref = Math.tanh(Math.tanh(CUES[KEY - 1])), ratio = read / ref;
+  return { c, read, ref, ratio, blame: Math.pow(gt.f, T - KEY), verdict: verdictOf(ratio) };
 }

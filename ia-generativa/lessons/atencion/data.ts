@@ -60,6 +60,17 @@ export const ATT_IT = attend(Q_IT);
 /** Mapa de atención de toda la frase (fila i = lo que mira la palabra i). */
 export const MAP: number[][] = Q.map((q) => attend(q).w);
 
+/**
+ * Mapa con máscara causal (ilustrativo, con los mismos Q y K del juguete): cada palabra solo ve las anteriores y a sí misma.
+ * La máscara se aplica a las puntuaciones ANTES del softmax (−∞ en el futuro), así que cada fila se vuelve a repartir y suma 1.
+ */
+export const CAUSAL: number[][] = Q.map((q, i) => {
+  const w = softmax(attend(q).scaled.slice(0, i + 1));
+  return [...w, ...Array(N - i - 1).fill(0)];
+});
+/** Orden barajado de las nueve palabras (qué palabra original ocupa cada lugar), para la demostración de «sin posición». */
+export const SHUF = [7, 3, 8, 0, 6, 4, 1, 5, 2];
+
 /** Ajusta una consulta a la rejilla de 0,5 y al rango del plano. */
 export const snapQ = (x: number, y: number): V2 => {
   const f = (t: number) => Math.max(-QR, Math.min(QR, Math.round(t * 2) / 2));
@@ -68,7 +79,7 @@ export const snapQ = (x: number, y: number): V2 => {
 
 // ── por qué √d ─────────────────────────────────────────────────────────────────────────────────────────────
 export const DIMS = [2, 4, 8, 16, 32, 64, 128, 256, 512];
-const DEMO_KEYS = 9;
+export const DEMO_KEYS = 9;
 let base: { q: number[]; K: number[][] } | null = null;
 function baseDraw() {
   if (base) return base;
@@ -102,3 +113,20 @@ export function demo(d: number): Demo {
   demoCache.set(d, out);
   return out;
 }
+
+/**
+ * Demostración a una «dimensión» fraccionaria x ∈ [0, 8] (índice sobre DIMS): interpola las puntuaciones entre dos
+ * dimensiones vecinas (son sumas parciales del mismo sorteo, así que cambian de forma continua) y recalcula el softmax.
+ * Las medias de 100 sorteos solo existen en las dimensiones de DIMS: se interpolan para mostrarlas.
+ */
+export function demoAt(x: number): Demo & { d: number } {
+  const t = Math.max(0, Math.min(DIMS.length - 1, x)), i = Math.min(DIMS.length - 2, Math.floor(t)), f = t - i;
+  const a = demo(DIMS[i]), b = demo(DIMS[i + 1]), mix = (u: number[], v: number[]) => u.map((q, k) => q + (v[k] - q) * f);
+  const d = Math.exp(Math.log(DIMS[i]) + (Math.log(DIMS[i + 1]) - Math.log(DIMS[i])) * f);
+  const raw = mix(a.raw, b.raw), scaled = raw.map((s) => s / Math.sqrt(d));
+  const sens = (w: number[]): number => w.reduce((s, q) => s + q * (1 - q), 0);
+  const wRaw = softmax(raw), wScaled = softmax(scaled);
+  return { d, raw, scaled, wRaw, wScaled, avgMaxRaw: a.avgMaxRaw + (b.avgMaxRaw - a.avgMaxRaw) * f, avgMaxScaled: a.avgMaxScaled + (b.avgMaxScaled - a.avgMaxScaled) * f, sens: [sens(wRaw), sens(wScaled)] };
+}
+/** Precalcula todas las dimensiones (una vez, al iniciar la escena) para que ningún fotograma pague el cálculo. */
+export const warmDemo = () => DIMS.forEach((d) => demo(d));

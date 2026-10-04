@@ -1,0 +1,33 @@
+// GENERADO por build-outputs.py (ver ese archivo para reproducirlo). No editar a mano.
+// Salidas reales, decodificación voraz, de TinyLlama-1.1B (base, 3T) y TinyLlama-1.1B-Chat-v1.0 (Apache-2.0).
+export interface Sample { prompt: string; base: string; baseCut: boolean; chat: string; chatCut: boolean }
+export const SAMPLES: Sample[] = [
+  {
+    "prompt": "What is the capital of France?",
+    "base": "\nWhat is the capital of France?\nWhat is the capital of France? The capital of France is Paris.\nWhat is the capital of France? The capital of France is Paris.\nWhat is the capital of France? The capital of France is Paris.\nWhat is the capital of France",
+    "baseCut": true,
+    "chat": "The capital of France is Paris.",
+    "chatCut": false
+  },
+  {
+    "prompt": "Explain in one sentence what inflation is.",
+    "base": "\nInflation is the increase in the price of goods and services.\nWhat is the difference between inflation and deflation?\nInflation is the increase in the price of goods and services.\nWhat is the difference between inflation and deflation?\nInflation is the increase in the",
+    "baseCut": true,
+    "chat": "Inflation is the increase in the general price level of goods and services over time. It is a measure of the rate at which prices rise in an economy.",
+    "chatCut": false
+  },
+  {
+    "prompt": "Write a two-line email asking for a meeting.",
+    "base": "\n\n### 1.1.2 Write a two-line email asking for a meeting.\n\n### 1.1.3 Write a two-line email asking for a meeting.\n\n### 1.1.4 Write a two-line email asking for",
+    "baseCut": true,
+    "chat": "Subject: Request for a meeting\n\nTo: [Recipient's Name]\n\nDate: [Date]\n\nSubject: [Subject]\n\nDear [Recipient's Name],\n\nI hope this email finds you well. I am writing to request a meeting with you regarding [specific topic]. I am interested in discussing [specific details] with you and would like to schedule a meeting at your earliest convenience.\n\nI am confident that our discuss",
+    "chatCut": true
+  },
+  {
+    "prompt": "Give me three tips to sleep better.",
+    "base": "\nI'm a big fan of the 5-10-10 method. I've been using it for years and it works for me.\nI'm a big fan of the 5-10-10 method. I've been using it for years",
+    "baseCut": true,
+    "chat": "1. Create a sleep-friendly environment: Make sure your bedroom is cool, dark, and quiet. Avoid using electronic devices like smartphones, tablets, or laptops before bedtime.\n\n2. Establish a sleep routine: Establish a regular sleep schedule and stick to it. Try to go to bed and wake up at the same time every day.\n\n3. Limit caffeine and alcohol: Caffe",
+    "chatCut": true
+  }
+];
