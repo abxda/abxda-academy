@@ -125,8 +125,7 @@ function drawCost(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = regions(S, 1).all;
   const cs = Math.floor(Math.min(R.w * 0.3 / N, R.h * 0.5 / N)), ix = R.x + (S.portrait ? (R.w - N * cs) / 2 : 10 * u), iy = R.y + 10 * u;
   drawImage(S, ix, iy, cs, IMG, { kind: 'gray' });
-  d.text(S.l('100 × 100 = 10 000 valores', '100 × 100 = 10,000 values'), ix, iy + N * cs + 16 * u, { size: 13, weight: 700, color: p.ink2 });
-  d.text(S.l('(la imagen se dibuja más pequeña)', '(the image is drawn smaller)'), ix, iy + N * cs + 32 * u, { size: 11, weight: 600, color: p.mute });
+  d.text(S.l('100 × 100 = 10 000 valores (imagen dibujada más pequeña)', '100 × 100 = 10,000 values (image drawn smaller)'), ix, iy + N * cs + 16 * u, { size: 12, weight: 700, color: p.ink2, w: N * cs });
   if (S.is('hook')) {
     const a = S.at('hook', 0.6, 3.2, 'out'), nx = S.portrait ? R.x + R.w - 70 * u : R.x + R.w * 0.55, ny0 = R.y + 20 * u, rows = 10, gap = (S.portrait ? 24 : 30) * u;
     const lines = Math.floor(a * 160);
@@ -201,11 +200,11 @@ function drawConv(S: Frame) {
     void link; void box; void inset;
   }
   // mensajes de segmento
-  if (S.is('vertical') && S.at('vertical', 1.2, 2.0) > 0) d.withAlpha(S.at('vertical', 1.2, 2.0), () => { d.text(S.l('cian: borde que sube · rosa: borde que baja', 'cyan: rising edge · pink: falling edge'), L.R.x + L.R.w / 2, L.R.y + L.R.h - 6 * u, { size: 12, weight: 700, color: p.ink2, align: 'center', base: 'bottom' }); });
+  if (S.is('vertical') && S.at('vertical', 1.2, 2.0) > 0) d.withAlpha(S.at('vertical', 1.2, 2.0), () => { d.text(S.l('cian: borde que sube · rosa: borde que baja', 'cyan: rising edge · pink: falling edge'), L.R.x + L.R.w / 2, S.portrait ? L.ker.y + 3 * 30 * u + 14 * u + 6 * u + 66 * u + 26 * u : L.R.y + L.R.h - 6 * u, { size: 12, weight: 700, color: p.ink2, align: 'center', base: S.portrait ? 'top' : 'bottom', w: L.R.w }); });
   if (S.is('try2')) {
-    const R = L.R, y = R.y + R.h - 10 * u;
+    const R = L.R, y = R.y + R.h - (S.portrait ? 30 : 10) * u;
     if (!st.pick) d.text(S.l('¿cuál resaltará mejor la franja vertical de la izquierda?', 'which will highlight the vertical stripe on the left best?'), R.x + R.w / 2, y, { size: 13, weight: 700, color: p.ink2, align: 'center', base: 'bottom', w: R.w });
-    else d.text(st.pick === 'vert' ? S.l('Correcto: los bordes verticales de la franja saltan a la vista.', 'Correct: the stripe’s vertical edges leap out.') : st.pick === 'horiz' ? S.l('Casi no la resalta: sus lados son verticales y este kernel solo responde en sus extremos. Prueba otro.', 'It barely highlights it: its sides are vertical and this kernel only responds at its ends. Try another.') : S.l('No marca sus bordes: suaviza la imagen y la franja sigue ahí, pero borrosa. Prueba otro.', 'It does not mark its edges: it smooths the image and the stripe is still there, but blurred. Try another.'), R.x + R.w / 2, y, { size: 13, weight: 700, color: st.pick === 'vert' ? tone(S, 'dat').ink : tone(S, 'err').ink, align: 'center', base: 'bottom', w: R.w });
+    else d.text(st.pick === 'vert' ? S.l('Correcto: los bordes verticales de la franja saltan a la vista.', 'Correct: the stripe’s vertical edges leap out.') : st.pick === 'horiz' ? S.l('Casi no la resalta: solo responde en sus extremos. Prueba otro.', 'It barely highlights it: it only responds at its ends. Try another.') : S.l('No marca sus bordes: solo la suaviza. Prueba otro.', 'It does not mark its edges: it only smooths it. Try another.'), R.x + R.w / 2, y, { size: 13, weight: 700, color: st.pick === 'vert' ? tone(S, 'dat').ink : tone(S, 'err').ink, align: 'center', base: 'bottom', w: R.w });
   }
 }
 
@@ -220,7 +219,7 @@ function drawShared(S: Frame) {
         const yy = y + k * row;
         d.text(label, cx, yy, { size: 13, weight: 700, color: p.ink2, align: 'center', w: R.w - 16 * u });
         d.rect(cx - bw / 2, yy + 10 * u, Math.max(3, bw * wFrac), 26 * u, { fill: alpha(tone(S, t).c, t === 'w' ? 0.4 : 0.7), stroke: tone(S, t).c, r: t === 'w' ? 3 : 0 });
-        d.text(value, cx - bw / 2 + Math.max(3, bw * wFrac) + 8 * u, yy + 23 * u, { size: 16, weight: 800, font: 'mono', color: tone(S, t).ink, base: 'middle' });
+        d.text(value, wFrac > 0.5 ? cx - bw / 2 + 12 * u : cx - bw / 2 + Math.max(3, bw * wFrac) + 8 * u, yy + 23 * u, { size: 16, weight: 800, font: 'mono', color: tone(S, t).ink, base: 'middle' });
       };
       // las barras comparten escala (10 000 000 = ancho completo); las dos convolucionales miden menos de un píxel y se dibujan con 3 px
       bar(0, S.l('totalmente conectada (10 000 entradas → 1 000 neuronas)', 'fully connected (10,000 inputs → 1,000 neurons)'), S.n(10_000_000, 0), 1, 'w');
@@ -335,7 +334,7 @@ function drawLimits(S: Frame) {
   const bw = Math.min(S.portrait ? R.w - 24 * u : R.w * 0.42, 280 * u), bh = 70 * u, y = R.y + R.h * 0.2;
   const xs = S.portrait ? [R.x + (R.w - bw) / 2, R.x + (R.w - bw) / 2] : [R.x + R.w / 2 - bw - 12 * u, R.x + R.w / 2 + 12 * u], ys = S.portrait ? [y, y + bh + 30 * u] : [y, y];
   box(S, { x: xs[0], y: ys[0], w: bw, h: bh }, S.l('Lo que vemos: la forma', 'What we see: the shape'), { tone: 'dat', a: S.reveal('limits', 0.3, 0.6) });
-  box(S, { x: xs[1], y: ys[1], w: bw, h: bh }, S.l('En qué tiende a apoyarse la red: texturas', 'What the network tends to lean on: textures'), { tone: 'err', a: S.reveal('limits', 1.2, 0.6) });
+  box(S, { x: xs[1], y: ys[1], w: bw, h: bh }, S.l('Tiende a apoyarse en: texturas', 'It tends to lean on: textures'), { tone: 'err', a: S.reveal('limits', 1.2, 0.6) });
   d.withAlpha(S.at('limits', 2.4, 3.2), () => d.text(S.l('cambios sutiles, invisibles para una persona, pueden cambiar la respuesta', 'subtle changes, invisible to a person, can change the answer'), R.x + R.w / 2, ys[1] + bh + 36 * u, { size: 14, weight: 700, color: p.ink, align: 'center', w: R.w - 24 * u }));
   neu(S, R.x + R.w - 70 * u, R.y + R.h - 58 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'think', a: S.at('limits', 2.6, 3.2) });
 }

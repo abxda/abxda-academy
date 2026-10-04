@@ -153,12 +153,12 @@ export default defineLesson({
     },
     {
       id: 'base',
-      es: 'Y hay una trampa más: la tasa base. Con una enfermedad rara, incluso una prueba buena da más falsas alarmas que aciertos.',
-      en: 'And there is one more trap: the base rate. With a rare disease, even a good test gives more false alarms than hits.',
+      es: 'Y hay una trampa más: la tasa base. Con una enfermedad rara, incluso una prueba bastante buena puede dar más falsas alarmas que aciertos.',
+      en: 'And there is one more trap: the base rate. With a rare disease, even a fairly good test can give more false alarms than hits.',
     },
     {
       id: 'base2',
-      es: 'Imagina dos mil personas, veinte enfermas, y una prueba que acierta el noventa y cinco por ciento en sanos y en enfermos. Detecta a diecinueve enfermos, pero marca por error a noventa y nueve sanos: solo uno de cada seis positivos está realmente enfermo.',
+      es: 'Imagina dos mil personas, veinte enfermas, y una prueba que acierta el noventa y cinco por ciento en sanos y en enfermos. Detecta a diecinueve enfermos, pero marca por error a noventa y nueve sanos: solo alrededor de uno de cada seis positivos está realmente enfermo.',
       en: 'Imagine two thousand people, twenty sick, and a test that is right ninety-five percent of the time for both healthy and sick people. It detects nineteen sick people, but wrongly flags ninety-nine healthy ones: only about one in six positives is truly sick.',
       note: { es: 'Tasa base baja: muchas falsas alarmas.', en: 'Low base rate: many false alarms.' },
       pad: 0.6,

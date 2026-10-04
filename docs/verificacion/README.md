@@ -11,5 +11,5 @@ Cada lección cita sus fuentes en `sources` de su `content.ts` (autores, año, e
 Los enlaces añadidos después de la redacción se comprobaron antes de usarlos: estado 200 y título o DOI coincidentes en Crossref, arXiv, JMLR, NeurIPS y MIT Press.
 
 ## Pendiente
-- Lecciones 10 y 11: reauditoría en curso (04 y 06 ya reauditadas el 2026-10-04: sin cambios de narración salvo tres ajustes en la 04, que obligan a regenerar su audio). La 17 se reaudita con la parte 2.
+- Lecciones 4, 6, 10 y 11 reauditadas el 2026-10-04 (ajustes de narración en 04, 10 y 11: su audio se regenera). La 17 se reaudita con la parte 2.
 - Las lecciones en borrador (08, 19, 20, 24, 22, 31 y las que faltan) se verifican al revisarlas, y cada autor deja aquí su registro antes de que se publiquen.

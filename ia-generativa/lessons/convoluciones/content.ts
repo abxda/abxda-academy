@@ -85,8 +85,8 @@ export default defineLesson({
     },
     {
       id: 'pooling',
-      es: 'Luego viene el pooling: de cada bloque de dos por dos se conserva solo el valor más alto. La imagen se encoge y la red tolera pequeños desplazamientos.',
-      en: 'Then comes pooling: from each two-by-two block only the highest value is kept. The image shrinks and the network tolerates small shifts.',
+      es: 'Luego viene el pooling: de cada bloque de dos por dos se conserva solo el valor más alto. La imagen se encoge y la red se vuelve menos sensible a pequeños desplazamientos.',
+      en: 'Then comes pooling: from each two-by-two block only the highest value is kept. The image shrinks and the network becomes less sensitive to small shifts.',
       note: { es: 'Pooling: resume cada bloque con su máximo.', en: 'Pooling: summarizes each block by its maximum.' },
       pad: 0.5,
     },
@@ -126,8 +126,8 @@ export default defineLesson({
     },
     {
       id: 'limits',
-      es: 'Conviene ser honestos con los límites: estas redes se apoyan mucho en texturas, y cambios sutiles e invisibles para una persona pueden hacerlas fallar. Ver bien no es entender la escena.',
-      en: 'It is worth being honest about the limits: these networks lean heavily on textures, and subtle changes that a person cannot see can make them fail. Seeing well is not understanding the scene.',
+      es: 'Conviene ser honestos con los límites: las redes entrenadas con ImageNet se apoyan más en texturas que en formas, y cambios sutiles e invisibles para una persona pueden hacerlas fallar. Ver bien no es entender la escena.',
+      en: 'It is worth being honest about the limits: ImageNet-trained networks lean more on textures than on shapes, and subtle changes that a person cannot see can make them fail. Seeing well is not understanding the scene.',
       note: { es: 'Límite: apoyo en texturas y fragilidad ante cambios sutiles.', en: 'Limit: reliance on textures and fragility to subtle changes.' },
       pad: 0.4,
     },
