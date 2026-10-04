@@ -122,12 +122,12 @@ export function cachedEquivalent(c: CostIn): number {
 /** USD con un precio por millón de tokens de entrada (supuesto). */
 export const usd = (tokens: number, pricePerM: number) => (tokens * pricePerM) / 1e6;
 
-// ───────────────────────────── 5 · «Perdido en el medio» (REAL, leído de la figura 5) ─────────────────────────────
+// ───────────────────────────── 5 · «Perdido en el medio» (REAL, tabla 6 del apéndice G) ─────────────────────────────
 // Liu et al. (2023), «Lost in the Middle: How Language Models Use Long Contexts», TACL 2024, arXiv:2307.03172.
-// Tarea: respuesta a preguntas con 20 documentos (~4 mil tokens), uno solo contiene la respuesta; se varía su posición.
-// Los valores se leyeron de la figura 5 (panel «20 Total Retrieved Documents») extrayendo las coordenadas de los marcadores del PDF
-// vectorial y calibrando con las líneas de la cuadrícula (50 y 75). Precisión ≈ ±0,1 punto. Los valores «sin documentos» y
-// «solo el documento correcto» vienen de la tabla 1 del artículo (exactos).
+// Tarea: respuesta a preguntas con 20 documentos (~3–4 mil tokens), uno solo contiene la respuesta; se varía su posición.
+// Los valores de `acc` son EXACTOS: tabla 6 del apéndice G («Index 0, 4, 9, 14, 19» = posiciones 1.ª, 5.ª, 10.ª, 15.ª, 20.ª);
+// (una versión anterior de esta lección los había leído de la figura 5: coinciden al décimo). Los valores «sin documentos»
+// (`closed`) y «solo el documento correcto» (`oracle`) son de la tabla 1.
 export type LitmId = 'gpt' | 'claude' | 'longchat' | 'mpt';
 export interface LitmRow { id: LitmId; name: string; acc: number[]; closed: number; oracle: number }
 export const LITM_POS = [1, 5, 10, 15, 20];

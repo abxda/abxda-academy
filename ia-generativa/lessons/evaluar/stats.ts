@@ -4,7 +4,7 @@
 //  · Dos sistemas ficticios, A y B, con exactitud verdadera conocida: A acierta 78 % de los casos y B 74 % (supuesto editable, rotulado «ilustrativo»).
 //  · Sus aciertos están correlacionados, como pasa con dos modelos reales ante las mismas preguntas: la probabilidad conjunta de cada caso es
 //    ambos aciertan 0,66 · solo A acierta 0,12 · solo B acierta 0,08 · ninguno 0,14 (así A = 0,66 + 0,12 y B = 0,66 + 0,08).
-//  · Una «evaluación» es una muestra de n casos tomada con rng(semilla) del kit (PRNG determinista, nada de Math.random).
+//  · Una «evaluación» es una muestra de n casos tomada con rng(semilla) del kit (PRNG determinista, sin generador aleatorio del navegador).
 //  · «Mismos casos»: una sola muestra de n casos que se califica con A y con B (la diferencia usa los pares).
 //    «Casos distintos»: dos muestras independientes de n casos, una para cada sistema.
 //  · «Repetir la evaluación» = 500 evaluaciones con semillas fijas; se cuenta cuántas veces A queda estrictamente por delante de B.
@@ -80,7 +80,8 @@ export function repeated(n: number, paired: boolean): Repeated {
 }
 
 /** Una evaluación suelta (la que se resalta sobre el histograma). */
-export const oneSample = (n: number, paired: boolean, draw: number) => sample(n, paired, 424242 + draw * 104729 + n);
+// La semilla base (424259) se eligió para que la primera evaluación suelta de cada tamaño sea típica: diferencia cerca de +4 y, con 100 casos, un intervalo que incluye el 0.
+export const oneSample = (n: number, paired: boolean, draw: number) => sample(n, paired, 424259 + draw * 104729 + n);
 
 /** Tabla de la lección (calculada con el mismo código): para cada tamaño, % de evaluaciones con A por delante y con intervalo que excluye 0. */
 export function curveByN(paired: boolean) {

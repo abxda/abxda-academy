@@ -3,7 +3,7 @@
 // regresión, red teaming y métricas de negocio. Tres turnos interactivos; la estadística de stats.ts es cálculo real.
 // Cada acto vive en su archivo act-*.ts y se adapta al dispositivo con regions(S) y S.portrait; el texto del lienzo va con S.l(es, en).
 import { clamp, type Frame, type SceneFactory } from '../../../../../theme/kit';
-import { COMPARE_N_DEFAULT, REAL_EASY, SCORE_B, mixScore, scoreA } from './data';
+import { COMPARE_N_DEFAULT, REAL_EASY, SCORE_B, mixPasses, scoreA } from './data';
 import { N_STEPS, REPS, repeated } from './stats';
 import { drawBench, drawClaim, drawHook, drawScale } from './act-bench';
 import { drawContam, drawContamGrids, drawGoodhart, drawGsm1k } from './act-contam';
@@ -29,10 +29,10 @@ const scene: SceneFactory = () => ({
     const st = S.st;
     // turno 1: A aparece por encima de B sin ser mejor
     if (S.between('try1', 'goodhart') && scoreA(clamp(Math.round(S.p.seen ?? 0), 0, 40)) > SCORE_B) S.complete('contam');
-    // turno 2: pasar de 93 % con casos fáciles y volver a la mezcla real
+    // turno 2: llegar a 93 % con casos fáciles y volver a la mezcla real
     if (S.between('try2', 'grade')) {
       const e = clamp((S.p.mix ?? 50) / 100);
-      if (mixScore(e) >= 0.93) st.mixHit = true;
+      if (mixPasses(e)) st.mixHit = true;
       if (st.mixHit && Math.abs(e - REAL_EASY) <= 0.051) S.complete('mix');
     }
     // turno 3: tamaño de muestra con el que A gana en ≥ 95 de cada 100 evaluaciones

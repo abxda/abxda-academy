@@ -2,7 +2,7 @@
 // (cuaderno de notas, resumen, almacén externo), sus costos, el resumen del acto y el puente a RAG.
 import { alpha, clamp, ease, hash, lerp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import type { Role } from './model';
-import { K, T, card, chip, fitLabel, isShort, mw, neuAt, neuH, neuW, num, pad, roleLabel, sz, wagon, wrapLines } from './ui';
+import { K, T, Tbot, card, chip, fitLabel, isShort, mw, neuAt, neuH, neuW, num, pad, roleLabel, sz, wagon, wrapLines } from './ui';
 
 const L_TOK = 1024;
 
@@ -74,7 +74,7 @@ export function drawMemory(S: Frame) {
       }
       T(S, S.l('se pega al inicio del contexto, en cada conversación', 'pasted at the start of the context, in every conversation'), win.x - 5 * u, win.y + win.h + 16 * u, { px: 13.5, weight: 700, color: tn.ink, base: 'top', w: win.w + 10 * u, a: S.reveal('memory-q', 3.4, 0.5) });
       if (!short && land) neuAt(S, F.x + F.w - neuW(S), F.y + F.h - neuH(S) - 4 * u, 'think', S.reveal('memory-q', 0.6, 0.5));
-      T(S, S.l('Ejemplo ilustrativo del mecanismo: cada producto lo implementa a su manera.', 'Illustrative example of the mechanism: each product implements it in its own way.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, base: 'bottom', w: F.w * (land ? 0.78 : 1) });
+      Tbot(S, S.l('Ejemplo ilustrativo del mecanismo: cada producto lo implementa a su manera.', 'Illustrative example of the mechanism: each product implements it in its own way.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, w: F.w * (land ? 0.78 : 1) });
     });
 
     // ───────── memory-summary: lo viejo se resume
@@ -117,19 +117,22 @@ export function drawMemory(S: Frame) {
       notebook(S, st, S.reveal('memory-store', 0.1, 0.5), { title: S.l('Almacén externo · enorme y lento', 'External store · huge and slow'), many: true, hot: S.since('memory-store') > 1.6 ? hot : [] });
       const win: Strip = land ? { x: st.x + st.w + 90 * u, y: st.y + st.h / 2 - stripH / 2, w: F.w - st.w - 100 * u, h: stripH } : { x: F.x + 8 * u, y: st.y + st.h + 84 * u, w: F.w - 16 * u, h: stripH };
       const fly = S.at('memory-store', 1.6, 3.2, 'io');
-      strip(S, win, [{ role: 'sys', tokens: 200 }, { role: 'mem', tokens: 90 * ease.out(fly) }, { role: 'mem', tokens: 90 * ease.out(fly) }, { role: 'user', tokens: 110 }], { label: S.l('ventana · rápida y pequeña', 'window · fast and small'), a: S.reveal('memory-store', 0.3, 0.5) });
+      const winLabel = S.l('ventana · rápida y pequeña', 'window · fast and small');
+      strip(S, win, [{ role: 'sys', tokens: 200 }, { role: 'mem', tokens: 90 * ease.out(fly) }, { role: 'mem', tokens: 90 * ease.out(fly) }, { role: 'user', tokens: 110 }], { label: land ? undefined : winLabel, a: S.reveal('memory-store', 0.3, 0.5) });
+      // en horizontal el rótulo va a la derecha, para que las flechas de las notas no lo crucen
+      if (land) T(S, winLabel, win.x + win.w + 5 * u, win.y - 11 * u, { px: 12.5, weight: 800, color: p.ink2, align: 'right', base: 'bottom', a: S.reveal('memory-store', 0.3, 0.5) });
       if (S.since('memory-store') > 1.4) {
         const a = S.reveal('memory-store', 1.4, 0.5), lh = 22 * u;
         d.withAlpha(a, () => {
           hot.forEach((h, j) => {
-            const y0 = st.y + 34 * u + h * lh + (lh - 4 * u) / 2, tx = win.x + (200 + 45 + j * 90) * sw(win), ty = win.y + win.h / 2;
-            if (land) d.arrow(st.x + st.w + 2 * u, y0, tx - 6 * u, ty - (j ? -6 : 6) * u, tn.c, 2, 8, a);
+            const y0 = st.y + 34 * u + h * lh + (lh - 4 * u) / 2, tx = win.x + (200 + 45 + j * 90) * sw(win);
+            if (land) d.arrow(st.x + st.w + 2 * u, y0, tx, win.y - 3 * u, tn.c, 2, 8, a);
           });
           if (!land) d.arrow(F.x + F.w / 2, st.y + st.h + 4 * u, F.x + F.w / 2, win.y - 14 * u, tn.c, 2, 8);
         });
         T(S, S.l('se busca solo lo relevante', 'only what is relevant is fetched'), win.x - 5 * u, win.y + win.h + 16 * u, { px: 13.5, weight: 700, color: tn.ink, base: 'top', w: win.w + 10 * u, a });
       }
-      T(S, S.l('MemGPT: niveles de memoria, como en un sistema operativo.', 'MemGPT: memory tiers, like in an operating system.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, base: 'bottom', w: F.w, a: S.reveal('memory-store', 3.0, 0.5) });
+      Tbot(S, S.l('MemGPT: niveles de memoria, como en un sistema operativo.', 'MemGPT: memory tiers, like in an operating system.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, w: F.w, a: S.reveal('memory-store', 3.0, 0.5) });
     });
   });
   void hash; void mw; void num; void sz;

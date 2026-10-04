@@ -12,4 +12,5 @@ export const PUBLISHED: string[] = [
   'difusion',
   'atencion',
   'agentes',
+  'evaluar',
 ];

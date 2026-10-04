@@ -132,15 +132,15 @@ export default defineLesson({
     },
     {
       id: 'try2',
-      es: 'Tu turno: juega a ser el proveedor. Sube la proporción de casos fáciles hasta pasar de 93 %; luego pon la mezcla real, con 70 % de fáciles.',
-      en: 'Your turn: play the vendor. Raise the share of easy cases until the score passes 93%; then set the real mix, with 70% easy.',
+      es: 'Tu turno: juega a ser el proveedor. Sube la proporción de casos fáciles hasta llegar a 93 %; luego pon la mezcla real, con 70 % de fáciles.',
+      en: 'Your turn: play the vendor. Raise the share of easy cases until the score reaches 93%; then set the real mix, with 70% easy.',
       tts: {
-        es: 'Tu turno: juega a ser el proveedor. Sube la proporción de casos fáciles hasta pasar de noventa y tres por ciento; luego pon la mezcla real, con setenta por ciento de fáciles.',
-        en: 'Your turn: play the vendor. Raise the share of easy cases until the score passes ninety-three percent; then set the real mix, with seventy percent easy.',
+        es: 'Tu turno: juega a ser el proveedor. Sube la proporción de casos fáciles hasta llegar a noventa y tres por ciento; luego pon la mezcla real, con setenta por ciento de fáciles.',
+        en: 'Your turn: play the vendor. Raise the share of easy cases until the score reaches ninety-three percent; then set the real mix, with seventy percent easy.',
       },
       gate: {
         id: 'mix',
-        prompt: { es: 'Pasa de 93 % con casos fáciles y luego fija 70 % (la mezcla real).', en: 'Pass 93% with easy cases, then set 70% (the real mix).' },
+        prompt: { es: 'Llega a 93 % con casos fáciles y luego fija 70 % (la mezcla real).', en: 'Reach 93% with easy cases, then set 70% (the real mix).' },
       },
       pad: 0.4,
     },
@@ -266,11 +266,11 @@ export default defineLesson({
     },
     {
       id: 'drift',
-      es: 'Los modelos cambian. Entre marzo y junio de 2023, GPT-4 pasó de acertar el 84 % a acertar el 51 % al distinguir primos de compuestos, según un estudio académico.',
-      en: 'Models change. Between March and June 2023, GPT-4 went from 84% to 51% accuracy at telling primes from composites, according to an academic study.',
+      es: 'Los modelos cambian. En una prueba con números primos, GPT-4 pasó de acertar el 84 % en marzo de 2023 al 51 % en junio, según un estudio académico. Su comportamiento cambió.',
+      en: 'Models change. On a test of prime numbers, GPT-4 went from 84% accuracy in March 2023 to 51% in June, according to an academic study. Its behavior changed.',
       tts: {
-        es: 'Los modelos cambian. Entre marzo y junio de dos mil veintitrés, ge pe te cuatro pasó de acertar el ochenta y cuatro por ciento a acertar el cincuenta y uno por ciento al distinguir primos de compuestos, según un estudio académico.',
-        en: 'Models change. Between March and June twenty twenty-three, G P T four went from eighty-four percent to fifty-one percent accuracy at telling primes from composites, according to an academic study.',
+        es: 'Los modelos cambian. En una prueba con números primos, ge pe te cuatro pasó de acertar el ochenta y cuatro por ciento en marzo de dos mil veintitrés al cincuenta y uno por ciento en junio, según un estudio académico. Su comportamiento cambió.',
+        en: 'Models change. On a test of prime numbers, G P T four went from eighty-four percent accuracy in March twenty twenty-three to fifty-one percent in June, according to an academic study. Its behavior changed.',
       },
       pad: 0.5,
     },
@@ -377,6 +377,12 @@ Con $a = 0{,}70$ y $c = 0{,}25$ sale $0{,}775$. Un modelo B con $a = 0{,}76$ y $
 
 Zheng et al. (2023) midieron sesgo de posición, sesgo de longitud, una posible preferencia por las respuestas propias (no confirmada) y límites de razonamiento al calificar. Dos medidas útiles: la *consistencia* (porcentaje de veces que el veredicto se mantiene al invertir el orden) y la concordancia $p_o$ con personas. Para descontar el azar, $\\kappa = (p_o - p_e)/(1 - p_e)$. También el protocolo mueve la cifra: Sclar et al. (2023) hallaron diferencias de hasta 76 puntos de exactitud solo por cambiar el formato del *prompt* en un modelo abierto con pocos ejemplos. Y los benchmarks se agotan: Phan et al. (2025) construyeron un examen nuevo de 2500 preguntas porque los modelos ya superan el 90 % en MMLU.
 
+La cifra de 90,04 % de Gemini Ultra usa 32 razonamientos por pregunta con un criterio de «enrutamiento por incertidumbre»: si los razonamientos coinciden lo suficiente gana la mayoría, y si no se usa la respuesta directa del modelo. Con cinco ejemplos y respuesta directa la misma familia saca 83,7 % (Gemini Team, 2023).
+
+## Deriva: ¿capacidad o comportamiento?
+
+Chen, Zaharia y Zou (2023) midieron el mismo servicio en marzo y en junio de 2023. Narayanan y Kapoor (2023) señalaron que los números de la prueba de primos eran todos primos: el modelo de marzo casi siempre respondía «primo» y el de junio casi siempre «compuesto». Es un cambio de comportamiento, no necesariamente de capacidad; para quien depende del servicio el efecto práctico es el mismo, porque lo que funcionaba dejó de funcionar y solo se nota volviendo a medir.
+
 ## En código
 
 \`\`\`python
@@ -449,6 +455,12 @@ With $a = 0.70$ and $c = 0.25$ you get $0.775$. A model B with $a = 0.76$ and $c
 
 Zheng et al. (2023) measured position bias, length bias, a possible preference for a model’s own answers (not confirmed), and limits in reasoning when grading. Two useful measures: *consistency* (the share of times the verdict holds when the order is swapped) and agreement $p_o$ with people. To discount chance, $\\kappa = (p_o - p_e)/(1 - p_e)$. The protocol also moves the figure: Sclar et al. (2023) found differences of up to 76 accuracy points just from changing the *prompt* format in an open model with few-shot examples. And benchmarks run out: Phan et al. (2025) built a new 2,500-question exam because models already exceed 90% on MMLU.
 
+Gemini Ultra’s 90.04% figure uses 32 reasoning attempts per question with an “uncertainty-routed” rule: if the attempts agree enough the majority wins, and if not the model’s direct answer is used. With five examples and a direct answer the same model family scores 83.7% (Gemini Team, 2023).
+
+## Drift: ability or behavior?
+
+Chen, Zaharia, and Zou (2023) measured the same service in March and in June 2023. Narayanan and Kapoor (2023) pointed out that the numbers in the prime test were all primes: the March model almost always answered “prime” and the June one almost always “composite.” That is a change in behavior, not necessarily in ability; for someone who depends on the service the practical effect is the same, because what worked stopped working and you only notice by measuring again.
+
 ## In code
 
 \`\`\`python
@@ -516,7 +528,7 @@ Measured quality is one axis; risk is another: privacy, instruction hijacking, b
     },
     {
       kind: 'concept',
-      q: { es: 'Un juez automático prefiere casi siempre la respuesta que aparece primero. ¿Qué defensa sencilla propone el estudio de Zheng et al.?', en: 'An automatic judge almost always prefers the answer shown first. What simple defense does the Zheng et al. study propose?' },
+      q: { es: 'Un juez automático tiende a preferir la respuesta que aparece primero. ¿Qué defensa sencilla propone el estudio de Zheng et al.?', en: 'An automatic judge tends to prefer the answer shown first. What simple defense does the Zheng et al. study propose?' },
       options: [
         { es: 'Usar un juez más pequeño.', en: 'Use a smaller judge.' },
         { es: 'Quitar la rúbrica para que decida con libertad.', en: 'Remove the rubric so it can decide freely.' },
@@ -524,7 +536,7 @@ Measured quality is one axis; risk is another: privacy, instruction hijacking, b
         { es: 'Pedirle que responda más rápido.', en: 'Ask it to answer faster.' },
       ],
       answer: 2,
-      why: { es: 'Si el veredicto cambia al invertir el orden, el sesgo de posición decidió, no la calidad: se declara empate. Es barato y funciona mejor que confiar en una sola pasada.', en: 'If the verdict changes when the order is swapped, position bias decided, not quality: call it a tie. It is cheap and works better than trusting a single pass.' },
+      why: { es: 'Si el veredicto cambia al invertir el orden, el sesgo de posición decidió, no la calidad: se declara empate. Es un enfoque conservador y barato que evita que la posición decida el resultado.', en: 'If the verdict changes when the order is swapped, position bias decided, not quality: call it a tie. It is a conservative, cheap approach that keeps position from deciding the result.' },
     },
     {
       kind: 'calc',
@@ -573,6 +585,7 @@ Measured quality is one axis; risk is another: privacy, instruction hijacking, b
     { title: 'Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools', authors: 'Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C. D., Ho, D. E.', year: 2025, url: 'https://doi.org/10.1111/jels.12413' },
     { title: 'Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations', authors: 'Miller, E.', year: 2024, url: 'https://arxiv.org/abs/2411.00640' },
     { title: 'How is ChatGPT’s behavior changing over time?', authors: 'Chen, L., Zaharia, M., Zou, J.', year: 2023, url: 'https://arxiv.org/abs/2307.09009' },
+    { title: 'Is GPT-4 getting worse over time?', authors: 'Narayanan, A., Kapoor, S.', year: 2023, url: 'https://www.normaltech.ai/p/is-gpt-4-getting-worse-over-time' },
     { title: 'Red Teaming Language Models to Reduce Harms: Methods, Scaling Behaviors, and Lessons Learned', authors: 'Ganguli, D., Lovitt, L., Kernion, J., et al.', year: 2022, url: 'https://arxiv.org/abs/2209.07858' },
     { title: 'Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference', authors: 'Chiang, W.-L., Zheng, L., Sheng, Y., et al.', year: 2024, url: 'https://arxiv.org/abs/2403.04132' },
     { title: 'Scaling Laws for Reward Model Overoptimization', authors: 'Gao, L., Schulman, J., Hilton, J.', year: 2022, url: 'https://arxiv.org/abs/2210.10760' },

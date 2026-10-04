@@ -2,7 +2,7 @@
 // supuestos editables (turnos, tokens por turno, prompt del sistema, precio) y la caché del prefijo como opción.
 import { alpha, clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { CACHE_READ, CACHE_WRITE, cachedEquivalent, inputAt, onceOnly, totalInput, usd, type CostIn } from './model';
-import { T, chip, isShort, mw, num, pad, stat } from './ui';
+import { K, T, Tbot, chip, isShort, mw, num, pad, stat, wrapLines } from './ui';
 
 export const COST_FROM = 'cost-q', COST_TO = 'litm-q';
 const U_NEW = 50; // tokens del mensaje nuevo en cada turno (supuesto fijo; ver «Por dentro»)
@@ -109,7 +109,7 @@ export function drawCost(S: Frame) {
       const aS = S.reveal('cost-sum', 0.9, 0.5);
       const toks = cache ? ceq : total, cost = usd(toks, price), per1k = cost * 1000;
       d.withAlpha(aS, () => {
-        const cols = S.portrait ? 2 : 4, cw = stats.w / cols, rh = (S.portrait ? 50 : 56) * u;
+        const cols = S.portrait ? 2 : 4, cw = stats.w / cols, rh = (S.portrait ? 46 : 56) * u;
         const items: [string, string, 'err' | 'dat' | 'ink' | 'sig'][] = [
           [S.l('tokens procesados', 'tokens processed'), num(S, total), 'err'],
           [S.l('si cada token, una vez', 'if each token, once'), num(S, once) + (once > 0 ? ' · ×' + S.n(total / once, 1) : ''), 'ink'],
@@ -117,7 +117,33 @@ export function drawCost(S: Frame) {
           [S.l('por mil conversaciones', 'per thousand conversations'), usdStr(S, per1k), 'sig'],
         ];
         items.forEach(([l, v, t], i) => stat(S, stats.x + (i % cols) * cw, stats.y + Math.floor(i / cols) * rh, l, v, { tone: t, px: S.portrait ? 18 : 21 }));
-        T(S, S.l(`Supuestos: ${usdStr(S, price)} por millón de tokens de entrada, mensaje nuevo de ${U_NEW} tokens; sin tokens de salida.`, `Assumptions: ${usdStr(S, price)} per million input tokens, ${U_NEW}-token new message; output tokens not included.`), stats.x, stats.y + stats.h, { px: 12, weight: 600, color: p.mute, base: 'bottom', w: stats.w });
+        const note = S.l(`Supuestos: ${usdStr(S, price)} por millón de tokens de entrada, mensaje nuevo de ${U_NEW} tokens; sin tokens de salida.`, `Assumptions: ${usdStr(S, price)} per million input tokens, ${U_NEW}-token new message; output tokens not included.`);
+        Tbot(S, note, stats.x, stats.y + stats.h, { px: 12, weight: 600, color: p.mute, w: stats.w });
+        // «cost-play»: qué probar, con una marca cuando se hizo (cambio visible del segmento)
+        if (S.on('cost-play')) {
+          const aP = S.reveal('cost-play', 0.2, 0.5), rowsH = Math.ceil(items.length / cols) * rh, noteH = wrapLines(S, note, stats.w, 12, 600).length * 12 * K(S) * 1.3;
+          if (stats.h >= rowsH + 26 * u + noteH + 8 * u) {
+            d.withAlpha(aP, () => {
+              const cy = stats.y + rowsH + 12 * u, lab = S.l('Prueba:', 'Try:');
+              T(S, lab, stats.x, cy, { px: 12.5, weight: 700, color: p.mute, base: 'middle' });
+              let x = stats.x + mw(S, lab, 12.5, 700) + 10 * u;
+              const todo: [string, boolean][] = [
+                [S.l(`sistema largo (≥ ${num(S, 1000)})`, `long system prompt (≥ ${num(S, 1000)})`), c.S >= 1000],
+                [S.l('con caché', 'with caching'), cache],
+              ];
+              todo.forEach(([t, ok]) => {
+                const r = chip(S, t, x, cy, { tone: ok ? 'dat' : undefined, align: 'left' });
+                x += r.w + 6 * u;
+                if (ok) { const k = 5 * u, td = tone(S, 'dat'); d.polyline([[x, cy], [x + k * 0.8, cy + k * 0.9], [x + k * 2.2, cy - k * 0.9]], td.c, 2.5); x += k * 2.2 + 4 * u; }
+                x += 8 * u;
+              });
+            });
+          } else {
+            // sin espacio para las marcas: se enmarca la cifra del costo
+            const cwx = stats.x + (2 % cols) * cw, cyy = stats.y + Math.floor(2 / cols) * rh;
+            d.rect(cwx - 6 * u, cyy - 4 * u, cw - 8 * u, 42 * u, { stroke: tone(S, 'sig').c, lw: 2, r: 4, a: aP });
+          }
+        }
       });
     }
   });

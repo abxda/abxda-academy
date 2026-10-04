@@ -68,6 +68,9 @@ export function mixShares(easy: number): number[] {
 }
 export const mixScore = (easy: number) => mixShares(easy).reduce((a, w, i) => a + w * STRATA[i].acc, 0);
 export const REAL_EASY = 0.70;
+/** Meta del turno 2: la nota mostrada (redondeada) llega a 93 %. Se compara el valor redondeado para que lo que ve la persona coincida con lo que cuenta. */
+export const MIX_TARGET = 93;
+export const mixPasses = (easy: number) => Math.round(mixScore(easy) * 100) >= MIX_TARGET;
 export const REAL_SCORE = mixScore(REAL_EASY);          // 0,8658
 
 // ── juego de la comparación ────────────────────────────────────────────────

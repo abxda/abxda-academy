@@ -36,8 +36,9 @@ function answerCard(S: Frame, r: Rect, name: string, tn: 'w' | 'sig', lines: num
     const step = Math.min(11 * u, (r.h - 30 * u) / Math.max(lines.length, 1));
     lines.forEach((w, i) => { const yy = r.y + 28 * u + i * step; if (yy + 5 * u < r.y + r.h - 4 * u) d.rect(r.x + 9 * u, yy, (r.w - 18 * u) * w, 5 * u, { fill: alpha(p.mute, 0.45) }); });
     if (o.picked) {
-      d.circle(r.x + r.w - 15 * u, r.y + 15 * u, 11 * u, { fill: tone(S, 'dat').c });
-      d.polyline([[r.x + r.w - 20.5 * u, r.y + 15 * u], [r.x + r.w - 16 * u, r.y + 19.5 * u], [r.x + r.w - 9 * u, r.y + 10.5 * u]], p.stage, 2.4);
+      const cy = r.y + r.h - 15 * u;
+      d.circle(r.x + r.w - 15 * u, cy, 11 * u, { fill: tone(S, 'dat').c });
+      d.polyline([[r.x + r.w - 20.5 * u, cy], [r.x + r.w - 16 * u, cy + 4.5 * u], [r.x + r.w - 9 * u, cy - 4.5 * u]], p.stage, 2.4);
     }
   });
 }
@@ -149,8 +150,9 @@ export function drawHuman(S: Frame) {
   const done = prog >= N_CAL, [lo, hi] = wilson(N_CAL - DISAGREE.size, N_CAL);
   d.withAlpha(stag(S, 'human', 0.5, 0.1), () => {
     const yy = y2 + rh + 26 * u;
-    d.text(`${shown} / ${N_CAL}`, R.x + lw, yy, { size: fs(S, 30), weight: 800, font: 'mono', color: p.ink, base: 'top' });
-    d.text(S.l('coinciden', 'agree'), R.x + lw + 112 * u, yy + 16 * u, { size: fs(S, 14), weight: 700, color: p.ink2, base: 'top' });
+    const num = `${shown} / ${N_CAL}`, nw = d.measure(num, { size: fs(S, 30), weight: 800, font: 'mono' });
+    d.text(num, R.x + lw, yy, { size: fs(S, 30), weight: 800, font: 'mono', color: p.ink, base: 'top' });
+    d.text(S.l('coinciden', 'agree'), R.x + lw + nw + 10 * u, yy + 16 * u, { size: fs(S, 14), weight: 700, color: p.ink2, base: 'top' });
     if (done) d.text(S.l(`Con solo 20 casos, el intervalo al 95 % va de ${nf(S, lo * 100, 0)} % a ${nf(S, hi * 100, 0)} %.`, `With only 20 cases, the 95% interval runs from ${nf(S, lo * 100, 0)}% to ${nf(S, hi * 100, 0)}%.`), R.x, yy + 50 * u, { size: fs(S, 13.5), weight: 700, color: tone(S, 'err').ink, base: 'top', w: R.w });
   });
   const k = stag(S, 'human', 0.7, 0.15), ay = R.y + R.h - arenaH;

@@ -155,8 +155,8 @@ export default defineLesson({
     },
     {
       id: 'litm-closed',
-      es: 'Peor aún: con la respuesta en el medio acertó menos que sin recibir ningún documento, que daba cincuenta y seis por ciento. Tenerla a mano no bastó.',
-      en: 'Worse still: with the answer in the middle it did worse than with no documents at all, which scored fifty-six percent. Having it at hand wasn’t enough.',
+      es: 'Peor aún: con la respuesta en el medio, ese modelo acertó menos que sin recibir ningún documento, que daba cincuenta y seis por ciento. Tenerla a mano no bastó.',
+      en: 'Worse still: with the answer in the middle, that model did worse than with no documents at all, which scored fifty-six percent. Having it at hand wasn’t enough.',
       pad: 0.6,
     },
     {
@@ -270,7 +270,7 @@ En una API de chat, la llamada del turno $k$ lleva la lista completa de mensajes
 }
 \`\`\`
 
-La documentación de la API de mensajes de Anthropic habla de «conversaciones de varios turnos sin estado» y ubica las instrucciones del sistema en un parámetro aparte. Algunas plataformas guardan el historial en sus servidores y lo reinsertan por ti; el modelo sigue sin estado: solo cambia quién guarda el historial.
+La documentación de la API de mensajes de Anthropic lo dice así: «la API de mensajes es sin estado: siempre se envía a la API el historial completo de la conversación» (en el original: «stateless»). Las instrucciones del sistema van en un parámetro aparte. Algunas plataformas guardan el historial en sus servidores y lo reinsertan por ti; el modelo sigue sin estado: solo cambia quién guarda el historial.
 
 La ventana incluye también la respuesta: según esa misma documentación, el contexto comprende «todo el texto al que el modelo puede referirse al generar una respuesta, incluida la propia respuesta». GPT-3 tenía $n_{\\text{ctx}}=2048$ tokens (Brown et al., 2020).
 
@@ -300,7 +300,7 @@ Además de pagarlo, procesar un contexto de $n$ tokens exige cómputo de atenci�
 
 ## La posición importa: «Perdido en el medio»
 
-Liu et al. (2023) dieron a cada modelo 20 documentos (≈ 4 mil tokens), uno solo con la respuesta, y movieron su posición. Acierto (%), valores leídos de la figura 5 con precisión de ±0,1 punto; las dos últimas columnas son de la tabla 1:
+Liu et al. (2023) dieron a cada modelo 20 documentos (unos 3 mil a 4 mil tokens), uno solo con la respuesta, y movieron su posición. Acierto (%), valores exactos de la tabla 6 del apéndice G; las dos últimas columnas son de la tabla 1:
 
 | Modelo | 1.º | 5.º | 10.º | 15.º | 20.º | Sin documentos | Solo el correcto |
 |---|---|---|---|---|---|---|---|
@@ -365,7 +365,7 @@ In a chat API, the call for turn $k$ carries the full list of messages. The mode
 }
 \`\`\`
 
-Anthropic's Messages API documentation speaks of “stateless multi-turn conversations” and puts the system instructions in a separate parameter. Some platforms store the history on their servers and reinsert it for you; the model is still stateless: only who stores the history changes.
+Anthropic's Messages API documentation puts it this way: “The Messages API is stateless, which means that you always send the full conversational history to the API.” The system instructions go in a separate parameter. Some platforms store the history on their servers and reinsert it for you; the model is still stateless: only who stores the history changes.
 
 The window includes the answer too: per that same documentation, the context is “all the text a language model can reference when generating a response, including the response itself.” GPT-3 had $n_{\\text{ctx}}=2048$ tokens (Brown et al., 2020).
 
@@ -395,7 +395,7 @@ Besides paying for it, processing a context of $n$ tokens takes attention comput
 
 ## Position matters: “Lost in the Middle”
 
-Liu et al. (2023) gave each model 20 documents (≈ 4 thousand tokens), only one containing the answer, and moved its position. Accuracy (%), values read from figure 5 with ±0.1 point precision; the last two columns come from table 1:
+Liu et al. (2023) gave each model 20 documents (about 3 to 4 thousand tokens), only one containing the answer, and moved its position. Accuracy (%), exact values from table 6 in appendix G; the last two columns come from table 1:
 
 | Model | 1st | 5th | 10th | 15th | 20th | No documents | Only the right one |
 |---|---|---|---|---|---|---|---|
@@ -527,12 +527,14 @@ The KV cache and the cost per output token are in lesson 26. In lesson 31 (RAG) 
     { title: 'RULER: What’s the Real Context Size of Your Long-Context Language Models?', authors: 'Hsieh, C.-P., Sun, S., Kriman, S., Acharya, S., Rekesh, D., Jia, F., Zhang, Y., Ginsburg, B.', year: 2024, url: 'https://arxiv.org/abs/2404.06654' },
     { title: 'Language Models are Few-Shot Learners', authors: 'Brown, T. B. et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
     { title: 'GPT-4 Technical Report', authors: 'OpenAI', year: 2023, url: 'https://arxiv.org/abs/2303.08774' },
-    { title: 'Language Models are Unsupervised Multitask Learners', authors: 'Radford, A. et al.', year: 2019 },
+    { title: 'Improving Language Understanding by Generative Pre-Training', authors: 'Radford, A., Narasimhan, K., Salimans, T., Sutskever, I.', year: 2018, url: 'https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf' },
+    { title: 'Language Models are Unsupervised Multitask Learners', authors: 'Radford, A. et al.', year: 2019, url: 'https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf' },
     { title: 'The Llama 3 Herd of Models', authors: 'Llama Team, AI @ Meta', year: 2024, url: 'https://arxiv.org/abs/2407.21783' },
     { title: 'Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context', authors: 'Gemini Team, Google', year: 2024, url: 'https://arxiv.org/abs/2403.05530' },
     { title: 'Introducing 100K Context Windows', authors: 'Anthropic', year: 2023, url: 'https://www.anthropic.com/news/100k-context-windows' },
     { title: 'Context windows (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows' },
-    { title: 'Prompt caching (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching' },
+    { title: 'Prompt caching (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching' },
+    { title: 'Using the Messages API (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages' },
     { title: 'Memory tool (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool' },
     { title: 'MemGPT: Towards LLMs as Operating Systems', authors: 'Packer, C. et al.', year: 2023, url: 'https://arxiv.org/abs/2310.08560' },
     { title: 'Attention Is All You Need', authors: 'Vaswani, A. et al.', year: 2017, url: 'https://arxiv.org/abs/1706.03762' },

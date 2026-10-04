@@ -5,10 +5,10 @@ import {
   NO_NAME, SIZES, SYS_PROMPT, YES_NAME, STORY_ARRIVALS, WINDOWS, fitWindow, nameInside, storyTrain, total, wordsOf, baseTrain,
   type Wagon,
 } from './model';
-import { K, T, card, chip, fitLabel, gauge, isShort, mw, neuAt, neuH, neuW, num, pad, pt, roleLabel, seg, sz, wagon, windowFrame, wrapLines, type Track } from './ui';
+import { K, T, Tbot, card, chip, fitLabel, gauge, isShort, mw, neuAt, neuH, neuW, num, pad, pt, roleLabel, seg, sz, wagon, windowFrame, wrapLines, type Track } from './ui';
 
 // ───────────────────────────── estado de una vía ─────────────────────────────
-export interface Flip { to: 'in' | 'out'; at: number; s0: number }
+export interface Flip { dir: 'in' | 'out'; at: number; s0: number }
 export interface TS { wagons: Wagon[]; L: number; flips: Record<string, Flip>; now: number; grow?: { id: string; k: number } }
 
 /** Gate 2: estado interactivo del tren. */
@@ -28,9 +28,9 @@ export function g2Sync(S: Frame, g: G2, prevIds: Set<string>) {
   const inside = fitWindow(g.wagons, g.L);
   for (const x of g.wagons) {
     const was = g.inside.has(x.id), is = inside.has(x.id), isNew = !prevIds.has(x.id);
-    if (isNew) g.flips[x.id] = { to: 'in', at: S.clock, s0: 0 };
-    else if (was && !is) g.flips[x.id] = { to: 'out', at: S.clock, s0: startTok(g.wagons, g.inside, x.id) };
-    else if (!was && is) g.flips[x.id] = { to: 'in', at: S.clock, s0: 0 };
+    if (isNew) g.flips[x.id] = { dir: 'in', at: S.clock, s0: 0 };
+    else if (was && !is) g.flips[x.id] = { dir: 'out', at: S.clock, s0: startTok(g.wagons, g.inside, x.id) };
+    else if (!was && is) g.flips[x.id] = { dir: 'in', at: S.clock, s0: 0 };
   }
   g.inside = inside;
   if (!nameInside(g.wagons, g.L)) g.seenLost = true;
@@ -80,15 +80,15 @@ export function drawTrain(S: Frame, tl: TL, ts: TS, o: { a?: number; label?: boo
       const hot = o.hotId === w.id || (w.fact && !o.hotId);
       if (inside.has(w.id)) {
         const r = seg(tl.win, s * tl.scale + 1, (s + grown(w)) * tl.scale - 1);
-        const appear = f && f.to === 'in' ? ease.out(clamp(age / 0.5)) : 1;
+        const appear = f && f.dir === 'in' ? ease.out(clamp(age / 0.5)) : 1;
         if (rev > 0) d.shift(tl.vertical ? 0 : (1 - appear) * 22 * u, tl.vertical ? (1 - appear) * 22 * u : 0, () => wagon(S, r, w.role, { label: fitLabel(S, r, labelsOf(S, w), lpx), px: lpx, a: appear * rev, hot, wheels: !tl.vertical && r.w > 20 * u }));
         s += grown(w); k++;
       } else {
         const r = seg(tl.tray, ts2 * trayScale + 1, (ts2 + w.tokens) * trayScale - 1);
-        const appear = f && f.to === 'out' ? ease.out(clamp((age - 0.25) / 0.5)) : 1;
+        const appear = f && f.dir === 'out' ? ease.out(clamp((age - 0.25) / 0.5)) : 1;
         wagon(S, r, w.role, { label: fitLabel(S, r, labelsOf(S, w), lpx), px: lpx, a: 0.62 * appear, dashed: true, hot: w.fact });
         // fantasma que cae desde la ventana hacia la bandeja
-        if (f && f.to === 'out' && age < 0.8) {
+        if (f && f.dir === 'out' && age < 0.8) {
           const g0 = seg(tl.win, f.s0 * tl.scale + 1, (f.s0 + w.tokens) * tl.scale - 1), t = ease.io(clamp(age / 0.7));
           const x = lerp(g0.x, r.x, t), y = lerp(g0.y, r.y, t);
           wagon(S, { x, y, w: lerp(g0.w, r.w, t), h: lerp(g0.h, r.h, t) }, w.role, { label: false, a: (1 - t) * 0.9, hot: w.fact });
@@ -106,7 +106,7 @@ export function drawTrain(S: Frame, tl: TL, ts: TS, o: { a?: number; label?: boo
     // rótulo de la bandeja
     if (o.trayLabel && evicted.length > 0) {
       const [lx, ly] = tl.trayLabel;
-      T(S, S.l('fuera de la ventana', 'outside the window'), lx, ly, { px: 12.5, weight: 800, color: tone(S, 'err').ink, base: 'bottom', w: tl.vertical ? tl.right.w : undefined });
+      T(S, S.l('fuera de la ventana', 'outside the window'), lx, ly, { px: 12.5, weight: 800, color: tone(S, 'err').ink, base: 'bottom' });
     }
   });
   return { used: total(ts.wagons.filter((w) => inside.has(w.id))), evicted: evicted.length };
@@ -152,7 +152,7 @@ function usage(S: Frame, tl: TL, ts: TS, a: number, o: { y?: number } = {}) {
       T(S, txt, tl.win.x, y, { px: 13, weight: 800, color: p.ink2, base: 'middle' });
       gauge(S, { x: tl.win.x, y: y + 14 * u, w: Math.min(280 * u, tl.win.len * 0.45), h: 9 * u }, used, ts.L);
     } else {
-      T(S, txt, tl.right.x, tl.right.y + tl.right.h, { px: 12.5, weight: 800, color: p.ink2, base: 'bottom', w: tl.right.w });
+      Tbot(S, txt, tl.right.x, tl.right.y + tl.right.h, { px: 12.5, weight: 800, color: p.ink2, w: tl.right.w });
     }
   });
 }
@@ -172,7 +172,7 @@ function bracketsFor(S: Frame, tl: TL, ts: TS, a: number) {
     parts.forEach((pt_, i) => {
       const s0 = startOf(pt_.from) * tl.scale, s1 = endOf(pt_.to) * tl.scale, t = tone(S, pt_.tone), lab = S.l(pt_.es, pt_.en);
       if (!tl.vertical) {
-        const y = tl.win.y + tl.win.thick + 30 * u + (i % 2) * 38 * u, x0 = tl.win.x + s0 + 2, x1 = tl.win.x + s1 - 2;
+        const y = tl.win.y + tl.win.thick + 42 * u + (i % 2) * 38 * u, x0 = tl.win.x + s0 + 2, x1 = tl.win.x + s1 - 2;
         d.polyline([[x0, y - 5 * u], [x0, y], [x1, y], [x1, y - 5 * u]], t.c, 2);
         const lw = mw(S, lab, 12.5, 800), cx = Math.min(Math.max((x0 + x1) / 2, tl.win.x + lw / 2), tl.win.x + tl.win.len - lw / 2);
         T(S, lab, cx, y + 3 * u, { px: 12.5, weight: 800, color: t.ink, align: 'center', base: 'top' });
@@ -221,15 +221,21 @@ export function drawSizes(S: Frame) {
         d.rect(barX, y - 10 * u, len, 20 * u, { fill: alpha(tn.c, big && wordsOn > 0.5 ? 0.6 : 0.4), stroke: tn.c, lw: 1.5, r: 2 });
         if (row.plus) d.arrow(barX + len, y, barX + len + 22 * u, y, tn.c, 2, 7);
         T(S, row.short, barX + len + (row.plus ? 28 : 8) * u, y, { px: 13, weight: 800, font: 'mono', color: tn.ink, base: 'middle' });
-        // palabras
-        const words = `≈ ${num(S, Math.round(wordsOf(row.tokens) / (row.tokens > 5000 ? 1000 : 10)) * (row.tokens > 5000 ? 1000 : 10))}`;
+        // palabras (aproximadas); «>» cuando la barra es solo un mínimo
+        const wv = Math.round(wordsOf(row.tokens) / (row.tokens > 5000 ? 1000 : 10)) * (row.tokens > 5000 ? 1000 : 10);
+        const words = `${row.plus ? '>' : '≈'} ${num(S, wv)}`;
         const wtxt = S.l(`${words} palabras`, `${words} words`);
         if (wordsW > 0) T(S, wtxt, F.x + F.w, y, { px: 12.5, weight: 700, color: p.ink2, align: 'right', base: 'middle', a: wordsOn });
-        else T(S, wtxt, F.x + F.w, y - 8 * u, { px: 12, weight: 700, color: p.ink2, align: 'right', base: 'middle', a: wordsOn });
-        if (big && wordsOn > 0.2) chip(S, S.l('una novela entera', 'an entire novel'), barX + barW * 0.42, y - 24 * u + (S.portrait ? 4 * u : 0), { tone: 'sig', a: wordsOn, align: 'center' });
+        else T(S, wtxt, barX, y + 14 * u, { px: 12, weight: 700, color: p.ink2, align: 'left', base: 'top', a: wordsOn });
+        if (big && wordsOn > 0.2) {
+          const lbl = S.l('una novela entera', 'an entire novel');
+          if (S.portrait) chip(S, lbl, barX + mw(S, wtxt, 12, 700) + 12 * u, y + 21 * u, { tone: 'sig', a: wordsOn, align: 'left' });
+          else if (rowH >= 50 * u) chip(S, lbl, barX + 2 * u, y + 24 * u, { tone: 'sig', a: wordsOn, align: 'left' });
+          else chip(S, lbl, barX + len + 8 * u + mw(S, row.short, 13, 800, 'mono') + 14 * u, y, { tone: 'sig', a: wordsOn, align: 'left' });
+        }
       });
     });
-    T(S, S.l('Tokens de contexto (escala logarítmica). Palabras: aproximadas, ¾ de palabra por token en inglés.', 'Context tokens (logarithmic scale). Words: approximate, ¾ of a word per token in English.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, base: 'bottom', w: F.w });
+    Tbot(S, S.l('Tokens de contexto (escala logarítmica). Palabras: aproximadas, ¾ de palabra por token en inglés.', 'Context tokens (logarithmic scale). Words: approximate, ¾ of a word per token in English.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, w: F.w });
   });
 }
 
@@ -237,18 +243,18 @@ export function drawSizes(S: Frame) {
 export function overflowState(S: Frame): TS {
   const base = storyTrain(), [u4, a4] = STORY_ARRIVALS, L = WINDOWS[0];
   const t = S.since('overflow'), flips: Record<string, Flip> = {};
-  base.forEach((w) => (flips[w.id] = { to: 'in', at: -9, s0: 0 }));
+  base.forEach((w) => (flips[w.id] = { dir: 'in', at: -9, s0: 0 }));
   const wagons = [...base];
   const T1 = 1.0, T2 = 3.4;
   const insideBefore = (list: Wagon[]) => fitWindow(list, L);
   if (t >= T1) {
     const prev = insideBefore(wagons); wagons.push(u4); const inn = insideBefore(wagons);
-    flips[u4.id] = { to: 'in', at: T1, s0: 0 };
-    for (const w of wagons) if (prev.has(w.id) && !inn.has(w.id)) flips[w.id] = { to: 'out', at: T1, s0: startTok(wagons, prev, w.id) };
+    flips[u4.id] = { dir: 'in', at: T1, s0: 0 };
+    for (const w of wagons) if (prev.has(w.id) && !inn.has(w.id)) flips[w.id] = { dir: 'out', at: T1, s0: startTok(wagons, prev, w.id) };
     if (t >= T2) {
       const prev2 = inn; wagons.push(a4); const inn2 = insideBefore(wagons);
-      flips[a4.id] = { to: 'in', at: T2, s0: 0 };
-      for (const w of wagons) if (prev2.has(w.id) && !inn2.has(w.id)) flips[w.id] = { to: 'out', at: T2, s0: startTok(wagons, prev2, w.id) };
+      flips[a4.id] = { dir: 'in', at: T2, s0: 0 };
+      for (const w of wagons) if (prev2.has(w.id) && !inn2.has(w.id)) flips[w.id] = { dir: 'out', at: T2, s0: startTok(wagons, prev2, w.id) };
     }
   }
   return { wagons, L, flips, now: t };

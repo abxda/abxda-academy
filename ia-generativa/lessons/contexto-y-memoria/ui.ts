@@ -20,6 +20,11 @@ export interface TO { px?: number; weight?: number; color?: string; align?: Canv
 export function T(S: Frame, str: string, x: number, y: number, o: TO = {}) {
   return S.d.text(str, x, y, { size: sz(S, o.px ?? 13), weight: o.weight ?? 600, color: o.color ?? S.pal.ink, align: o.align, base: o.base ?? 'alphabetic', w: o.w, font: o.font, halo: o.halo ? S.pal.stage : undefined, haloW: 4, a: o.a, lh: o.lh, italic: o.italic });
 }
+/** Texto con ajuste de línea anclado ABAJO: la última línea queda en `y` (Draw pone la primera en `y` y las demás debajo). */
+export function Tbot(S: Frame, str: string, x: number, y: number, o: TO & { w: number }) {
+  const px = o.px ?? 13, n = Math.max(1, S.d.wrap(str, o.w, { size: sz(S, px), weight: o.weight ?? 600, font: o.font }).length);
+  return T(S, str, x, y - (n - 1) * px * K(S) * (o.lh ?? 1.3), { ...o, base: 'bottom' });
+}
 export const mw = (S: Frame, str: string, px = 13, weight = 600, font?: 'ui' | 'mono') => S.d.measure(str, { size: sz(S, px), weight, font });
 export const wrapLines = (S: Frame, str: string, w: number, px = 13, weight = 600) => S.d.wrap(str, w, { size: sz(S, px), weight });
 

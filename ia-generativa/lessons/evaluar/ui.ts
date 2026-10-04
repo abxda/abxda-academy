@@ -78,14 +78,14 @@ export function card(S: Frame, r: Rect, lines: { t: string; w?: number; c?: stri
 }
 
 /** Eje horizontal con marcas y etiquetas. Devuelve la función de mapeo valor → x. */
-export function hAxis(S: Frame, x0: number, x1: number, y: number, lo: number, hi: number, ticks: number[], fmt: (v: number) => string, a = 1) {
+export function hAxis(S: Frame, x0: number, x1: number, y: number, lo: number, hi: number, ticks: number[], fmt: (v: number) => string, a = 1, labelDy = 8) {
   const { d, pal: p } = S, u = S.u, X = (v: number) => x0 + ((v - lo) / (hi - lo)) * (x1 - x0);
   d.withAlpha(a, () => {
     d.line(x0, y, x1, y, p.lineStrong, 1.5);
     ticks.forEach((v) => {
       if (v < lo - 1e-9 || v > hi + 1e-9) return;
       d.line(X(v), y, X(v), y + 5 * u, p.lineStrong, 1.5);
-      d.text(fmt(v), X(v), y + 8 * u, { size: fs(S, 11.5), font: 'mono', color: p.mute, align: 'center', base: 'top' });
+      d.text(fmt(v), X(v), y + labelDy * u, { size: fs(S, 11.5), font: 'mono', color: p.mute, align: 'center', base: 'top' });
     });
   });
   return X;
@@ -93,7 +93,7 @@ export function hAxis(S: Frame, x0: number, x1: number, y: number, lo: number, h
 
 /** Reparto del escenario con una banda inferior reservada al pie (fuente / «ilustrativo»). Principal + lateral (horizontal) o principal + inferior (vertical). */
 export function layout(S: Frame, ratio = 0.66, o: { foot?: boolean; gap?: number } = {}) {
-  const u = S.u, m = 14 * u, f = o.foot === false ? 0 : 30 * u;
+  const u = S.u, m = 14 * u, f = o.foot === false ? 0 : (S.portrait ? 40 : 30) * u;
   const all: Rect = { x: m, y: m * 0.8, w: S.W - 2 * m, h: S.H - m * 0.8 - m * 0.5 - f };
   const gap = (o.gap ?? 14) * u;
   const [main, aside] = S.portrait ? split(all, 'v', Math.max(ratio, 0.6), gap * 0.8) : split(all, 'h', ratio, gap);

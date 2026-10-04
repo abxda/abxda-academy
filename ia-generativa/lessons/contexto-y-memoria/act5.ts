@@ -1,7 +1,7 @@
 // Acto 5: «perdido en el medio». Datos reales de Liu et al. (2023), figura 5 y tabla 1 (ver model.ts), y el hallazgo de RULER (2024).
 import { alpha, clamp, ease, lerp, tone, type Frame, type Rect } from '../../../../../theme/kit';
 import { LITM, LITM_POS, litmAt, litmRow } from './model';
-import { T, card, chip, isShort, mw, pad } from './ui';
+import { K, T, Tbot, card, chip, isShort, mw, pad, wrapLines } from './ui';
 
 export const LITM_FROM = 'litm-q', LITM_TO = 'memory-q';
 export interface LitmSt { mid: boolean; edge: boolean }
@@ -25,7 +25,7 @@ export function drawLitm(S: Frame) {
   const pos = posShown(S), posI = Math.round(pos);
   const ruler = S.on('litm-ruler') ? S.at('litm-ruler', 0, 0.5, 'out') : 0;
 
-  d.withAlpha(aV * (1 - 0.85 * ruler), () => {
+  d.withAlpha(aV * (1 - 0.96 * ruler), () => {
     // ── fila de 20 documentos
     const cols = S.portrait ? 10 : 20, rows = S.portrait ? 2 : 1, gap = 3 * u;
     const cell = Math.min((F.w - gap * (cols - 1)) / cols, S.portrait ? 30 * u : 36 * u), rowW = cols * cell + gap * (cols - 1);
@@ -46,9 +46,9 @@ export function drawLitm(S: Frame) {
     const gridBottom = y0 + rows * (cell + gap) + (S.portrait ? 2 : 20) * u;
 
     // ── gráfica: acierto vs posición
-    const short = isShort(S), ph = F.y + F.h - gridBottom - (S.portrait ? 74 : short ? 8 : 46) * u;
+    const short = isShort(S), ph = F.y + F.h - gridBottom - (S.portrait ? 96 : short ? 8 : 46) * u;
     const outer: Rect = { x: F.x, y: gridBottom + 6 * u, w: S.portrait ? F.w : F.w * (short ? 0.62 : 0.68), h: Math.max(60 * u, ph) };
-    const pl: Rect = { x: outer.x + 34 * u, y: outer.y + 6 * u, w: outer.w - 44 * u, h: outer.h - 34 * u };
+    const pl: Rect = { x: outer.x + 34 * u, y: outer.y + 6 * u, w: outer.w - 44 * u, h: outer.h - (S.portrait ? 40 : 34) * u };
     const X = (v: number) => pl.x + ((v - 1) / 19) * pl.w, Y = (v: number) => pl.y + pl.h - ((v - YR[0]) / (YR[1] - YR[0])) * pl.h;
     const aAx = S.reveal(LITM_FROM, 0.6, 0.6);
     d.withAlpha(aAx, () => {
@@ -77,11 +77,6 @@ export function drawLitm(S: Frame) {
     if (aAll > 0) LITM.filter((r) => r.id !== model.id).forEach((r) => d.withAlpha(aAll * 0.55, () => {
       d.polyline(LITM_POS.map((v, i) => [X(v), Y(r.acc[i])] as [number, number]), p.mute, 1.5, { dash: [4, 3] });
     }));
-    if (aAll > 0 && !S.portrait) d.withAlpha(aAll, () => {
-      let ly = outer.y + 112 * u; const lx = outer.x + outer.w + 16 * u;
-      T(S, S.l('otros modelos', 'other models'), lx, ly, { px: 12, weight: 700, color: p.mute, base: 'top' }); ly += 20 * u;
-      LITM.filter((r) => r.id !== model.id).forEach((r) => { d.line(lx, ly + 7 * u, lx + 18 * u, ly + 7 * u, p.mute, 1.5, [4, 3]); T(S, r.name, lx + 24 * u, ly + 7 * u, { px: 12, weight: 600, color: p.ink2, base: 'middle' }); ly += 20 * u; });
-    });
     // curva medida
     if (showCurve) {
       const k = S.at('litm-u', 0.3, 2.0, 'lin') * 5, n = S.on('try-litm') ? 5 : k;
@@ -102,7 +97,7 @@ export function drawLitm(S: Frame) {
       d.circle(X(posI), Y(v), 8 * u, { stroke: tone(S, 'sig').c, lw: 3, fill: alpha(p.stage, 0.8) });
     }
     // lectura a la derecha / abajo
-    const rd: Rect = S.portrait ? { x: F.x, y: outer.y + outer.h + 6 * u, w: F.w, h: 74 * u } : { x: outer.x + outer.w + 16 * u, y: outer.y, w: F.x + F.w - (outer.x + outer.w) - 16 * u, h: outer.h };
+    const rd: Rect = S.portrait ? { x: F.x, y: outer.y + outer.h + 10 * u, w: F.w, h: 62 * u } : { x: outer.x + outer.w + 16 * u, y: outer.y, w: F.x + F.w - (outer.x + outer.w) - 16 * u, h: outer.h };
     const lrow = (x: number, y: number, tn: 'dat' | 'err' | 'mute', text: string, dash = true) => { const c = tn === 'mute' ? p.mute : tone(S, tn).c; d.line(x, y + 7 * u, x + 20 * u, y + 7 * u, c, 1.5, dash ? [5, 3] : undefined); T(S, text, x + 26 * u, y + 7 * u, { px: 12, weight: 600, color: tn === 'mute' ? p.ink2 : tone(S, tn).ink, base: 'middle', w: S.portrait ? rd.w * 0.52 - 30 * u : rd.w - 30 * u }); };
     const legend: [('dat' | 'err' | 'mute'), string][] = [];
     if (showOracle) legend.push(['dat', S.l(`solo el correcto · ${S.n(model.oracle, 0)} %`, `only the right one · ${S.n(model.oracle, 0)}%`)]);
@@ -111,19 +106,19 @@ export function drawLitm(S: Frame) {
     if (S.on('try-litm')) {
       const { v, measured } = litmAt(model, posI), better = v >= model.closed;
       T(S, model.name, rd.x, rd.y, { px: 13, weight: 800, color: tm.ink, base: 'top', w: S.portrait ? rd.w * 0.46 : rd.w });
-      T(S, S.l('acierto', 'accuracy'), rd.x, rd.y + 20 * u, { px: 12, weight: 700, color: p.mute, base: 'top' });
-      T(S, (measured ? '' : '≈ ') + S.n(v, 0) + ' %', rd.x, rd.y + 34 * u, { px: S.portrait ? 24 : 30, weight: 800, font: 'mono', color: better ? p.ink : tone(S, 'err').ink, base: 'top' });
+      if (!S.portrait) T(S, S.l('acierto', 'accuracy'), rd.x, rd.y + 20 * u, { px: 12, weight: 700, color: p.mute, base: 'top' });
+      T(S, (measured ? '' : '≈ ') + S.n(v, 0) + ' %', rd.x, rd.y + (S.portrait ? 17 : 34) * u, { px: S.portrait ? 24 : 30, weight: 800, font: 'mono', color: better ? p.ink : tone(S, 'err').ink, base: 'top' });
       const nx = S.portrait ? rd.x + rd.w * 0.3 : rd.x, ny = S.portrait ? rd.y + 36 * u : rd.y + 76 * u, nw = S.portrait ? rd.w * 0.2 : rd.w;
       void nx; void ny; void nw;
       const note = better ? (measured ? S.l('valor medido', 'measured value') : S.l('interpolado entre medidas', 'interpolated between measurements')) : S.l('peor que sin documentos', 'worse than no documents');
-      if (S.portrait) T(S, note, rd.x, rd.y + 66 * u, { px: 12, weight: 700, color: better ? p.mute : tone(S, 'err').ink, base: 'top', w: rd.w * 0.46 });
+      if (S.portrait) T(S, note, rd.x, rd.y + 48 * u, { px: 12, weight: 700, color: better ? p.mute : tone(S, 'err').ink, base: 'top', w: rd.w * 0.5 });
       else { T(S, measured ? S.l('valor medido', 'measured value') : S.l('interpolado entre medidas', 'interpolated between measurements'), rd.x, rd.y + 74 * u, { px: 12, weight: 600, color: p.mute, base: 'top', w: rd.w }); if (!better) T(S, S.l('peor que sin documentos', 'worse than no documents'), rd.x, rd.y + 94 * u, { px: 12.5, weight: 800, color: tone(S, 'err').ink, base: 'top', w: rd.w }); }
     } else if (!S.portrait && S.on('litm-u')) {
       T(S, S.l('Medido en 2023.', 'Measured in 2023.'), rd.x, rd.y, { px: 12.5, weight: 700, color: p.mute, base: 'top', w: rd.w });
     }
     if (!S.portrait) { let ly = rd.y + (S.on('try-litm') ? 124 : 26) * u; legend.forEach(([tn, tx], i) => { if (tn === 'mute' && i > 0 && legend[i - 1][0] !== 'mute') { T(S, S.l('otros modelos', 'other models'), rd.x, ly, { px: 12, weight: 700, color: p.mute, base: 'top' }); ly += 18 * u; } lrow(rd.x, ly, tn, tx); ly += 20 * u; }); }
-    else { let ly = rd.y; const lx = rd.x + rd.w * 0.5; legend.slice(0, 3).forEach(([tn, tx]) => { lrow(lx, ly, tn, tx); ly += 20 * u; }); }
-    T(S, S.l('Datos de Liu et al. (2023), leídos de su figura 5 (±0,1) y tabla 1.', 'Data from Liu et al. (2023), read from their figure 5 (±0.1) and table 1.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, base: 'bottom', w: F.w, a: S.reveal(LITM_FROM, 0.8, 0.5) });
+    else { let ly = rd.y; const lx = rd.x + rd.w * 0.5; [...legend.filter(([tn]) => tn !== 'mute'), ...(aAll > 0 ? [['mute', S.l('otros modelos', 'other models')] as ['mute', string]] : [])].forEach(([tn, tx]) => { lrow(lx, ly, tn, tx); ly += 20 * u; }); }
+    Tbot(S, S.l('Datos: Liu et al. (2023), tabla 6 (apéndice G) y tabla 1.', 'Data: Liu et al. (2023), table 6 (appendix G) and table 1.'), F.x, F.y + F.h, { px: 12, weight: 600, color: p.mute, w: F.w, a: S.reveal(LITM_FROM, 0.8, 0.5) });
   });
 
   // ── RULER: la mitad
@@ -136,9 +131,10 @@ export function drawLitm(S: Frame) {
       const a = S.at('litm-ruler', 0.4 + k * 0.04, 0.9 + k * 0.04, 'out');
       d.withAlpha(a, () => { d.rect(gx + i * cs, gy + j * cs, cs - 3 * u, cs - 3 * u, { fill: good ? alpha(t.c, 0.7) : undefined, stroke: t.c, lw: 1.5, dash: good ? undefined : [3, 2] }); });
     }
-    const ty = gy + rows * cs + 10 * u;
-    T(S, S.l('modelos que declaraban 32 mil tokens o más', 'models that claimed 32 thousand tokens or more'), r.x + r.w / 2, ty, { px: 14.5, weight: 800, color: p.ink, align: 'center', base: 'top', w: r.w - 30 * u });
-    T(S, S.l('verde: rinde bien a 32 mil · punteado: no (la mitad)', 'green: does well at 32 thousand · dashed: does not (half)'), r.x + r.w / 2, ty + 36 * u, { px: 12.5, weight: 700, color: p.ink2, align: 'center', base: 'top', w: r.w - 30 * u });
+    const ty = gy + rows * cs + 12 * u, t1 = S.l('modelos que declaraban 32 mil tokens o más', 'models that claimed 32 thousand tokens or more');
+    T(S, t1, r.x + r.w / 2, ty, { px: 14.5, weight: 800, color: p.ink, align: 'center', base: 'top', w: r.w - 30 * u });
+    const h1 = wrapLines(S, t1, r.w - 30 * u, 14.5, 800).length * 14.5 * K(S) * 1.3;
+    T(S, S.l('verde: rinde bien a 32 mil · punteado: no (la mitad)', 'green: does well at 32 thousand · dashed: does not (half)'), r.x + r.w / 2, ty + h1 + 10 * u, { px: 12.5, weight: 700, color: p.ink2, align: 'center', base: 'top', w: r.w - 30 * u });
     T(S, S.l('Ilustra la proporción, no el número de modelos.', 'Illustrates the proportion, not the number of models.'), r.x + r.w / 2, r.y + r.h - 8 * u, { px: 12, weight: 600, color: p.mute, align: 'center', base: 'bottom' });
   });
   void chip; void mw;

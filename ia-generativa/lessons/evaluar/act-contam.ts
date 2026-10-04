@@ -80,7 +80,7 @@ export function gridA(seen: number): Grid {
 export function gridB(): Grid { const ok = new Set(P_B.slice(0, SCORE_B)); return { right: Array.from({ length: QN }, (_, i) => ok.has(i)), seen: Array.from({ length: QN }, () => false) }; }
 
 export function drawContamGrids(S: Frame) {
-  const { d, pal: p } = S, u = S.u, L = layout(S, S.portrait ? 0.6 : 0.56), dat = tone(S, 'dat'), lat = tone(S, 'lat'), err = tone(S, 'err');
+  const { d, pal: p } = S, u = S.u, L = layout(S, S.portrait ? 0.55 : 0.56), dat = tone(S, 'dat'), lat = tone(S, 'lat'), err = tone(S, 'err');
   const seen = clamp(Math.round(S.p.seen ?? 0), 0, 40), A = gridA(seen), B = gridB();
   const sa = scoreA(seen), sb = SCORE_B, a = S.reveal('try1', 0.1, 0.6), m = L.main, t = L.aside;
   const gap = 12 * u, gw = (m.w - gap) / 2, legH = 22 * u;
@@ -101,27 +101,27 @@ export function drawContamGrids(S: Frame) {
     draw(B, m.x + gw + gap, S.l('Modelo B', 'Model B'), sb, 'sig');
     const lx = m.x, ly = m.y + m.h - 6 * u;
     d.rect(lx, ly - 11 * u, 11 * u, 11 * u, { fill: lat.c, stroke: p.stage, lw: 1 });
-    d.text(S.l('pregunta que A vio al entrenarse (la acierta siempre)', 'question A saw in training (always right)'), lx + 17 * u, ly - 5 * u, { size: fs(S, 12), weight: 600, color: p.ink2, base: 'middle', w: m.w - 20 * u });
+    d.text(S.l('la vio al entrenarse (siempre la acierta)', 'seen in training (always right)'), lx + 17 * u, ly - 5 * u, { size: fs(S, 12), weight: 600, color: p.ink2, base: 'middle', w: m.w - 20 * u });
   });
   // tabla: nota medida frente a capacidad real
-  const rowH = Math.min(56 * u, (t.h - 90 * u) / 2);
+  const rowH = Math.min((S.portrait ? 34 : 56) * u, (t.h - 90 * u) / 2), r0 = (S.portrait ? 36 : 54) * u;
   d.withAlpha(a, () => {
     d.text(S.l('Nota en el examen público', 'Score on the public exam'), t.x, t.y, { size: fs(S, 14), weight: 800, color: p.ink, base: 'top', w: t.w });
     ([['A', sa, ABILITY_A * 100, 'w'], ['B', sb, ABILITY_B * 100, 'sig']] as const).forEach(([nm, sc, real, tn], i) => {
-      const cy = t.y + 54 * u + i * rowH, bx = t.x + 30 * u, bw = t.w - 80 * u;
+      const cy = t.y + r0 + i * rowH, bx = t.x + 30 * u, bw = t.w - 80 * u;
       d.text(nm, t.x + 10 * u, cy, { size: fs(S, 16), weight: 800, color: tone(S, tn).ink, align: 'center', base: 'middle' });
       hbar(S, bx, cy - 10 * u, bw, 20 * u, sc / 100, tn);
       const mx = bx + bw * (real / 100);
       d.polygon([[mx, cy - 18 * u], [mx + 7 * u, cy - 11 * u], [mx, cy - 4 * u], [mx - 7 * u, cy - 11 * u]], { fill: p.ink, stroke: p.stage, lw: 1.5 });
       d.text(String(sc), bx + bw + 8 * u, cy, { size: fs(S, 17), weight: 800, font: 'mono', color: p.ink, base: 'middle' });
     });
-    const ly = t.y + 54 * u + 2 * rowH - 6 * u;
+    const ly = t.y + r0 + 2 * rowH - 6 * u;
     d.polygon([[t.x + 10 * u, ly], [t.x + 15 * u, ly + 5 * u], [t.x + 10 * u, ly + 10 * u], [t.x + 5 * u, ly + 5 * u]], { fill: p.ink });
     d.text(S.l(`capacidad real: A ${Math.round(ABILITY_A * 100)}, B ${Math.round(ABILITY_B * 100)}`, `real ability: A ${Math.round(ABILITY_A * 100)}, B ${Math.round(ABILITY_B * 100)}`), t.x + 22 * u, ly + 5 * u, { size: fs(S, 12.5), weight: 600, color: p.ink2, base: 'middle' });
     const verdict = sa > sb ? S.l('A aparece primero, pero B es mejor en tu tarea', 'A ranks first, but B is better on your task') : sa === sb ? S.l('Empate en la tabla', 'A tie in the table') : S.l('B aparece primero, y es el mejor de verdad', 'B ranks first, and it really is the best');
-    d.text(verdict, t.x, ly + 26 * u, { size: fs(S, 14), weight: 800, color: sa > sb ? err.ink : p.ink2, base: 'top', w: t.w });
+    d.text(verdict, t.x, ly + (S.portrait ? 20 : 26) * u, { size: fs(S, S.portrait ? 13 : 14), weight: 800, color: sa > sb ? err.ink : p.ink2, base: 'top', w: t.w });
   });
-  if (!S.portrait && sa > sb) neu(S, t.x + t.w - 80 * u, t.y + t.h - 66 * u, { scale: 3, mood: 'think', a: 1 });
+  if (!S.portrait && sa > sb && t.h > 200 * u) neu(S, t.x + t.w - 80 * u, t.y + t.h - 66 * u, { scale: 3, mood: 'think', a: 1 });
   foot(S, S.l('modelo simplificado: lo que vio, lo acierta siempre', 'simplified model: what it saw, it always gets right'), { tag: S.l('ilustrativo', 'illustrative'), a });
 }
 
@@ -131,20 +131,31 @@ export const quality = (x: number) => proxy(x) - 0.9 * x * x;
 
 export function drawGoodhart(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = layout(S, 1).all;
-  const plot = new Plot(S, R, { xr: [0, 1], yr: [0, 1.05], xLabel: S.l('esfuerzo por subir la nota', 'effort to raise the score'), yLabel: S.l('valor', 'value'), pad: { l: 30, b: 40, t: 18, r: 10 } });
+  const plot = new Plot(S, R, { xr: [0, 1], yr: [0, 1.34], xLabel: S.l('esfuerzo por subir la nota', 'effort to raise the score'), yLabel: S.l('valor', 'value'), pad: { l: 30, b: 40, t: 12, r: 10 } });
   plot.axes(S.reveal('goodhart', 0, 0.6));
   const sweep = S.at('goodhart', 0.4, 4.2, 'lin');
   plot.curve(proxy, 'dat', 3.4, { to: sweep });
   plot.curve(quality, 'sig', 3.4, { to: sweep });
-  const peak = 0.38, aPk = stag(S, 'goodhart', 0.55, 0.12);
+  // la calidad real alcanza su máximo cerca de x = 0,44 (derivada de proxy − 0,9x²)
+  const peak = 0.44, aPk = stag(S, 'goodhart', 0.55, 0.12);
   d.withAlpha(aPk, () => {
     plot.line(peak, 0, peak, quality(peak), 'ink', 1.5, [4, 4]);
     plot.dot(peak, quality(peak), 6, 'sig');
-    d.tag(S.l('aquí la medida deja de ayudar', 'here the measure stops helping'), plot.X(peak) + 12 * u, plot.Y(quality(peak) - 0.17), { size: fs(S, 12.5), color: tone(S, 'sig').ink, fill: tone(S, 'sig').soft, stroke: tone(S, 'sig').c, align: 'left' });
   });
-  const lab = (t: string, x: number, tn: 'dat' | 'sig', dy: number) => plot.label(t, x, tn === 'dat' ? proxy(x) + dy : quality(x) + dy, tn, { size: fs(S, 13.5), align: 'right', base: 'bottom' });
-  d.withAlpha(stag(S, 'goodhart', 0.3, 0.1), () => lab(S.l('la nota del examen (la medida)', 'the exam score (the measure)'), 0.98, 'dat', -0.14));
-  d.withAlpha(stag(S, 'goodhart', 0.78, 0.1), () => lab(S.l('lo que querías (calidad real)', 'what you wanted (real quality)'), 0.99, 'sig', 0.09));
+  // leyenda arriba, donde no pasa ninguna curva: nunca tapa el trazo
+  const rows: { t: string; tn: 'dat' | 'sig'; a: number; dot?: boolean }[] = [
+    { t: S.l('la nota del examen (la medida)', 'the exam score (the measure)'), tn: 'dat', a: stag(S, 'goodhart', 0.3, 0.1) },
+    { t: S.l('aquí la medida deja de ayudar', 'here the measure stops helping'), tn: 'sig', a: aPk, dot: true },
+    { t: S.l('lo que querías (calidad real)', 'what you wanted (real quality)'), tn: 'sig', a: stag(S, 'goodhart', 0.78, 0.1) },
+  ];
+  rows.forEach((r, i) => {
+    const y = plot.r.y + 12 * u + i * 21 * u, x = plot.r.x + 10 * u, t = tone(S, r.tn);
+    d.withAlpha(r.a, () => {
+      if (r.dot) d.circle(x + 11 * u, y, 5.5 * u, { fill: t.c });
+      else d.line(x, y, x + 22 * u, y, t.c, 3.4);
+      d.text(r.t, x + 32 * u, y, { size: fs(S, 13.5), weight: 700, color: t.ink, base: 'middle', w: plot.r.w - 44 * u });
+    });
+  });
   void p;
-  foot(S, S.l('Forma cualitativa observada con modelos de recompensa (Gao et al., 2022); formulación de Strathern, 1997', 'Qualitative shape observed with reward models (Gao et al., 2022); wording by Strathern, 1997'), { tag: S.l('ilustrativo', 'illustrative'), a: S.reveal('goodhart', 1, 0.5) });
+  foot(S, S.l('Forma según Gao et al., 2022 (modelos de recompensa); formulación de Strathern, 1997', 'Shape after Gao et al., 2022 (reward models); wording by Strathern, 1997'), { tag: S.l('ilustrativo', 'illustrative'), a: S.reveal('goodhart', 1, 0.5) });
 }

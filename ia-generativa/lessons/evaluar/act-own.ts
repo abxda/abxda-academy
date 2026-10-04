@@ -1,6 +1,6 @@
 // Actos 7–8: el conjunto de evaluación propio (casos de oro) y la mezcla de casos (turno 2).
 import { alpha, clamp, tone, type Frame, type Rect } from '../../../../../theme/kit';
-import { REAL_EASY, REAL_SCORE, STRATA, mixScore, mixShares } from './data';
+import { REAL_EASY, REAL_SCORE, STRATA, mixPasses, mixScore, mixShares } from './data';
 import { stag } from './act-bench';
 import { foot, fs, hbar, layout, pcu } from './ui';
 
@@ -29,7 +29,7 @@ export function drawGold(S: Frame) {
       }
     });
   });
-  foot(S, S.l('mesa de ayuda interna; los casos reales vendrían de tus registros, anonimizados', 'internal help desk; real cases would come from your logs, anonymized'), { tag: S.l('ejemplos ilustrativos', 'illustrative examples'), a: S.reveal('gold', 0.6, 0.5) });
+  foot(S, S.l('mesa de ayuda interna; los reales saldrían de tus registros, anonimizados', 'internal help desk; real ones would come from your logs, anonymized'), { tag: S.l('ilustrativo', 'illustrative'), a: S.reveal('gold', 0.6, 0.5) });
 }
 
 // ═════════ la mezcla decide la nota ═════════
@@ -77,7 +77,7 @@ export function drawMix(S: Frame) {
       d.text(val, x, yy + 22 * u, { size: fs(S, big), weight: 800, font: 'mono', color: tn === 'ink' ? p.ink : tone(S, tn).ink, base: 'top' });
     };
     if (interactive) {
-      rd(a.x, a.y, S.l('Nota con tu conjunto', 'Score on your set'), pcu(S, score), score >= 0.93 ? 'err' : 'ink');
+      rd(a.x, a.y, S.l('Nota con tu conjunto', 'Score on your set'), pcu(S, score), mixPasses(easy) ? 'err' : 'ink');
       rd(a.x + (S.portrait ? cw : 0), a.y + (S.portrait ? 0 : 84 * u), S.l('Con el tráfico real', 'With real traffic'), pcu(S, REAL_SCORE), 'dat');
       const st = S.st.mixHit as boolean | undefined, near = Math.abs(easy - REAL_EASY) <= 0.051;
       const ly = a.y + (S.portrait ? 74 * u : 184 * u);
@@ -87,7 +87,7 @@ export function drawMix(S: Frame) {
         if (ok) d.polyline([[a.x + 3.5 * u, yy], [a.x + 7 * u, yy + 4.5 * u], [a.x + 12.5 * u, yy - 4.5 * u]], tone(S, 'dat').c, 2.4);
         d.text(txt, a.x + 24 * u, yy, { size: fs(S, 13), weight: 600, color: p.ink2, base: 'middle', w: a.w - 28 * u });
       };
-      step(0, !!st, S.l('pasar de 93 %', 'pass 93%'));
+      step(0, !!st, S.l('llegar a 93 %', 'reach 93%'));
       step(1, !!st && near, S.l('volver a 70 % fáciles', 'back to 70% easy'));
     } else {
       rd(a.x, a.y, S.l('Con el tráfico real', 'With real traffic'), pcu(S, REAL_SCORE), 'dat');

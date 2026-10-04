@@ -3,7 +3,7 @@ import { Plot, alpha, clamp, ease, lerp, neu, regions, tone, type Frame, type Re
 import { COMPARE_N_DEFAULT } from './data';
 import { N_STEPS, PA, PB, REPS, TRUE_DIFF, curveByN, diffCI, margin, oneSample, repeated, sample, wilson } from './stats';
 import { fr, stag } from './act-bench';
-import { fs, hAxis, source, stamp, nf } from './ui';
+import { foot, fs, hAxis, layout, stamp, nf } from './ui';
 
 // ═════════ una nota es una medición con ruido ═════════
 const EVALS = Array.from({ length: 60 }, (_, i) => (i === 0 ? 78 : sample(100, false, 5000 + i * 31).a));
@@ -29,7 +29,7 @@ export function drawNoise(S: Frame) {
     d.polyline([[X(72), yb - 6 * u], [X(72), yb], [X(84), yb], [X(84), yb - 6 * u]], tone(S, 'err').c, 2);
     d.text(S.l('otras 100 evaluaciones: de 72 a 84', 'other evaluations of 100: from 72 to 84'), (X(72) + X(84)) / 2, yb + 5 * u, { size: fs(S, 12.5), weight: 800, color: tone(S, 'err').ink, align: 'center', base: 'top', w: Math.max(180 * u, X(84) - X(72) + 80 * u) });
   });
-  stamp(S, S.l('simulación: 60 evaluaciones de 100 casos, exactitud real 78 %', 'simulation: 60 evaluations of 100 cases, true accuracy 78%'), R.x + R.w, R.y + 10 * u, S.reveal('noise', 0.6, 0.5));
+  stamp(S, S.portrait ? S.l('simulación · exactitud real 78 %', 'simulation · true accuracy 78%') : S.l('simulación: 60 evaluaciones de 100 casos, exactitud real 78 %', 'simulation: 60 evaluations of 100 cases, true accuracy 78%'), R.x + R.w, R.y + 10 * u, S.reveal('noise', 0.6, 0.5));
 }
 
 // ═════════ intervalo de confianza: el margen baja con la raíz de n ═════════
@@ -69,7 +69,7 @@ export function drawCompare(S: Frame) {
   const interactive = S.on('try3');
   const nIdx = interactive ? clamp(Math.round(S.p.nidx ?? COMPARE_N_DEFAULT), 0, N_STEPS.length - 1) : 3, n = N_STEPS[nIdx];
   const paired = interactive ? (S.p.paired ?? true) !== false : true;
-  const m = R.main, plot = new Plot(S, m, { xr: [-25, 25], yr: [0, 1], pad: { l: 14, r: 12, t: 28, b: 56 } });
+  const m = R.main, plot = new Plot(S, m, { xr: [-25, 25], yr: [0, 1], pad: { l: 14, r: 12, t: 46, b: 56 } });
   const yBase = plot.Y(0);
   const a0 = S.reveal('compare', 0.1, 0.5);
   d.withAlpha(a0, () => {
@@ -79,8 +79,8 @@ export function drawCompare(S: Frame) {
     // diferencia real
     d.line(X(TRUE_DIFF * 100), plot.r.y + 8 * u, X(TRUE_DIFF * 100), yBase, sig.c, 2, [5, 4]);
     d.text(S.l('real: +4', 'true: +4'), X(TRUE_DIFF * 100) + 5 * u, plot.r.y + 8 * u, { size: fs(S, 12.5), weight: 800, color: sig.ink, base: 'top', halo: p.stage, haloW: 4 });
-    d.text(S.l('← B por delante', '← B ahead'), X(0) - 6 * u, plot.r.y - 4 * u, { size: fs(S, 12), weight: 700, color: err.ink, align: 'right', base: 'bottom' });
-    d.text(S.l('A por delante →', 'A ahead →'), X(0) + 6 * u, plot.r.y - 4 * u, { size: fs(S, 12), weight: 700, color: sig.ink, base: 'bottom' });
+    d.text(S.l('← B por delante', '← B ahead'), X(0) - 6 * u, plot.r.y - 6 * u, { size: fs(S, 12), weight: 700, color: err.ink, align: 'right', base: 'bottom' });
+    d.text(S.l('A por delante →', 'A ahead →'), X(0) + 6 * u, plot.r.y - 6 * u, { size: fs(S, 12), weight: 700, color: sig.ink, base: 'bottom' });
   });
   const X = (v: number) => plot.X(v);
   if (!interactive) {
@@ -105,8 +105,9 @@ export function drawCompare(S: Frame) {
     d.polygon([[ox, yBase - 2], [ox - 7 * u, yBase + 10 * u], [ox + 7 * u, yBase + 10 * u]], { fill: p.ink, stroke: p.stage, lw: 1.5 });
     // marcador: A por delante
     const win = Math.round((100 * rep.winsA) / REPS);
-    d.text(S.l(`A queda por delante en ${win} de cada 100`, `A comes out ahead in ${win} of every 100`), plot.r.x + 4 * u, plot.r.y + 40 * u, { size: fs(S, 14), weight: 800, color: win >= 95 ? tone(S, 'dat').ink : p.ink, base: 'top', w: plot.r.w * 0.6, halo: p.stage, haloW: 4 });
-    d.text(S.l(`n = ${nf(S, n, 0)} casos · ${paired ? 'mismos casos' : 'casos distintos'}`, `n = ${nf(S, n, 0)} cases · ${paired ? 'same cases' : 'different cases'}`), plot.r.x + 4 * u, plot.r.y + 62 * u, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'top', w: plot.r.w * 0.6, halo: p.stage, haloW: 4 });
+    const tw = plot.r.w * (S.portrait || S.H < 420 ? 0.46 : 0.6);
+    const h1 = d.text(S.l(`A queda por delante en ${win} de cada 100`, `A comes out ahead in ${win} of every 100`), plot.r.x + 4 * u, plot.r.y + 30 * u, { size: fs(S, 14), weight: 800, color: win >= 95 ? tone(S, 'dat').ink : p.ink, base: 'top', w: tw, halo: p.stage, haloW: 4 }).h;
+    d.text(S.l(`n = ${nf(S, n, 0)} casos · ${paired ? 'mismos casos' : 'casos distintos'}`, `n = ${nf(S, n, 0)} cases · ${paired ? 'same cases' : 'different cases'}`), plot.r.x + 4 * u, plot.r.y + 30 * u + h1 + 4 * u, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'top', w: tw, halo: p.stage, haloW: 4 });
     // panel «una evaluación»
     const a = R.aside, rh = Math.min(48 * u, (a.h - 28 * u) / 3), [la, ha] = wilson(one.a, n), [lb, hb] = wilson(one.b, n);
     d.text(S.l('Una evaluación (▲)', 'One evaluation (▲)'), a.x, a.y, { size: fs(S, 12.5), weight: 800, color: p.ink, base: 'top' });
@@ -144,9 +145,9 @@ export function drawCompare(S: Frame) {
 
 // ═════════ cuántos casos hacen falta (curvas calculadas con el mismo simulador) ═════════
 export function drawProve(S: Frame) {
-  const { d, pal: p } = S, u = S.u, R = regions(S, 1).all, sig = tone(S, 'sig'), lat = tone(S, 'lat');
-  const lx = (n: number) => Math.log10(n);
-  const plot = new Plot(S, { x: R.x, y: R.y, w: R.w, h: R.h - 22 * u }, { xr: [lx(10), lx(3000)], yr: [0, 100], xLabel: S.l('casos en la evaluación', 'cases in the evaluation'), yLabel: S.l('% de evaluaciones', '% of evaluations'), pad: { l: 40, b: 40, t: 20, r: 12 }, xTicks: [lx(10), lx(100), lx(1000)], yTicks: [0, 50, 95], tickFmt: (v) => (v === 0 ? '0' : v > 5 ? String(v) : nf(S, 10 ** v, 0)) });
+  const { d, pal: p } = S, u = S.u, R = layout(S, 1).all, sig = tone(S, 'sig'), lat = tone(S, 'lat');
+  const lx = (n: number) => Math.log10(n), top = 50 * u;
+  const plot = new Plot(S, { x: R.x, y: R.y + top, w: R.w, h: R.h - top }, { xr: [lx(10), lx(3000)], yr: [0, 100], xLabel: S.l('casos en la evaluación', 'cases in the evaluation'), yLabel: S.l('% de evaluaciones', '% of evaluations'), pad: { l: 40, b: 40, t: 12, r: 12 }, xTicks: [lx(10), lx(100), lx(1000)], yTicks: [0, 50, 95], tickFmt: (v) => (v === 0 ? '0' : v > 5 ? String(v) : nf(S, 10 ** v, 0)) });
   plot.axes(S.reveal('prove', 0, 0.5));
   const data = curveByN(true), sweep = clamp((fr(S, 'prove') - 0.08) / 0.5);
   const upto = (key: 'winsA' | 'sig') => data.map((r) => [plot.X(lx(r.n)), plot.Y(r[key])] as [number, number]).filter((_, i) => i / (data.length - 1) <= sweep + 1e-6);
@@ -155,9 +156,11 @@ export function drawProve(S: Frame) {
   d.polyline(A, sig.c, 3); d.polyline(B, lat.c, 3);
   A.forEach(([x, y]) => d.circle(x, y, 3.2 * u, { fill: sig.c })); B.forEach(([x, y]) => d.circle(x, y, 3.2 * u, { fill: lat.c }));
   const aA = stag(S, 'prove', 0.3, 0.1), aB = stag(S, 'prove', 0.62, 0.1);
-  d.withAlpha(aA, () => { plot.line(lx(400), 0, lx(400), 96, 'sig', 1.8, [3, 3]); d.tag(S.l('~400: ganador casi seguro', '~400: winner almost sure'), plot.X(lx(400)) - 6 * u, plot.Y(30), { size: fs(S, 12), color: sig.ink, fill: sig.soft, stroke: sig.c, align: 'right' }); });
-  d.withAlpha(aB, () => { plot.line(lx(1000), 0, lx(1000), 82, 'lat', 1.8, [3, 3]); d.tag(S.l('~1000: diferencia demostrada', '~1000: difference proven'), plot.X(lx(1000)) + 6 * u, plot.Y(12), { size: fs(S, 12), color: lat.ink, fill: lat.soft, stroke: lat.c, align: 'right' }); });
-  const lg = (y: number, t: string, tn: 'sig' | 'lat') => { d.rect(plot.r.x + 8 * u, y - 2 * u, 18 * u, 4 * u, { fill: tone(S, tn).c }); d.text(t, plot.r.x + 32 * u, y, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'middle', w: plot.r.w - 40 * u }); };
-  d.withAlpha(S.reveal('prove', 0.2, 0.4), () => { lg(plot.r.y + 14 * u, S.l('A queda por delante', 'A comes out ahead'), 'sig'); lg(plot.r.y + 34 * u, S.l('el intervalo de A − B excluye el 0', 'the A − B interval excludes 0'), 'lat'); });
-  source(S, S.l('Simulación de la lección: mismos casos, diferencia real de 4 puntos, 500 evaluaciones por tamaño.', 'The lesson’s simulation: same cases, true difference of 4 points, 500 evaluations per size.'), R.x, R.y + R.h + 4 * u, R.w, S.reveal('prove', 0.6, 0.5));
+  // las cifras clave van en la leyenda; sobre la gráfica solo el valor, abajo, donde no pasa ninguna curva
+  d.withAlpha(aA, () => { plot.line(lx(400), 0, lx(400), 96, 'sig', 1.8, [3, 3]); d.tag(nf(S, 400, 0), plot.X(lx(400)) - 5 * u, plot.Y(6), { size: fs(S, 12), color: sig.ink, fill: sig.soft, stroke: sig.c, align: 'right' }); });
+  d.withAlpha(aB, () => { plot.line(lx(1000), 0, lx(1000), 82, 'lat', 1.8, [3, 3]); d.tag(nf(S, 1000, 0), plot.X(lx(1000)) + 5 * u, plot.Y(6), { size: fs(S, 12), color: lat.ink, fill: lat.soft, stroke: lat.c, align: 'right' }); });
+  const lg = (y: number, t: string, tn: 'sig' | 'lat', a: number) => d.withAlpha(a, () => { d.rect(R.x + 4 * u, y - 2 * u, 20 * u, 4 * u, { fill: tone(S, tn).c }); d.text(t, R.x + 32 * u, y, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'middle', w: R.w - 38 * u }); });
+  lg(R.y + 10 * u, S.l('A queda por delante · ~400 casos (95 %)', 'A comes out ahead · ~400 cases (95%)'), 'sig', S.reveal('prove', 0.2, 0.4));
+  lg(R.y + 32 * u, S.l('El intervalo excluye el 0 · ~1000 casos (~80 %)', 'The interval excludes 0 · ~1,000 cases (~80%)'), 'lat', S.reveal('prove', 0.5, 0.4));
+  foot(S, S.l('Simulación: mismos casos, diferencia real de 4 puntos, 500 repeticiones', 'Simulation: same cases, true difference of 4 points, 500 repetitions'), { tag: S.l('ilustrativo', 'illustrative'), a: S.reveal('prove', 0.6, 0.5) });
 }
