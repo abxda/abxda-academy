@@ -21,4 +21,5 @@ export const PUBLISHED: string[] = [
   'big-bang-deep-learning',
   'embeddings',
   'alucinaciones-y-limites',
+  'alineacion',
 ];

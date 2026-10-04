@@ -107,7 +107,7 @@ function drawProxy(S: Frame) {
     card(S, L, { tone: 'w', fill: alpha(wt.c, 0.08), lw: 2 });
     const x = L.x + 12 * u, w = L.w - 24 * u;
     fitText(S, S.l('Puntuación del modelo de recompensa', 'Reward model score'), x, L.y + 12 * u, w, 16, { weight: 800, color: wt.ink, base: 'top' });
-    fitText(S, S.l('un número, al instante, sin costo', 'a number, instantly, at no cost'), x, L.y + 38 * u, w, 14, { weight: 600, color: p.ink2, base: 'top' });
+    para(S, S.l('un número, al instante, sin costo', 'a number, instantly, at no cost'), x, L.y + 36 * u, w, FS(S, 14), { weight: 600, color: p.ink2, maxLines: 2 });
     const by = L.y + L.h - 22 * u, k = S.at('proxy', 0.4, 2.0, 'out');
     d.rect(x, by - 8 * u, w, 12 * u, { fill: p.surface2 });
     d.rect(x, by - 8 * u, w * 0.85 * k, 12 * u, { fill: wt.c });
@@ -117,7 +117,7 @@ function drawProxy(S: Frame) {
     card(S, Rr, { tone: 'dat', fill: alpha(dt.c, 0.08), lw: 2 });
     const x = Rr.x + 12 * u, w = Rr.w - 24 * u;
     fitText(S, S.l('Calidad real', 'Real quality'), x, Rr.y + 12 * u, w, 16, { weight: 800, color: dt.ink, base: 'top' });
-    fitText(S, S.l('la juzgan personas: lento y caro', 'people judge it: slow and expensive'), x, Rr.y + 38 * u, w, 14, { weight: 600, color: p.ink2, base: 'top' });
+    para(S, S.l('la juzgan personas: lento y caro', 'people judge it: slow and expensive'), x, Rr.y + 36 * u, w, FS(S, 14), { weight: 600, color: p.ink2, maxLines: 2 });
     const pc = cmp ? 2 : 3, py = Rr.y + Rr.h - 14 * u - 9 * pc;
     for (let i = 0; i < 4; i++) person(S, x + i * (6 * pc + 8 * u), py, pc, 'ink', S.reveal('proxy', 1.6 + i * 0.25, 0.3));
     d.text(S.l('objetivo real', 'real goal'), x + w, py + 9 * pc, { size: FS(S, 12), weight: 700, color: p.mute, align: 'right', base: 'bottom' });
@@ -176,7 +176,7 @@ function drawOpt(S: Frame) {
     d.rect(zx, plot.r.y, plot.r.x + plot.r.w - zx, plot.r.h, { fill: alpha(et.c, 0.09) });
     d.line(zx, plot.r.y, zx, plot.r.y + plot.r.h, et.c, 1.8, [5, 4]);
     const lx = Math.max(zx + 6 * u, plot.X(0.64));
-    para(S, S.l('la puntuación sube, la calidad real cae', 'the score rises, real quality falls'), lx, plot.Y(1.3), plot.r.x + plot.r.w - lx - 6 * u, FS(S, 13), { weight: 800, color: et.ink, maxLines: 3, halo: true });
+    para(S, S.l('puntuación ↑, calidad real ↓', 'score ↑, real quality ↓'), lx, plot.Y(1.3), plot.r.x + plot.r.w - lx - 6 * u, FS(S, 13), { weight: 800, color: et.ink, maxLines: 3, halo: true });
     d.text(S.l('máximo de calidad real', 'peak of real quality'), zx - 4 * u, plot.r.y + 4 * u, { size: FS(S, 12), weight: 700, color: dt.ink, align: 'right', base: 'top' });
   });
   // curvas: solo lo explorado (o todo, tras la explicación)
@@ -212,7 +212,7 @@ function drawOpt(S: Frame) {
       y += rowH;
     });
     y += 6 * u;
-    d.text(S.l('probabilidad de cada rasgo (│ = inicio)', 'probability of each trait (│ = start)'), x, y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
+    d.text(S.l('rasgos (│ = inicio)', 'traits (│ = start)'), x, y, { size: FS(S, 12), weight: 700, color: p.mute, base: 'top' });
     y += 17 * u;
     const bh = Math.min((port ? 17 : cmp ? 20 : 26) * u, (pan.y + pan.h - y - 4 * u) / 4);
     g.m.forEach((m, i) => traitBar(S, { x, y: y + i * bh, w, h: bh }, i, m, { nameW: (port ? 92 : 104) * u }));

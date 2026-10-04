@@ -39,11 +39,12 @@ function judgeModels() {
 
 function drawSyco(S: Frame) {
   const { d, pal: p } = S, u = S.u, r = R(S), port = S.portrait, cmp = isCompact(S), gap = 14 * u;
-  const J = judgeModels();
-  const ph = port ? (r.h - gap - 22 * u) / 2 : r.h - 22 * u - (cmp ? 0 : 6 * u);
+  const J = judgeModels(), foot = 34 * u;
+  const content = (cmp ? 36 : 56) * u + 27 * u + 14 * u + 38 * u + 16 * u + 18 * u + 22 * u;
+  const ph = Math.min(content, port ? (r.h - foot - gap) / 2 : r.h - foot), top = r.y + Math.max(0, (r.h - foot - (port ? 2 * ph + gap : ph)) / 2);
   const panels: { rect: Rect; title: string; sub: string; tn: Tone; key: 'truth' | 'pleaser'; at: number }[] = [
-    { rect: port ? { x: r.x, y: r.y, w: r.w, h: ph } : { x: r.x, y: r.y, w: (r.w - gap) / 2, h: ph }, title: S.l('Jueces que prefieren lo correcto', 'Judges who prefer what is right'), sub: S.l('eligen la respuesta que acierta', 'they pick the answer that is right'), tn: 'dat', key: 'truth', at: 0.2 },
-    { rect: port ? { x: r.x, y: r.y + ph + gap, w: r.w, h: ph } : { x: r.x + (r.w - gap) / 2 + gap, y: r.y, w: (r.w - gap) / 2, h: ph }, title: S.l('Jueces que prefieren que les den la razón', 'Judges who prefer being agreed with'), sub: S.l('eligen la respuesta que coincide con ellos', 'they pick the answer that matches theirs'), tn: 'err', key: 'pleaser', at: 1.2 },
+    { rect: port ? { x: r.x, y: top, w: r.w, h: ph } : { x: r.x, y: top, w: (r.w - gap) / 2, h: ph }, title: S.l('Jueces que prefieren lo correcto', 'Judges who prefer what is right'), sub: S.l('eligen la respuesta que acierta', 'they pick the answer that is right'), tn: 'dat', key: 'truth', at: 0.2 },
+    { rect: port ? { x: r.x, y: top + ph + gap, w: r.w, h: ph } : { x: r.x + (r.w - gap) / 2 + gap, y: top, w: (r.w - gap) / 2, h: ph }, title: S.l('Jueces que prefieren que les den la razón', 'Judges who prefer being agreed with'), sub: S.l('eligen la respuesta que coincide con ellos', 'they pick the answer that matches theirs'), tn: 'err', key: 'pleaser', at: 1.2 },
   ];
   panels.forEach((pn) => {
     const c = tone(S, pn.tn), P = pn.rect, m = J[pn.key], a = S.reveal('syco', pn.at, 0.5), x = P.x + 12 * u, w = P.w - 24 * u;
@@ -57,19 +58,20 @@ function drawSyco(S: Frame) {
     });
     // lo que aprende el modelo de recompensa y la política óptima
     const aW = S.reveal('syco', pn.at + 1.2, 0.5), aB = S.at('syco', pn.at + 1.8, pn.at + 3.0, 'out');
-    const by = P.y + P.h - (cmp ? 46 : port ? 62 : 74) * u;
+    const by = P.y + (cmp ? 36 : 56) * u + 27 * u + 14 * u;
     d.withAlpha(aW, () => {
-      d.text(S.l('peso de «da la razón» en su modelo de recompensa', 'weight of “agrees” in their reward model'), x, by, { size: FS(S, 12), weight: 700, color: p.ink2, base: 'top' });
-      d.text(sgn(S, m.w[3], 2), x + w, by + (cmp ? 14 : 16) * u, { size: FS(S, 17), weight: 800, font: 'mono', color: c.ink, align: 'right', base: 'top' });
-      const bw = w - 70 * u, yy = by + (cmp ? 18 : 22) * u, bh = 12 * u, v = Q_REF[3] + (m.m[3] - Q_REF[3]) * aB;
-      d.text(S.l('prob. de dar la razón', 'chance of agreeing'), x, yy + bh + 4 * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top' });
-      d.rect(x, yy, bw, bh, { fill: p.surface2 });
-      d.rect(x, yy, bw * clamp(v), bh, { fill: tone(S, 'err').c });
-      d.line(x + bw * Q_REF[3], yy - 3, x + bw * Q_REF[3], yy + bh + 3, p.ink, 2);
-      d.text(pct(S, v), x + bw + 8 * u, yy + bh / 2, { size: FS(S, 14), weight: 800, font: 'mono', color: tone(S, 'err').ink, base: 'middle' });
+      para(S, S.l('peso de «da la razón» en su modelo de recompensa', 'weight of “agrees” in their reward model'), x, by, w - 70 * u, FS(S, 12), { weight: 700, color: p.ink2, maxLines: 2 });
+      d.text(sgn(S, m.w[3], 2), x + w, by, { size: FS(S, 17), weight: 800, font: 'mono', color: c.ink, align: 'right', base: 'top' });
+      const bw = w - 70 * u, yy = by + 38 * u, bh = 12 * u, v = Q_REF[3] + (m.m[3] - Q_REF[3]) * aB;
+      d.text(S.l('prob. de dar la razón', 'chance of agreeing'), x, yy, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top' });
+      const yb = yy + 18 * u;
+      d.rect(x, yb, bw, bh, { fill: p.surface2 });
+      d.rect(x, yb, bw * clamp(v), bh, { fill: tone(S, 'err').c });
+      d.line(x + bw * Q_REF[3], yb - 3, x + bw * Q_REF[3], yb + bh + 3, p.ink, 2);
+      d.text(pct(S, v), x + bw + 8 * u, yb + bh / 2, { size: FS(S, 14), weight: 800, font: 'mono', color: tone(S, 'err').ink, base: 'middle' });
     });
   });
-  d.withAlpha(S.reveal('syco', 3.6, 0.5), () => d.text(S.l('Juguete: elecciones inventadas, presión moderada (β = 1). │ = modelo de partida.', 'Toy: invented choices, moderate pressure (β = 1). │ = starting model.'), r.x, r.y + r.h - 4 * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'bottom' }));
+  d.withAlpha(S.reveal('syco', 3.6, 0.5), () => para(S, S.l('Juguete: elecciones inventadas, presión moderada (β = 1). │ = modelo de partida.', 'Toy: invented choices, moderate pressure (β = 1). │ = starting model.'), r.x, r.y + r.h - 30 * u, r.w, FS(S, 12), { weight: 600, color: p.mute, maxLines: 2 }));
 }
 
 // ── 2 · lo que midió un estudio con cinco asistentes ──
@@ -86,7 +88,7 @@ function drawEvidence(S: Frame) {
     fitText(S, S.l('5 asistentes de IA, 2023', '5 AI assistants, 2023'), right.x, right.y + 4 * u, right.w, 17, { weight: 800, color: p.ink, base: 'top' });
     for (let i = 0; i < 5; i++) {
       const cx = x0 + i * (chipW + 8 * u), cy = right.y + 34 * u, k = S.reveal('syco-evidence', 0.3 + i * 0.15, 0.3);
-      d.withAlpha(k, () => { card(S, { x: cx, y: cy, w: chipW, h: 34 * u }, { tone: 'ink', fill: p.surface }); d.text('IA', cx + chipW / 2, cy + 17 * u, { size: FS(S, 13), weight: 800, color: p.ink2, align: 'center', base: 'middle' }); glyph(S, 'agree', cx + chipW - 7 * u, cy - 1 * u, 6 * u, { color: et.c }); });
+      d.withAlpha(k, () => { card(S, { x: cx, y: cy, w: chipW, h: 34 * u }, { tone: 'ink', fill: p.surface }); d.text(S.l('IA', 'AI'), cx + chipW / 2, cy + 17 * u, { size: FS(S, 13), weight: 800, color: p.ink2, align: 'center', base: 'middle' }); glyph(S, 'agree', cx + chipW - 7 * u, cy - 1 * u, 6 * u, { color: et.c }); });
     }
   });
   const ry = right.y + 84 * u, rh = Math.min(40 * u, (right.y + right.h - ry - 44 * u) / 3);
@@ -170,9 +172,9 @@ function drawRefuse(S: Frame) {
   const { d, pal: p } = S, u = S.u, r = R(S), port = S.portrait, cmp = isCompact(S), dt = tone(S, 'dat'), et = tone(S, 'err');
   const thr = thrOf(S), a0 = S.reveal('refuse', 0, 0.5);
   const wrong = REQS.filter((q) => !q.harmful && q.risk >= thr).length, allowed = REQS.filter((q) => q.harmful && q.risk < thr).length;
-  const topH = (port ? 58 : 36) * u, foot = (cmp ? 20 : 34) * u;
+  const topH = (port ? 58 : 36) * u, foot = (cmp ? 20 : 36) * u;
   const pr: Rect = { x: r.x, y: r.y + topH, w: r.w, h: r.h - topH - foot };
-  const plot = new Plot(S, pr, { xr: [0, 1], yr: [0, 1], pad: { l: 6, r: 6, t: 6, b: cmp ? 6 : 26 } });
+  const plot = new Plot(S, pr, { xr: [0, 1], yr: [0, 1], pad: { l: 6, r: 6, t: 6, b: cmp ? 6 : 28 } });
   // contadores
   d.withAlpha(a0, () => {
     const c1x = r.x, c2x = port ? r.x : r.x + r.w / 2, y1 = r.y + 4 * u, y2 = port ? y1 + 26 * u : y1;
@@ -188,7 +190,7 @@ function drawRefuse(S: Frame) {
     d.rect(tx, plot.r.y, plot.r.x + plot.r.w - tx, plot.r.h, { fill: alpha(p.ink, 0.05) });
     d.text(S.l('responde', 'answers'), plot.r.x + 6 * u, plot.r.y + 4 * u, { size: FS(S, 13), weight: 800, color: p.ink2, base: 'top' });
     d.text(S.l('rechaza', 'refuses'), plot.r.x + plot.r.w - 6 * u, plot.r.y + 4 * u, { size: FS(S, 13), weight: 800, color: p.ink2, align: 'right', base: 'top' });
-    if (!cmp) d.text(S.l('riesgo que estima el modelo →', 'risk the model estimates →'), plot.r.x + plot.r.w, plot.r.y + plot.r.h + 6 * u, { size: FS(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
+    if (!cmp) d.text(S.l('riesgo que estima el modelo →', 'risk the model estimates →'), plot.r.x + plot.r.w, plot.r.y + plot.r.h + 8 * u, { size: FS(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
   });
   const kd = S.at('refuse', 0.1, 1.2, 'out');
   REQS.forEach((q, i) => {
@@ -196,8 +198,8 @@ function drawRefuse(S: Frame) {
     plot.datum(q.risk, y, q.harmful ? 1 : 0, { r: cmp ? 4 : 5, a: kd * (q.risk >= thr === !q.harmful ? 0.55 : 1) });
     if ((q.harmful && q.risk < thr) || (!q.harmful && q.risk >= thr)) d.withAlpha(kd, () => d.circle(plot.X(q.risk), plot.Y(y), (cmp ? 8 : 10) * u, { stroke: p.ink, lw: 1.6 }));
   });
-  d.withAlpha(a0, () => { const tx = plot.X(thr); d.line(tx, plot.r.y, tx, plot.r.y + plot.r.h, p.ink, 3); d.text(S.l('umbral', 'threshold'), tx, plot.r.y + plot.r.h + 4 * u, { size: FS(S, 12), weight: 800, color: p.ink, align: 'center', base: 'top', halo: p.stage, haloW: 3 }); });
-  d.withAlpha(S.reveal('refuse', 0.8, 0.5), () => d.text(S.l('Ilustrativo: 28 solicitudes inventadas; ○ inofensiva, ✕ dañina; círculo = error.', 'Illustrative: 28 invented requests; ○ harmless, ✕ harmful; ring = mistake.'), r.x, r.y + r.h, { size: FS(S, 12), weight: 600, color: p.mute, base: 'bottom' }));
+  d.withAlpha(a0, () => { const tx = plot.X(thr); d.line(tx, plot.r.y, tx, plot.r.y + plot.r.h, p.ink, 3); d.text(S.l('umbral', 'threshold'), tx + 5 * u, plot.r.y + plot.r.h - 5 * u, { size: FS(S, 12), weight: 800, color: p.ink, align: 'left', base: 'bottom', halo: p.stage, haloW: 3 }); });
+  d.withAlpha(S.reveal('refuse', 0.8, 0.5), () => para(S, S.l('Ilustrativo: 28 solicitudes inventadas; ● inofensiva, ✕ dañina; anillo = error.', 'Illustrative: 28 invented requests; ● harmless, ✕ harmful; ring = mistake.'), r.x, r.y + r.h - (cmp ? 16 : 32) * u, r.w, FS(S, 12), { weight: 600, color: p.mute, maxLines: 2 }));
 }
 
 // ── 5 · lo que cuesta la capa (InstructGPT, Ouyang et al. 2022) ──
@@ -264,10 +266,11 @@ function drawWho(S: Frame) {
     { t: S.l('quienes compararon respuestas', 'who compared answers'), k: 'people' as const },
     { t: S.l('las reglas que recibieron', 'the rules they were given'), k: 'doc' as const },
   ];
-  const topH = port ? 3 * 46 * u + 2 * gap : (cmp ? 60 : 84) * u, botH = r.h - topH - 30 * u;
+  const topH = port ? 3 * 46 * u + 2 * gap : (cmp ? 72 : 84) * u, Bh = 34 * u + 3 * 26 * u + 12 * u, botH = 24 * u + Bh;
+  const yOff = Math.max(0, (r.h - topH - botH - 22 * u) / 2);
   const cw = port ? r.w : (r.w - 2 * gap) / 3;
   srcs.forEach((s, i) => {
-    const a = S.reveal('who', 0.2 + i * 0.5, 0.5), rc: Rect = port ? { x: r.x, y: r.y + i * (46 * u + gap), w: cw, h: 46 * u } : { x: r.x + i * (cw + gap), y: r.y, w: cw, h: topH };
+    const a = S.reveal('who', 0.2 + i * 0.5, 0.5), rc: Rect = port ? { x: r.x, y: r.y + yOff + i * (46 * u + gap), w: cw, h: 46 * u } : { x: r.x + i * (cw + gap), y: r.y + yOff, w: cw, h: topH };
     d.withAlpha(a, () => {
       card(S, rc, { tone: 'ink', fill: p.surface });
       const pc = cmp ? 2 : 3;
@@ -278,7 +281,7 @@ function drawWho(S: Frame) {
     });
   });
   // decisiones de producto
-  const ay = r.y + topH + 6 * u, bh = Math.max(40 * u, botH);
+  const ay = r.y + yOff + topH + 6 * u, bh = botH;
   const aB = S.reveal('who', 2.0, 0.6);
   d.withAlpha(aB, () => {
     d.arrow(r.x + r.w / 2, ay - 4 * u, r.x + r.w / 2, ay + 14 * u, p.ink, 2.4, 9);
@@ -325,21 +328,31 @@ function drawRecap(S: Frame) {
 // ── 9 · puente: ¿puede pensar antes de responder? ──
 function drawBridge(S: Frame) {
   const { d, pal: p } = S, u = S.u, r = R(S), port = S.portrait, cmp = isCompact(S), lt = tone(S, 'lat'), st_ = tone(S, 'sig');
-  const bw = Math.min(r.w * (port ? 0.7 : 0.3), 280 * u), bh = Math.min(r.h * 0.3, 110 * u), cx = r.x + r.w / 2, cy = r.y + r.h * (port ? 0.42 : 0.46);
-  const B: Rect = { x: cx - bw / 2, y: cy - bh / 2, w: bw, h: bh };
+  const bw = Math.min(r.w * (port ? 0.62 : 0.3), 280 * u), bh = Math.min(r.h * 0.3, 110 * u), cx = r.x + r.w / 2, cy = r.y + r.h * (port ? 0.5 : 0.52);
+  const B: Rect = { x: cx - bw / 2, y: cy - bh / 2, w: bw, h: bh }, al = (port ? 30 : 76) * u;
   d.withAlpha(S.reveal('bridge', 0, 0.5), () => {
     card(S, B, { tone: 'lat', fill: alpha(lt.c, 0.1), lw: 2 });
     fitText(S, S.l('Asistente', 'Assistant'), cx, cy - 8 * u, bw - 14 * u, 20, { weight: 800, color: lt.ink, align: 'center', base: 'middle' });
     fitText(S, S.l('tono y criterio', 'tone and judgment'), cx, cy + 18 * u, bw - 14 * u, 13, { weight: 600, color: p.ink2, align: 'center', base: 'middle' });
-    d.arrow(B.x - 46 * u, cy, B.x - 4 * u, cy, p.ink, 2.6, 10);
-    d.arrow(B.x + B.w + 4 * u, cy, B.x + B.w + 46 * u, cy, p.ink, 2.6, 10);
+    d.arrow(B.x - al - 4 * u, cy, B.x - 4 * u, cy, p.ink, 2.6, 10);
+    d.arrow(B.x + B.w + 4 * u, cy, B.x + B.w + al + 4 * u, cy, p.ink, 2.6, 10);
+    if (!port) {
+      d.text(S.l('pregunta', 'question'), B.x - al / 2 - 4 * u, cy - 8 * u, { size: FS(S, 12), weight: 700, color: p.ink2, align: 'center', base: 'bottom' });
+      d.text(S.l('respuesta', 'answer'), B.x + B.w + al / 2 + 4 * u, cy - 8 * u, { size: FS(S, 12), weight: 700, color: p.ink2, align: 'center', base: 'bottom' });
+    }
   });
-  const aQ = S.reveal('bridge', 1.4, 0.6);
+  const aQ = S.reveal('bridge', 1.4, 0.6), t = S.l('¿pensar antes de responder?', 'think before answering?'), tw = d.measure(t, { size: FS(S, 18), weight: 800 }) + 28 * u, by = B.y - 64 * u;
   d.withAlpha(aQ, () => {
-    const t = S.l('¿pensar antes de responder?', 'think before answering?'), tw = d.measure(t, { size: FS(S, 18), weight: 800 }) + 28 * u, by = B.y - 44 * u - (port ? 0 : 6 * u);
     d.rect(cx - tw / 2, by - 18 * u, tw, 36 * u, { fill: p.surface, stroke: st_.c, lw: 2.2, r: 6 });
     d.text(t, cx, by, { size: FS(S, 18), weight: 800, color: st_.ink, align: 'center', base: 'middle' });
-    [0, 1, 2].forEach((i) => d.circle(cx - 10 * u + i * 10 * u, by + 26 * u + i * 3 * u, (2 + i) * u, { stroke: st_.c, lw: 1.6 }));
   });
-  if (!cmp) neu(S, port ? cx - 36 * u : cx + bw / 2 + 70 * u, port ? B.y + bh + 40 * u : cy - 24 * u, { scale: Math.max(2, Math.round(2.6 * u)), mood: 'think', a: S.reveal('bridge', 1.0, 0.5) });
+  if (!cmp) {
+    const sc = Math.max(3, Math.round(3 * u)), nw = 24 * sc, nh = 18 * sc, aN = S.reveal('bridge', 1.0, 0.5);
+    if (port) neu(S, cx - nw / 2, B.y + B.h + 18 * u, { scale: sc, mood: 'think', a: aN });
+    else {
+      const nx = cx - tw / 2 - nw - 40 * u;
+      neu(S, nx, by - nh / 2, { scale: sc, mood: 'think', a: aN });
+      d.withAlpha(aQ, () => [0, 1, 2].forEach((i) => d.circle(nx + nw + (6 + i * 11) * u, by + (6 - i * 4) * u, (2 + i) * u, { stroke: st_.c, lw: 1.6 })));
+    }
+  }
 }

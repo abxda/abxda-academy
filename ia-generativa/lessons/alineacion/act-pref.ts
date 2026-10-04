@@ -1,7 +1,7 @@
 // Acto 3 · Preferencias y modelo de recompensa: comparar dos respuestas, el modelo que puntúa, la sigmoide de Bradley–Terry,
 // el turno «elige la mejor» (un modelo de recompensa diminuto aprende de tus decisiones), su resumen y el desacuerdo entre personas.
 import { Plot, alpha, clamp, contains, inset, tone, type Frame, type Rect } from '../../../../../theme/kit';
-import { FS, card, fitText, glyph, isCompact, mark, num, para, person, sgn, tab, traitName } from './ui';
+import { FS, card, fitText, glyph, isCompact, lines, mark, num, para, person, sgn, tab, traitName } from './ui';
 import { answerCard, phases, pct, splitBar, weightRows } from './board';
 import { DEMO, PAIRS, PAIR_SHORT, loser, winner } from './pairs';
 import { curPair, effective, probA, scoreOf, st } from './state';
@@ -27,7 +27,12 @@ function questionBanner(S: Frame, r: Rect, text: string, a = 1) {
     card(S, r, { tone: 'sig', fill: alpha(t.c, 0.08) });
     const lab = S.l('pregunta', 'question'), lw = d.measure(lab, { size: FS(S, 12), weight: 800 });
     d.text(lab, r.x + 10 * u, r.y + r.h / 2, { size: FS(S, 12), weight: 800, color: t.ink, base: 'middle' });
-    fitText(S, text, r.x + 10 * u + lw + 10 * u, r.y + r.h / 2, r.w - lw - 30 * u, 16, { weight: 700, color: p.ink, base: 'middle' });
+    const tx = r.x + 10 * u + lw + 10 * u, tw = r.x + r.w - tx - 10 * u;
+    if (d.measure(text, { size: FS(S, 16), weight: 700 }) <= tw) fitText(S, text, tx, r.y + r.h / 2, tw, 16, { weight: 700, color: p.ink, base: 'middle' });
+    else {   // pregunta larga: dos líneas más pequeñas
+      const sz = FS(S, 13), n = lines(S, text, tw, sz, { weight: 700 }).length, lh = 1.12 * sz * u;
+      para(S, text, tx, r.y + (r.h - Math.min(n, 2) * lh) / 2, tw, sz, { weight: 700, color: p.ink, maxLines: 2, lh: 1.12 });
+    }
   });
 }
 
@@ -165,7 +170,7 @@ function drawRmMath(S: Frame) {
 export function boardLayout(S: Frame) {
   const u = S.u, port = S.portrait, cmp = isCompact(S), r = inset(S.full(), (cmp ? 8 : 12) * u), gap = (cmp ? 8 : 12) * u;
   if (!port) {
-    const lw = r.w * 0.6, ph = 18 * u, qh = (cmp ? 28 : 38) * u, predH = (cmp ? 38 : 48) * u;
+    const lw = r.w * 0.6, ph = 18 * u, qh = 38 * u, predH = (cmp ? 38 : 48) * u;
     const chMax = r.h - ph - 6 * u - qh - 8 * u - 8 * u - predH, ch = Math.min(chMax, (cmp ? 130 : 180) * u);
     const H1 = ph + 6 * u + qh + 8 * u + ch + 8 * u + predH, y0 = r.y + Math.max(0, (r.h - H1) / 2);
     const left: Rect = { x: r.x, y: y0, w: lw, h: H1 }, panel: Rect = { x: r.x + lw + gap, y: y0, w: r.w - lw - gap, h: H1 };
@@ -197,7 +202,7 @@ function progressDots(S: Frame, r: Rect, n: number) {
   return r.x + 8 * u + PAIRS.length * 20 * u;
 }
 
-function feedback(S: Frame, r: Rect) {
+function feedback(S: Frame, r: Rect, short = false) {
   const { d, pal: p } = S, u = S.u, s = st(S);
   if (!s.last) return;
   const hit = s.last.pChosen > 0.5, tie = Math.abs(s.last.pChosen - 0.5) < 1e-6, a = clamp((S.clock - s.lastClock) / 0.3);
@@ -206,7 +211,8 @@ function feedback(S: Frame, r: Rect) {
     if (!tie) mark(S, hit ? 'yes' : 'no', x + 7 * u, cy, 7 * u);
     else d.circle(x + 7 * u, cy, 7 * u, { stroke: p.mute, lw: 2, dash: [3, 3] });
     const txt = tie ? S.l('Aún no sabía nada: daba 50 % a tu elección', 'It knew nothing yet: it gave 50% to your choice') : S.l(`Daba ${pct(S, s.last!.pChosen)} a tu elección: ${hit ? 'lo esperaba' : 'no lo esperaba'}`, `It gave ${pct(S, s.last!.pChosen)} to your choice: ${hit ? 'expected' : 'a surprise'}`);
-    fitText(S, txt, x + 20 * u, cy, r.w - 24 * u, 13, { weight: 700, color: p.ink2, base: 'middle' });
+    if (short) fitText(S, tie ? S.l('Aún no sabía nada: 50 %', 'It knew nothing yet: 50%') : S.l(`Daba ${pct(S, s.last!.pChosen)} a tu elección`, `It gave ${pct(S, s.last!.pChosen)} to your choice`), x + 20 * u, cy, r.w - 24 * u, 12, { weight: 700, color: p.ink2, base: 'middle' });
+    else para(S, txt, x + 20 * u, r.y + 2 * u, r.w - 24 * u, FS(S, 12), { weight: 700, color: p.ink2, maxLines: 2, lh: 1.2 });
   });
 }
 
@@ -237,8 +243,8 @@ function drawBoard(S: Frame) {
   const pair = PAIRS[curPair(s)] ?? PAIRS[PAIRS.length - 1];
   d.withAlpha(a0, () => {
     const dotsEnd = progressDots(S, L.prog, n);
-    d.text(done ? S.l('5 de 5', '5 of 5') : S.l(`pareja ${n + 1} de 5`, `pair ${n + 1} of 5`), dotsEnd + 6 * u, L.prog.y + L.prog.h / 2, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'middle' });
-    if (L.fb) feedback(S, { x: dotsEnd + 90 * u, y: L.prog.y, w: L.prog.w - (dotsEnd - L.prog.x) - 94 * u, h: L.prog.h });
+    d.text(done ? S.l('5 de 5', '5 of 5') : S.l(`${n + 1} de 5`, `${n + 1} of 5`), dotsEnd + 6 * u, L.prog.y + L.prog.h / 2, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'middle' });
+    if (L.fb) feedback(S, { x: dotsEnd + 52 * u, y: L.prog.y, w: L.prog.w - (dotsEnd - L.prog.x) - 54 * u, h: L.prog.h }, true);
   });
   const port = L.port, size = FS(S, port ? 13 : 15);
   if (!done) {
@@ -265,10 +271,10 @@ function drawBoard(S: Frame) {
     const x = P.x + (port ? 0 : 10 * u), w = P.w - (port ? 0 : 20 * u);
     fitText(S, S.l('Tu modelo de recompensa', 'Your reward model'), x, P.y + (port ? 2 : 10) * u, w, 16, { weight: 800, color: t.ink, base: 'top' });
     let y = P.y + (port ? 22 : 32) * u;
-    if (!port) { d.text(S.l('4 rasgos asignados a mano (ilustrativo)', '4 hand-assigned traits (illustrative)'), x, y - 2 * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top' }); y += 22 * u; }
+    if (!port) { const hh = para(S, S.l('4 rasgos asignados a mano (ilustrativo)', '4 hand-assigned traits (illustrative)'), x, y - 2 * u, w, FS(S, 12), { weight: 600, color: p.mute, maxLines: 2, lh: 1.15 }); y += Math.max(22 * u, hh + 4 * u); }
     const rowH = Math.min(port ? 19 * u : (L.cmp ? 28 : 44) * u, (P.y + P.h - y - (port ? 0 : 40 * u)) / 4);
     weightRows(S, { x, y, w, h: rowH * 4 }, s.wShown, { rowH });
-    if (!port) feedback(S, { x, y: y + rowH * 4 + 6 * u, w, h: 28 * u });
+    if (!port) feedback(S, { x, y: y + rowH * 4 + 6 * u, w, h: 34 * u });
   });
 }
 
@@ -288,7 +294,7 @@ function drawReveal(S: Frame) {
     if (!port) card(S, rw, { tone: 'w', fill: alpha(t.c, 0.07), lw: 2 });
     const x = rw.x + (port ? 0 : 12 * u), w = rw.w - (port ? 0 : 24 * u);
     fitText(S, e.own ? S.l('Tu modelo de recompensa', 'Your reward model') : S.l('Modelo de recompensa de ejemplo', 'Example reward model'), x, rw.y + (port ? 0 : 12 * u), w, 17, { weight: 800, color: t.ink, base: 'top' });
-    d.text(S.l('cuánto suma o resta cada rasgo (ilustrativo)', 'how much each trait adds or subtracts (illustrative)'), x, rw.y + (port ? 24 : 36) * u, { size: FS(S, 12), weight: 600, color: p.mute, base: 'top' });
+    para(S, S.l('cuánto suma o resta cada rasgo (ilustrativo)', 'how much each trait adds or subtracts (illustrative)'), x, rw.y + (port ? 24 : 36) * u, w, FS(S, 12), { weight: 600, color: p.mute, maxLines: 2 });
   });
   const y0 = rw.y + (port ? 46 : 62) * u;
   weightRows(S, { x: rw.x + (port ? 0 : 12 * u), y: y0, w: rw.w - (port ? 0 : 24 * u), h: wRow * 4 }, e.w, { rowH: wRow, k: S.at('rm-reveal', 0.7, 2.0, 'out'), a: S.reveal('rm-reveal', 0.6, 0.4) });
@@ -310,7 +316,7 @@ function drawPeople(S: Frame) {
   // cuatro personas, cuatro decisiones (ilustrativo)
   const picks: ('A' | 'B')[] = ['A', 'B', 'A', 'A'], pc = cmp ? 2 : 3, py = y0 + ch + 12 * u + 22 * u + (cmp ? 30 : 34) * u, spacing = Math.min(70 * u, r.w / 5);
   const x0 = cx - (3 * spacing) / 2;
-  d.withAlpha(S.reveal('rm-people', 0.5, 0.4), () => tab(S, S.l('ilustrativo: cuatro personas', 'illustrative: four people'), r.x, y0 + ch + 12 * u + 12 * u, { align: 'left' }));
+  d.withAlpha(S.reveal('rm-people', 0.5, 0.4), () => tab(S, S.l('ilustrativo: cuatro personas', 'illustrative: four people'), cx, y0 + ch + 12 * u + 12 * u, { align: 'center' }));
   picks.forEach((c, i) => {
     const a = S.reveal('rm-people', 0.9 + i * 0.4, 0.4), px = x0 + i * spacing - 3 * pc, ay = S.reveal('rm-people', 1.2 + i * 0.4, 0.4);
     person(S, px, py, pc, 'ink', a);
