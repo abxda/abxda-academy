@@ -24,4 +24,5 @@ export const PUBLISHED: string[] = [
   'alineacion',
   'que-es-aprender',
   'fine-tuning-lora',
+  'datos-como-numeros',
 ];

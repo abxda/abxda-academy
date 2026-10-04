@@ -133,6 +133,7 @@ ok(28 * 28 === 784 && MNIST_LIKE.length === 784, '28 × 28 = 784 números por im
 ok(60000 / 10000 === 6, 'MNIST: 60 000 de entrenamiento y 10 000 de prueba (barras 1 : 1/6)');
 ok(4000 * 3000 === 12_000_000 && 12_000_000 * 3 === 36_000_000, 'foto de 12 megapíxeles: 4000 × 3000 = 12 000 000 píxeles; × 3 canales = 36 000 000 números');
 ok(256 * 256 * 3 === 196608 && near(36_000_000 / 196608, 183.105, 1e-3), 'AlexNet: 256 × 256 × 3 = 196 608 («casi doscientos mil»); 36 000 000 / 196 608 ≈ 183 veces menos');
+ok(224 * 224 * 3 === 150528, 'AlexNet: los recortes de entrada son 224 × 224 × 3 = 150 528 valores');
 ok(100 * 100 * 3 === 30000, 'quiz: imagen de 100 × 100 en color = 30 000 números');
 
 console.log(bad ? `\nFALLAN ${bad}` : '\ntodo coincide');

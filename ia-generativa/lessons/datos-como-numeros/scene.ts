@@ -548,7 +548,7 @@ function drawFeatureAct(S: Frame, all: Rect, a: number) {
     const y1 = all.y + (S.portrait ? 40 : 54) * u, cw = clamp(w * 0.16, 62 * u, 96 * u), ch = 46 * u, gap = 8 * u;
     d.text(S.l('un correo', 'an email'), x0, y1 - 14 * u, { size: T(S, 15), weight: 700, color: p.ink2, base: 'bottom' });
     tagText(S, S.l('ilustrativo', 'illustrative'), x0 + w, y1 - 22 * u, 'mute', 1, 'right');
-    const feats: [string, string][] = [['4', S.l('enlaces', 'links')], ['22 %', S.l('mayúsculas', 'capitals')]];
+    const feats: [string, string][] = [['4', S.l('enlaces', 'links')], ['22 %', S.l('mayúsculas', 'capital letters')]];
     feats.forEach(([v, lbl], k) => {
       const x = gx + k * (cw + gap);
       d.rect(x, y1, cw, ch, { fill: tD.soft, stroke: tD.c, lw: 1.5 });
@@ -643,7 +643,7 @@ function asideBlur(S: Frame, L: Lay, a: number) {
     const lines: [string, string, 'err' | 'dat' | 'w'][] = [
       [S.l('números que cambiaron', 'numbers that changed'), `${nCh} / 64`, 'err'],
       [S.l('cambio medio (de 255)', 'mean change (of 255)'), S.n(mad, 1), 'w'],
-      [S.l('contraste (máx − mín)', 'contrast (max − min)'), `${Math.max(...orig) - Math.min(...orig)} → ${Math.max(...cur) - Math.min(...cur)}`, 'dat'],
+      [S.l('contraste', 'contrast'), `${Math.max(...orig) - Math.min(...orig)} → ${Math.max(...cur) - Math.min(...cur)}`, 'dat'],
     ];
     lines.forEach(([l, v, t], k) => stat(S, A.x, y + 8 * u + k * (S.portrait ? 23 : 28) * u, w, l, v, t));
     // miniaturas: la misma carita, antes y después (sin cifras, para juzgar a simple vista)
@@ -658,7 +658,8 @@ function asideKernel(S: Frame, L: Lay, a: number) {
   const { d, pal: p } = S, A = L.A, u = S.u;
   const cs = clamp(Math.min(A.w * 0.12, A.h * 0.16), 24 * u, 40 * u), tcs = clamp(A.w * 0.012, 5, 8) * u;
   const x0 = A.x + 2 * u, y0 = A.y + (S.portrait ? 24 : 34) * u;
-  const k0 = S.reveal('blur-reflect', 0.2, 0.6);
+  const compact = S.portrait || A.w < 460 * u;   // teléfono vertical u horizontal: el demo va más junto y el rótulo debajo
+  const k0 = S.reveal('blur-reflect', 0.2, 0.6), kw = Math.max(cs * 3, compact ? 120 * u : 150 * u);
   d.withAlpha(a, () => {
     // columna 1: la regla (promedio de la ventana completa)
     d.withAlpha(k0, () => {
@@ -668,15 +669,14 @@ function asideKernel(S: Frame, L: Lay, a: number) {
         d.rect(x, y, cs, cs, { fill: tone(S, 'w').soft, stroke: tone(S, 'w').c, lw: 1.5 });
         d.text('1/9', x + cs / 2, y + cs / 2, { size: T(S, 12), font: 'mono', weight: 700, color: tone(S, 'w').ink, align: 'center', base: 'middle' });
       }
-      d.text(S.l('promedio de vecinos = una convolución', 'average of neighbors = a convolution'), x0, y0 + cs * 3 + 8 * u, { size: T(S, 13), weight: 600, color: p.ink2, base: 'top', w: Math.max(cs * 3, A.w * 0.4) });
+      d.text(S.l('promedio de los vecinos', 'average of the neighbors'), x0, y0 + cs * 3 + 8 * u, { size: T(S, 13), weight: 600, color: p.ink2, base: 'top', w: kw });
     });
     // columna 2: dos imágenes que difieren en seis píxeles y dan el mismo resultado
-    const kw = Math.max(cs * 3, S.portrait ? 120 * u : 150 * u);
-    const dx = x0 + kw + (S.portrait ? 18 : 40) * u, dw = A.x + A.w - dx;
+    const dx = x0 + kw + (compact ? 18 : 40) * u, dw = A.x + A.w - dx;
     const ex = S.reveal('blur-reflect', 3.2, 0.6), rs = S.reveal('blur-reflect', 6.0, 0.6);
-    const th = tcs * N, gapy = (S.portrait ? 24 : 30) * u, hlI = SMILE_GRAY.map((v, i) => (v !== FACE_B[i] ? i : -1)).filter((i) => i >= 0);
+    const th = tcs * N, gapy = (compact ? 24 : 30) * u, hlI = SMILE_GRAY.map((v, i) => (v !== FACE_B[i] ? i : -1)).filter((i) => i >= 0);
     const R = boxBlur(SMILE_GRAY), yB = y0 + th + gapy;
-    const side = !S.portrait, lblW = side ? 112 * u : 0;           // en horizontal el rótulo va a la derecha de la segunda imagen; en teléfono, debajo
+    const side = !compact, lblW = side ? 112 * u : 0;           // en horizontal el rótulo va a la derecha de la segunda imagen; en teléfono, debajo
     d.withAlpha(ex, () => {
       d.text(S.l('dos imágenes distintas', 'two different images'), dx, A.y + 2 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'top', w: dw });
       thumb(S, dx, y0, tcs, SMILE_GRAY, '');
@@ -691,9 +691,9 @@ function asideKernel(S: Frame, L: Lay, a: number) {
       d.arrow(ax, ya, rx - 8 * u, yr - 8 * u, p.ink2, 2, 8);
       d.arrow(ax, yb, rx - 8 * u, yr + 8 * u, p.ink2, 2, 8);
       thumb(S, rx, yr - th / 2, tcs, R, '');
-      d.text(S.l('con 100 %: el mismo resultado', 'at 100 %: the same result'), Math.min(rx + th / 2, A.x + A.w - 55 * u), yr + th / 2 + 4 * u, { size: T(S, 12), weight: 700, color: tone(S, 'dat').ink, align: 'center', base: 'top', w: 110 * u });
+      d.text(compact ? S.l('mismo resultado', 'same result') : S.l('con 100 %: el mismo resultado', 'at 100 %: the same result'), Math.min(rx + th / 2, A.x + A.w - 55 * u), yr + th / 2 + 4 * u, { size: T(S, 12), weight: 700, color: tone(S, 'dat').ink, align: 'center', base: 'top', w: compact ? 120 * u : 110 * u });
     });
-    tagText(S, S.l('lo veremos en convoluciones', 'we will see it in convolutions'), x0, A.y + A.h - 10 * u, 'mute', S.reveal('blur-reflect', 8.4, 0.6), 'left');
+    tagText(S, S.l('esto es una convolución: la veremos', 'this is a convolution: coming up'), x0, A.y + A.h - 8 * u, 'mute', S.reveal('blur-reflect', 8.4, 0.6), 'left');
   });
 }
 
@@ -902,9 +902,11 @@ function drawSoundAside(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, sp:
     d.polygon([[mx - 6 * u, my - 8 * u], [mx + 6 * u, my - 8 * u], [mx, my + 2 * u]], { fill: tm.c, stroke: p.stage, lw: 1 });
     const mt = `${big(S, rate)} · ${ok ? S.l('se reconstruye', 'rebuilt') : S.l('se pierde', 'lost')}`, mw = d.measure(mt, { size: T(S, 14), weight: 800 });
     d.text(mt, clamp(mx - mw / 2, A.x, A.x + A.w - mw), my - 12 * u, { size: T(S, 14), weight: 800, color: tm.ink, base: 'bottom' });
-    const y2 = by + bh + (S.portrait ? 34 : 40) * u;
-    d.withAlpha(S.reveal('sound-reflect', 0.5, 0.6), () => d.text(S.l(`tono más rápido: ${SND.f2} veces por segundo`, `fastest tone: ${SND.f2} times per second`), A.x, y2, { size: T(S, 14), weight: 700, color: p.ink2, base: 'top', w: A.w - 4 * u }));
-    d.withAlpha(S.reveal('sound-reflect', 4.3, 0.6), () => d.text(S.l(`mínimo: más de ${big(S, MIN_RATE)} muestras por segundo`, `minimum: more than ${big(S, MIN_RATE)} samples per second`), A.x, y2 + (S.portrait ? 20 : 24) * u, { size: T(S, 14), weight: 800, color: p.ink, base: 'top', w: A.w - 4 * u }));
+    const y2 = by + bh + (S.portrait ? 34 : 40) * u, fz = T(S, 14);
+    const l1 = S.l(`tono más rápido: ${SND.f2} veces por segundo`, `fastest tone: ${SND.f2} times per second`), l2 = S.l(`mínimo: más de ${big(S, MIN_RATE)} muestras por segundo`, `minimum: more than ${big(S, MIN_RATE)} samples per second`);
+    const h1 = d.wrap(l1, A.w - 4 * u, { size: fz, weight: 700 }).length * 1.3 * fz * u;   // el segundo texto empieza donde acaba el primero, aunque el primero ocupe dos líneas
+    d.withAlpha(S.reveal('sound-reflect', 0.5, 0.6), () => d.text(l1, A.x, y2, { size: fz, weight: 700, color: p.ink2, base: 'top', w: A.w - 4 * u }));
+    d.withAlpha(S.reveal('sound-reflect', 4.3, 0.6), () => d.text(l2, A.x, y2 + h1 + 4 * u, { size: fz, weight: 800, color: p.ink, base: 'top', w: A.w - 4 * u }));
   });
   // el audio real: Whisper
   const aRef = win(S, 'sound-real', 'text-codes', 0.7, 0.5);
@@ -1105,7 +1107,7 @@ function drawPhoto(S: Frame) {
   const fOf = (n: number) => (Math.log10(n) - 0.5) / (7.7 - 0.5);
   d.withAlpha(S.reveal('photo', 1.4, 0.6), () => {
     d.text(S.l('números por ejemplo (escala logarítmica)', 'numbers per example (logarithmic scale)'), R.x, top - 18 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'bottom', w: R.w });
-    (S.portrait ? [3, 6] : [2, 4, 6]).forEach((e) => {
+    (bwMax * (3 / 7.2) < 78 * u ? [6] : S.portrait || bwMax * (2 / 7.2) < 84 * u ? [3, 6] : [2, 4, 6]).forEach((e) => {
       const x = R.x + bwMax * fOf(10 ** e);
       d.line(x, top - 6 * u, x, top + items.length * rowH - 6 * u, p.line, 1, [3, 4]);
       d.text(big(S, 10 ** e), x, top + items.length * rowH - 2 * u, { size: T(S, 12), font: 'mono', color: p.mute, align: 'center', base: 'top' });
@@ -1121,7 +1123,7 @@ function drawPhoto(S: Frame) {
   });
   // cuántas veces menos números: 36 000 000 / 196 608 ≈ 183
   const sh = S.reveal('photo-shrink', 9.4, 0.7);
-  if (sh > 0) tagText(S, S.l('183 veces menos números', '183× fewer numbers'), R.x + R.w, top + 3 * rowH + (S.portrait ? 8 : 36) * u, 'lat', sh, 'right');
+  if (sh > 0) tagText(S, S.l('183 veces menos', '183× fewer'), R.x + R.w, top + 3 * rowH + (S.portrait ? 27 : 36) * u, 'lat', sh, 'right');
 }
 
 // ═════════════════════════════════════════════════════════════════════════

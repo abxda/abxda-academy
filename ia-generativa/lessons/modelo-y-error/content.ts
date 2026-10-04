@@ -21,8 +21,8 @@ export default defineLesson({
   segments: [
     {
       id: 'hook',
-      es: 'Ya sabemos que los datos son números. Ahora falta un modelo que los use. Empecemos con un caso concreto: diez estudiantes, las horas que estudió cada uno y la calificación que sacó.',
-      en: 'We already know that data are numbers. Now we need a model that uses them. Let’s start with one concrete case: ten students, the hours each studied, and the grade each got.',
+      es: 'Ya sabemos que los datos son números y que un modelo es una regla con números ajustables. Construyamos el más simple con un caso: diez estudiantes, las horas que estudió cada uno y la calificación que sacó.',
+      en: 'We know that data are numbers and that a model is a rule with adjustable numbers. Let’s build the simplest one with a single case: ten students, the hours each studied, and the grade each got.',
     },
     {
       id: 'pattern',
@@ -31,8 +31,8 @@ export default defineLesson({
     },
     {
       id: 'regression',
-      es: 'Cuando lo que se predice es un número, como una calificación o un precio, el problema se llama regresión. Es la tarea más sencilla para estudiar cómo aprende un modelo.',
-      en: 'When what we predict is a number, such as a grade or a price, the problem is called regression. It is the simplest task for studying how a model learns.',
+      es: 'Cuando lo que se predice es un número, como una calificación o un precio, y no una categoría como «spam», el problema se llama regresión. Es la tarea más sencilla para estudiar cómo aprende un modelo.',
+      en: 'When what we predict is a number, such as a grade or a price, rather than a category like “spam”, the problem is called regression. It is the simplest task for studying how a model learns.',
       note: { es: 'Regresión: predecir un número a partir de datos.', en: 'Regression: predicting a number from data.' },
     },
     {
@@ -42,9 +42,9 @@ export default defineLesson({
     },
     {
       id: 'formula',
-      es: 'Su fórmula es corta: la predicción es w por x, más b. La entrada x son las horas; w y b son dos números que deciden qué recta es.',
-      en: 'Its formula is short: the prediction is w times x, plus b. The input x is the hours; w and b are two numbers that decide which line it is.',
-      tts: { es: 'Su fórmula es corta: la predicción es doble ve por equis, más be. La entrada equis son las horas; doble ve y be son dos números que deciden qué recta es.' },
+      es: 'Su fórmula es corta: la predicción es w por x, más b, la suma ponderada de la primera lección con una sola entrada. La entrada x son las horas; w y b son dos números que deciden qué recta es.',
+      en: 'Its formula is short: the prediction is w times x, plus b, the weighted sum from the first lesson with a single input. The input x is the hours; w and b are two numbers that decide which line it is.',
+      tts: { es: 'Su fórmula es corta: la predicción es doble ve por equis, más be, la suma ponderada de la primera lección con una sola entrada. La entrada equis son las horas; doble ve y be son dos números que deciden qué recta es.' },
     },
     {
       id: 'weight',
@@ -55,9 +55,9 @@ export default defineLesson({
     },
     {
       id: 'bias',
-      es: 'El sesgo b es la altura de la recta cuando x vale cero: lo que el modelo predice para quien no estudió nada. Cambiarlo sube o baja la recta entera.',
-      en: 'The bias b is the height of the line when x is zero: what the model predicts for someone who never studied. Changing it moves the whole line up or down.',
-      tts: { es: 'El sesgo be es la altura de la recta cuando equis vale cero: lo que el modelo predice para quien no estudió nada. Cambiarlo sube o baja la recta entera.' },
+      es: 'El sesgo b es el número fijo que se suma al final: la altura de la recta cuando x vale cero, lo que el modelo predice para quien no estudió nada. Cambiarlo sube o baja la recta entera.',
+      en: 'The bias b is the fixed number added at the end: the height of the line when x is zero, what the model predicts for someone who never studied. Changing it moves the whole line up or down.',
+      tts: { es: 'El sesgo be es el número fijo que se suma al final: la altura de la recta cuando equis vale cero, lo que el modelo predice para quien no estudió nada. Cambiarlo sube o baja la recta entera.' },
       note: { es: 'Sesgo b: la altura de la recta en x = 0.', en: 'Bias b: the height of the line at x = 0.' },
     },
     {
@@ -96,35 +96,39 @@ export default defineLesson({
     },
     {
       id: 'big-weighs',
-      es: 'Fíjate en la influencia de cada punto. Un error el doble de grande ocupa un cuadrado cuatro veces mayor, y uno cuatro veces mayor, dieciséis veces. Los errores grandes dominan.',
-      en: 'Look at how much each point counts. An error twice as large fills a square four times bigger, and one four times larger fills sixteen times the area. Big errors dominate.',
+      es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, 28,6 contra 7,4: casi cuatro veces el error y unas quince veces el área.',
+      en: 'Look at how much each point weighs. Twice the error gives a square with four times the area; four times, sixteen. Here, 28.6 against 7.4: almost four times the error and about fifteen times the area.',
+      tts: {
+        es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, veintiocho coma seis contra siete coma cuatro: casi cuatro veces el error y unas quince veces el área.',
+        en: 'Look at how much each point weighs. Twice the error gives a square with four times the area; four times, sixteen. Here, twenty-eight point six against seven point four: almost four times the error and about fifteen times the area.',
+      },
     },
     {
       id: 'loss',
-      es: 'La función de pérdida promedia esas áreas: suma de cuadrados entre número de puntos. Es el error cuadrático medio, o MSE. Cuanto menor, mejor el modelo.',
-      en: 'The loss function averages those areas: the sum of the squares divided by the number of points. It is the mean squared error, or MSE. The lower, the better the model.',
+      es: 'La función de pérdida promedia esas áreas: suma de cuadrados entre número de puntos. Es el error cuadrático medio, o MSE. Cuanto menor, mejor se ajusta el modelo a los datos.',
+      en: 'The loss function averages those areas: the sum of the squares divided by the number of points. It is the mean squared error, or MSE. The lower, the better the model fits the data.',
       tts: {
-        es: 'La función de pérdida promedia esas áreas: suma de cuadrados entre número de puntos. Es el error cuadrático medio, o eme ese e. Cuanto menor, mejor el modelo.',
-        en: 'The loss function averages those areas: the sum of the squares divided by the number of points. It is the mean squared error, or M S E. The lower, the better the model.',
+        es: 'La función de pérdida promedia esas áreas: suma de cuadrados entre número de puntos. Es el error cuadrático medio, o eme ese e. Cuanto menor, mejor se ajusta el modelo a los datos.',
+        en: 'The loss function averages those areas: the sum of the squares divided by the number of points. It is the mean squared error, or M S E. The lower, the better the model fits the data.',
       },
       note: { es: 'Pérdida (MSE): promedio de los errores al cuadrado.', en: 'Loss (MSE): the average of the squared errors.' },
     },
     {
       id: 'goal',
-      es: 'Ahora «aprender» tiene un significado exacto: encontrar los valores de w y b que dejan la pérdida lo más baja posible.',
-      en: 'Now “learning” has an exact meaning: finding the values of w and b that make the loss as low as possible.',
-      tts: { es: 'Ahora «aprender» tiene un significado exacto: encontrar los valores de doble ve y be que dejan la pérdida lo más baja posible.' },
+      es: 'Ahora «aprender» tiene un sentido preciso: encontrar los valores de w y b que dejan la pérdida lo más baja posible.',
+      en: 'Now “learning” has a precise meaning: finding the values of w and b that make the loss as low as possible.',
+      tts: { es: 'Ahora «aprender» tiene un sentido preciso: encontrar los valores de doble ve y be que dejan la pérdida lo más baja posible.' },
       note: { es: 'Aprender: elegir w y b que minimicen la pérdida.', en: 'Learning: choosing the w and b that minimize the loss.' },
     },
     {
       id: 'try1',
-      es: 'Tu turno: arrastra las dos asas de la recta, o usa los botones, y baja la pérdida todo lo que puedas. Los cuadrados te dicen hacia dónde ir.',
-      en: 'Your turn: drag the two handles on the line, or use the buttons, and push the loss down as far as you can. The squares tell you which way to go.',
+      es: 'Tu turno: arrastra las dos asas de la recta, o usa los botones, y baja la pérdida todo lo que puedas. Los cuadrados te muestran qué puntos fallan más.',
+      en: 'Your turn: drag the two handles on the line, or use the buttons, and push the loss down as far as you can. The squares show which points miss the most.',
       gate: {
         id: 'fit',
         prompt: {
-          es: 'Baja la pérdida hasta quedar cerca del mínimo. No te diremos cuánto es: guíate por tu mejor marca.',
-          en: 'Bring the loss close to its minimum. We will not tell you how low it goes: follow your best score.',
+          es: 'Baja la pérdida todo lo que puedas; te avisaremos al llegar cerca del mínimo. Guíate por tu mejor marca.',
+          en: 'Push the loss down as far as you can; we will tell you when you are close to the minimum. Follow your best score.',
         },
       },
       pad: 0.4,
@@ -137,13 +141,13 @@ export default defineLesson({
     },
     {
       id: 'not-zero',
-      es: 'Ni siquiera la mejor recta acierta todo: su pérdida no es cero. Los datos traen ruido, y una sola recta no puede pasar por diez puntos a la vez.',
-      en: 'Even the best line does not hit everything: its loss is not zero. Real data carry noise, and a single straight line cannot pass through ten points at once.',
+      es: 'Ni siquiera la mejor recta acierta todo: su pérdida no es cero. Los datos reales traen ruido, y diez puntos así no caen sobre una misma recta.',
+      en: 'Even the best line does not hit everything: its loss is not zero. Real data carry noise, and ten points like these do not fall on a single straight line.',
     },
     {
       id: 'best-line',
-      es: 'Para una recta, la mejor tiene fórmula: es el método de mínimos cuadrados. Legendre lo publicó en 1805, y Gauss afirmó que lo usaba desde 1795.',
-      en: 'For a straight line, the best fit has a formula: the method of least squares. Legendre published it in 1805, and Gauss claimed he had used it since 1795.',
+      es: 'Para una recta, la mejor tiene una fórmula directa: es el método de mínimos cuadrados. Legendre lo publicó en 1805, y Gauss afirmó que lo usaba desde 1795.',
+      en: 'For a straight line, the best fit has a direct formula: the method of least squares. Legendre published it in 1805, and Gauss claimed he had used it since 1795.',
       tts: {
         es: 'Para una recta, la mejor tiene fórmula: es el método de mínimos cuadrados. Legendre lo publicó en mil ochocientos cinco, y Gauss afirmó que lo usaba desde mil setecientos noventa y cinco.',
         en: 'For a straight line, the best fit has a formula: the method of least squares. Legendre published it in eighteen oh five, and Gauss claimed he had used it since seventeen ninety-five.',
@@ -156,8 +160,8 @@ export default defineLesson({
     },
     {
       id: 'why-big',
-      es: 'Elevar al cuadrado es una decisión, no una ley natural. Dice: prefiero varios errores pequeños a uno enorme. Tiene sentido cuando un error grande cuesta mucho más que varios pequeños.',
-      en: 'Squaring is a design choice, not a law of nature: it prefers several small errors to one huge one. That fits when a big error costs more than a few small ones.',
+      es: 'Con valores absolutos, ese mismo estudiante aportaría casi la mitad. Elevar al cuadrado es una decisión, no una ley natural: prefiere varios errores pequeños a uno enorme, y eso tiene sentido si un error grande cuesta mucho más.',
+      en: 'With absolute values, that same student would add almost half. Squaring is a design choice, not a law of nature: it prefers several small errors to one huge one, which makes sense when a big error costs far more.',
     },
     {
       id: 'compare',

@@ -59,8 +59,8 @@ export default defineLesson({
     },
     {
       id: 'vector',
-      es: 'Esa lista ordenada de números se llama vector. Correo o imagen, el modelo siempre recibe un vector por ejemplo; solo cambia su longitud: dos o sesenta y cuatro.',
-      en: 'That ordered list of numbers is called a vector. Email or image, the model always receives one vector per example; only the length changes: two or sixty-four.',
+      es: 'Esa lista ordenada de números se llama vector. Correo o imagen, el modelo recibe un vector por ejemplo; solo cambia su longitud: dos o sesenta y cuatro.',
+      en: 'That ordered list of numbers is called a vector. Email or image, the model receives one vector per example; only the length changes: two or sixty-four.',
       note: { es: 'Vector: lista ordenada de números. Cada ejemplo es un vector.', en: 'Vector: an ordered list of numbers. Each example is a vector.' },
       pad: 0.3,
     },
@@ -289,7 +289,7 @@ Una imagen en color es un tensor $X \\in \\{0,\\dots,255\\}^{H \\times W \\times
 
 $$12\\,000\\,000 \\times 3 = 36\\,000\\,000 \\text{ valores}$$
 
-es decir, unos 36 MB sin comprimir a un byte por valor. Los archivos como JPEG ocupan mucho menos, pero el modelo trabaja con los píxeles ya decodificados (o con una versión reducida: AlexNet, por ejemplo, redujo todas las imágenes de ImageNet a $256 \\times 256$, o sea $256 \\times 256 \\times 3 = 196\\,608$ valores, unas 183 veces menos que la foto de 12 megapíxeles; Krizhevsky et al., 2012). El orden de los ejes depende de la biblioteca: alto × ancho × canales, o canales × alto × ancho. En rigor, un número, un vector y una matriz también son tensores (de 0, 1 y 2 ejes).
+es decir, unos 36 MB sin comprimir a un byte por valor. Los archivos como JPEG ocupan mucho menos, pero el modelo trabaja con los píxeles ya decodificados (o con una versión reducida: AlexNet, por ejemplo, redujo todas las imágenes de ImageNet a $256 \\times 256$ —reescalando el lado corto a 256 y recortando el centro—, o sea $256 \\times 256 \\times 3 = 196\\,608$ valores, unas 183 veces menos que la foto de 12 megapíxeles; la red recibía además recortes de $224 \\times 224 \\times 3 = 150\\,528$ valores; Krizhevsky et al., 2012). El orden de los ejes depende de la biblioteca: alto × ancho × canales, o canales × alto × ancho. En rigor, un número, un vector y una matriz también son tensores (de 0, 1 y 2 ejes).
 
 En la lección, el gris de cada píxel sale de su color con la receta de luma de la recomendación ITU-R BT.601 (versión 7, 2011): $Y' = 0{,}299\\,R' + 0{,}587\\,G' + 0{,}114\\,B'$, aplicada a valores ya corregidos con gamma. Con tres canales de 8 bits hay $256^3 = 16\\,777\\,216$ colores posibles.
 
@@ -387,7 +387,7 @@ A color image is a tensor $X \\in \\{0,\\dots,255\\}^{H \\times W \\times 3}$ wi
 
 $$12{,}000{,}000 \\times 3 = 36{,}000{,}000 \\text{ values}$$
 
-that is, about 36 MB uncompressed at one byte per value. Files like JPEG are much smaller, but the model works with the decoded pixels (or with a downsized version: AlexNet, for example, downsized every ImageNet image to $256 \\times 256$, that is $256 \\times 256 \\times 3 = 196{,}608$ values, about 183 times fewer than the 12-megapixel photo; Krizhevsky et al., 2012). The order of the axes depends on the library: height × width × channels, or channels × height × width. Strictly, a number, a vector, and a matrix are also tensors (with 0, 1, and 2 axes).
+that is, about 36 MB uncompressed at one byte per value. Files like JPEG are much smaller, but the model works with the decoded pixels (or with a downsized version: AlexNet, for example, downsized every ImageNet image to $256 \\times 256$ —rescaling the short side to 256 and cropping the center—, that is $256 \\times 256 \\times 3 = 196{,}608$ values, about 183 times fewer than the 12-megapixel photo; the network also took $224 \\times 224 \\times 3 = 150{,}528$-value crops; Krizhevsky et al., 2012). The order of the axes depends on the library: height × width × channels, or channels × height × width. Strictly, a number, a vector, and a matrix are also tensors (with 0, 1, and 2 axes).
 
 In the lesson, the gray of each pixel comes from its color with the luma recipe of Recommendation ITU-R BT.601 (version 7, 2011): $Y' = 0.299\\,R' + 0.587\\,G' + 0.114\\,B'$, applied to gamma-corrected values. With three 8-bit channels there are $256^3 = 16{,}777{,}216$ possible colors.
 
@@ -476,13 +476,13 @@ With the data in vectors, lesson 3 puts the first model on top: a line $y = wx +
       'Lo que un modelo puede aprender tiene un techo: lo que sobrevive en los números. Resolución, compresión, frecuencia de muestreo y calidad de la transcripción fijan ese techo, y ninguna IA recupera con certeza lo que no se midió (puede inventar algo plausible). Pregunta a qué calidad se captura lo que vas a usar.',
       'Más números por ejemplo significan más memoria y más cómputo. Una foto de 12 megapíxeles son unos 36 millones de valores, por eso los sistemas suelen reducir las imágenes antes de procesarlas (AlexNet las bajó a 256 × 256 en 2012). Pregunta qué versión ve realmente el modelo y cuánto detalle pierde.',
       '«Basura entra, basura sale»: otra cámara, otro micrófono o otro escáner producen números distintos aunque a ti te parezca lo mismo (como el desenfoque suave de la lección, que cambia los 64 números de la carita). Prueba el sistema con muestras de tu operación real, no solo con la demostración.',
-      'Si con esos números se puede identificar a alguien, siguen siendo datos personales: el RGPD europeo (art. 4) llama datos personales a cualquier información sobre una persona identificable, y biométricos a los que resultan de procesar técnicamente sus rasgos físicos, como las imágenes faciales. Trata la representación numérica con las mismas reglas de privacidad que el original.',
+      'Si con esos números se puede identificar a alguien, siguen siendo datos personales: el RGPD europeo (art. 4) llama datos personales a cualquier información sobre una persona identificable, y biométricos a los que resultan de procesar técnicamente sus rasgos físicos para identificarla, como las imágenes faciales. Trata la representación numérica con las mismas reglas de privacidad que el original.',
     ],
     en: [
       'What a model can learn has a ceiling: what survives in the numbers. Resolution, compression, sampling rate, and transcription quality set that ceiling, and no AI recovers with certainty what was never measured (it may invent something plausible). Ask at what quality the data you will use is captured.',
       'More numbers per example mean more memory and more compute. A 12-megapixel photo is about 36 million values, which is why systems usually shrink images before processing them (AlexNet brought them down to 256 × 256 in 2012). Ask which version the model actually sees and how much detail it loses.',
       '“Garbage in, garbage out”: a different camera, microphone, or scanner produces different numbers even if it looks the same to you (like the lesson’s light blur, which changes all 64 numbers of the little face). Test the system with samples from your real operation, not only with the demo.',
-      'If those numbers can identify someone, they are still personal data: the EU’s GDPR (art. 4) calls personal data any information about an identifiable person, and biometric data what results from technical processing of their physical features, such as facial images. Treat the numeric representation under the same privacy rules as the original.',
+      'If those numbers can identify someone, they are still personal data: the EU’s GDPR (art. 4) calls personal data any information about an identifiable person, and biometric data what results from technical processing of their physical features to identify them, such as facial images. Treat the numeric representation under the same privacy rules as the original.',
     ],
   },
 
@@ -537,7 +537,7 @@ With the data in vectors, lesson 3 puts the first model on top: a line $y = wx +
     },
   ],
 
-  glossary: ['pixel', 'vector', 'feature', 'tensor', 'training-data', 'model'],
+  glossary: ['pixel', 'vector', 'feature', 'tensor', 'training-data', 'model', 'convolution', 'embedding'],
 
   terms: [
     { id: 'pixel', term: { es: 'Píxel', en: 'Pixel' }, def: { es: 'El punto más pequeño de una imagen digital. En escala de grises es un número de 0 (negro) a 255 (blanco); en color son tres números (rojo, verde y azul).', en: 'The smallest dot of a digital image. In grayscale it is a number from 0 (black) to 255 (white); in color it is three numbers (red, green, and blue).' } },
