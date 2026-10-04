@@ -180,11 +180,11 @@ export default defineLesson({
     },
     {
       id: 'horizon',
-      es: 'Hay buenas noticias: según METR, en tareas de software, la duración de lo que un agente completa la mitad de las veces se ha duplicado cerca de cada siete meses.',
-      en: 'There is good news: according to METR, on software tasks, the length of what an agent completes half the time has doubled about every seven months.',
+      es: 'Hay buenas noticias: según METR, desde dos mil diecinueve la duración de las tareas de software que un agente completa la mitad de las veces se ha duplicado cerca de cada siete meses.',
+      en: 'There is good news: according to METR, since two thousand nineteen the length of the software tasks an agent completes half the time has doubled about every seven months.',
       tts: {
-        es: 'Hay buenas noticias: según meter, en tareas de software, la duración de lo que un agente completa la mitad de las veces se ha duplicado cerca de cada siete meses.',
-        en: 'There is good news: according to meter, on software tasks, the length of what an agent completes half the time has doubled about every seven months.',
+        es: 'Hay buenas noticias: según meter, desde dos mil diecinueve la duración de las tareas de software que un agente completa la mitad de las veces se ha duplicado cerca de cada siete meses.',
+        en: 'There is good news: according to meter, since two thousand nineteen the length of the software tasks an agent completes half the time has doubled about every seven months.',
       },
       pad: 0.4,
     },
@@ -298,7 +298,7 @@ Un agente es un programa con tres piezas: un **modelo** que decide, un conjunto 
 2. el programa valida la llamada, aplica los permisos y ejecuta la función;
 3. el resultado se agrega al historial como un mensaje más y se vuelve al paso 1, hasta que el modelo responde o se agota un límite de pasos.
 
-Esa es la idea de ReAct (Yao et al., 2022): intercalar razonamiento y acción, de modo que cada observación corrija el siguiente razonamiento. Desde 2023 las interfaces de los proveedores (por ejemplo, la «llamada a funciones» que OpenAI lanzó en junio de 2023) hacen que el modelo emita la llamada en un formato estructurado fiable.
+Esa es la idea de ReAct (Yao et al., 2022): intercalar razonamiento y acción, de modo que cada observación corrija el siguiente razonamiento. Desde 2023 las interfaces de los proveedores (por ejemplo, la «llamada a funciones» que OpenAI lanzó en junio de 2023) hacen que el modelo emita la llamada en un formato estructurado más fiable.
 
 ## Una llamada a funciones, por dentro
 
@@ -315,7 +315,7 @@ Una herramienta se describe con un nombre, una descripción y un esquema de sus 
 
 El modelo no ejecuta nada: produce el texto de la llamada. El programa debe tratar esos argumentos como **entrada no confiable**: validarlos, limitarlos y registrarlos.
 
-**MCP** (Model Context Protocol) estandariza esa conexión. Los mensajes son JSON-RPC 2.0: el cliente (la aplicación) pide \`tools/list\` para descubrir las herramientas de un servidor y \`tools/call\` para invocar una, y el resultado vuelve con un indicador \`isError\`. La especificación recomienda que haya siempre una persona en el bucle, con la posibilidad de rechazar invocaciones, y que el cliente muestre las entradas antes de llamar al servidor. En diciembre de 2025 Anthropic aportó MCP a la Agentic AI Foundation, un fondo de la Linux Foundation.
+**MCP** (Model Context Protocol) estandariza esa conexión. Los mensajes son JSON-RPC 2.0: el cliente (la aplicación) pide \`tools/list\` para descubrir las herramientas de un servidor y \`tools/call\` para invocar una, y el resultado vuelve con un indicador \`isError\`. La especificación recomienda que haya siempre una persona en el bucle, con la posibilidad de rechazar invocaciones, y que el cliente muestre las entradas antes de llamar al servidor. En diciembre de 2025 Anthropic aportó MCP a la Agentic AI Foundation, una fundación creada bajo la Linux Foundation.
 
 ## Fiabilidad de una cadena
 
@@ -343,7 +343,7 @@ Si cada consulta relee las instrucciones y las definiciones ($B$ tokens) más to
 
 $$\\sum_{k=1}^{n}\\bigl(B + (k-1)\\,g\\bigr) = nB + g\\,\\frac{n(n-1)}{2}$$
 
-Crece como $n^2$. Con los supuestos de la lección ($B = 2000$, $g = 800$, US$ 3 por millón de tokens leídos): 10 pasos son 56 000 tokens (US$ 0,17), 20 pasos son 192 000 (US$ 0,58) y 40 pasos son 704 000 (US$ 2,11). Dividido entre la probabilidad de éxito, el costo por tarea lograda, con $p = 0{,}95$, es US$ 0,28, US$ 1,61 y US$ 16,43. Los proveedores cobran las lecturas de caché a una fracción del precio normal (en la documentación de Anthropic, alrededor de una décima parte para la mayoría de los modelos), pero lo repetido se sigue leyendo y se sigue pagando algo.
+Crece como $n^2$. Con los supuestos de la lección ($B = 2000$, $g = 800$, US$ 3 por millón de tokens leídos): 10 pasos son 56 000 tokens (US$ 0,17), 20 pasos son 192 000 (US$ 0,58) y 40 pasos son 704 000 (US$ 2,11). Dividido entre la probabilidad de éxito, el costo por tarea lograda, con $p = 0{,}95$, es US$ 0,28, US$ 1,61 y US$ 16,43. Los proveedores cobran las lecturas de caché a una fracción del precio normal (en la documentación de Anthropic, una décima parte para la mayoría de los modelos y menos aún para algunos), pero lo repetido se sigue leyendo y se sigue pagando algo.
 
 ## Niveles de autonomía
 
@@ -406,7 +406,7 @@ An agent is a program with three parts: a **model** that decides, a set of **too
 2. the program validates the call, applies the permissions, and runs the function;
 3. the result is added to the history as one more message and we go back to step 1, until the model answers or a step limit runs out.
 
-That is the idea behind ReAct (Yao et al., 2022): interleave reasoning and acting so that each observation corrects the next reasoning step. Since 2023, providers’ interfaces (for example, the “function calling” OpenAI launched in June 2023) make the model emit the call in a reliable structured format.
+That is the idea behind ReAct (Yao et al., 2022): interleave reasoning and acting so that each observation corrects the next reasoning step. Since 2023, providers’ interfaces (for example, the “function calling” OpenAI launched in June 2023) make the model emit the call in a more reliable structured format.
 
 ## A function call, inside
 
@@ -423,7 +423,7 @@ A tool is described by a name, a description, and a schema of its arguments (JSO
 
 The model runs nothing: it produces the text of the call. The program must treat those arguments as **untrusted input**: validate them, bound them, and log them.
 
-**MCP** (Model Context Protocol) standardizes that connection. Messages are JSON-RPC 2.0: the client (the application) sends \`tools/list\` to discover a server’s tools and \`tools/call\` to invoke one, and the result comes back with an \`isError\` flag. The specification recommends that there always be a human in the loop with the ability to deny invocations, and that the client show the inputs before calling the server. In December 2025 Anthropic contributed MCP to the Agentic AI Foundation, a Linux Foundation fund.
+**MCP** (Model Context Protocol) standardizes that connection. Messages are JSON-RPC 2.0: the client (the application) sends \`tools/list\` to discover a server’s tools and \`tools/call\` to invoke one, and the result comes back with an \`isError\` flag. The specification recommends that there always be a human in the loop with the ability to deny invocations, and that the client show the inputs before calling the server. In December 2025 Anthropic contributed MCP to the Agentic AI Foundation, a foundation created under the Linux Foundation.
 
 ## Reliability of a chain
 
@@ -451,7 +451,7 @@ If each query rereads the instructions and definitions ($B$ tokens) plus the who
 
 $$\\sum_{k=1}^{n}\\bigl(B + (k-1)\\,g\\bigr) = nB + g\\,\\frac{n(n-1)}{2}$$
 
-It grows like $n^2$. With the lesson’s assumptions ($B = 2000$, $g = 800$, $3 per million tokens read): 10 steps is 56,000 tokens ($0.17), 20 steps is 192,000 ($0.58), and 40 steps is 704,000 ($2.11). Divided by the probability of success, the cost per completed task with $p = 0.95$ is $0.28, $1.61, and $16.43. Providers charge cache reads at a fraction of the normal price (in Anthropic’s documentation, about a tenth for most models), but what is repeated is still read and still costs something.
+It grows like $n^2$. With the lesson’s assumptions ($B = 2000$, $g = 800$, $3 per million tokens read): 10 steps is 56,000 tokens ($0.17), 20 steps is 192,000 ($0.58), and 40 steps is 704,000 ($2.11). Divided by the probability of success, the cost per completed task with $p = 0.95$ is $0.28, $1.61, and $16.43. Providers charge cache reads at a fraction of the normal price (in Anthropic’s documentation, a tenth for most models and less still for some), but what is repeated is still read and still costs something.
 
 ## Levels of autonomy
 

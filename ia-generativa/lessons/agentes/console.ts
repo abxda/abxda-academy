@@ -40,7 +40,8 @@ export function conAction(S: Frame, id: string) {
   }
 }
 
-export function conUpdate(S: Frame) {
+/** Avanza el turno «Tu turno»; devuelve true cuando ya viste el error sin freno y decidiste con límite (la escena completa el gate). */
+export function conUpdate(S: Frame): boolean {
   const cs = csOf(S), dt = S.dt;
   if (((S.p.scenario ?? 'slip') as Scenario) !== cs.scn) restart(S, cs, false);
   if (cs.run.status === 'running') cs.run.limit = limitOf(S.p.limit ?? 3000);
@@ -54,8 +55,8 @@ export function conUpdate(S: Frame) {
     cs.handled = true; cs.auto = false;
     if (cs.run.verdict === 'wrong-auto') cs.seen.blind = true;
     if (cs.run.decision) cs.seen.decided = true;
-    if (cs.seen.blind && cs.seen.decided) S.complete('autonomy');
   }
+  return cs.seen.blind && cs.seen.decided;
 }
 
 /** Vista del turno interactivo. */

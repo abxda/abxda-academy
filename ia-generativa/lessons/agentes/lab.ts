@@ -2,7 +2,7 @@
 // la curva p^n y los puntos de control. Todo es función pura de S.t y de los controles.
 import { alpha, clamp, inset, lerp, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 import { COST, P_DEFAULT, costAttempt, costPerSuccess, n50, simulate, stats, tokensRead, type RunOut } from './rel';
-import { FS, T, big, glyph, lineH, pill, smooth } from './ui';
+import { FS, T, big, glyph, lineH, pill, smooth, wrapLines } from './ui';
 
 const area = (S: Frame) => inset(S.full(), 14 * S.u);
 
@@ -13,7 +13,7 @@ export function drawChain(S: Frame) {
   const { d, pal: p } = S, u = S.u, all = area(S), lh = lineH(S, 12), dat = tone(S, 'dat'), err = tone(S, 'err');
   const cs = Math.min(all.w / (10 * 1.22 - 0.22), 46 * u), gap = cs * 0.22, rowW = 10 * cs + 9 * gap, x0 = all.x + (all.w - rowW) / 2;
   const compound = S.on('compound');
-  const head = 56 * u, rowH = cs + lh * 1.3 + 8 * u, y1 = all.y + head, y2 = y1 + rowH + 10 * u;
+  const head = (S.portrait ? 92 : 56) * u, rowH = cs + lh * 1.3 + 8 * u, y1 = all.y + head, y2 = y1 + rowH + 10 * u;
   const nowRow2 = compound ? S.at('compound', 4.6, 5.0) : 0;
   const cum = (i: number) => Math.pow(P_DEFAULT, i + 1);
   // cabecera: la cifra grande
@@ -24,9 +24,9 @@ export function drawChain(S: Frame) {
   if (compound) {
     const n = twenty > 0.5 ? 20 : 10, val = cum(n - 1), a = n === 20 ? twenty : ten;
     d.withAlpha(Math.max(a, 0), () => {
-      T(S, `0.95${n === 20 ? '²⁰' : '¹⁰'} ≈ ${S.n(val, 2)}`, all.x, all.y + 20 * u, { size: 18, weight: 800, font: 'mono' });
+      T(S, `0.95${n === 20 ? '²⁰' : '¹⁰'} ≈ ${S.n(val, 2)}`, all.x, all.y + (S.portrait ? 14 : 20) * u, { size: 18, weight: 800, font: 'mono' });
       T(S, `≈ ${Math.round(val * 100)} %`, all.x + all.w, all.y + 4 * u, { size: 38, weight: 800, font: 'mono', color: tone(S, 'err').ink, align: 'right' });
-      T(S, S.l(`los ${n} pasos bien`, `all ${n} steps right`), all.x + all.w, all.y + 4 * u + 40 * u, { size: 12, weight: 700, color: p.ink2, align: 'right' });
+      T(S, S.l(`los ${n} pasos bien`, `all ${n} steps right`), all.x + all.w, all.y + (S.portrait ? 50 : 44) * u, { size: 12, weight: 700, color: p.ink2, align: 'right' });
     });
   }
   const square = (i: number, x: number, y: number, a: number) => {
@@ -92,14 +92,22 @@ function runsGrid(S: Frame, x: number, y: number, cell: number, runs: RunOut[], 
   });
 }
 
-function rows(S: Frame, x: number, y: number, w: number, items: { l: string; v: string; t?: Tone; big?: boolean }[]) {
-  const { d, pal: p } = S, lh = lineH(S, 12.5);
-  items.forEach((it, i) => {
-    const yy = y + i * lh * 1.45;
-    T(S, it.l, x, yy + (it.big ? 3 * S.u : 0), { size: 12.5, weight: 600, color: p.ink2, w: w * 0.62 });
+type RowItem = { l: string; v: string; t?: Tone; big?: boolean };
+/** Reparte las filas: cada etiqueta se parte en las líneas que necesite y la fila crece con ella. */
+function rowLayout(S: Frame, w: number, items: RowItem[]) {
+  const lh = lineH(S, 12.5);
+  return items.map((it) => { const ls = wrapLines(S, it.l, w * 0.6, 12.5, 600); return { ls, h: Math.max(ls.length * lh, (it.big ? 22 : 18) * S.u) + 6 * S.u }; });
+}
+const rowsHeight = (S: Frame, w: number, items: RowItem[]) => rowLayout(S, w, items).reduce((a, r) => a + r.h, 0);
+function rows(S: Frame, x: number, y: number, w: number, items: RowItem[]) {
+  const { pal: p } = S, lh = lineH(S, 12.5);
+  let yy = y;
+  rowLayout(S, w, items).forEach((r, i) => {
+    const it = items[i];
+    r.ls.forEach((ln, k) => T(S, ln, x, yy + (it.big ? 3 * S.u : 0) + k * lh, { size: 12.5, weight: 600, color: p.ink2 }));
     T(S, it.v, x + w, yy - (it.big ? 1 : 0), { size: it.big ? 16 : 13, weight: 800, font: 'mono', color: it.t ? tone(S, it.t).ink : p.ink, align: 'right' });
+    yy += r.h;
   });
-  void d;
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -114,10 +122,11 @@ export function drawRel(S: Frame) {
   const gridR: Rect = port ? { x: all.x, y: all.y + lh * 1.5, w: all.w * 0.48, h: topH - lh * 1.5 } : { x: all.x + all.w * 0.58, y: all.y + lh * 1.5, w: all.w * 0.42, h: all.h };
   const cell = port ? Math.min(gridR.w / 10, (topH - lh * 2) / 10) : Math.min(gridR.w / 10, (all.h - lh * 1.5 - (cost > 0 ? 8.2 : 5.6) * lh * 1.45) / 10, 30 * u);
   const shown = S.is('grid') ? Math.floor(S.at('grid', 0.3, 3.8, 'lin') * 100) : 100;
-  runsGrid(S, gridR.x, gridR.y, cell, runs, shown, S.l('100 corridas del mismo agente', '100 runs of the same agent'));
+  const wide = port && S.on('cost-success') ? smooth(S.at('cost-success', 0, 0.6)) : 0;   // vertical + costo: las lecturas pasan a todo el ancho
+  d.withAlpha(1 - wide, () => runsGrid(S, gridR.x, gridR.y, cell, runs, shown, S.l('100 corridas del mismo agente', '100 runs of the same agent')));
   // lecturas
   const ra = S.reveal('grid', 3.8, 0.6) * (S.on('try-rel') ? 1 : 1) + (S.on('try-rel') ? 1 : 0);
-  const rd: Rect = port ? { x: all.x + all.w * 0.52, y: all.y + lh * 1.5, w: all.w * 0.48, h: topH } : { x: gridR.x, y: gridR.y + cell * 10 + 12 * u, w: gridR.w, h: all.h };
+  const rd: Rect = port ? { x: lerp(all.x + all.w * 0.52, all.x, wide), y: all.y + lh * 1.5, w: lerp(all.w * 0.48, all.w, wide), h: topH } : { x: gridR.x, y: gridR.y + cell * 10 + 12 * u, w: gridR.w, h: all.h };
   const items: { l: string; v: string; t?: Tone; big?: boolean }[] = [
     { l: S.l('éxito esperado', 'expected success'), v: `${S.n(succ * 100, 1)} %`, t: succ < 0.5 ? 'err' : 'dat', big: true },
     { l: S.l('en estas 100', 'in these 100'), v: `${okN}` },
@@ -126,13 +135,14 @@ export function drawRel(S: Frame) {
     { l: S.l('tokens leídos (supuesto)', 'tokens read (assumed)'), v: big(S, tokensRead(P.n)) },
     { l: S.l('costo por intento', 'cost per attempt'), v: money2(S, costAttempt(P.n)) },
     { l: S.l('por tarea lograda', 'per completed task'), v: money2(S, costPerSuccess(P.p, P.n)), t: 'err', big: true });
-  d.withAlpha(clamp(ra), () => rows(S, rd.x, rd.y, rd.w, items.map((it, i) => (i < 2 ? it : { ...it }))));
-  if (cost > 0) d.withAlpha(cost, () => T(S, S.l(`Supuestos ilustrativos: ${big(S, COST.base)} tokens base, ${big(S, COST.perStep)} por paso, US$ ${COST.perMillion} por millón.`, `Illustrative assumptions: ${big(S, COST.base)} base tokens, ${big(S, COST.perStep)} per step, $${COST.perMillion} per million.`), rd.x, rd.y + items.length * lh * 1.45 + 2 * u, { size: 12, weight: 600, color: p.mute, w: rd.w }));
+  const rowsH = rowsHeight(S, rd.w, items);
+  d.withAlpha(clamp(ra), () => rows(S, rd.x, rd.y, rd.w, items));
+  if (cost > 0) d.withAlpha(cost, () => T(S, S.l(`Supuestos ilustrativos: ${big(S, COST.base)} tokens base, ${big(S, COST.perStep)} por paso, US$ ${COST.perMillion} por millón.`, `Illustrative assumptions: ${big(S, COST.base)} base tokens, ${big(S, COST.perStep)} per step, $${COST.perMillion} per million.`), rd.x, rd.y + rowsH + 2 * u, { size: 12, weight: 600, color: p.mute, w: rd.w }));
   // estado del turno
   if (S.on('try-rel') && !S.on('cost-success')) {
     const cross = Math.abs(P.n - n50(P.p)) <= 1, below = succ < 0.5;
     const msg = cross ? S.l('Ahí cruza: el éxito pasa de más a menos de la mitad.', 'There it crosses: success goes from above to below one half.') : below ? S.l('Ya falla más de lo que acierta. Prueba con menos pasos.', 'It already fails more than it succeeds. Try fewer steps.') : S.l('Aún acierta más de la mitad. Sube los pasos.', 'It still succeeds more than half the time. Raise the steps.');
-    d.withAlpha(S.reveal('try-rel', 0.2, 0.4), () => T(S, msg, rd.x, rd.y + items.length * lh * 1.45 + 4 * u, { size: 12.5, weight: 800, color: tone(S, cross ? 'dat' : 'mute').ink, w: rd.w }));
+    d.withAlpha(S.reveal('try-rel', 0.2, 0.4), () => T(S, msg, rd.x, rd.y + rowsH + 4 * u, { size: 12.5, weight: 800, color: tone(S, cross ? 'dat' : 'mute').ink, w: rd.w }));
   }
   // curva
   const ch: Rect = port ? { x: all.x, y: all.y + topH + lh * 1.4, w: all.w, h: all.h - topH - lh * 1.4 } : { x: all.x, y: all.y + lh * 1.5, w: all.w * 0.54, h: all.h - lh * 1.5 };
@@ -213,7 +223,7 @@ export function drawChk(S: Frame) {
     if (cell > 8) runsGrid(S, port ? all.x + all.w - cell * 10 : gr.x, gr.y, cell, runs, 100, S.l('100 corridas', '100 runs'));
     if (S.on('try-chk')) {
       const ok = st.success >= 0.85 && st.reviews <= 4 && st.steps <= 35 && kEff > 0;
-      d.withAlpha(S.reveal('try-chk', 0.2, 0.4), () => T(S, ok ? S.l('Cumples los tres límites.', 'You meet all three limits.') : S.l('Aún no cumples los tres límites (las marcas).', 'You do not meet all three limits yet (the marks).'), gr.x, port ? gr.y - lh * 3.2 : gr.y + cell * 10 + 10 * u, { size: 12.5, weight: 800, color: tone(S, ok ? 'dat' : 'mute').ink, w: port ? all.w * 0.5 : gr.w }));
+      d.withAlpha(S.reveal('try-chk', 0.2, 0.4), () => T(S, ok ? S.l('Cumples los tres límites.', 'You meet all three limits.') : S.l('Aún no cumples los tres límites (las marcas).', 'You do not meet all three limits yet (the marks).'), gr.x, port ? gr.y + 4 * u : gr.y + cell * 10 + 10 * u, { size: 12.5, weight: 800, color: tone(S, ok ? 'dat' : 'mute').ink, w: port ? (cell > 8 ? all.w - cell * 10 - 14 * u : all.w) : gr.w }));
     }
   } else {
     const t0 = port ? by + 3 * (bh + lh * 1.5) + 6 * u : all.y + lh * 1.4, tw = port ? all.w : all.w * 0.38, tx = port ? all.x : all.x + all.w * 0.62 + 8 * u, rowH = Math.min(lh * 1.45, (all.y + all.h - t0) / 8.4);

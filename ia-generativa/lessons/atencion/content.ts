@@ -306,7 +306,7 @@ Si $X$ es la matriz de vectores de entrada (embeddings, más la posición), $Q=X
 
 ## Por qué $\\sqrt{d_k}$
 
-Si las componentes de $q$ y $k$ son independientes, con media 0 y varianza 1, el producto $q\\cdot k=\\sum_{i=1}^{d_k}q_ik_i$ tiene media 0 y varianza $d_k$ (la nota 4 de Vaswani et al., 2017). Dividir entre $\\sqrt{d_k}$ devuelve la varianza a 1. Sin ello, con $d_k$ grande, el softmax se satura: si $\\alpha=\\text{softmax}(s)$, entonces $\\partial\\alpha_i/\\partial s_j=\\alpha_i(\\delta_{ij}-\\alpha_j)$, que tiende a 0 cuando $\\alpha$ se parece a un vector «uno-caliente». La lección lo mide: con $d=64$ el peso máximo medio sin escalar es 0,88; escalado, 0,34.
+Si las componentes de $q$ y $k$ son independientes, con media 0 y varianza 1, el producto $q\\cdot k=\\sum_{i=1}^{d_k}q_ik_i$ tiene media 0 y varianza $d_k$ (la nota 4 de Vaswani et al., 2017). Dividir entre $\\sqrt{d_k}$ devuelve la varianza a 1. Sin ello, con $d_k$ grande, el softmax se satura: si $\\alpha=\\text{softmax}(s)$, entonces $\\partial\\alpha_i/\\partial s_j=\\alpha_i(\\delta_{ij}-\\alpha_j)$, que tiende a 0 cuando $\\alpha$ se parece a un vector «uno-caliente». La lección lo mide con 100 sorteos al azar: con $d=64$ el peso máximo medio sin escalar es ≈ 0,88; escalado, ≈ 0,34.
 
 ## Varias cabezas
 
@@ -378,7 +378,7 @@ If $X$ is the matrix of input vectors (embeddings, plus position), $Q=XW^Q$, $K=
 
 ## Why $\\sqrt{d_k}$
 
-If the components of $q$ and $k$ are independent with mean 0 and variance 1, the product $q\\cdot k=\\sum_{i=1}^{d_k}q_ik_i$ has mean 0 and variance $d_k$ (footnote 4 of Vaswani et al., 2017). Dividing by $\\sqrt{d_k}$ brings the variance back to 1. Without it, with large $d_k$, softmax saturates: if $\\alpha=\\text{softmax}(s)$, then $\\partial\\alpha_i/\\partial s_j=\\alpha_i(\\delta_{ij}-\\alpha_j)$, which goes to 0 as $\\alpha$ approaches a one-hot vector. The lesson measures it: with $d=64$ the average maximum weight is 0.88 unscaled and 0.34 scaled.
+If the components of $q$ and $k$ are independent with mean 0 and variance 1, the product $q\\cdot k=\\sum_{i=1}^{d_k}q_ik_i$ has mean 0 and variance $d_k$ (footnote 4 of Vaswani et al., 2017). Dividing by $\\sqrt{d_k}$ brings the variance back to 1. Without it, with large $d_k$, softmax saturates: if $\\alpha=\\text{softmax}(s)$, then $\\partial\\alpha_i/\\partial s_j=\\alpha_i(\\delta_{ij}-\\alpha_j)$, which goes to 0 as $\\alpha$ approaches a one-hot vector. The lesson measures it with 100 random draws: with $d=64$ the average maximum weight is ≈ 0.88 unscaled and ≈ 0.34 scaled.
 
 ## Several heads
 

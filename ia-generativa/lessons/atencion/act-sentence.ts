@@ -109,7 +109,10 @@ function body(S: Frame) {
     const it2 = L2.rects[I.it], ro2 = L2.rects[I.robot];
     const prog = S.at('flip', 0.7, 1.7, 'out');
     const mid = arcBetween(S, it2, ro2, { tone: 'sig', lw: 2.6, dash: [6, 4], progress: prog, a: sec2, lift: lift(it2, ro2) });
-    d.withAlpha(sec2 * S.reveal('flip', 1.5, 0.4), () => badge(S, S.l('robot', 'robot'), mid[0], mid[1] - 2 * u, { tone: 'sig' }));
+    // con la frase en dos líneas y «robot» casi encima de «este», la flecha es corta: la etiqueta va al lado del arco, no encima
+    const shortArc = Math.abs(it2.y - ro2.y) >= it2.h * 0.6 && Math.abs(it2.x - ro2.x) < 90 * u;
+    const bx = shortArc ? mid[0] + 34 * u * (ro2.x < it2.x ? 1 : -1) : mid[0];
+    d.withAlpha(sec2 * S.reveal('flip', 1.5, 0.4), () => badge(S, S.l('robot', 'robot'), bx, mid[1] - 2 * u, { tone: 'sig' }));
     drawVec(it2, sec2 * S.reveal('flip', 1.0, 0.5), S.l('el mismo vector', 'the same vector'));
   }
 

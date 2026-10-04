@@ -37,8 +37,8 @@ export function drawHeadsWhy(S: Frame) {
   const box = (r: Rect, label: string, t: Tone, a: number, sub?: string) => d.withAlpha(a, () => {
     const tc = tone(S, t);
     d.rect(r.x, r.y, r.w, r.h, { fill: alpha(tc.c, 0.12), stroke: tc.c, lw: 1.5, r: 3 });
-    d.text(label, r.x + r.w / 2, r.y + r.h / 2 - (sub ? 7 * u : 0), { size: fs(S, 13), weight: 800, color: tc.ink, align: 'center', base: 'middle', w: r.w - 6 * u });
-    if (sub) d.text(sub, r.x + r.w / 2, r.y + r.h / 2 + 9 * u, { size, weight: 600, color: p.mute, align: 'center', base: 'middle', w: r.w - 6 * u });
+    textBlock(S, label, r.x + r.w / 2, r.y + r.h / 2 - (sub ? 7 * u : 0), r.w - 6 * u, { size: fs(S, 13), weight: 800, color: tc.ink, align: 'center' });
+    if (sub) textBlock(S, sub, r.x + r.w / 2, r.y + r.h / 2 + 9 * u, r.w - 6 * u, { size, weight: 600, color: p.mute, align: 'center' });
   });
   const aH = (i: number) => S.reveal('heads-why', 0.3 + i * 0.5, 0.5), aC = S.reveal('heads-why', 4.4, 0.6), aO = S.reveal('heads-why', 5.6, 0.6), aOut = S.reveal('heads-why', 6.8, 0.6);
   d.withAlpha(A, () => {
@@ -226,15 +226,24 @@ export function drawFew(S: Frame) {
   const pr: Rect = S.portrait ? { x: all.x, y: mr.y + mr.h + 10 * u, w: all.w, h: all.h - mr.h - 10 * u } : { x: mr.x + mr.w + 24 * u, y: all.y, w: all.w - mr.w - 24 * u, h: all.h };
   d.withAlpha(A, () => {
     mosaic(S, mr, R.grid.sp, { a: S.reveal('real-few', 0.1, 0.7), marks: S.on('real-few') && S.at('real-few', 1.2, 1.9) > 0.5 });
+    const bs = fs(S, S.portrait ? 22 : 32), ls = fs(S, 13);
     const stat = (y: number, big: string, label: string, t: Tone, a: number) => d.withAlpha(a, () => {
-      const tc = tone(S, t), bs = fs(S, S.portrait ? 22 : 32);
+      const tc = tone(S, t);
       d.text(big, pr.x, y, { size: bs, weight: 800, font: 'mono', color: tc.ink, base: 'top' });
       const bw = d.measure(big, { size: bs, weight: 800, font: 'mono' });
-      textTop(S, label, pr.x + bw + 10 * u, y + 1 * u, pr.w - bw - 10 * u, { size: fs(S, 13), weight: 600, color: p.ink2, lh: 1.2 });
+      textTop(S, label, pr.x + bw + 10 * u, y + 1 * u, pr.w - bw - 10 * u, { size: ls, weight: 600, color: p.ink2, lh: 1.2 });
     });
-    const step = S.portrait ? 64 * u : 96 * u;
-    stat(pr.y + (S.portrait ? 2 : 8) * u, `${R.grid.nSpecialTop} / 144`, S.l('cabezas con el mayor peso de «este» en una marca: [CLS], [SEP] o el punto', 'heads with the biggest weight of “it” on a mark: [CLS], [SEP], or the period'), 'err', S.reveal('real-few', 2.4, 0.6));
-    stat(pr.y + (S.portrait ? 2 : 8) * u + step, `${R.flip.nFlip} / 144`, S.l('cabezas que giran como la elegida: más de 0,3 con «pesado» en el paquete y con «cansado» en el robot', 'heads that swing like the chosen one: over 0.3 on the package with “heavy” and on the robot with “tired”'), 'sig', S.reveal('real-few', 4.2, 0.6));
+    // la altura de cada leyenda depende del ancho (teléfono horizontal: varias líneas): la segunda cifra baja lo necesario
+    const heightOf = (big: string, label: string) => {
+      const bw = d.measure(big, { size: bs, weight: 800, font: 'mono' });
+      return Math.max(bs * u * 1.1, d.wrap(label, pr.w - bw - 10 * u, { size: ls, weight: 600 }).length * 1.2 * ls * u);
+    };
+    const l1 = S.l('cabezas con el mayor peso de «este» en una marca: [CLS], [SEP] o el punto', 'heads with the biggest weight of “it” on a mark: [CLS], [SEP], or the period');
+    const l2 = S.l('cabezas que giran como la elegida: más de 0,3 con «pesado» en el paquete y con «cansado» en el robot', 'heads that swing like the chosen one: over 0.3 on the package with “heavy” and on the robot with “tired”');
+    const b1 = `${R.grid.nSpecialTop} / 144`, b2 = `${R.flip.nFlip} / 144`;
+    const step = Math.max(S.portrait ? 64 * u : 96 * u, heightOf(b1, l1) + 14 * u);
+    stat(pr.y + (S.portrait ? 2 : 8) * u, b1, l1, 'err', S.reveal('real-few', 2.4, 0.6));
+    stat(pr.y + (S.portrait ? 2 : 8) * u + step, b2, l2, 'sig', S.reveal('real-few', 4.2, 0.6));
     d.withAlpha(S.reveal('real-few', 1.4, 0.6), () => textBlock(S, S.l('intensidad: parte de la atención de «este» que cae en marcas · recuadro C: la elegida', 'intensity: share of the attention of “it” that lands on marks · box C: the chosen one'), pr.x, pr.y + pr.h - 18 * u, pr.w, { size: fs(S, 12), weight: 600, color: p.mute, lh: 1.15 }));
     void err; void sig;
   });

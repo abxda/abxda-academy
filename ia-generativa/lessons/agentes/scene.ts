@@ -6,11 +6,10 @@
 // Tres turnos: encontrar dónde el éxito cruza el 50 %, colocar puntos de control, y correr el agente con distintos permisos.
 import { clamp, type Frame, type SceneFactory } from '../../../../../theme/kit';
 import { drawAnatomy } from './anatomy';
-import { approvalHit, conAction, conUpdate, drawConsole, limitOf, viewOfNarration, viewOfState } from './console';
+import { approvalHit, conAction, conUpdate, drawConsole, viewOfNarration, viewOfState } from './console';
 import { drawBridge, drawCost, drawHitl, drawHorizon, drawIncident, drawLevels, drawMcp, drawPerm, drawPlan, drawReal, drawStart } from './acts';
 import { drawChain, drawChk, drawRel } from './lab';
 import { n50, stats } from './rel';
-import { clamp as _c } from '../../../../../theme/kit';
 
 type Group = 'anatomy' | 'console' | 'cost' | 'plan' | 'mcp' | 'chain' | 'lab' | 'real' | 'horizon' | 'chk' | 'incident' | 'perm' | 'levels' | 'agent' | 'hitl' | 'start' | 'bridge';
 
@@ -76,7 +75,7 @@ const scene: SceneFactory = () => ({
       const k = Math.round(S.p.chk ?? 0), st = stats(0.95, 20, k, clamp((S.p.qrev ?? 90) / 100));
       if (k > 0 && st.success >= 0.85 && st.reviews <= 4 && st.steps <= 35) S.complete('chk');
     }
-    if (S.between('try-agent', 'hitl')) conUpdate(S);
+    if (S.between('try-agent', 'hitl') && conUpdate(S)) S.complete('autonomy');
   },
   render(S) {
     const g = groupOf(S);
@@ -101,7 +100,6 @@ const scene: SceneFactory = () => ({
         case 'bridge': return drawBridge(S);
       }
     });
-    void clamp; void limitOf; void _c;
   },
 });
 

@@ -1,6 +1,6 @@
 // Acto G (recap → bridge): el recorrido completo de una capa de atención y el puente hacia el transformer.
 import { alpha, badge, inset, neu, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
-import { actAlpha, fs } from './ui';
+import { actAlpha, fitSize, fs, textBlock, textTop } from './ui';
 
 export function drawRecap(S: Frame) {
   const A = actAlpha(S, 'recap', 'bridge'); if (A <= 0) return;
@@ -29,9 +29,19 @@ export function drawRecap(S: Frame) {
       if (mid) for (let k = 2; k >= 1; k--) d.rect(r.x + k * 5 * u, r.y - k * 5 * u, r.w, r.h, { fill: p.surface, stroke: alpha(tc.c, 0.55), lw: 1.25, r: 3, a: stackA });
       d.withAlpha(a, () => {
         d.rect(r.x, r.y, r.w, r.h, { fill: mid ? alpha(tc.c, 0.14) : alpha(tc.c, 0.1), stroke: t === 'ink' || t === 'mute' ? p.lineStrong : tc.c, lw: 1.75, r: 3 });
-        d.text(label, r.x + r.w / 2, r.y + r.h / 2 - (S.portrait ? 0 : 9 * u), { size: fs(S, S.portrait ? 15 : 16), weight: 800, font: mid ? 'mono' : 'ui', color: tc.ink, align: 'center', base: 'middle', w: r.w - 8 * u });
-        if (!S.portrait) d.text(sub, r.x + r.w / 2, r.y + r.h / 2 + 14 * u, { size: fs(S, 12), weight: 600, color: p.mute, align: 'center', base: 'middle', w: r.w - 8 * u });
-        else d.text(sub, r.x + r.w - 8 * u, r.y + r.h / 2, { size: fs(S, 12), weight: 600, color: p.mute, align: 'right', base: 'middle' });
+        const lw = r.w - 8 * u, cx = r.x + r.w / 2, cy = r.y + r.h / 2, fnt = mid ? 'mono' : 'ui';
+        const lsz = fitSize(S, label, lw, S.portrait ? 15 : 16, { weight: 800, font: fnt });
+        if (!S.portrait) {
+          // en cajas estrechas (teléfono horizontal) la etiqueta y la leyenda pueden ocupar dos líneas cada una: se apilan midiendo su alto
+          const ss = fs(S, 12), lhL = 1.2 * lsz * u, lhS = 1.2 * ss * u, gapY = 4 * u;
+          const nL = d.wrap(label, lw, { size: lsz, weight: 800, font: fnt }).length, nS = d.wrap(sub, lw, { size: ss, weight: 600 }).length;
+          const total = nL * lhL + gapY + nS * lhS, top = cy - total / 2;
+          textTop(S, label, cx, top, lw, { size: lsz, weight: 800, font: fnt, color: tc.ink, align: 'center', lh: 1.2 });
+          textTop(S, sub, cx, top + nL * lhL + gapY, lw, { size: ss, weight: 600, color: p.mute, align: 'center', lh: 1.2 });
+        } else {
+          d.text(label, cx, cy, { size: lsz, weight: 800, font: fnt, color: tc.ink, align: 'center', base: 'middle' });
+          d.text(sub, r.x + r.w - 8 * u, cy, { size: fs(S, 12), weight: 600, color: p.mute, align: 'right', base: 'middle' });
+        }
       });
       if (i > 0) {
         const q = boxes[i - 1], aa = S.reveal('recap', 0.45 + i * 0.4, 0.4);
@@ -71,7 +81,7 @@ export function drawBridge(S: Frame) {
       const tc = tone(S, t), r: Rect = { x: x0 + (i % cols) * (bw + gap), y: y0 + Math.floor(i / cols) * (bh + gap), w: bw, h: bh }, a = S.reveal('bridge', 1.0 + i * 0.5, 0.6);
       d.withAlpha(a, () => {
         d.rect(r.x, r.y, r.w, r.h, { fill: alpha(tc.c, 0.13), stroke: tc.c, lw: 1.75, r: 3 });
-        d.text(label, r.x + r.w / 2, r.y + r.h / 2, { size: fs(S, 15), weight: 800, color: tc.ink, align: 'center', base: 'middle', w: r.w - 10 * u });
+        textBlock(S, label, r.x + r.w / 2, r.y + r.h / 2, r.w - 10 * u, { size: fitSize(S, label, r.w - 10 * u, 15, { weight: 800 }), weight: 800, color: tc.ink, align: 'center' });
       });
     });
     if (!S.portrait) [1, 2, 3].forEach((i) => d.text('+', x0 + i * (bw + gap) - gap / 2, y0 + bh / 2, { size: fs(S, 22), weight: 800, color: p.ink2, align: 'center', base: 'middle', a: S.reveal('bridge', 1.0 + i * 0.5, 0.6) }));

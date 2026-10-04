@@ -16,7 +16,8 @@ function miniSeq(S: Frame, r: Rect, mode: 'bahdanau' | 'vaswani', a: number, cro
     boxes.slice(0, -1).forEach((b, i) => d.arrow(b.x + b.w + 1, rowY, boxes[i + 1].x - 1, rowY, p.ink2, 1.6, 6, 1 - cross));
     boxes.forEach((b) => d.rect(b.x, b.y, b.w, b.h, { fill: lat.soft, stroke: lat.c, lw: 1.5, r: 2 }));
     if (mode === 'bahdanau') {
-      const dec: Rect = { x: r.x + r.w / 2 - 44 * u, y: r.y + r.h - bh - 2 * u, w: 88 * u, h: bh };
+      const decW = Math.max(88 * u, d.measure(S.l('decodificador', 'decoder'), { size: fs(S, 12), weight: 700 }) + 16 * u);
+      const dec: Rect = { x: r.x + r.w / 2 - decW / 2, y: r.y + r.h - bh - 2 * u, w: decW, h: bh };
       const wts = [0.05, 0.15, 0.5, 0.2, 0.1];
       boxes.forEach((b, i) => {
         const x1 = dec.x + dec.w / 2 + (i - 2) * 14 * u, y1 = dec.y, x2 = b.x + b.w / 2, y2 = b.y + b.h;

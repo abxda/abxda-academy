@@ -22,14 +22,15 @@ function geo(S: Frame): Geo {
     const back: [number, number][] = [[tx + wt / 2, world.y + th], [tx + wt / 2, yb], [ctx.x + wc / 2, yb], [ctx.x + wc / 2, ctx.y + ctx.h]];
     return { all, ctx, model, prog, world, cards, back, midY };
   }
-  // vertical: cuatro filas apiladas
-  const gap = 24 * u, top = 22 * u, hc = all.h * 0.25, hm = all.h * 0.14, hp = all.h * 0.12, ht = all.h - top - hc - hm - hp - 3 * gap;
+  // vertical: cuatro filas apiladas. El contexto manda: debe caber el mensaje, las herramientas (en dos columnas) y el resultado.
+  const lhc = lineH(S, 12.5), g1 = 24 * u, g2 = 22 * u, g3 = 20 * u, top = 26 * u, bot = 12 * u;
+  const hc = Math.max(all.h * 0.28, lhc * 6.2 + 26 * u), hm = Math.max(all.h * 0.11, 44 * u), hp = Math.max(all.h * 0.1, 42 * u), ht = all.h - top - hc - hm - hp - g1 - g2 - g3 - bot;
   const ctx: Rect = { x: all.x, y: all.y + top, w: all.w, h: hc };
-  const model: Rect = { x: all.x + all.w * 0.18, y: ctx.y + hc + gap, w: all.w * 0.64, h: hm };
-  const prog: Rect = { x: all.x + all.w * 0.18, y: model.y + hm + gap, w: all.w * 0.64, h: hp };
-  const world: Rect = { x: all.x, y: prog.y + hp + gap, w: all.w, h: ht };
-  const cw = (all.w - 10 * u) / 2, ch = (ht - 10 * u) / 2;
-  const cards = [0, 1, 2, 3].map((i) => ({ x: all.x + (i % 2) * (cw + 10 * u), y: world.y + Math.floor(i / 2) * (ch + 10 * u), w: cw, h: ch }));
+  const model: Rect = { x: all.x + all.w * 0.18, y: ctx.y + hc + g1, w: all.w * 0.64, h: hm };
+  const prog: Rect = { x: all.x + all.w * 0.18, y: model.y + hm + g2, w: all.w * 0.64, h: hp };
+  const world: Rect = { x: all.x, y: prog.y + hp + g3, w: all.w, h: ht };
+  const cw = (all.w - 10 * u) / 2, ch = (ht - 8 * u) / 2;
+  const cards = [0, 1, 2, 3].map((i) => ({ x: all.x + (i % 2) * (cw + 10 * u), y: world.y + Math.floor(i / 2) * (ch + 8 * u), w: cw, h: ch }));
   const xr = S.W - 6 * u;
   const back: [number, number][] = [[world.x + world.w, world.y + world.h / 2], [xr, world.y + world.h / 2], [xr, ctx.y + ctx.h / 2], [ctx.x + ctx.w, ctx.y + ctx.h / 2]];
   return { all, ctx, model, prog, world, cards, back, midY: model.y + model.h / 2 };
@@ -66,8 +67,9 @@ export function drawAnatomy(S: Frame) {
       frame(S, G.world, { dash: [6, 5], fill: 0.02 });
       T(S, S.l('el mundo', 'the world'), G.world.x + G.world.w / 2, G.world.y + 10 * u, { size: 14, weight: 800, color: mute.ink, align: 'center' });
       const items = [S.l('inventario de hoy', 'today’s inventory'), S.l('pedidos', 'orders')];
-      items.forEach((s, i) => T(S, s, G.world.x + G.world.w / 2, G.world.y + G.world.h / 2 - 14 * u + i * 26 * u, { size: 13, color: p.ink2, align: 'center', base: 'middle' }));
-      T(S, '?', G.world.x + G.world.w / 2, G.world.y + G.world.h - 28 * u, { size: 22, weight: 800, color: mute.ink, align: 'center' });
+      if (S.portrait) items.forEach((s, i) => T(S, s, G.world.x + G.world.w * (i ? 0.76 : 0.27), G.world.y + 32 * u, { size: 13, color: p.ink2, align: 'center' }));
+      else items.forEach((s, i) => T(S, s, G.world.x + G.world.w / 2, G.world.y + G.world.h / 2 - 14 * u + i * 26 * u, { size: 13, color: p.ink2, align: 'center', base: 'middle' }));
+      T(S, '?', G.world.x + G.world.w / 2, G.world.y + G.world.h - (S.portrait ? 27 : 28) * u, { size: 22, weight: 800, color: mute.ink, align: 'center' });
     });
     // el muro: sin acceso
     const wx = (G.model.x + G.model.w + G.world.x) / 2, wy = G.midY;
@@ -78,7 +80,7 @@ export function drawAnatomy(S: Frame) {
   }
   if (showTools) {
     const f = S.reveal('hands', 0, 0.5);
-    d.withAlpha(f, () => T(S, S.l('herramientas', 'tools'), G.world.x + (S.portrait ? 0 : G.world.w / 2), G.world.y - (S.portrait ? 20 : 20) * u, { size: 13, weight: 800, color: dat.ink, align: S.portrait ? 'left' : 'center' }));
+    d.withAlpha(f, () => T(S, S.l('herramientas', 'tools'), G.world.x + (S.portrait ? 0 : G.world.w / 2), G.world.y - (S.portrait ? 17 : 20) * u, { size: 13, weight: 800, color: dat.ink, align: S.portrait ? 'left' : 'center' }));
     G.cards.forEach((r, i) => {
       const a = S.reveal('hands', 0.5 + i * 0.7, 0.5), irr = i === 3, t = irr ? w : dat;
       if (a <= 0) return;
@@ -95,16 +97,17 @@ export function drawAnatomy(S: Frame) {
   const cA = S.reveal('hook', 0, 0.6);
   d.withAlpha(cA, () => {
     frame(S, G.ctx, { tone: 'lat', fill: 0.04 });
-    T(S, S.l('contexto', 'context'), G.ctx.x + 4 * u, G.ctx.y - 19 * u, { size: 13, weight: 800, color: lat.ink });
+    T(S, S.l('contexto', 'context'), G.ctx.x + 4 * u, G.ctx.y - (S.portrait ? 17 : 19) * u, { size: 13, weight: 800, color: lat.ink });
     const iw = G.ctx.w - 20 * u;
     let y = G.ctx.y + 8 * u;
     const lh = lineH(S, 12.5);
     // mensaje del usuario
     const q = S.l('¿Qué piezas faltan y cuánto cuesta reponerlas?', 'Which parts are missing, and what does restocking them cost?');
-    T(S, S.l('usuario', 'user'), G.ctx.x + 10 * u, y, { size: 12, weight: 800, color: p.mute });
-    const ql = wrapLines(S, q, iw, 12.5, 600);
-    d.withAlpha(S.reveal('hook', 0.5, 0.6), () => typed(S, ql, G.ctx.x + 10 * u, y + lh, S.at('hook', 0.5, 2.4, 'lin'), { size: 12.5, weight: 600 }));
-    y += lh * (1 + ql.length) + 8 * u;
+    const ulab = S.l('usuario', 'user'), ulw = S.portrait ? d.measure(ulab, { size: FS(S, 12), weight: 800 }) + 8 * u : 0;   // en vertical la etiqueta va en la misma línea
+    T(S, ulab, G.ctx.x + 10 * u, y, { size: 12, weight: 800, color: p.mute });
+    const ql = wrapLines(S, q, iw - ulw, 12.5, 600);
+    d.withAlpha(S.reveal('hook', 0.5, 0.6), () => typed(S, ql, G.ctx.x + 10 * u + ulw, y + (S.portrait ? 0 : lh), S.at('hook', 0.5, 2.4, 'lin'), { size: 12.5, weight: 600 }));
+    y += lh * ((S.portrait ? 0 : 1) + ql.length) + 8 * u;
     // descripciones de herramientas
     if (S.on('describe')) {
       const a = S.reveal('describe', 0.4, 0.5);
@@ -113,17 +116,21 @@ export function drawAnatomy(S: Frame) {
         y += lh;
         [0, 1, 2, 3].forEach((i) => {
           const k = clamp(S.at('describe', 0.8 + i * 0.7, 1.5 + i * 0.7, 'out'));
-          if (k > 0) T(S, SIG(S, i), G.ctx.x + 10 * u, y + i * lh * 1.05, { size: 12, weight: 600, font: 'mono', color: dat.ink, a: k });
+          // en vertical, las cuatro firmas van en dos columnas
+          const tx = G.ctx.x + 10 * u + (S.portrait ? (i % 2) * (iw / 2) : 0), ty = y + (S.portrait ? Math.floor(i / 2) : i) * lh * 1.05;
+          if (k > 0) T(S, SIG(S, i), tx, ty, { size: 12, weight: 600, font: 'mono', color: dat.ink, a: k });
         });
       });
-      y += 4.2 * lh;
+      y += (S.portrait ? 2.2 : 4.2) * lh;
     }
     // resultado pegado por el programa
     const rk = S.at('harness', 5.6, 6.4, 'out');
     if (rk > 0) {
       d.withAlpha(rk, () => {
-        T(S, S.l('resultado', 'result'), G.ctx.x + 10 * u, y, { size: 12, weight: 800, color: sig.ink });
-        T(S, S.l('precio: 8.50', 'price: 8.50'), G.ctx.x + 10 * u, y + lh, { size: 12.5, weight: 600, font: 'mono', color: sig.ink });
+        const rlab = S.l('resultado', 'result'), rval = S.l('precio: 8.50', 'price: 8.50');
+        T(S, rlab, G.ctx.x + 10 * u, y, { size: 12, weight: 800, color: sig.ink });
+        if (S.portrait) T(S, rval, G.ctx.x + 10 * u + d.measure(rlab, { size: FS(S, 12), weight: 800 }) + 8 * u, y, { size: 12.5, weight: 600, font: 'mono', color: sig.ink });
+        else T(S, rval, G.ctx.x + 10 * u, y + lh, { size: 12.5, weight: 600, font: 'mono', color: sig.ink });
       });
     }
   });
@@ -211,9 +218,9 @@ export function drawAnatomy(S: Frame) {
     const off = S.portrait ? 0 : 0;
     const cmMid: [number, number] = [(cm[0][0] + cm[1][0]) / 2, (cm[0][1] + cm[1][1]) / 2];
     const mpMid: [number, number] = S.portrait ? [progMid[0], G.model.y + G.model.h + (G.prog.y - G.model.y - G.model.h) / 2] : [(G.model.x + G.model.w + G.prog.x) / 2, mid];
-    pill(S, S.l('observar', 'observe'), cmMid[0] + (S.portrait ? 54 * u : 0), cmMid[1] + (S.portrait ? 0 : -22 * u) + off, { tone: 'sig', a, weight: 800 });
-    pill(S, S.l('pensar', 'think'), G.model.x + G.model.w / 2, G.model.y - (S.portrait ? 4 : 14) * u, { tone: 'lat', a: a2, weight: 800 });
-    pill(S, S.l('actuar', 'act'), mpMid[0] + (S.portrait ? 54 * u : 0), mpMid[1] + (S.portrait ? 0 : -22 * u), { tone: 'dat', a: a3, weight: 800 });
+    pill(S, S.l('observar', 'observe'), cmMid[0] + (S.portrait ? 72 * u : 0), cmMid[1] + (S.portrait ? 0 : -22 * u) + off, { tone: 'sig', a, weight: 800 });
+    pill(S, S.l('pensar', 'think'), S.portrait ? G.model.x + 40 * u : G.model.x + G.model.w / 2, G.model.y - (S.portrait ? 3 : 14) * u, { tone: 'lat', a: a2, weight: 800 });
+    pill(S, S.l('actuar', 'act'), mpMid[0] + (S.portrait ? 72 * u : 0), mpMid[1] + (S.portrait ? 0 : -22 * u), { tone: 'dat', a: a3, weight: 800 });
   }
 
   // ── el agente: el ciclo completo (loop) ──
@@ -231,8 +238,9 @@ export function drawAnatomy(S: Frame) {
     // etiquetas del ciclo, ya presentadas
     const l1 = S.reveal('loop', 1.2, 0.6);
     d.withAlpha(l1, () => {
-      const y = S.portrait ? G.back[2][1] : G.back[1][1];
-      pill(S, S.l('repetir hasta cumplir el objetivo', 'repeat until the goal is met'), S.portrait ? S.W - 14 * u : (G.back[1][0] + G.back[2][0]) / 2, S.portrait ? (G.back[1][1] + G.back[2][1]) / 2 : y - 14 * u, { tone: 'sig', align: S.portrait ? 'right' : 'center', weight: 700 });
+      const lab = S.l('repetir hasta cumplir el objetivo', 'repeat until the goal is met');
+      if (S.portrait) pill(S, lab, fr.x + fr.w / 2, fr.y + fr.h, { tone: 'sig', align: 'center', weight: 700 });   // sobre el borde inferior del marco
+      else pill(S, lab, (G.back[1][0] + G.back[2][0]) / 2, G.back[1][1] - 14 * u, { tone: 'sig', align: 'center', weight: 700 });
     });
     d.withAlpha(S.reveal('loop', 2.6, 0.6), () => pill(S, S.l('ReAct · Yao et al., 2022', 'ReAct · Yao et al., 2022'), S.W - 14 * u, S.portrait ? fr.y : fr.y, { tone: 'mute', align: 'right', weight: 700 }));
   }

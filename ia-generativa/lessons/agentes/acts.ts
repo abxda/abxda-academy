@@ -31,7 +31,7 @@ export function drawCost(S: Frame) {
   const { d, pal: p } = S, u = S.u, all = area(S), lh = lineH(S, 12);
   const rows = readLedger(NARR.turns, S.lang), n = rows.length;
   const tot = rows.map((r) => r.base + r.hist + r.fresh), ymax = Math.ceil(Math.max(...tot) / 100) * 100;
-  const side = !S.portrait, chartR: Rect = side ? { x: all.x, y: all.y, w: all.w * 0.64, h: all.h } : { x: all.x, y: all.y, w: all.w, h: all.h * 0.62 };
+  const side = !S.portrait, chartR: Rect = side ? { x: all.x, y: all.y, w: all.w * 0.64, h: all.h } : { x: all.x, y: all.y, w: all.w, h: all.h * 0.5 };
   const ax = axes(S, chartR, { yMax: ymax, yTicks: [0, ymax / 4, ymax / 2, (3 * ymax) / 4, ymax], xLabel: S.l('consulta al modelo', 'model query'), yLabel: S.l('tokens que lee (≈)', 'tokens it reads (≈)'), yFmt: (v) => String(Math.round(v)), a: S.reveal('cost-loop', 0, 0.5) });
   const bw = ax.w / n, gap = bw * 0.22, cols = [tone(S, 'mute'), tone(S, 'lat'), tone(S, 'sig')];
   rows.forEach((r, i) => {
@@ -60,13 +60,22 @@ export function drawCost(S: Frame) {
   y += 6 * u;
   const total = tot.reduce((a, b) => a + b, 0), flat = rows[0].base * n;
   d.withAlpha(a2, () => {
-    T(S, S.l('leído en total', 'read in total'), lg.x, y, { size: 12, weight: 700, color: p.mute });
-    T(S, `≈ ${big(S, total)}`, lg.x, y + lh, { size: 20, weight: 800, font: 'mono' });
-    T(S, S.l(`si el contexto no creciera: ≈ ${big(S, flat)}`, `if the context did not grow: ≈ ${big(S, flat)}`), lg.x, y + lh * 2.4, { size: 12, weight: 600, color: p.ink2, w: lg.w });
-    y += lh * 4.4;
+    const lab = S.l('leído en total', 'read in total'), note = S.l(`si el contexto no creciera: ≈ ${big(S, flat)}`, `if the context did not grow: ≈ ${big(S, flat)}`);
+    if (side) {
+      T(S, lab, lg.x, y, { size: 12, weight: 700, color: p.mute });
+      T(S, `≈ ${big(S, total)}`, lg.x, y + lh, { size: 20, weight: 800, font: 'mono' });
+      T(S, note, lg.x, y + lh * 2.4, { size: 12, weight: 600, color: p.ink2, w: lg.w });
+      y += lh * 4.4;
+    } else {
+      // vertical: etiqueta y cifra en la misma línea, la nota debajo
+      T(S, lab, lg.x, y + 4 * u, { size: 12, weight: 700, color: p.mute });
+      T(S, `≈ ${big(S, total)}`, lg.x + d.measure(lab, { size: FS(S, 12), weight: 700 }) + 10 * u, y, { size: 20, weight: 800, font: 'mono' });
+      T(S, note, lg.x, y + lh * 1.7, { size: 12, weight: 600, color: p.ink2, w: lg.w });
+      y += lh * 3.4;
+    }
   });
   const foot = S.l('Estimación: un token ≈ cuatro caracteres. Aquí los resultados son cortos; con páginas o archivos el historial crece mucho más rápido. El caché de prompt abarata lo repetido, no lo elimina.', 'Estimate: one token ≈ four characters. Results here are short; with pages or files the history grows much faster. Prompt caching makes repeats cheaper, not free.');
-  d.withAlpha(S.reveal('cost-loop', 9.2, 0.6), () => T(S, foot, lg.x, side ? Math.max(y, lg.y + lg.h - lh * 6.6) : lg.y + lh * 4.6, { size: 12, weight: 600, color: p.mute, w: lg.w }));
+  d.withAlpha(S.reveal('cost-loop', 9.2, 0.6), () => T(S, foot, lg.x, side ? Math.max(y, lg.y + lg.h - lh * 6.6) : y, { size: 12, weight: 600, color: p.mute, w: lg.w }));
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -95,12 +104,12 @@ export function drawPlan(S: Frame) {
   });
   // medidor del contexto: se llena y se desborda
   const fillK = smooth(S.at('plan-memory', 1.0, 6.5, 'lin')), full = S.at('plan-memory', 6.4, 6.8);
-  const gx = ctx.x + ctx.w - gw - 10 * u, gy = ctx.y + 14 * u, gh = ctx.h - 28 * u;
+  const gx = ctx.x + ctx.w - gw - 10 * u, gy = ctx.y + 28 * u, gh = ctx.h - 42 * u;
   d.withAlpha(S.reveal('plan-memory', 0.5, 0.5), () => {
     d.rect(gx, gy, gw * 0.6, gh, { stroke: p.lineStrong, lw: 1.5, fill: p.surface2 });
     const fh = gh * (0.12 + 0.88 * fillK);
     d.rect(gx, gy + gh - fh, gw * 0.6, fh, { fill: alpha(full > 0.5 ? err.c : lat.c, 0.7) });
-    T(S, S.l('límite', 'limit'), gx + gw * 0.3, gy - 4 * u, { size: 12, weight: 700, color: p.mute, align: 'center', base: 'bottom' });
+    T(S, S.l('límite', 'limit'), gx + gw * 0.3, gy - 5 * u, { size: 12, weight: 700, color: p.mute, align: 'center', base: 'bottom' });
   });
   d.withAlpha(full, () => pill(S, S.l('lleno', 'full'), gx + gw * 0.3, gy + gh / 2, { tone: 'err', weight: 800 }));
   // notas fuera
@@ -141,8 +150,8 @@ export function drawMcp(S: Frame) {
   d.withAlpha(S.reveal('mcp', 0, 0.5), () => {
     A.forEach((r, i) => { frame(S, r, { tone: 'sig', fill: 0.08 }); T(S, apps[i], r.x + r.w / 2, r.y + r.h / 2, { size: 13, weight: 800, color: sig.ink, align: 'center', base: 'middle' }); });
     B.forEach((r, i) => { frame(S, r, { tone: 'dat', fill: 0.08 }); T(S, srv[i], r.x + r.w / 2, r.y + r.h / 2, { size: 13, weight: 800, color: dat.ink, align: 'center', base: 'middle' }); });
-    T(S, S.l('aplicaciones', 'applications'), port ? all.x : A[0].x, A[0].y - (port ? 20 : 30) * u, { size: 12, weight: 800, color: sig.ink });
-    T(S, S.l('herramientas y datos', 'tools and data'), port ? all.x : B[0].x + bw, B[0].y - (port ? 20 : 30) * u, { size: 12, weight: 800, color: dat.ink, align: port ? 'left' : 'right' });
+    T(S, S.l('aplicaciones', 'applications'), port ? all.x : A[0].x, A[0].y - (port ? 20 : 30) * u, { size: 12, weight: 800, color: sig.ink, halo: true });
+    T(S, S.l('herramientas y datos', 'tools and data'), port ? all.x : B[0].x + bw, B[0].y - (port ? 20 : 30) * u, { size: 12, weight: 800, color: dat.ink, align: port ? 'left' : 'right', halo: true });
   });
   const phase2 = S.at('mcp', 6.0, 7.0), many = 1 - phase2 * 0.88;
   // 9 conexiones a medida
@@ -207,7 +216,7 @@ export function drawHorizon(S: Frame) {
     pill(S, S.l('METR · 2025 · tareas de software', 'METR · 2025 · software tasks'), all.x, all.y + 10 * u, { tone: 'lat', align: 'left', weight: 800, size: 13 });
     T(S, S.l('duración de la tarea que el agente completa la mitad de las veces', 'length of the task the agent completes half the time'), all.x, all.y + 32 * u, { size: 12.5, weight: 600, color: p.ink2, w: all.w });
   });
-  const n = 5, ch: Rect = { x: all.x + 8 * u, y: all.y + 76 * u, w: all.w - 16 * u, h: all.h - 76 * u - lh * 4.2 };
+  const n = 5, ch: Rect = { x: all.x + 8 * u, y: all.y + 76 * u, w: all.w - 16 * u, h: all.h - 76 * u - lh * 5.4 };
   const bw = ch.w / n, gap = bw * 0.28, base = ch.y + ch.h;
   for (let i = 0; i < n; i++) {
     const k = smooth(S.at('horizon', 0.8 + i * 0.7, 1.6 + i * 0.7, 'lin'));
@@ -246,7 +255,7 @@ export function drawIncident(S: Frame) {
     const m: [number, number] = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
     d.circle(m[0], m[1], 15 * u, { fill: p.stage, stroke: err.c, lw: 2.5 });
     glyph(S, 'cross', m[0], m[1], 18 * u, err.c);
-    pill(S, S.l('no la frenó', 'did not stop it'), m[0], m[1] + (port ? 0 : 28 * u), { tone: 'err', weight: 800, align: port ? 'left' : 'center' });
+    pill(S, S.l('no la frenó', 'did not stop it'), m[0] + (port ? 24 * u : 0), m[1] + (port ? 0 : 28 * u), { tone: 'err', weight: 800, align: port ? 'left' : 'center' });
   });
   d.withAlpha(S.reveal('incident', 10.2, 0.6), () => T(S, S.l('Según reportó su usuario; cobertura: The Register, 22 de julio de 2025.', 'As reported by its user; coverage: The Register, July 22, 2025.'), all.x, all.y + all.h - lh * 2.2, { size: 12, weight: 600, color: p.mute, w: all.w }));
   if (!port) neu(S, all.x + all.w - 64 * u, all.y + all.h - 80 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'sad', a: S.reveal('incident', 9.6, 0.5) });
@@ -273,31 +282,35 @@ export function drawPerm(S: Frame) {
     pill(S, S.l('no depende del modelo', 'does not depend on the model'), P2.x + P2.w - 10 * u, P2.y + P2.h - 18 * u, { tone: 'w', align: 'right', weight: 800 });
   });
   // el flujo: modelo → programa (regla) → herramienta
-  const fy = (port ? P2.y + ph : P1.y + ph) + (port ? 44 * u : 52 * u), bh = 44 * u, bw = port ? 84 * u : 120 * u;
-  const xs = [all.x + (port ? 0 : 30 * u), all.x + all.w / 2 - bw / 2, all.x + all.w - bw - (port ? 0 : 30 * u)];
+  const fy = (port ? P2.y + ph : P1.y + ph) + (port ? 44 * u : 52 * u), bh = 44 * u;
+  const bws = port ? [66 * u, 84 * u, 116 * u] : [120 * u, 120 * u, 120 * u];
+  const pgap = port ? Math.max(14 * u, (all.w - bws[0] - bws[1] - bws[2]) / 2) : 0;
+  const xs = port ? [all.x, all.x + bws[0] + pgap, all.x + bws[0] + bws[1] + 2 * pgap] : [all.x + 30 * u, all.x + all.w / 2 - bws[1] / 2, all.x + all.w - bws[2] - 30 * u];
   const fa = S.reveal('perm', 8.4, 0.6);
   d.withAlpha(fa, () => {
     const labs: [string, Tone][] = [[S.l('modelo', 'model'), 'lat'], [S.l('programa', 'program'), 'ink'], [S.lang === 'es' ? 'hacer_pedido' : 'place_order', 'dat']];
     labs.forEach(([lab, t], i) => {
-      const tc = tone(S, t), r: Rect = { x: xs[i], y: fy, w: bw, h: bh };
+      const tc = tone(S, t), r: Rect = { x: xs[i], y: fy, w: bws[i], h: bh };
       d.rect(r.x, r.y, r.w, r.h, { fill: alpha(tc.c, i === 2 ? 0.06 : 0.12), stroke: tc.c, lw: i === 1 ? 2.5 : 1.5, r: 3, dash: i === 2 ? [5, 4] : undefined });
       T(S, lab, r.x + r.w / 2, r.y + r.h / 2, { size: 12.5, weight: 800, color: tc.ink, align: 'center', base: 'middle', font: i === 2 ? 'mono' : 'ui' });
     });
-    d.arrow(xs[0] + bw + 2 * u, fy + bh / 2, xs[1] - 2 * u, fy + bh / 2, lat.c, 2, 8);
-    d.line(xs[1] + bw + 2 * u, fy + bh / 2, xs[2] - 2 * u, fy + bh / 2, p.lineStrong, 2, [5, 5]);
+    d.arrow(xs[0] + bws[0] + 2 * u, fy + bh / 2, xs[1] - 2 * u, fy + bh / 2, lat.c, 2, 8);
+    d.line(xs[1] + bws[1] + 2 * u, fy + bh / 2, xs[2] - 2 * u, fy + bh / 2, p.lineStrong, 2, [5, 5]);
   });
   const k = S.at('perm', 9.4, 10.8, 'io'), hit = S.at('perm', 10.8, 11.2);
   if (k > 0) {
     const call = S.lang === 'es' ? 'hacer_pedido(2621.40)' : 'place_order(2621.40)', wch = d.measure(call, { size: FS(S, 12), weight: 800, font: 'mono' }) + 14 * u;
-    const cx = lerp(xs[0] + bw, xs[1] - wch / 2 - 4 * u, k), cy = fy - 20 * u;
+    // la llamada viaja por encima de las cajas: en vertical acaba centrada sobre el programa; en horizontal, justo antes de él
+    const startL = port ? all.x : xs[0] + bws[0], endL = port ? xs[1] + bws[1] / 2 - wch / 2 : xs[1] - wch - 4 * u;
+    const left = lerp(startL, endL, k), cy = fy - 20 * u;
     d.withAlpha(Math.min(fa, 1), () => {
-      d.rect(cx - (k < 1 ? 0 : wch / 2), cy - 11 * u, wch, 22 * u, { fill: dat.c, stroke: p.stage, lw: 2, r: 3 });
-      T(S, call, cx - (k < 1 ? 0 : wch / 2) + 7 * u, cy, { size: 12, weight: 800, font: 'mono', color: p.stage, base: 'middle' });
+      d.rect(left, cy - 11 * u, wch, 22 * u, { fill: dat.c, stroke: p.stage, lw: 2, r: 3 });
+      T(S, call, left + 7 * u, cy, { size: 12, weight: 800, font: 'mono', color: p.stage, base: 'middle' });
     });
   }
   d.withAlpha(hit, () => {
     d.rect(xs[1] - 5 * u, fy - 5 * u, 8 * u, bh + 10 * u, { fill: err.c });
-    pill(S, S.l('pide aprobación', 'asks approval'), xs[1] + bw / 2, fy + bh + 22 * u, { tone: 'w', weight: 800 });
+    pill(S, S.l('pide aprobación', 'asks approval'), xs[1] + bws[1] / 2, fy + bh + 22 * u, { tone: 'w', weight: 800 });
   });
   void ink; void err;
 }
@@ -315,7 +328,7 @@ export function drawLevels(S: Frame) {
     { n: S.l('Actúa sola', 'Acts alone'), s: S.l('La persona revisa el registro después.', 'The person reviews the log afterward.'), v: 4, c: 1 },
   ];
   const port = S.portrait, mw = (port ? 56 : 80) * u, head = lh * 1.6, rh = (all.h - head) / 4;
-  const mx = [all.x + all.w - 2 * mw - 18 * u, all.x + all.w - mw];
+  const mx = [all.x + all.w - 2 * mw - 24 * u, all.x + all.w - mw - 8 * u];
   d.withAlpha(S.reveal('levels', 0.2, 0.5), () => {
     T(S, S.l('velocidad', 'speed'), mx[0] + mw / 2, all.y, { size: 12, weight: 800, color: sig.ink, align: 'center' });
     T(S, S.l('control', 'control'), mx[1] + mw / 2, all.y, { size: 12, weight: 800, color: w.ink, align: 'center' });
@@ -344,19 +357,21 @@ export function drawLevels(S: Frame) {
 // ═════════════════════════════════════════════════════════════════════════
 export function drawHitl(S: Frame) {
   const { d, pal: p } = S, u = S.u, all = area(S), lh = lineH(S, 12.5), w = tone(S, 'w'), dat = tone(S, 'dat'), err = tone(S, 'err'), ink = tone(S, 'ink'), lat = tone(S, 'lat');
-  const port = S.portrait, bh = 44 * u, bw = port ? 86 * u : 118 * u, cy = all.y + 8 * u;
-  const xs = [all.x, all.x + all.w / 2 - bw / 2, all.x + all.w - bw];
+  const port = S.portrait, bh = 44 * u, cy = all.y + 8 * u;
+  const bws = port ? [70 * u, 104 * u, 84 * u] : [118 * u, 118 * u, 118 * u];
+  const hg = port ? Math.max(12 * u, (all.w - bws[0] - bws[1] - bws[2]) / 2) : 0;
+  const xs = port ? [all.x, all.x + bws[0] + hg, all.x + bws[0] + bws[1] + 2 * hg] : [all.x, all.x + all.w / 2 - bws[1] / 2, all.x + all.w - bws[2]];
   const labs: [string, Tone][] = [[S.l('agente', 'agent'), 'lat'], [S.l('aprobación', 'approval'), 'w'], [S.l('el mundo', 'the world'), 'dat']];
   labs.forEach(([lab, t], i) => {
     const a = S.reveal('hitl', 0.3 + i * (i === 1 ? 2.8 : 0.7), 0.5), tc = tone(S, t);
     d.withAlpha(a, () => {
-      d.rect(xs[i], cy, bw, bh, { fill: alpha(tc.c, 0.1), stroke: tc.c, lw: i === 1 ? 2.5 : 1.5, r: 3 });
-      T(S, lab, xs[i] + bw / 2 + (i === 1 ? 10 * u : 0), cy + bh / 2, { size: 13, weight: 800, color: tc.ink, align: 'center', base: 'middle' });
+      d.rect(xs[i], cy, bws[i], bh, { fill: alpha(tc.c, 0.1), stroke: tc.c, lw: i === 1 ? 2.5 : 1.5, r: 3 });
+      T(S, lab, xs[i] + bws[i] / 2 + (i === 1 ? 10 * u : 0), cy + bh / 2, { size: 13, weight: 800, color: tc.ink, align: 'center', base: 'middle' });
       if (i === 1) glyph(S, 'person', xs[i] + 16 * u, cy + bh / 2, 18 * u, w.c);
     });
   });
-  d.withAlpha(S.reveal('hitl', 1.0, 0.5), () => d.arrow(xs[0] + bw + 2 * u, cy + bh / 2, xs[1] - 2 * u, cy + bh / 2, lat.c, 2, 8));
-  d.withAlpha(S.reveal('hitl', 3.4, 0.5), () => { d.arrow(xs[1] + bw + 2 * u, cy + bh / 2, xs[2] - 2 * u, cy + bh / 2, dat.c, 2, 8); T(S, S.l('si aprueba', 'if approved'), (xs[1] + bw + xs[2]) / 2, cy + bh / 2 - 8 * u, { size: 12, weight: 700, color: dat.ink, align: 'center', base: 'bottom' }); });
+  d.withAlpha(S.reveal('hitl', 1.0, 0.5), () => d.arrow(xs[0] + bws[0] + 2 * u, cy + bh / 2, xs[1] - 2 * u, cy + bh / 2, lat.c, 2, 8));
+  d.withAlpha(S.reveal('hitl', 3.4, 0.5), () => { d.arrow(xs[1] + bws[1] + 2 * u, cy + bh / 2, xs[2] - 2 * u, cy + bh / 2, dat.c, 2, 8); T(S, S.l('si aprueba', 'if approved'), (xs[1] + bws[1] + xs[2]) / 2, port ? cy + bh + 3 * u : cy + bh / 2 - 8 * u, { size: 12, weight: 700, color: dat.ink, align: 'center', base: port ? 'top' : 'bottom' }); });
   // la tarjeta de aprobación del escenario «error de cantidad»
   const cw = port ? all.w : Math.min(all.w * 0.62, 430 * u), cx = all.x, cyy = cy + bh + 26 * u, a = S.reveal('hitl', 5.2, 0.6);
   const items = [{ sku: 'COJ-6204', qty: 280, unit: 8.5 }, { sku: 'FIL-A15', qty: 17, unit: 14.2 }];
@@ -392,27 +407,27 @@ export function drawStart(S: Frame) {
   const { d, pal: p } = S, u = S.u, all = area(S), lh = lineH(S, 13);
   const dat = tone(S, 'dat'), w = tone(S, 'w'), err = tone(S, 'err');
   const steps: { t: string; u: string; tc: Tone; at: number }[] = [
-    { t: S.l('leer y resumir', 'read and summarize'), u: S.l('se deshace', 'undoable'), tc: 'dat', at: 1.2 },
-    { t: S.l('redactar borradores', 'draft'), u: S.l('se deshace', 'undoable'), tc: 'dat', at: 3.2 },
-    { t: S.l('actuar con deshacer', 'act with undo'), u: S.l('se deshace a medias', 'partly undoable'), tc: 'w', at: 7.6 },
-    { t: S.l('pagar, borrar, enviar', 'pay, delete, send'), u: S.l('no se deshace', 'cannot be undone'), tc: 'err', at: 9.2 },
+    { t: S.l('leer y resumir', 'read and summarize'), u: S.l('se deshace', 'undoable'), tc: 'dat', at: 1.0 },
+    { t: S.l('redactar borradores', 'draft'), u: S.l('se deshace', 'undoable'), tc: 'dat', at: 2.6 },
+    { t: S.l('actuar con deshacer', 'act with undo'), u: S.l('se deshace a medias', 'partly undoable'), tc: 'w', at: 5.2 },
+    { t: S.l('pagar, borrar, enviar', 'pay, delete, send'), u: S.l('no se deshace', 'cannot be undone'), tc: 'err', at: 6.8 },
   ];
   const port = S.portrait, stairs: Rect = port ? { x: all.x, y: all.y, w: all.w, h: all.h * 0.56 } : { x: all.x, y: all.y, w: all.w * 0.58, h: all.h };
   const sw = (stairs.w - 3 * 6 * u) / 4;
   steps.forEach((s, i) => {
-    const a = S.reveal('start', s.at, 0.6), h = stairs.h * (0.3 + 0.18 * i) - (port ? 20 * u : 30 * u), tc = tone(S, s.tc), x = stairs.x + i * (sw + 6 * u), y = stairs.y + stairs.h - h;
+    const a = S.reveal('start-small', s.at, 0.6), h = stairs.h * (0.3 + 0.18 * i) - (port ? 20 * u : 30 * u), tc = tone(S, s.tc), x = stairs.x + i * (sw + 6 * u), y = stairs.y + stairs.h - h;
     d.withAlpha(a, () => {
       d.rect(x, y, sw, h, { fill: alpha(tc.c, 0.12 + 0.05 * i), stroke: tc.c, lw: 2, r: 3, dash: s.tc === 'err' ? [6, 4] : undefined });
       T(S, s.t, x + sw / 2, y + 8 * u, { size: 12.5, weight: 800, color: tc.ink, align: 'center', w: sw - 8 * u });
       pill(S, s.u, x + sw / 2, y + h - 16 * u, { tone: s.tc, weight: 700, size: 12 });
     });
   });
-  d.withAlpha(S.reveal('start', 1.0, 0.5), () => T(S, S.l('más riesgo, más control necesario →', 'more risk, more control needed →'), stairs.x, stairs.y - 2 * u, { size: 12, weight: 700, color: p.mute }));
+  d.withAlpha(S.reveal('start-small', 0.6, 0.5), () => T(S, S.l('más riesgo, más control necesario →', 'more risk, more control needed →'), stairs.x, stairs.y - 2 * u, { size: 12, weight: 700, color: p.mute }));
   const list: Rect = port ? { x: all.x, y: stairs.y + stairs.h + 14 * u, w: all.w, h: all.h - stairs.h - 14 * u } : { x: stairs.x + stairs.w + 22 * u, y: all.y + 30 * u, w: all.w - stairs.w - 22 * u, h: all.h - 30 * u };
   const checks = [S.l('permisos mínimos', 'minimal permissions'), S.l('registro de cada llamada', 'a log of every call'), S.l('aprobación antes de lo irreversible', 'approval before the irreversible'), S.l('medir antes de subir de nivel', 'measure before moving up')];
   let y = list.y;
   checks.forEach((c, i) => {
-    const a = S.reveal('start', 10.4 + i * 0.8, 0.5);
+    const a = S.reveal('start-small', 8.0 + i * 0.7, 0.5);
     const ls = wrapLines(S, c, list.w - 30 * u, 13, 700);
     d.withAlpha(a, () => { glyph(S, 'check', list.x + 10 * u, y + lh * 0.5, 16 * u, dat.c); ls.forEach((ln, k) => T(S, ln, list.x + 28 * u, y + k * lh, { size: 13, weight: 700 })); });
     y += ls.length * lh + 6 * u;

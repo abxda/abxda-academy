@@ -10,4 +10,5 @@ export const PUBLISHED: string[] = [
   'generalizar-y-evaluar',
   'convoluciones',
   'difusion',
+  'atencion',
 ];
