@@ -94,8 +94,11 @@ function lay(S: Frame): Lay {
     return { all, chips, ledger, loop: null, strip, right: null, bar };
   }
   const lw = all.w * 0.58, gap = 16 * u;
-  const cw = (lw - 3 * 6 * u) / 4, chips = [0, 1, 2, 3].map((i) => ({ x: all.x + i * (cw + 6 * u), y: all.y, w: cw, h: ch }));
-  const ledger: Rect = { x: all.x, y: all.y + ch + 8 * u, w: lw, h: all.h - ch - 8 * u };
+  // si el nombre más largo no cabe en una ficha (teléfono horizontal), las fichas pasan a dos filas de dos
+  const need = Math.max(...TOOLS.map((t) => S.d.measure(`${toolName(t, S.lang)}()`, { size: FS(S, 12), weight: 800, font: 'mono' }))) + 12 * u;
+  const cw1 = (lw - 3 * 6 * u) / 4, two = cw1 < need, cw = two ? (lw - 6 * u) / 2 : cw1, chipsH = two ? 2 * ch + 5 * u : ch;
+  const chips = [0, 1, 2, 3].map((i) => (two ? { x: all.x + (i % 2) * (cw + 6 * u), y: all.y + Math.floor(i / 2) * (ch + 5 * u), w: cw, h: ch } : { x: all.x + i * (cw + 6 * u), y: all.y, w: cw, h: ch }));
+  const ledger: Rect = { x: all.x, y: all.y + chipsH + 8 * u, w: lw, h: all.h - chipsH - 8 * u };
   const right: Rect = { x: all.x + lw + gap, y: all.y, w: all.w - lw - gap, h: all.h };
   const tall = S.H >= 400;
   return { all, chips, ledger, loop: tall ? { x: right.x, y: right.y, w: right.w, h: 112 * u } : null, strip: tall ? null : { x: right.x, y: right.y, w: right.w, h: 30 * u }, right, bar: null };

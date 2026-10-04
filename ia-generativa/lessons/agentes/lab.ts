@@ -13,7 +13,8 @@ export function drawChain(S: Frame) {
   const { d, pal: p } = S, u = S.u, all = area(S), lh = lineH(S, 12), dat = tone(S, 'dat'), err = tone(S, 'err');
   const cs = Math.min(all.w / (10 * 1.22 - 0.22), 46 * u), gap = cs * 0.22, rowW = 10 * cs + 9 * gap, x0 = all.x + (all.w - rowW) / 2;
   const compound = S.on('compound');
-  const head = (S.portrait ? 92 : 56) * u, rowH = cs + lh * 1.3 + 8 * u, y1 = all.y + head, y2 = y1 + rowH + 10 * u;
+  const roomy = x0 - all.x > 220 * u;   // si la fila de cuadros arranca lejos del borde, la cifra y el rótulo no se pisan
+  const head = (roomy ? 56 : 92) * u, rowH = cs + lh * 1.3 + 8 * u, y1 = all.y + head, y2 = y1 + rowH + 10 * u;
   const nowRow2 = compound ? S.at('compound', 4.6, 5.0) : 0;
   const cum = (i: number) => Math.pow(P_DEFAULT, i + 1);
   // cabecera: la cifra grande
@@ -24,9 +25,9 @@ export function drawChain(S: Frame) {
   if (compound) {
     const n = twenty > 0.5 ? 20 : 10, val = cum(n - 1), a = n === 20 ? twenty : ten;
     d.withAlpha(Math.max(a, 0), () => {
-      T(S, `0.95${n === 20 ? '²⁰' : '¹⁰'} ≈ ${S.n(val, 2)}`, all.x, all.y + (S.portrait ? 14 : 20) * u, { size: 18, weight: 800, font: 'mono' });
+      T(S, `0.95${n === 20 ? '²⁰' : '¹⁰'} ≈ ${S.n(val, 2)}`, all.x, all.y + (roomy ? 20 : 14) * u, { size: 18, weight: 800, font: 'mono' });
       T(S, `≈ ${Math.round(val * 100)} %`, all.x + all.w, all.y + 4 * u, { size: 38, weight: 800, font: 'mono', color: tone(S, 'err').ink, align: 'right' });
-      T(S, S.l(`los ${n} pasos bien`, `all ${n} steps right`), all.x + all.w, all.y + (S.portrait ? 50 : 44) * u, { size: 12, weight: 700, color: p.ink2, align: 'right' });
+      T(S, S.l(`los ${n} pasos bien`, `all ${n} steps right`), all.x + all.w, all.y + (roomy ? 44 : 50) * u, { size: 12, weight: 700, color: p.ink2, align: 'right' });
     });
   }
   const square = (i: number, x: number, y: number, a: number) => {

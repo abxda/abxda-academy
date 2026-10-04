@@ -23,7 +23,7 @@ function geo(S: Frame): Geo {
     return { all, ctx, model, prog, world, cards, back, midY };
   }
   // vertical: cuatro filas apiladas. El contexto manda: debe caber el mensaje, las herramientas (en dos columnas) y el resultado.
-  const lhc = lineH(S, 12.5), g1 = 24 * u, g2 = 22 * u, g3 = 20 * u, top = 26 * u, bot = 12 * u;
+  const lhc = lineH(S, 12.5), g1 = 24 * u, g2 = 22 * u, g3 = 20 * u, top = 30 * u, bot = 12 * u;
   const hc = Math.max(all.h * 0.28, lhc * 6.2 + 26 * u), hm = Math.max(all.h * 0.11, 44 * u), hp = Math.max(all.h * 0.1, 42 * u), ht = all.h - top - hc - hm - hp - g1 - g2 - g3 - bot;
   const ctx: Rect = { x: all.x, y: all.y + top, w: all.w, h: hc };
   const model: Rect = { x: all.x + all.w * 0.18, y: ctx.y + hc + g1, w: all.w * 0.64, h: hm };
@@ -74,8 +74,17 @@ export function drawAnatomy(S: Frame) {
     // el muro: sin acceso
     const wx = (G.model.x + G.model.w + G.world.x) / 2, wy = G.midY;
     d.withAlpha(worldA, () => {
-      if (S.portrait) { d.line(G.all.x + 12 * u, G.prog.y + G.prog.h / 2, G.all.x + G.all.w - 12 * u, G.prog.y + G.prog.h / 2, p.lineStrong, 2, [8, 6]); pill(S, S.l('sin acceso', 'no access'), G.all.x + G.all.w / 2, G.prog.y + G.prog.h / 2, { tone: 'err' }); }
-      else { d.line(wx, G.all.y + 4 * u, wx, G.all.y + G.all.h - 4 * u, p.lineStrong, 2, [8, 6]); pill(S, S.l('sin acceso', 'no access'), wx, wy, { tone: 'err' }); }
+      // el muro se interrumpe donde va el rótulo, para que la línea no lo atraviese
+      const nol = S.l('sin acceso', 'no access'), hw = d.measure(nol, { size: FS(S, 12), weight: 600 }) / 2 + 14 * u;
+      if (S.portrait) {
+        const my = G.prog.y + G.prog.h / 2, mx = G.all.x + G.all.w / 2;
+        d.line(G.all.x + 12 * u, my, mx - hw, my, p.lineStrong, 2, [8, 6]); d.line(mx + hw, my, G.all.x + G.all.w - 12 * u, my, p.lineStrong, 2, [8, 6]);
+        pill(S, nol, mx, my, { tone: 'err' });
+      } else {
+        const py = wy + 40 * u;   // debajo de la flecha de «texto», que sale del modelo a la altura media
+        d.line(wx, G.all.y + 4 * u, wx, py - 16 * u, p.lineStrong, 2, [8, 6]); d.line(wx, py + 16 * u, wx, G.all.y + G.all.h - 4 * u, p.lineStrong, 2, [8, 6]);
+        pill(S, nol, wx, py, { tone: 'err' });
+      }
     });
   }
   if (showTools) {
@@ -154,13 +163,21 @@ export function drawAnatomy(S: Frame) {
 
   // ── la llamada que escribe el modelo (call): un texto que aparece junto al modelo ──
   const callTxt = S.lang === 'es' ? 'precio("COJ-6204")' : 'get_price("COJ-6204")';
+  // la llamada es un texto en una ficha; si no cabe entre el modelo y las herramientas, se parte en dos líneas
+  const chipFont = { size: FS(S, 12.5), weight: 800, font: 'mono' as const }, chipLh = lineH(S, 12.5);
+  const chipBox = (text: string) => {
+    const full = d.measure(text, chipFont) + 16 * u, avail = S.portrait ? G.all.w * 0.9 : G.cards[1].x - (G.model.x + G.model.w) - 12 * u, pi = text.indexOf('(') + 1;
+    const split = full > avail && pi > 1 && pi < text.length;
+    const w = split ? Math.max(d.measure(text.slice(0, pi), chipFont), d.measure(text.slice(pi), chipFont)) + 16 * u : full;
+    return { w, h: split ? 2 * chipLh + 8 * u : 24 * u, pi: split ? pi : 0 };
+  };
   const progMid: [number, number] = [G.prog.x + G.prog.w / 2, G.prog.y + G.prog.h / 2];
   const toolMid: [number, number] = [G.cards[1].x + G.cards[1].w / 2, G.cards[1].y + G.cards[1].h / 2];
   const chipHome: [number, number] = [progMid[0], progMid[1]];
   let chipAt: [number, number] | null = null, chipTone = dat, chipText = callTxt, chipK = 1;
   if (S.on('call') && !S.on('harness')) {
     chipAt = chipHome; chipK = S.at('call', 0.4, 2.2, 'lin');
-    const wch = d.measure(callTxt, { size: FS(S, 12.5), weight: 800, font: 'mono' }) + 16 * u;
+    const wch = chipBox(callTxt).w;
     const from: [number, number] = S.portrait ? [G.model.x + G.model.w / 2, G.model.y + G.model.h] : [G.model.x + G.model.w, mid];
     const to: [number, number] = S.portrait ? [chipHome[0], chipHome[1] - 14 * u] : [chipHome[0] - wch / 2 - 3 * u, chipHome[1]];
     arrow(S, from, to, lat, S.at('call', 0.1, 0.6));
@@ -172,9 +189,10 @@ export function drawAnatomy(S: Frame) {
   }
   if (chipAt) {
     const label = chipText.slice(0, Math.max(1, Math.ceil(chipText.length * chipK)));
-    const wch = d.measure(chipText, { size: FS(S, 12.5), weight: 800, font: 'mono' }) + 16 * u, hch = 24 * u;
+    const box = chipBox(chipText), wch = box.w, hch = box.h;
     d.rect(chipAt[0] - wch / 2, chipAt[1] - hch / 2, wch, hch, { fill: chipTone.c, stroke: p.stage, lw: 2, r: 3 });
-    T(S, label, chipAt[0] - wch / 2 + 8 * u, chipAt[1], { size: 12.5, weight: 800, font: 'mono', color: p.stage, base: 'middle' });
+    if (box.pi) [label.slice(0, box.pi), label.slice(box.pi)].forEach((ln, k) => { if (ln) T(S, ln, chipAt![0] - wch / 2 + 8 * u, chipAt![1] - hch / 2 + 4 * u + k * chipLh, { size: 12.5, weight: 800, font: 'mono', color: p.stage }); });
+    else T(S, label, chipAt[0] - wch / 2 + 8 * u, chipAt[1], { size: 12.5, weight: 800, font: 'mono', color: p.stage, base: 'middle' });
   }
 
   // ── el programa (harness) ──
@@ -239,7 +257,11 @@ export function drawAnatomy(S: Frame) {
     const l1 = S.reveal('loop', 1.2, 0.6);
     d.withAlpha(l1, () => {
       const lab = S.l('repetir hasta cumplir el objetivo', 'repeat until the goal is met');
-      if (S.portrait) pill(S, lab, fr.x + fr.w / 2, fr.y + fr.h, { tone: 'sig', align: 'center', weight: 700 });   // sobre el borde inferior del marco
+      if (S.portrait) {   // sobre el borde inferior del marco, con fondo para que el trazo no lo atraviese
+        const pw = d.measure(lab, { size: FS(S, 12), weight: 700 }) + 24 * u;
+        d.rect(fr.x + fr.w / 2 - pw / 2, fr.y + fr.h - 11 * u, pw, 22 * u, { fill: p.stage });
+        pill(S, lab, fr.x + fr.w / 2, fr.y + fr.h, { tone: 'sig', align: 'center', weight: 700 });
+      }
       else pill(S, lab, (G.back[1][0] + G.back[2][0]) / 2, G.back[1][1] - 14 * u, { tone: 'sig', align: 'center', weight: 700 });
     });
     d.withAlpha(S.reveal('loop', 2.6, 0.6), () => pill(S, S.l('ReAct · Yao et al., 2022', 'ReAct · Yao et al., 2022'), S.W - 14 * u, S.portrait ? fr.y : fr.y, { tone: 'mute', align: 'right', weight: 700 }));

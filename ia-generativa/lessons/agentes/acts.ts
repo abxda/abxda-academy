@@ -119,7 +119,12 @@ export function drawPlan(S: Frame) {
     glyph(S, 'doc', notes.x + 20 * u, notes.y + 22 * u, 24 * u, dat.c);
     T(S, S.l('notas guardadas fuera', 'notes saved outside'), notes.x + 38 * u, notes.y + 8 * u, { size: 12, weight: 800, color: dat.ink, w: notes.w - 44 * u });
     const lines = [S.l('precios: 8.50 y 14.20', 'prices: 8.50 and 14.20'), S.l('falta: hacer el pedido', 'left: place the order')];
-    lines.forEach((s, i) => T(S, s, notes.x + 10 * u, notes.y + 52 * u + i * lh * 1.25, { size: 12, weight: 600, font: 'mono', w: notes.w - 16 * u }));
+    let ny = notes.y + 52 * u;
+    lines.forEach((s) => {   // cada línea se parte en las que necesite y la siguiente baja lo mismo
+      const ls = wrapLines(S, s, notes.w - 16 * u, 12, 600, 'mono');
+      ls.forEach((ln, k) => T(S, ln, notes.x + 10 * u, ny + k * lh * 1.1, { size: 12, weight: 600, font: 'mono' }));
+      ny += ls.length * lh * 1.1 + 4 * u;
+    });
   });
   const ya = side ? ctx.y + ctx.h * 0.4 : 0;
   if (na > 0) {
@@ -150,9 +155,11 @@ export function drawMcp(S: Frame) {
   d.withAlpha(S.reveal('mcp', 0, 0.5), () => {
     A.forEach((r, i) => { frame(S, r, { tone: 'sig', fill: 0.08 }); T(S, apps[i], r.x + r.w / 2, r.y + r.h / 2, { size: 13, weight: 800, color: sig.ink, align: 'center', base: 'middle' }); });
     B.forEach((r, i) => { frame(S, r, { tone: 'dat', fill: 0.08 }); T(S, srv[i], r.x + r.w / 2, r.y + r.h / 2, { size: 13, weight: 800, color: dat.ink, align: 'center', base: 'middle' }); });
+  });
+  const colLabels = () => {   // se dibujan después de las líneas, con halo, para que ninguna las cruce
     T(S, S.l('aplicaciones', 'applications'), port ? all.x : A[0].x, A[0].y - (port ? 20 : 30) * u, { size: 12, weight: 800, color: sig.ink, halo: true });
     T(S, S.l('herramientas y datos', 'tools and data'), port ? all.x : B[0].x + bw, B[0].y - (port ? 20 : 30) * u, { size: 12, weight: 800, color: dat.ink, align: port ? 'left' : 'right', halo: true });
-  });
+  };
   const phase2 = S.at('mcp', 6.0, 7.0), many = 1 - phase2 * 0.88;
   // 9 conexiones a medida
   let k = 0;
@@ -181,6 +188,7 @@ export function drawMcp(S: Frame) {
     d.withAlpha(S.reveal('mcp', 8.6, 0.5), () => T(S, S.l('3 + 3 = 6 conexiones, una vez cada una', '3 + 3 = 6 connections, once each'), all.x + all.w / 2, port ? all.y + all.h - 6 * u : all.y + all.h - 4 * u, { size: 15, weight: 800, font: 'mono', color: ink.ink, align: 'center', base: 'bottom' }));
     d.withAlpha(S.reveal('mcp', 10.0, 0.5), () => T(S, S.l('con cinco y cinco: 25 contra 10', 'with five and five: 25 versus 10'), all.x + all.w / 2, port ? all.y + all.h - 6 * u - lh * 1.8 : all.y + all.h - 4 * u - lh * 1.8, { size: 12.5, weight: 600, color: p.ink2, align: 'center', base: 'bottom' }));
   }
+  d.withAlpha(S.reveal('mcp', 0, 0.5), colLabels);   // al final: encima de todas las líneas
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -255,7 +263,12 @@ export function drawIncident(S: Frame) {
     const m: [number, number] = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
     d.circle(m[0], m[1], 15 * u, { fill: p.stage, stroke: err.c, lw: 2.5 });
     glyph(S, 'cross', m[0], m[1], 18 * u, err.c);
-    pill(S, S.l('no la frenó', 'did not stop it'), m[0] + (port ? 24 * u : 0), m[1] + (port ? 0 : 28 * u), { tone: 'err', weight: 800, align: port ? 'left' : 'center' });
+    if (port) pill(S, S.l('no la frenó', 'did not stop it'), m[0] + 24 * u, m[1], { tone: 'err', weight: 800, align: 'left' });
+    else {   // en horizontal el hueco entre las tarjetas es estrecho: el rótulo baja de las tarjetas, unido a la cruz por un trazo
+      const py = c1.y + c1.h + 20 * u;
+      d.line(m[0], m[1] + 16 * u, m[0], py - 11 * u, err.c, 1.5, [3, 3]);
+      pill(S, S.l('no la frenó', 'did not stop it'), m[0], py, { tone: 'err', weight: 800, align: 'center' });
+    }
   });
   d.withAlpha(S.reveal('incident', 10.2, 0.6), () => T(S, S.l('Según reportó su usuario; cobertura: The Register, 22 de julio de 2025.', 'As reported by its user; coverage: The Register, July 22, 2025.'), all.x, all.y + all.h - lh * 2.2, { size: 12, weight: 600, color: p.mute, w: all.w }));
   if (!port) neu(S, all.x + all.w - 64 * u, all.y + all.h - 80 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'sad', a: S.reveal('incident', 9.6, 0.5) });
@@ -414,7 +427,18 @@ export function drawStart(S: Frame) {
   ];
   const port = S.portrait, stairs: Rect = port ? { x: all.x, y: all.y, w: all.w, h: all.h * 0.56 } : { x: all.x, y: all.y, w: all.w * 0.58, h: all.h };
   const sw = (stairs.w - 3 * 6 * u) / 4;
-  steps.forEach((s, i) => {
+  const rowH = 40 * u, rowY0 = all.y + 24 * u, rowStep = rowH + 6 * u;
+  const asRows = port || sw < 140 * u, rw = port ? all.w : stairs.w;   // si no caben las pastillas bajo cada escalón, los cuatro escalones son filas
+  if (asRows) steps.forEach((s, i) => {   // título a la izquierda, reversibilidad a la derecha
+    const a = S.reveal('start-small', s.at, 0.6), tc = tone(S, s.tc), y = rowY0 + i * rowStep, pw = d.measure(s.u, { size: FS(S, 12), weight: 700 }) + 22 * u;
+    d.withAlpha(a, () => {
+      d.rect(all.x, y, rw, rowH, { fill: alpha(tc.c, 0.12 + 0.05 * i), stroke: tc.c, lw: 2, r: 3, dash: s.tc === 'err' ? [6, 4] : undefined });
+      d.rect(all.x, y, 6 * u, rowH, { fill: alpha(tc.c, 0.55) });
+      T(S, s.t, all.x + 16 * u, y + rowH / 2, { size: 13, weight: 800, color: tc.ink, base: 'middle', w: rw - pw - 34 * u });
+      pill(S, s.u, all.x + rw - 10 * u, y + rowH / 2, { tone: s.tc, align: 'right', weight: 700, size: 12 });
+    });
+  });
+  if (!asRows) steps.forEach((s, i) => {
     const a = S.reveal('start-small', s.at, 0.6), h = stairs.h * (0.3 + 0.18 * i) - (port ? 20 * u : 30 * u), tc = tone(S, s.tc), x = stairs.x + i * (sw + 6 * u), y = stairs.y + stairs.h - h;
     d.withAlpha(a, () => {
       d.rect(x, y, sw, h, { fill: alpha(tc.c, 0.12 + 0.05 * i), stroke: tc.c, lw: 2, r: 3, dash: s.tc === 'err' ? [6, 4] : undefined });
@@ -422,8 +446,8 @@ export function drawStart(S: Frame) {
       pill(S, s.u, x + sw / 2, y + h - 16 * u, { tone: s.tc, weight: 700, size: 12 });
     });
   });
-  d.withAlpha(S.reveal('start-small', 0.6, 0.5), () => T(S, S.l('más riesgo, más control necesario →', 'more risk, more control needed →'), stairs.x, stairs.y - 2 * u, { size: 12, weight: 700, color: p.mute }));
-  const list: Rect = port ? { x: all.x, y: stairs.y + stairs.h + 14 * u, w: all.w, h: all.h - stairs.h - 14 * u } : { x: stairs.x + stairs.w + 22 * u, y: all.y + 30 * u, w: all.w - stairs.w - 22 * u, h: all.h - 30 * u };
+  d.withAlpha(S.reveal('start-small', 0.6, 0.5), () => T(S, asRows ? S.l('más riesgo, más control necesario ↓', 'more risk, more control needed ↓') : S.l('más riesgo, más control necesario →', 'more risk, more control needed →'), stairs.x, stairs.y - 2 * u, { size: 12, weight: 700, color: p.mute }));
+  const list: Rect = port ? { x: all.x, y: rowY0 + 4 * rowStep + 10 * u, w: all.w, h: all.h } : { x: stairs.x + stairs.w + 22 * u, y: all.y + 30 * u, w: all.w - stairs.w - 22 * u, h: all.h - 30 * u };
   const checks = [S.l('permisos mínimos', 'minimal permissions'), S.l('registro de cada llamada', 'a log of every call'), S.l('aprobación antes de lo irreversible', 'approval before the irreversible'), S.l('medir antes de subir de nivel', 'measure before moving up')];
   let y = list.y;
   checks.forEach((c, i) => {

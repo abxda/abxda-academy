@@ -10,7 +10,7 @@
 //  · ILUSTRATIVO: el «modelo» es un guion escrito a mano (`decide`) que decide a partir de lo que observó. No hay ningún
 //    LLM aquí. En el escenario «error de cantidad» el guion se equivoca a propósito (280 en lugar de 28), y en todos
 //    los escenarios se equivoca una vez al escribir un código, para que se vea cómo un error se vuelve una observación.
-//  Todo es determinista: sin Math.random ni fechas.
+//  Todo es determinista: sin azar ni relojes.
 
 export type Lang = 'es' | 'en';
 export interface LS { es: string; en: string }
