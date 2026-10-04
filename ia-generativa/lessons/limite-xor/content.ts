@@ -139,14 +139,14 @@ export default defineLesson({
       'Una neurona separa el plano con una recta: solo resuelve problemas linealmente separables.',
       'XOR no es linealmente separable: sus dos diagonales se cruzan, así que ninguna recta acierta las cuatro esquinas.',
       'Una capa oculta crea señales nuevas (aquí, «alguna entrada» y «las dos»); en ese espacio nuevo, una recta sí separa.',
-      'El límite era de las neuronas solas, no de las redes. Lo que faltaba era un método práctico para entrenar las capas ocultas.',
+      'El límite de XOR era de la neurona sola: una capa oculta lo supera. Minsky y Papert dudaron de las redes de varias capas, pero lo dejaron como problema abierto; faltaba un método práctico para entrenar las capas ocultas.',
       'La historia de la IA tiene ciclos de entusiasmo y desencanto; los factores son varios, no solo un libro.',
     ],
     en: [
       'One neuron splits the plane with a line: it only solves linearly separable problems.',
       'XOR is not linearly separable: its two diagonals cross, so no line gets all four corners right.',
       'A hidden layer creates new signals (here, “some input” and “both”); in that new space, a line does separate.',
-      'The limit belonged to single neurons, not to networks. What was missing was a practical method to train hidden layers.',
+      'The XOR limit belonged to the single neuron: a hidden layer overcomes it. Minsky and Papert doubted multi-layer networks but left it as an open problem; what was missing was a practical method to train hidden layers.',
       'The history of AI has cycles of enthusiasm and disillusion; the causes are several, not just one book.',
     ],
   },
@@ -157,8 +157,8 @@ export default defineLesson({
       en: 'Minsky and Papert proved that neural networks could not work, and that is why they were abandoned.',
     },
     right: {
-      es: 'Mostraron límites reales de las neuronas solas. Dudaron de las redes con varias capas, pero no probaron que fueran inútiles. El desencanto de los setenta tuvo además otras causas, como el informe Lighthill de 1973.',
-      en: 'They showed real limits of single neurons. They doubted multi-layer networks, but did not prove them useless. The disillusion of the 1970s also had other causes, such as the 1973 Lighthill report.',
+      es: 'Mostraron límites reales de las neuronas solas. Dudaron de las redes con varias capas, pero lo dejaron como problema abierto: no probaron que fueran inútiles. El desencanto de los setenta tuvo además otras causas, como el informe Lighthill, publicado en 1973.',
+      en: 'They showed real limits of single neurons. They doubted multi-layer networks, but left it as an open problem: they did not prove them useless. The disillusion of the 1970s also had other causes, such as the Lighthill report, published in 1973.',
     },
   },
 
@@ -169,19 +169,21 @@ Una neurona de dos entradas responde $f(x,y)=1$ si $w_1x+w_2y+b>0$ y $0$ en otro
 
 $$b\\le 0,\\qquad w_1+b>0,\\qquad w_2+b>0,\\qquad w_1+w_2+b\\le 0.$$
 
-Sumando las dos desigualdades del medio: $w_1+w_2+2b>0$, es decir, $w_1+w_2+b>-b\\ge 0$, lo que contradice la última. No existen pesos que funcionen: es el mismo argumento geométrico de las diagonales, en álgebra.
+Sumando las dos desigualdades del medio: $w_1+w_2+2b>0$, es decir, $w_1+w_2+b>-b\\ge 0$, lo que contradice la última. No existen pesos que funcionen: es el mismo argumento geométrico de las diagonales, en álgebra. Es también el argumento con que Minsky y Papert demuestran en *Perceptrons* (§2.1) que la equivalencia $x\\equiv y$, el complemento de XOR, no la calcula una sola neurona; el libro anota (§1.4) que, de las 16 funciones booleanas de dos variables, son las únicas dos con esa limitación. Lo comprobamos por fuerza bruta: con una rejilla fina de $(w_1,w_2,b)$ se alcanzan 14 de las 16 tablas de verdad, y las dos que faltan son XOR y su complemento.
 
 ## La solución con una capa oculta
 
 Con la función escalón $H$ (vale 1 si el argumento es positivo y 0 si no), estos pesos resuelven XOR:
 
-$$h_1=H(x+y-0{,}5),\\qquad h_2=H(x+y-1{,}5),\\qquad \\text{salida}=H(h_1-h_2-0{,}5).$$
+$$h_1=H(x+y-0.5),\\qquad h_2=H(x+y-1.5),\\qquad \\text{salida}=H(h_1-h_2-0.5).$$
 
 $h_1$ es OR, $h_2$ es AND, y la salida es «OR y no AND», que es XOR. En el plano $(h_1,h_2)$ los cuatro puntos pasan a $(0,0)$, $(1,0)$, $(1,0)$ y $(1,1)$: los unos se funden en $(1,0)$ y una recta ya separa las clases.
 
-## Funciones más difíciles
+## Qué probaron Minsky y Papert, y qué no
 
-Minsky y Papert estudiaron qué funciones puede calcular una neurona o una capa con ciertas restricciones (por ejemplo, la paridad de $n$ bits). La paridad generaliza XOR y es un ejemplo clásico de función que exige estructura en capas o muchas neuronas.
+En *Perceptrons* (1969), un perceptrón «de orden $k$» es una neurona de umbral cuyas entradas son predicados, cada uno de los cuales depende como máximo de $k$ entradas. Entre otros resultados, probaron que la paridad de $n$ bits tiene orden $n$ (teorema 3.1.1): hace falta al menos un predicado que mire todas las entradas. Con $n=2$ la paridad es XOR.
+
+Sobre las redes de varias capas, el libro dice (§13.2) que consideraron las «máquinas de Gamba», «dos capas de perceptrón», y que no encontraron otra clase multicapa realmente interesante; y añade que «es un problema de investigación importante dilucidar (o rechazar) nuestro juicio intuitivo de que la extensión es estéril» (traducción nuestra). Lo presentan como una conjetura por comprobar, no como un teorema.
 
 ## En código
 
@@ -203,14 +205,14 @@ for x in (0, 1):
 
 ## Lo que viene
 
-Los pesos de este ejemplo se eligieron a mano. En una red real se aprenden con el descenso del gradiente, que necesita el gradiente de cada peso, incluidos los de las capas ocultas: eso lo resuelve la retropropagación (lección 8). Antes, la lección 7 muestra por qué las capas necesitan una función de activación no lineal.`,
+Los pesos de este ejemplo se eligieron a mano. En una red real se aprenden con el descenso del gradiente, que necesita el gradiente de cada peso, incluidos los de las capas ocultas: eso lo resuelve la retropropagación (lección 8), que Rumelhart, Hinton y Williams describieron en 1986 mostrando cómo las unidades ocultas llegan a representar características nuevas de la tarea. Antes, la lección 7 muestra por qué las capas necesitan una función de activación no lineal.`,
     en: `## Why XOR is not linearly separable
 
 A two-input neuron answers $f(x,y)=1$ if $w_1x+w_2y+b>0$ and $0$ otherwise. For XOR we would need all of these at once:
 
 $$b\\le 0,\\qquad w_1+b>0,\\qquad w_2+b>0,\\qquad w_1+w_2+b\\le 0.$$
 
-Adding the two middle inequalities: $w_1+w_2+2b>0$, that is, $w_1+w_2+b>-b\\ge 0$, which contradicts the last one. No weights work: it is the same geometric argument about the diagonals, in algebra.
+Adding the two middle inequalities: $w_1+w_2+2b>0$, that is, $w_1+w_2+b>-b\\ge 0$, which contradicts the last one. No weights work: it is the same geometric argument about the diagonals, in algebra. It is also the argument Minsky and Papert use in *Perceptrons* (§2.1) to show that the equivalence $x\\equiv y$, the complement of XOR, cannot be computed by a single neuron; the book notes (§1.4) that, of the 16 Boolean functions of two variables, these are the only two with that limitation. We checked it by brute force: over a fine grid of $(w_1,w_2,b)$, 14 of the 16 truth tables are reachable, and the two missing ones are XOR and its complement.
 
 ## The solution with a hidden layer
 
@@ -220,9 +222,11 @@ $$h_1=H(x+y-0.5),\\qquad h_2=H(x+y-1.5),\\qquad \\text{output}=H(h_1-h_2-0.5).$$
 
 $h_1$ is OR, $h_2$ is AND, and the output is “OR and not AND,” which is XOR. In the $(h_1,h_2)$ plane the four points become $(0,0)$, $(1,0)$, $(1,0)$, and $(1,1)$: the ones merge at $(1,0)$ and a line now separates the classes.
 
-## Harder functions
+## What Minsky and Papert proved, and what they did not
 
-Minsky and Papert studied which functions a neuron or a layer can compute under certain restrictions (for example, the parity of $n$ bits). Parity generalizes XOR and is a classic example of a function that demands layered structure or many neurons.
+In *Perceptrons* (1969), a perceptron “of order $k$” is a threshold neuron whose inputs are predicates, each of which depends on at most $k$ inputs. Among other results, they proved that the parity of $n$ bits has order $n$ (theorem 3.1.1): at least one predicate that looks at all the inputs is required. With $n=2$, parity is XOR.
+
+On multi-layer networks, the book says (§13.2) that they considered “Gamba machines,” described as “two layers of perceptron,” and found no other really interesting class of multilayered machine; and it adds: “we consider it to be an important research problem to elucidate (or reject) our intuitive judgment that the extension is sterile.” They present it as a conjecture to be tested, not as a theorem.
 
 ## In code
 
@@ -244,20 +248,20 @@ for x in (0, 1):
 
 ## What comes next
 
-The weights in this example were chosen by hand. In a real network they are learned with gradient descent, which needs the gradient of every weight, including those of hidden layers: backpropagation solves that (lesson 8). First, lesson 7 shows why layers need a nonlinear activation function.`,
+The weights in this example were chosen by hand. In a real network they are learned with gradient descent, which needs the gradient of every weight, including those of hidden layers: backpropagation solves that (lesson 8), which Rumelhart, Hinton, and Williams described in 1986, showing how hidden units come to represent new features of the task. First, lesson 7 shows why layers need a nonlinear activation function.`,
   },
 
   lens: {
     es: [
       'Los ciclos de entusiasmo y desencanto son parte de la historia de la IA: pide evidencia con tus datos antes que promesas.',
-      'Si un proveedor habla de un modelo «lineal» o «de una sola capa», pregunta si tu problema tiene interacciones entre variables que ese modelo no puede capturar.',
-      'Las capas ocultas capturan interacciones como XOR, pero necesitan más datos y un entrenamiento cuidadoso: más capacidad también trae más riesgo de errores.',
+      'Si un proveedor habla de un modelo «lineal» o «de una sola capa» (sin capa oculta), pregunta si tu problema tiene interacciones entre variables que ese modelo no puede capturar.',
+      'Las capas ocultas capturan interacciones como XOR, pero suelen necesitar más datos y un entrenamiento cuidadoso: más capacidad también trae más riesgo de errores.',
       'Cuando alguien diga «eso la IA no puede hacerlo», pregunta con qué método: muchos límites eran de una arquitectura concreta, no de la idea general.',
     ],
     en: [
       'Cycles of enthusiasm and disillusion are part of AI’s history: ask for evidence with your data before promises.',
-      'If a vendor talks about a “linear” or “single-layer” model, ask whether your problem has interactions between variables that such a model cannot capture.',
-      'Hidden layers capture interactions like XOR, but they need more data and careful training: more capacity also brings more risk of mistakes.',
+      'If a vendor talks about a “linear” or “single-layer” model (no hidden layer), ask whether your problem has interactions between variables that such a model cannot capture.',
+      'Hidden layers capture interactions like XOR, but they usually need more data and careful training: more capacity also brings more risk of mistakes.',
       'When someone says “AI cannot do that,” ask with which method: many limits belonged to a specific architecture, not to the general idea.',
     ],
   },
@@ -301,7 +305,7 @@ The weights in this example were chosen by hand. In a real network they are lear
     },
     {
       kind: 'apply',
-      q: { es: 'Un proveedor afirma que su modelo «de una sola capa» resuelve cualquier problema de clasificación. ¿Qué respuesta es la más sólida?', en: 'A vendor claims its “single-layer” model solves any classification problem. Which response is the soundest?' },
+      q: { es: 'Un proveedor afirma que su modelo «de una sola capa» (sin capa oculta) resuelve cualquier problema de clasificación. ¿Qué respuesta es la más sólida?', en: 'A vendor claims its “single-layer” model (no hidden layer) solves any classification problem. Which response is the soundest?' },
       options: [
         { es: 'Aceptarlo: los modelos de una capa son los más fiables.', en: 'Accept it: single-layer models are the most reliable.' },
         { es: 'Pedir evidencia con tus datos y preguntar cómo capta relaciones no lineales, porque una frontera lineal falla en casos como XOR.', en: 'Ask for evidence on your data and how it captures nonlinear relationships, because a linear boundary fails in cases like XOR.' },
@@ -324,8 +328,10 @@ The weights in this example were chosen by hand. In a real network they are lear
 
   sources: [
     { title: 'The perceptron: a probabilistic model for information storage and organization in the brain', authors: 'Rosenblatt, F.', year: 1958, url: 'https://doi.org/10.1037/h0042519' },
-    { title: 'Perceptrons: An Introduction to Computational Geometry', authors: 'Minsky, M., Papert, S.', year: 1969, url: 'https://mitpress.mit.edu/9780262631112/perceptrons/' },
+    { title: 'Perceptrons: An Introduction to Computational Geometry (1969; texto leído en la edición ampliada de 1988: §1.4, §2.1, teorema 3.1.1 y §13.2)', authors: 'Minsky, M., Papert, S.', year: 1969, url: 'https://mitpress.mit.edu/9780262631112/perceptrons/' },
+    { title: 'A Sociological Study of the Official History of the Perceptrons Controversy (Social Studies of Science 26(3), 611–659)', authors: 'Olazaran, M.', year: 1996, url: 'https://doi.org/10.1177/030631296026003005' },
+    { title: 'Learning representations by back-propagating errors (Nature 323, 533–536)', authors: 'Rumelhart, D. E., Hinton, G. E., Williams, R. J.', year: 1986, url: 'https://doi.org/10.1038/323533a0' },
     { title: 'Artificial Intelligence: A General Survey (informe Lighthill, Science Research Council)', authors: 'Lighthill, J.', year: 1973, url: 'http://www.chilton-computing.org.uk/inf/literature/reports/lighthill_report/p001.htm' },
-    { title: 'What is science for? The Lighthill report on artificial intelligence reinterpreted', authors: 'Agar, J.', year: 2020, url: 'https://doi.org/10.1017/S0007087420000230' },
+    { title: 'What is science for? The Lighthill report on artificial intelligence reinterpreted (The British Journal for the History of Science 53(3), 289–310)', authors: 'Agar, J.', year: 2020, url: 'https://doi.org/10.1017/S0007087420000230' },
   ],
 });

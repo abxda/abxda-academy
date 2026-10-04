@@ -337,7 +337,7 @@ for g in (0.5, 0.9, 1.5, 2.0):
 # 2.0 [1.7064, 2.2703, 2.4696, 1.3574]
 \`\`\`
 
-Con $g=0{,}5$ o $0{,}9$ el empujón se apaga; con $g=2$ se amplifica; en torno a $g=1{,}5$ y con esta entrada fija hay una ventana estrecha en que se mantiene. Basta moverse un poco para salir de ella.
+Con $g=0.5$ o $0.9$ el empujón se apaga; con $g=2$ se amplifica; en torno a $g=1.5$ y con esta entrada fija hay una ventana estrecha en que se mantiene. Basta moverse un poco para salir de ella.
 
 \`\`\`python
 import math

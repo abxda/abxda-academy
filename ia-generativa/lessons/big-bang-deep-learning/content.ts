@@ -364,15 +364,15 @@ $$T(n,P)=\\left\\lceil \\frac{n^2}{P}\\right\\rceil n,\\qquad \\frac{T(n,8)}{T(n
 
 Con $P=512$ (GTX 580) la ventaja ideal tope es 64; con $P=3584$ (RTX 3060), 448. Es un conteo ideal: ignora el ancho de banda de memoria, el costo de mover datos a la GPU y que cada núcleo de GPU es más lento que uno de CPU. Las medidas reales de Raina, Madhavan y Ng (2009), con una GPU GTX 280 contra una CPU de dos núcleos, fueron entre 12.9 y 72.6 veces según el tamaño del modelo.
 
-La velocidad pico de un chip es $\\text{núcleos}\\times 2\\times\\text{reloj}$: $512\\times2\\times1{,}544\\ \\text{GHz}\\approx1{,}58$ TFLOP/s para la GTX 580 (cifra que usa OpenAI) y, por la misma cuenta, unos 12.7 TFLOP/s para la RTX 3060.
+La velocidad pico de un chip es $\\text{núcleos}\\times 2\\times\\text{reloj}$: $512\\times2\\times1.544\\ \\text{GHz}\\approx1.58$ TFLOP/s para la GTX 580 (cifra que usa OpenAI) y, por la misma cuenta, unos 12.7 TFLOP/s para la RTX 3060.
 
 ## El costo de entrenar AlexNet
 
-Según la estimación de Amodei y Hernandez (OpenAI, 2018), el pase hacia delante cuesta unos $0{,}75\\times10^{9}$ multiplicaciones-suma por imagen; entrenar incluye 2 operaciones por multiplicación-suma, el paso hacia atrás (factor 3) y unas 90 vueltas al conjunto:
+Según la estimación de Amodei y Hernandez (OpenAI, 2018), el pase hacia delante cuesta unos $0.75\\times10^{9}$ multiplicaciones-suma por imagen; entrenar incluye 2 operaciones por multiplicación-suma, el paso hacia atrás (factor 3) y unas 90 vueltas al conjunto:
 
-$$1{,}2\\times10^{6}\\cdot 90\\cdot 0{,}75\\times10^{9}\\cdot 2\\cdot 3\\approx 4{,}9\\times10^{17}\\ \\text{FLOP}.$$
+$$1.2\\times10^{6}\\cdot 90\\cdot 0.75\\times10^{9}\\cdot 2\\cdot 3\\approx 4.9\\times10^{17}\\ \\text{FLOP}.$$
 
-Es coherente con dos GTX 580 durante 5.5 días al 33 % de su pico, que es lo que supone OpenAI: $2\\cdot1{,}58\\times10^{12}\\cdot5{,}5\\cdot86\\,400\\cdot0{,}33\\approx5\\times10^{17}$. Desde 2012 (de AlexNet a AlphaGo Zero, a finales de 2017), OpenAI midió que el cómputo de los mayores entrenamientos se duplicaba cada 3.4 meses; estimaciones posteriores (Sevilla et al., 2022) dan alrededor de 6 meses para la era del deep learning. En ambos casos, el crecimiento es exponencial.
+Es coherente con dos GTX 580 durante 5.5 días al 33 % de su pico, que es lo que supone OpenAI: $2\\cdot1.58\\times10^{12}\\cdot5.5\\cdot86\\,400\\cdot0.33\\approx5\\times10^{17}$. Desde 2012 (de AlexNet a AlphaGo Zero, a finales de 2017), OpenAI midió que el cómputo de los mayores entrenamientos se duplicaba cada 3.4 meses; estimaciones posteriores (Sevilla et al., 2022) dan alrededor de 6 meses para la era del deep learning. En ambos casos, el crecimiento es exponencial.
 
 ## El gradiente a través de las capas
 
@@ -380,7 +380,7 @@ En una pila simple, $h_l=\\tanh(W_l h_{l-1})$ y el gradiente retrocede como
 
 $$\\frac{\\partial L}{\\partial h_{l-1}}=W_l^{\\top}\\Big(\\tanh'(z_l)\\odot\\frac{\\partial L}{\\partial h_l}\\Big),$$
 
-así que su norma se multiplica por un factor, cada capa, de aproximadamente $\\sigma\\cdot\\overline{\\tanh'}$. Con la inicialización «estándar» de la época, $n\\,\\mathrm{Var}[W]=1/3$ (Glorot y Bengio, 2010, ec. 15), el factor queda alrededor de 0.5; en el juguete de la lección sale ≈ 0.55 y $0{,}55^{40}\\approx 4\\times10^{-11}$.
+así que su norma se multiplica por un factor, cada capa, de aproximadamente $\\sigma\\cdot\\overline{\\tanh'}$. Con la inicialización «estándar» de la época, $n\\,\\mathrm{Var}[W]=1/3$ (Glorot y Bengio, 2010, ec. 15), el factor queda alrededor de 0.5; en el juguete de la lección sale ≈ 0.55 y $0.55^{40}\\approx 4\\times10^{-11}$.
 
 Con atajo, $x_{l+1}=x_l+F(x_l)$ y, según He et al. (2016, ec. 5),
 

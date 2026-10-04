@@ -318,7 +318,7 @@ Con ventana de $n-1$ piezas, la estimación por máxima verosimilitud es la frec
 
 $$P(w\\mid c)=\\frac{N(c,w)}{N(c)}$$
 
-donde $N(c,w)$ cuenta cuántas veces $w$ siguió al contexto $c$. En la lección, «don» apareció $N(c)=38$ veces y $N(\\text{don},\\text{Quijote})=31$, así que $P=31/38\\approx0{,}816$. Shannon (1948) ya construía texto así a mano: su «aproximación de segundo orden por palabras» elige cada palabra según las frecuencias de transición desde la anterior. El límite es la dispersión: con un vocabulario $V$ hay hasta $V^{\\,n-1}$ contextos y casi todos son raros o nunca se vieron; la tabla no generaliza.
+donde $N(c,w)$ cuenta cuántas veces $w$ siguió al contexto $c$. En la lección, «don» apareció $N(c)=38$ veces y $N(\\text{don},\\text{Quijote})=31$, así que $P=31/38\\approx0.816$. Shannon (1948) ya construía texto así a mano: su «aproximación de segundo orden por palabras» elige cada palabra según las frecuencias de transición desde la anterior. El límite es la dispersión: con un vocabulario $V$ hay hasta $V^{\\,n-1}$ contextos y casi todos son raros o nunca se vieron; la tabla no generaliza.
 
 ## Softmax y temperatura
 
@@ -326,7 +326,7 @@ Un modelo neuronal produce una puntuación $z_i$ (*logit*) por cada pieza $i$ de
 
 $$p_i=\\frac{e^{z_i/T}}{\\sum_j e^{z_j/T}}$$
 
-con $T=1$ es el softmax normal (en GPT-1: $P(u)=\\operatorname{softmax}(h_nW_e^\\top)$). Si $T\\to0$ toda la masa va a la pieza de mayor puntuación (voraz); si $T\\to\\infty$ la distribución tiende a la uniforme. Con $z_i=\\ln c_i$ (la puntuación de la lección) queda una forma cerrada: $p_i=c_i^{1/T}/\\sum_j c_j^{1/T}$. Por ejemplo, en «aquel» las cuentas son $5,2,2,2,1,1,1,1,1$ (suman 16): con $T=1$ la favorita vale $5/16=0{,}31$; con $T=0{,}5$ vale $25/42\\approx0{,}60$; con $T=0{,}25$ vale $625/678\\approx0{,}92$. La temperatura fue tomada de la física estadística y aparece con este papel en la destilación de conocimiento (Hinton et al., 2015).
+con $T=1$ es el softmax normal (en GPT-1: $P(u)=\\operatorname{softmax}(h_nW_e^\\top)$). Si $T\\to0$ toda la masa va a la pieza de mayor puntuación (voraz); si $T\\to\\infty$ la distribución tiende a la uniforme. Con $z_i=\\ln c_i$ (la puntuación de la lección) queda una forma cerrada: $p_i=c_i^{1/T}/\\sum_j c_j^{1/T}$. Por ejemplo, en «aquel» las cuentas son $5,2,2,2,1,1,1,1,1$ (suman 16): con $T=1$ la favorita vale $5/16=0.31$; con $T=0.5$ vale $25/42\\approx0.60$; con $T=0.25$ vale $625/678\\approx0.92$. La temperatura fue tomada de la física estadística y aparece con este papel en la destilación de conocimiento (Hinton et al., 2015).
 
 ## Top-k y top-p
 

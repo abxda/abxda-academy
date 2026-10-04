@@ -247,17 +247,17 @@ function drawTime(S: Frame) {
       badge(S, `${it.yr} · ${S.l(it.es, it.en)}`, clamp(px, R.x + 90 * u, R.x + R.w - 90 * u), ty, { tone: it.tone });
     });
   });
-  // el "invierno": se enfría a partir de 1969-1973 (cualitativo, no es un dato)
+  // el "invierno": los años setenta (1970-1980). Las fechas exactas dependen de a quién se pregunte: es una ilustración cualitativa, no un dato
   const c = S.at('history', 3.4, 5.2, 'io');
   if (c > 0) {
     d.withAlpha(c, () => {
-      d.rect(X(1969), R.y + 10 * u, X(1982) - X(1969), R.h - 20 * u, { fill: alpha(p.mute, 0.07 * c) });
+      d.rect(X(1970), R.y + 10 * u, X(1980) - X(1970), R.h - 20 * u, { fill: alpha(p.mute, 0.07 * c) });
       for (let i = 0; i < 46; i++) {   // nieve: píxeles que caen despacio
-        const sx = X(1969) + hash(i, 1) * (X(1982) - X(1969)), sy = R.y + 10 * u + ((hash(i, 2) * (R.h - 20 * u) + S.clock * (8 + 10 * hash(i, 3))) % (R.h - 20 * u));
+        const sx = X(1970) + hash(i, 1) * (X(1980) - X(1970)), sy = R.y + 10 * u + ((hash(i, 2) * (R.h - 20 * u) + S.clock * (8 + 10 * hash(i, 3))) % (R.h - 20 * u));
         d.rect(Math.round(sx), Math.round(sy), 3, 3, { fill: alpha(p.ink2, 0.35 * c) });
       }
-      d.text(S.l('primer invierno de la IA', 'first AI winter'), (X(1969) + X(1982)) / 2, R.y + R.h - 30 * u, { size: 14, weight: 800, color: p.ink2, align: 'center' });
-      d.text(S.l('ilustración cualitativa', 'qualitative illustration'), (X(1969) + X(1982)) / 2, R.y + R.h - 12 * u, { size: 11, color: p.mute, align: 'center' });
+      d.text(S.l('primer invierno de la IA', 'first AI winter'), (X(1970) + X(1980)) / 2, R.y + R.h - 30 * u, { size: 14, weight: 800, color: p.ink2, align: 'center' });
+      d.text(S.l('años setenta · ilustración cualitativa', '1970s · qualitative illustration'), (X(1970) + X(1980)) / 2, R.y + R.h - 12 * u, { size: 11, color: p.mute, align: 'center' });
     });
   }
   if (S.is('nuance')) {

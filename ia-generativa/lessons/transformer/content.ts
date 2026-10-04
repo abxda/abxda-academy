@@ -316,7 +316,7 @@ Las longitudes de onda forman una progresión geométrica de $2\\pi$ a $10000\\c
 
 $$\\mathrm{Att}(Q,K,V)=\\mathrm{softmax}\\!\\Big(\\frac{QK^\\top}{\\sqrt{d_h}}+M\\Big)V$$
 
-La predicción de la posición $i$ depende solo de los tokens $\\le i$, así que en el entrenamiento las $T$ predicciones se calculan a la vez. Nuestro experimento lo confirma: con máscara, la pérdida en frases nuevas es 0.527 nats por palabra, casi la entropía de la gramática (0.526, la cota inferior). Sin máscara, la pérdida de entrenamiento cae a 0.059, pero ese mismo modelo, usado sin trampa, da 3.088, peor que elegir al azar entre doce palabras ($\\ln 12 = 2{,}485$).
+La predicción de la posición $i$ depende solo de los tokens $\\le i$, así que en el entrenamiento las $T$ predicciones se calculan a la vez. Nuestro experimento lo confirma: con máscara, la pérdida en frases nuevas es 0.527 nats por palabra, casi la entropía de la gramática (0.526, la cota inferior). Sin máscara, la pérdida de entrenamiento cae a 0.059, pero ese mismo modelo, usado sin trampa, da 3.088, peor que elegir al azar entre doce palabras ($\\ln 12 = 2.485$).
 
 ## Contar parámetros
 

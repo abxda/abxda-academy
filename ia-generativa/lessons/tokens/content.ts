@@ -253,7 +253,7 @@ Trabajar con bytes (UTF-8) permite escribir cualquier texto con solo 256 piezas 
 
 ## Tamaño del vocabulario
 
-Cada pieza necesita una fila en la tabla de embeddings $E\\in\\mathbb{R}^{|V|\\times d}$, es decir $|V|\\cdot d$ parámetros, y la capa final produce un valor por cada pieza. Con $|V|=50\\,257$ y $d=768$ (el GPT-2 más pequeño), la tabla tiene $50\\,257\\times 768\\approx 38{,}6$ millones de parámetros. A cambio, un vocabulario mayor comprime más: el informe técnico de Llama 3 reporta que su tokenizador de 128 mil piezas mejora la compresión frente al de Llama 2 (32 mil piezas): de 3.17 a 3.94 caracteres por token en una muestra de inglés.
+Cada pieza necesita una fila en la tabla de embeddings $E\\in\\mathbb{R}^{|V|\\times d}$, es decir $|V|\\cdot d$ parámetros, y la capa final produce un valor por cada pieza. Con $|V|=50\\,257$ y $d=768$ (el GPT-2 más pequeño), la tabla tiene $50\\,257\\times 768\\approx 38.6$ millones de parámetros. A cambio, un vocabulario mayor comprime más: el informe técnico de Llama 3 reporta que su tokenizador de 128 mil piezas mejora la compresión frente al de Llama 2 (32 mil piezas): de 3.17 a 3.94 caracteres por token en una muestra de inglés.
 
 ## Costo
 
@@ -261,7 +261,7 @@ Con precios por millón de tokens distintos para entrada y salida:
 
 $$\\text{costo}=\\frac{n_{\\text{ent}}\\,p_{\\text{ent}}+n_{\\text{sal}}\\,p_{\\text{sal}}}{10^{6}}$$
 
-Para inglés, $n\\approx \\text{palabras}/0{,}75$. Ejemplo con un precio supuesto de 2 dólares por millón: un informe de 3 000 palabras son unos 4 000 tokens; mil informes, 4 millones de tokens y 8 dólares. El mismo contenido en otro idioma puede necesitar más tokens: con cuatro frases medidas con tiktoken, el español usó 1.82 veces los tokens del inglés con el tokenizador de GPT-2, 1.32 con el de GPT-4 y 1.15 con el de GPT-4o (muestra muy pequeña: sirve para ilustrar, no para presupuestar).
+Para inglés, $n\\approx \\text{palabras}/0.75$. Ejemplo con un precio supuesto de 2 dólares por millón: un informe de 3 000 palabras son unos 4 000 tokens; mil informes, 4 millones de tokens y 8 dólares. El mismo contenido en otro idioma puede necesitar más tokens: con cuatro frases medidas con tiktoken, el español usó 1.82 veces los tokens del inglés con el tokenizador de GPT-2, 1.32 con el de GPT-4 y 1.15 con el de GPT-4o (muestra muy pequeña: sirve para ilustrar, no para presupuestar).
 
 ## Por qué fallan las letras y las cifras
 

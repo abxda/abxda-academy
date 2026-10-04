@@ -302,13 +302,13 @@ Sea $V$ el tamaño del vocabulario y $d$ la dimensión de los vectores. La tabla
 
 $$e_i = x_i^{\\top}E = E_{i,:}$$
 
-Multiplicar por un one-hot equivale a elegir una fila: es una capa lineal sin activación (lección 7) cuyos $V\\cdot d$ pesos se aprenden. Con $V=400\\,000$ y $d=100$ son $40\\,000\\,000$ de números. En la práctica no se multiplica: se consulta la fila. El mismo mecanismo abre los modelos de lenguaje: en GPT-2 pequeño la tabla es de $50\\,257\\times 768\\approx 38{,}6$ millones de parámetros (lecciones 20 y 22).
+Multiplicar por un one-hot equivale a elegir una fila: es una capa lineal sin activación (lección 7) cuyos $V\\cdot d$ pesos se aprenden. Con $V=400\\,000$ y $d=100$ son $40\\,000\\,000$ de números. En la práctica no se multiplica: se consulta la fila. El mismo mecanismo abre los modelos de lenguaje: en GPT-2 pequeño la tabla es de $50\\,257\\times 768\\approx 38.6$ millones de parámetros (lecciones 20 y 22).
 
 ## Similitud coseno
 
 $$\\cos(a,b)=\\frac{a\\cdot b}{\\lVert a\\rVert\\,\\lVert b\\rVert}=\\cos\\theta\\in[-1,1]$$
 
-Si los dos vectores tienen longitud 1, $\\cos(a,b)=a\\cdot b$ y $\\lVert a-b\\rVert^2=2-2\\cos(a,b)$: ordenar por coseno y ordenar por distancia euclídea da el mismo orden. Ejemplo: $a=(3,4)$ y $b=(4,3)$ dan $\\cos=\\frac{12+12}{5\\cdot 5}=0{,}96$, un ángulo de unos $16^\\circ$. Con $\\cos=0{,}88$ ("perro" y "gato") el ángulo es $\\arccos 0{,}88\\approx 28^\\circ$.
+Si los dos vectores tienen longitud 1, $\\cos(a,b)=a\\cdot b$ y $\\lVert a-b\\rVert^2=2-2\\cos(a,b)$: ordenar por coseno y ordenar por distancia euclídea da el mismo orden. Ejemplo: $a=(3,4)$ y $b=(4,3)$ dan $\\cos=\\frac{12+12}{5\\cdot 5}=0.96$, un ángulo de unos $16^\\circ$. Con $\\cos=0.88$ ("perro" y "gato") el ángulo es $\\arccos 0.88\\approx 28^\\circ$.
 
 ## ¿De dónde salen los números?
 
@@ -343,7 +343,7 @@ Con $F$ = {mujer, niña, madre, esposa, hermana, hija} y $M$ = {hombre, niño, p
 
 $$s(w)=\\frac{1}{|F|}\\sum_{f\\in F}\\cos(w,f)\\;-\\;\\frac{1}{|M|}\\sum_{m\\in M}\\cos(w,m)$$
 
-Positivo es más cerca de lo femenino. Se usan conjuntos y no un par porque «man» tiene varios sentidos. Es una versión simplificada de las pruebas de asociación de Caliskan et al. (2017). Resultado con las 52 profesiones del vocabulario: de $-0{,}16$ («boss») a $+0{,}10$ («receptionist»); 26 objetos sin género (mesa, árbol, río…) quedan entre $-0{,}05$ y $+0{,}03$. La correlación de Spearman con el puntaje «she» − «he» en GloVe completo es 0.91. El puntaje mezcla género con tema (en el texto, lo femenino aparece más junto a «vestido» o «jabón»): sirve para ver la pendiente, no para dar un veredicto sobre una persona. Si a cada vector se le resta su componente en $g=\\bar F-\\bar M$ (normalizado), el puntaje en ese eje vale 0 por construcción; aun así, adivinar si cada profesión estaba por encima o por debajo de la mediana del puntaje original, con el centroide más cercano por coseno y dejando una fuera cada vez, acierta 41 de 52 antes y 35 de 52 después (azar: 26). Es un experimento mínimo, con pocas palabras, en el espíritu del de Gonen y Goldberg (2019), quienes mostraron que los métodos para «desagregar» el sesgo en gran medida lo esconden, no lo quitan.
+Positivo es más cerca de lo femenino. Se usan conjuntos y no un par porque «man» tiene varios sentidos. Es una versión simplificada de las pruebas de asociación de Caliskan et al. (2017). Resultado con las 52 profesiones del vocabulario: de $-0.16$ («boss») a $+0.10$ («receptionist»); 26 objetos sin género (mesa, árbol, río…) quedan entre $-0.05$ y $+0.03$. La correlación de Spearman con el puntaje «she» − «he» en GloVe completo es 0.91. El puntaje mezcla género con tema (en el texto, lo femenino aparece más junto a «vestido» o «jabón»): sirve para ver la pendiente, no para dar un veredicto sobre una persona. Si a cada vector se le resta su componente en $g=\\bar F-\\bar M$ (normalizado), el puntaje en ese eje vale 0 por construcción; aun así, adivinar si cada profesión estaba por encima o por debajo de la mediana del puntaje original, con el centroide más cercano por coseno y dejando una fuera cada vez, acierta 41 de 52 antes y 35 de 52 después (azar: 26). Es un experimento mínimo, con pocas palabras, en el espíritu del de Gonen y Goldberg (2019), quienes mostraron que los métodos para «desagregar» el sesgo en gran medida lo esconden, no lo quitan.
 
 ## Búsqueda semántica
 

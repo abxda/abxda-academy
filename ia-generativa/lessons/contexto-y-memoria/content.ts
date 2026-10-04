@@ -290,9 +290,9 @@ $$\\sum_{k=1}^{n} T_k = nS + m\\,\\frac{n(n-1)}{2} + nu .$$
 
 Con $S=0$, $m=150$, $u=50$ y $n=20$ son $29\\,500$ tokens de entrada; si cada token se procesara una sola vez serían $S+nm = 3\\,000$. El término dominante es $m\\,n^2/2$: el costo crece con el cuadrado de los turnos.
 
-Con caché del prefijo (suponiendo que acierta en cada turno), el turno 1 escribe todo y los siguientes leen el prefijo y escriben solo lo nuevo. La documentación de Anthropic fija la lectura en $0{,}1\\times$ el precio base de entrada (con excepciones por modelo) y la escritura de 5 minutos en $1{,}25\\times$:
+Con caché del prefijo (suponiendo que acierta en cada turno), el turno 1 escribe todo y los siguientes leen el prefijo y escriben solo lo nuevo. La documentación de Anthropic fija la lectura en $0.1\\times$ el precio base de entrada (con excepciones por modelo) y la escritura de 5 minutos en $1.25\\times$:
 
-$$C = 1{,}25\\,T_1 + \\sum_{k=2}^{n}\\left(0{,}1\\,T_{k-1} + 1{,}25\\,m\\right)$$
+$$C = 1.25\\,T_1 + \\sum_{k=2}^{n}\\left(0.1\\,T_{k-1} + 1.25\\,m\\right)$$
 
 En el ejemplo, $C = 6\\,285$ tokens equivalentes, el 21 % de $29\\,500$. Con $S=2\\,000$, $m=500$, $u=50$ y $n=60$ el total es $1\\,008\\,000$ tokens: a un precio supuesto de 3 USD por millón, unos 3 USD por conversación sin caché y unos 0.41 USD con ella. No se incluyen los tokens de salida (se pagan aparte y crecen de forma lineal).
 

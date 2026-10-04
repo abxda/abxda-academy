@@ -344,11 +344,11 @@ export default defineLesson({
 
 Con $k$ aciertos en $n$ casos, la nota es $\\hat p = k/n$. Su margen aproximado al 95 % es
 
-$$\\hat p \\pm 1{,}96\\sqrt{\\hat p\\,(1-\\hat p)/n}$$
+$$\\hat p \\pm 1.96\\sqrt{\\hat p\\,(1-\\hat p)/n}$$
 
-que en el peor caso ($\\hat p = 0{,}5$) vale $\\approx 1/\\sqrt{n}$: unos 10 puntos con 100 casos, 5 con 400 y 2.5 con 1600. Con pocos casos, o con notas cerca de 0 % o de 100 %, se prefiere el intervalo de Wilson (1927), que es el que usa la escena:
+que en el peor caso ($\\hat p = 0.5$) vale $\\approx 1/\\sqrt{n}$: unos 10 puntos con 100 casos, 5 con 400 y 2.5 con 1600. Con pocos casos, o con notas cerca de 0 % o de 100 %, se prefiere el intervalo de Wilson (1927), que es el que usa la escena:
 
-$$\\frac{\\hat p + \\dfrac{z^2}{2n} \\pm z\\sqrt{\\dfrac{\\hat p(1-\\hat p)}{n} + \\dfrac{z^2}{4n^2}}}{1 + z^2/n}, \\qquad z = 1{,}96.$$
+$$\\frac{\\hat p + \\dfrac{z^2}{2n} \\pm z\\sqrt{\\dfrac{\\hat p(1-\\hat p)}{n} + \\dfrac{z^2}{4n^2}}}{1 + z^2/n}, \\qquad z = 1.96.$$
 
 La lectura correcta: si repitieras la evaluación muchas veces con casos nuevos, el 95 % de los intervalos construidos así contendría la exactitud real. Bowyer et al. (2025) advierten que con menos de unos cientos de casos los intervalos basados en la aproximación normal subestiman la incertidumbre.
 
@@ -356,12 +356,12 @@ La lectura correcta: si repitieras la evaluación muchas veces con casos nuevos,
 
 Para cada caso, $d_i = a_i - b_i \\in \\{-1, 0, +1\\}$. Si $b$ casos los acierta solo A y $c$ casos los acierta solo B, la diferencia es $\\bar d = (b-c)/n$ y su error estándar,
 
-$$\\mathrm{ET}(\\bar d) = \\sqrt{\\frac{(b+c)/n - \\bar d^{\\,2}}{n-1}}, \\qquad \\bar d \\pm 1{,}96\\,\\mathrm{ET}.$$
+$$\\mathrm{ET}(\\bar d) = \\sqrt{\\frac{(b+c)/n - \\bar d^{\\,2}}{n-1}}, \\qquad \\bar d \\pm 1.96\\,\\mathrm{ET}.$$
 
-Probar cada sistema con casos distintos suma las varianzas: $p_A(1-p_A)/n + p_B(1-p_B)/n$. En la lección eso es $0{,}364/n$ frente a $0{,}198/n$ con los mismos casos: casi la mitad. Con una diferencia real $\\delta = 0{,}04$, el tamaño necesario es $n \\approx (z_\\alpha + z_\\beta)^2\\,\\sigma_d^2/\\delta^2$:
+Probar cada sistema con casos distintos suma las varianzas: $p_A(1-p_A)/n + p_B(1-p_B)/n$. En la lección eso es $0.364/n$ frente a $0.198/n$ con los mismos casos: casi la mitad. Con una diferencia real $\\delta = 0.04$, el tamaño necesario es $n \\approx (z_\\alpha + z_\\beta)^2\\,\\sigma_d^2/\\delta^2$:
 
-- que A quede por delante el 95 % de las veces ($z = 1{,}645$): $n \\approx 1{,}645^2 \\cdot 0{,}198 / 0{,}04^2 \\approx 335$ (en la cuadrícula de la escena, 400);
-- que el intervalo excluya el cero el 80 % de las veces ($z = 1{,}96 + 0{,}84$): $n \\approx 2{,}8^2 \\cdot 0{,}198/0{,}04^2 \\approx 970$.
+- que A quede por delante el 95 % de las veces ($z = 1.645$): $n \\approx 1.645^2 \\cdot 0.198 / 0.04^2 \\approx 335$ (en la cuadrícula de la escena, 400);
+- que el intervalo excluya el cero el 80 % de las veces ($z = 1.96 + 0.84$): $n \\approx 2.8^2 \\cdot 0.198/0.04^2 \\approx 970$.
 
 La prueba de McNemar usa $z = (b-c)/\\sqrt{b+c}$. Miller (2024) resume el oficio: reporta errores estándar, compara por pares, agrupa casos que no son independientes y planifica el tamaño de la muestra antes de evaluar.
 
@@ -371,7 +371,7 @@ Si el modelo acierta siempre lo que vio, tiene capacidad real $a$ en lo demás y
 
 $$\\text{nota} = c + (1-c)\\,a.$$
 
-Con $a = 0{,}70$ y $c = 0{,}25$ sale $0{,}775$. Un modelo B con $a = 0{,}76$ y $c = 0$ queda detrás de A en cuanto $c > (0{,}76 - 0{,}70)/(1 - 0{,}70) = 0{,}20$. Es un modelo simplificado: la memoria real es parcial. Se detecta con coincidencias de texto entre examen y corpus (el informe de GPT-4 usó subcadenas de 50 caracteres, con falsos negativos si hay pequeñas diferencias), con problemas nuevos equivalentes (GSM1k) o comparando la probabilidad que el modelo asigna a los ejemplos del examen.
+Con $a = 0.70$ y $c = 0.25$ sale $0.775$. Un modelo B con $a = 0.76$ y $c = 0$ queda detrás de A en cuanto $c > (0.76 - 0.70)/(1 - 0.70) = 0.20$. Es un modelo simplificado: la memoria real es parcial. Se detecta con coincidencias de texto entre examen y corpus (el informe de GPT-4 usó subcadenas de 50 caracteres, con falsos negativos si hay pequeñas diferencias), con problemas nuevos equivalentes (GSM1k) o comparando la probabilidad que el modelo asigna a los ejemplos del examen.
 
 ## El juez automático y el protocolo
 

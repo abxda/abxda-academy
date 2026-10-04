@@ -340,9 +340,9 @@ export default defineLesson({
 
 Kaplan et al. (2020) entrenaron modelos de 768 a 1 500 millones de parámetros y ajustaron la pérdida $L$ (entropía cruzada, en nats por token) frente al número de parámetros $N$, sin contar los embeddings:
 
-$$L(N)=\\left(\\frac{N_c}{N}\\right)^{\\alpha_N},\\qquad \\alpha_N\\approx 0{,}076,\\quad N_c\\approx 8{,}8\\cdot 10^{13}$$
+$$L(N)=\\left(\\frac{N_c}{N}\\right)^{\\alpha_N},\\qquad \\alpha_N\\approx 0.076,\\quad N_c\\approx 8.8\\cdot 10^{13}$$
 
-Eso vale para modelos que convergen con datos de sobra. Con un modelo enorme y datos limitados, $L(D)=(D_c/D)^{\\alpha_D}$ con $\\alpha_D\\approx 0{,}095$; y con el cómputo repartido de forma óptima, $L(C_{\\min})\\propto C_{\\min}^{-0{,}050}$. Multiplicar $N$ por $k$ multiplica $L$ por $k^{-\\alpha_N}$: por 2, 0.95; por 10, 0.84. Las constantes dependen del vocabulario y de los datos («no tienen un significado fundamental», dicen los autores), y fuera del rango medido todo es extrapolación.
+Eso vale para modelos que convergen con datos de sobra. Con un modelo enorme y datos limitados, $L(D)=(D_c/D)^{\\alpha_D}$ con $\\alpha_D\\approx 0.095$; y con el cómputo repartido de forma óptima, $L(C_{\\min})\\propto C_{\\min}^{-0.050}$. Multiplicar $N$ por $k$ multiplica $L$ por $k^{-\\alpha_N}$: por 2, 0.95; por 10, 0.84. Las constantes dependen del vocabulario y de los datos («no tienen un significado fundamental», dicen los autores), y fuera del rango medido todo es extrapolación.
 
 ## El reparto óptimo (Chinchilla)
 
@@ -354,9 +354,9 @@ $E$ es la pérdida irreducible (la entropía del texto); el segundo término es 
 
 $$N_{\\mathrm{opt}}=G\\left(\\tfrac{C}{6}\\right)^{a},\\quad D_{\\mathrm{opt}}=G^{-1}\\left(\\tfrac{C}{6}\\right)^{b},\\quad a=\\tfrac{\\beta}{\\alpha+\\beta},\\ b=\\tfrac{\\alpha}{\\alpha+\\beta},\\ G=\\left(\\tfrac{\\alpha A}{\\beta B}\\right)^{\\frac{1}{\\alpha+\\beta}}$$
 
-Una advertencia honesta sobre las constantes. Las que imprime el artículo ($E=1{,}69$, $A=406{,}4$, $B=410{,}7$, $\\alpha=0{,}34$, $\\beta=0{,}28$) dan, para el presupuesto de Gopher, un modelo óptimo de unos 40 mil millones de parámetros, distinto de los ≈ 67 mil millones que obtienen los otros dos métodos del propio artículo. Besiroglu et al. (2024, Epoch AI) re-estimaron las cinco constantes con los datos de la figura 4 y obtuvieron $E=1{,}8172$, $A=482{,}01$, $B=2085{,}43$, $\\alpha=0{,}3478$, $\\beta=0{,}3658$, coherentes con los otros métodos. La lección usa estas, con la forma de Hoffmann: dan $a\\approx 0{,}51$, $b\\approx 0{,}49$ y, con $5{,}76\\cdot 10^{23}$ FLOPs, $N\\approx 7{,}2\\cdot 10^{10}$ y $D\\approx 1{,}3\\cdot 10^{12}$, unos 18 tokens por parámetro. Son un ajuste a esos datos: sirven para ver la forma, no para predecir tu modelo.
+Una advertencia honesta sobre las constantes. Las que imprime el artículo ($E=1.69$, $A=406.4$, $B=410.7$, $\\alpha=0.34$, $\\beta=0.28$) dan, para el presupuesto de Gopher, un modelo óptimo de unos 40 mil millones de parámetros, distinto de los ≈ 67 mil millones que obtienen los otros dos métodos del propio artículo. Besiroglu et al. (2024, Epoch AI) re-estimaron las cinco constantes con los datos de la figura 4 y obtuvieron $E=1.8172$, $A=482.01$, $B=2085.43$, $\\alpha=0.3478$, $\\beta=0.3658$, coherentes con los otros métodos. La lección usa estas, con la forma de Hoffmann: dan $a\\approx 0.51$, $b\\approx 0.49$ y, con $5.76\\cdot 10^{23}$ FLOPs, $N\\approx 7.2\\cdot 10^{10}$ y $D\\approx 1.3\\cdot 10^{12}$, unos 18 tokens por parámetro. Son un ajuste a esos datos: sirven para ver la forma, no para predecir tu modelo.
 
-Kaplan había encontrado $N_{\\mathrm{opt}}\\propto C^{0{,}73}$. Porian et al. (2024) mostraron que la diferencia con Chinchilla se explica por el costo de la última capa, la duración del calentamiento y el ajuste del optimizador.
+Kaplan había encontrado $N_{\\mathrm{opt}}\\propto C^{0.73}$. Porian et al. (2024) mostraron que la diferencia con Chinchilla se explica por el costo de la última capa, la duración del calentamiento y el ajuste del optimizador.
 
 ## De FLOPs a días y dinero
 
@@ -364,7 +364,7 @@ Un paso hacia delante cuesta unas $2N$ operaciones (una multiplicación y una su
 
 $$C\\approx 6ND$$
 
-La aproximación ignora el término de atención que depende del contexto, pequeño cuando $d_{\\text{modelo}}\\gg n_{\\text{ctx}}/12$ (Kaplan et al.). Hoffmann et al. compararon su conteo exacto con $6ND$ en modelos de 73 M a 6.8 mil M de parámetros: la razón fue de 0.99 a 1.10. Para GPT-3, $6\\cdot 175\\cdot 10^{9}\\cdot 300\\cdot 10^{9}=3{,}15\\cdot 10^{23}$; el artículo reporta $3{,}14\\cdot 10^{23}$ (tabla D.1).
+La aproximación ignora el término de atención que depende del contexto, pequeño cuando $d_{\\text{modelo}}\\gg n_{\\text{ctx}}/12$ (Kaplan et al.). Hoffmann et al. compararon su conteo exacto con $6ND$ en modelos de 73 M a 6.8 mil M de parámetros: la razón fue de 0.99 a 1.10. Para GPT-3, $6\\cdot 175\\cdot 10^{9}\\cdot 300\\cdot 10^{9}=3.15\\cdot 10^{23}$; el artículo reporta $3.14\\cdot 10^{23}$ (tabla D.1).
 
 Con $G$ GPU de pico $P$ (FLOP/s) y una fracción de aprovechamiento $\\mathrm{MFU}$ (Chowdhery et al., 2022: rendimiento observado entre el máximo teórico),
 
@@ -372,7 +372,7 @@ $$t=\\frac{6ND}{G\\,P\\,\\mathrm{MFU}},\\qquad H=\\frac{G\\,t}{3600},\\qquad \\t
 
 Como $H=6ND/(3600\\,P\\,\\mathrm{MFU})$ no depende de $G$, duplicar las GPU reduce $t$ a la mitad y deja el costo igual, mientras el MFU se mantenga. En clústeres enormes cae: Llama 3 405B reporta un MFU de 38 a 43 % y 466 interrupciones en 54 días de entrenamiento.
 
-Verificación con un entrenamiento real: Llama 2 70B usó 1 720 320 horas de GPU A100 con 2 billones de tokens (Touvron et al., 2023, tabla 2). Con $6ND=8{,}4\\cdot 10^{23}$ eso implica $1{,}36\\cdot 10^{14}$ FLOP/s por GPU, el 43.5 % del pico de 312 teraFLOPS de la A100 (BF16, denso): un MFU parecido al de Llama 3. Para la H100, la ficha de NVIDIA da 1 979 teraFLOPS con esparsidad, es decir, unos 989 sin ella: el valor de partida de la calculadora.
+Verificación con un entrenamiento real: Llama 2 70B usó 1 720 320 horas de GPU A100 con 2 billones de tokens (Touvron et al., 2023, tabla 2). Con $6ND=8.4\\cdot 10^{23}$ eso implica $1.36\\cdot 10^{14}$ FLOP/s por GPU, el 43.5 % del pico de 312 teraFLOPS de la A100 (BF16, denso): un MFU parecido al de Llama 3. Para la H100, la ficha de NVIDIA da 1 979 teraFLOPS con esparsidad, es decir, unos 989 sin ella: el valor de partida de la calculadora.
 
 ## En código
 

@@ -305,7 +305,7 @@ Son multiplicaciones de matrices grandes: la GPU trabaja cerca de su pico (la le
 
 $$t_{\\text{vuelta}}=\\max\\!\\left(\\frac{W+B\\,L\\,c_{kv}}{\\mathrm{BW}},\\ \\frac{B\\,(2N+4\\,n_\\ell\\,d_{\\text{attn}}\\,L)}{P}\\right)$$
 
-con $W$ los bytes de pesos, $c_{kv}$ los bytes de caché por token, BW el ancho de banda y $P$ el cálculo útil de la GPU (la lección usa la mitad del pico). Con $B=1$ hay $2N$ FLOPs por cada $W=bN$ bytes, es decir $2/b$ FLOPs por byte: uno, en FP16. Una H100 puede hacer $989\\cdot10^{12}/3{,}35\\cdot10^{12}\\approx 295$ por byte, así que el decode de una persona usa cerca del 0.3 % del cálculo. Ignorando la caché, el lote con el que el cálculo alcanza a la memoria es $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})$: unos 295 con el pico de la hoja de datos y unos 148 con la mitad del pico que usa la lección; la caché de cada persona suele impedir llegar ahí.
+con $W$ los bytes de pesos, $c_{kv}$ los bytes de caché por token, BW el ancho de banda y $P$ el cálculo útil de la GPU (la lección usa la mitad del pico). Con $B=1$ hay $2N$ FLOPs por cada $W=bN$ bytes, es decir $2/b$ FLOPs por byte: uno, en FP16. Una H100 puede hacer $989\\cdot10^{12}/3.35\\cdot10^{12}\\approx 295$ por byte, así que el decode de una persona usa cerca del 0.3 % del cálculo. Ignorando la caché, el lote con el que el cálculo alcanza a la memoria es $B^{*}\\approx P\\,b/(2\\,\\mathrm{BW})$: unos 295 con el pico de la hoja de datos y unos 148 con la mitad del pico que usa la lección; la caché de cada persona suele impedir llegar ahí.
 
 ## La caché KV por dentro
 

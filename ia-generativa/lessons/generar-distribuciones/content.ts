@@ -264,7 +264,7 @@ Esa media es la «puntuación» de la lección (como $x$ es continuo, $p_\\theta
 
 $$\\hat\\mu=\\frac1N\\sum_i x_i,\\qquad \\hat\\sigma^2=\\frac1N\\sum_i (x_i-\\hat\\mu)^2,\\qquad \\text{puntuación}=-\\ln\\hat\\sigma-\\tfrac12\\ln 2\\pi-\\tfrac12$$
 
-Con la tinta total (suma de los 64 píxeles, cada uno entre 0 y 1) de las 1797 imágenes: $\\hat\\mu=19{,}54$, $\\hat\\sigma=2{,}15$ y puntuación $-2{,}19$. Ninguna otra campana la supera.
+Con la tinta total (suma de los 64 píxeles, cada uno entre 0 y 1) de las 1797 imágenes: $\\hat\\mu=19.54$, $\\hat\\sigma=2.15$ y puntuación $-2.19$. Ninguna otra campana la supera.
 
 ## Autocodificador
 
@@ -288,7 +288,7 @@ El primer término es el error de reconstrucción; el segundo, la penalización 
 
 $$D_{\\mathrm{KL}}=\\tfrac12\\sum_{k}\\big(\\mu_k^2+\\sigma_k^2-\\ln\\sigma_k^2-1\\big)$$
 
-La pérdida usada en la lección es $\\lVert x-\\hat x\\rVert^2/(2\\sigma_{\\text{obs}}^2)+D_{\\mathrm{KL}}$ con $\\sigma_{\\text{obs}}^2=0{,}1$. Los dos términos compiten: la reconstrucción separa y encoge las nubes; la penalización las junta y las ensancha. Para **generar**: $z\\sim\\mathcal N(0,I)$ y $x=D_\\theta(z)$. Con un decodificador gaussiano de varianza fija y error cuadrático, la mejor reconstrucción de un código es el promedio de las imágenes que caben en él: de ahí la borrosidad. Kingma y Welling (2019, §2.8.2) la atribuyen a que el ajuste nunca es perfecto (la cota castiga más no cubrir los datos que cubrir de más) y señalan que se atenúa con un modelo de inferencia y uno generativo más flexibles.
+La pérdida usada en la lección es $\\lVert x-\\hat x\\rVert^2/(2\\sigma_{\\text{obs}}^2)+D_{\\mathrm{KL}}$ con $\\sigma_{\\text{obs}}^2=0.1$. Los dos términos compiten: la reconstrucción separa y encoge las nubes; la penalización las junta y las ensancha. Para **generar**: $z\\sim\\mathcal N(0,I)$ y $x=D_\\theta(z)$. Con un decodificador gaussiano de varianza fija y error cuadrático, la mejor reconstrucción de un código es el promedio de las imágenes que caben en él: de ahí la borrosidad. Kingma y Welling (2019, §2.8.2) la atribuyen a que el ajuste nunca es perfecto (la cota castiga más no cubrir los datos que cubrir de más) y señalan que se atenúa con un modelo de inferencia y uno generativo más flexibles.
 
 ## En código
 

@@ -262,15 +262,15 @@ Una neurona con entradas $x_1,\\dots,x_n$, pesos $w_1,\\dots,w_n$ y sesgo $b$ ca
 
 $$z = \\sum_{i=1}^{n} w_i x_i + b = \\mathbf{w}\\cdot\\mathbf{x} + b, \\qquad y = f(z)$$
 
-donde $f$ es la función de activación. Con los números de la lección, $\\mathbf{x}=(0{,}8;\\,0{,}2)$, $\\mathbf{w}=(2;\\,-1{,}5)$ y $b=-0{,}5$:
+donde $f$ es la función de activación. Con los números de la lección, $\\mathbf{x}=(0.8;\\,0.2)$, $\\mathbf{w}=(2;\\,-1.5)$ y $b=-0.5$:
 
-$$z = 2\\cdot 0{,}8 + (-1{,}5)\\cdot 0{,}2 - 0{,}5 = 0{,}8$$
+$$z = 2\\cdot 0.8 + (-1.5)\\cdot 0.2 - 0.5 = 0.8$$
 
-Con escalón, $y=1$. Con sigmoide, $y=\\sigma(0{,}8)\\approx 0{,}69$. Si $n=1$ y $f$ es la identidad, queda $y=wx+b$: la recta de la lección 3 es el caso más simple de neurona.
+Con escalón, $y=1$. Con sigmoide, $y=\\sigma(0.8)\\approx 0.69$. Si $n=1$ y $f$ es la identidad, queda $y=wx+b$: la recta de la lección 3 es el caso más simple de neurona.
 
 ## La frontera de decisión
 
-La neurona cambia de respuesta donde $z=0$, es decir, $w_1x_1+w_2x_2+b=0$. Es una recta cuyo vector normal es $\\mathbf{w}$. Su distancia al origen es $|b|/\\lVert\\mathbf{w}\\rVert$ y la distancia con signo de un punto a ella es $z/\\lVert\\mathbf{w}\\rVert$. En el ejemplo, $\\lVert\\mathbf{w}\\rVert=2{,}5$: la recta pasa a $0{,}2$ del origen y el correo de ejemplo queda a $0{,}8/2{,}5=0{,}32$.
+La neurona cambia de respuesta donde $z=0$, es decir, $w_1x_1+w_2x_2+b=0$. Es una recta cuyo vector normal es $\\mathbf{w}$. Su distancia al origen es $|b|/\\lVert\\mathbf{w}\\rVert$ y la distancia con signo de un punto a ella es $z/\\lVert\\mathbf{w}\\rVert$. En el ejemplo, $\\lVert\\mathbf{w}\\rVert=2.5$: la recta pasa a $0.2$ del origen y el correo de ejemplo queda a $0.8/2.5=0.32$.
 
 Cambiar $b$ desplaza la recta; cambiar $\\mathbf{w}$ la gira (si $w_2=0$ es vertical: solo importa $x_1$). Multiplicar $\\mathbf{w}$ y $b$ por $k>0$ no mueve la recta, pero con sigmoide cambia la nitidez de la transición, porque la salida pasa a ser $\\sigma(kz)$. Con $n$ entradas, la frontera es un hiperplano.
 
@@ -290,7 +290,7 @@ $$w_i \\leftarrow w_i + \\eta\\,(t-y)\\,x_i,\\qquad b \\leftarrow b + \\eta\\,(t
 
 Solo cambia cuando $t\\neq y$, y entonces $t-y=\\pm1$. El mismo ejemplo queda mejor: $\\Delta z=\\eta\\,(t-y)\\,(\\lVert\\mathbf{x}\\rVert^2+1)$ tiene el signo correcto. Es un paso de descenso estocástico, con subgradiente, sobre la pérdida $\\max(0,-\\tilde t\\,z)$ (el «criterio del perceptrón»), con $\\tilde t=2t-1$: la idea de la lección 4, aplicada a otra pérdida porque la del escalón (contar errores) es plana casi en todas partes.
 
-El teorema de convergencia dice: si existe un vector unitario $\\mathbf{u}$ y un margen $\\gamma>0$ con $\\tilde t_i\\,(\\mathbf{u}\\cdot\\mathbf{x}_i)\\ge\\gamma$ para todos los ejemplos (con el sesgo como una entrada más, igual a 1) y $\\lVert\\mathbf{x}_i\\rVert\\le R$, el perceptrón, partiendo de pesos cero, comete a lo sumo $(R/\\gamma)^2$ errores: la cota sale directamente de la demostración de Novikoff (1962). Con los 16 correos de la lección, $R\\approx 1{,}63$ (el mayor $\\lVert(x_1,x_2,1)\\rVert$) y $\\gamma\\approx 0{,}12$, así que la cota es de unos 190 errores; en 300 pruebas con orden aleatorio, desde cero, nunca hicieron falta más de 31. Si los datos no se separan con una recta, no converge: los pesos no dejan de moverse.
+El teorema de convergencia dice: si existe un vector unitario $\\mathbf{u}$ y un margen $\\gamma>0$ con $\\tilde t_i\\,(\\mathbf{u}\\cdot\\mathbf{x}_i)\\ge\\gamma$ para todos los ejemplos (con el sesgo como una entrada más, igual a 1) y $\\lVert\\mathbf{x}_i\\rVert\\le R$, el perceptrón, partiendo de pesos cero, comete a lo sumo $(R/\\gamma)^2$ errores: la cota sale directamente de la demostración de Novikoff (1962). Con los 16 correos de la lección, $R\\approx 1.63$ (el mayor $\\lVert(x_1,x_2,1)\\rVert$) y $\\gamma\\approx 0.12$, así que la cota es de unos 190 errores; en 300 pruebas con orden aleatorio, desde cero, nunca hicieron falta más de 31. Si los datos no se separan con una recta, no converge: los pesos no dejan de moverse.
 
 ## En código
 
@@ -349,7 +349,7 @@ for epoca in range(10):
 
 **La demostración de julio de 1958** se hizo con una computadora IBM 704: tras 50 ensayos distinguió tarjetas marcadas a la izquierda de las marcadas a la derecha. La frase de la Marina sobre una máquina «consciente de su existencia» es del despacho de UPI que publicó The New York Times el 8 de julio.
 
-**Las cifras del cerebro.** Azevedo et al. (2009) contaron, en cerebros de varones adultos, $86{,}1\\pm 8{,}1$ miles de millones de neuronas en promedio. Beniaguev et al. (2021) necesitaron una red convolucional temporal de cinco a ocho capas para imitar un modelo biofísico detallado de una neurona piramidal de la capa 5 de la corteza; cuando quitaron del modelo los receptores NMDA, bastaba una red con una sola capa oculta. Es una propiedad de ese modelo simulado, no una medida de todas las neuronas.
+**Las cifras del cerebro.** Azevedo et al. (2009) contaron, en cerebros de varones adultos, $86.1\\pm 8.1$ miles de millones de neuronas en promedio. Beniaguev et al. (2021) necesitaron una red convolucional temporal de cinco a ocho capas para imitar un modelo biofísico detallado de una neurona piramidal de la capa 5 de la corteza; cuando quitaron del modelo los receptores NMDA, bastaba una red con una sola capa oculta. Es una propiedad de ese modelo simulado, no una medida de todas las neuronas.
 
 ## Lo que viene
 

@@ -298,7 +298,7 @@ Para $n$ palabras con vectores de dimensión $d_k$ (claves y consultas) y $d_v$ 
 
 $$\\text{Atención}(Q,K,V)=\\text{softmax}\\!\\left(\\frac{QK^{\\top}}{\\sqrt{d_k}}\\right)V$$
 
-Fila por fila: la puntuación de la palabra $i$ sobre la $j$ es $s_{ij}=q_i\\cdot k_j/\\sqrt{d_k}$; el peso es $\\alpha_{ij}=\\dfrac{e^{s_{ij}}}{\\sum_{l}e^{s_{il}}}$ (cada fila suma 1) y la salida es $o_i=\\sum_j\\alpha_{ij}\\,v_j$. En la escena, $q$ de «este» es $(2,1)$ y la puntuación con «paquete» es $(2\\cdot 2+1\\cdot 0{,}5)/\\sqrt{2}\\approx 3{,}18$.
+Fila por fila: la puntuación de la palabra $i$ sobre la $j$ es $s_{ij}=q_i\\cdot k_j/\\sqrt{d_k}$; el peso es $\\alpha_{ij}=\\dfrac{e^{s_{ij}}}{\\sum_{l}e^{s_{il}}}$ (cada fila suma 1) y la salida es $o_i=\\sum_j\\alpha_{ij}\\,v_j$. En la escena, $q$ de «este» es $(2,1)$ y la puntuación con «paquete» es $(2\\cdot 2+1\\cdot 0.5)/\\sqrt{2}\\approx 3.18$.
 
 ## De dónde salen Q, K y V
 

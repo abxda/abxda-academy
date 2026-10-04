@@ -2,7 +2,8 @@ import { defineLesson } from '../../../../../core/define';
 
 // Lección 8 · Retropropagación. Una red diminuta (2-2-1, sigmoide, sin sesgos) recorrida con números reales:
 // pase hacia delante, pérdida, culpa (gradiente) hacia atrás con la regla de la cadena y actualización.
-// Los números de la escena salen de math.ts; el código de «Por dentro» es el mismo cálculo y su salida se verificó al escribirlo.
+// Los números de la escena salen de math.ts; verify-data.ts (misma carpeta) los recalcula de forma independiente,
+// compara con diferencias finitas y ejecuta el código de «Por dentro». Registro: docs/v2/verificacion/backpropagation.md
 export default defineLesson({
   id: 'backpropagation',
 
@@ -52,9 +53,9 @@ export default defineLesson({
     },
     {
       id: 'question',
-      es: 'Ahora, la pregunta de fondo: si movemos un peso un poco, ¿cuánto cambia la pérdida? Esa cifra es el gradiente de ese peso. Aquí la llamaremos su culpa.',
-      en: 'Now the real question: if we nudge a weight a little, how much does the loss change? That number is the gradient of that weight. Here we will call it its blame.',
-      note: { es: 'Meta: la culpa de cada peso, es decir, su gradiente.', en: 'Goal: the blame of each weight, that is, its gradient.' },
+      es: 'Ahora, la pregunta de fondo: si movemos un peso un poco, ¿cuánto cambia la pérdida? Esa tasa de cambio es la derivada de ese peso; las seis juntas forman el gradiente. Aquí la llamaremos su culpa.',
+      en: 'Now the real question: if we nudge a weight a little, how much does the loss change? That rate of change is that weight’s derivative; the six together form the gradient. Here we will call it its blame.',
+      note: { es: 'Meta: la culpa de cada peso, es decir, su derivada (juntas, el gradiente).', en: 'Goal: the blame of each weight, that is, its derivative (together, the gradient).' },
     },
     {
       id: 'wiggle',
@@ -84,8 +85,8 @@ export default defineLesson({
     },
     {
       id: 'back-err',
-      es: 'El viaje de vuelta empieza en la pérdida. Si la predicción subiera un poco, ¿cuánto cambiaría la pérdida? Cambia la predicción menos el objetivo, que aquí es negativo: subirla ayuda.',
-      en: 'The trip back starts at the loss. If the prediction rose a little, how much would the loss change? By the prediction minus the target, which is negative here: raising it helps.',
+      es: 'El viaje de vuelta empieza en la pérdida. Si la predicción subiera un poco, la pérdida cambiaría a razón de la predicción menos el objetivo: aquí es negativo, así que subirla ayuda.',
+      en: 'The trip back starts at the loss. If the prediction rose a little, the loss would change at a rate of the prediction minus the target: here it is negative, so raising it helps.',
       note: { es: 'Retropropagación: la culpa viaja de la salida hacia la entrada, capa por capa.', en: 'Backpropagation: the blame travels from the output to the input, layer by layer.' },
     },
     {
@@ -95,8 +96,8 @@ export default defineLesson({
     },
     {
       id: 'back-w56',
-      es: 'Esa culpa se reparte entre los dos pesos que llegan a la salida: se multiplica por la señal que cada uno llevaba, la activación de su neurona oculta.',
-      en: 'That blame is shared between the two weights that feed the output: it is multiplied by the signal each one carried, the activation of its hidden neuron.',
+      es: 'Esa culpa llega a los dos pesos que alimentan la salida: cada uno la recibe multiplicada por la señal que llevaba, la activación de su neurona oculta. No se parte en trozos que suman.',
+      en: 'That blame reaches the two weights that feed the output: each gets it multiplied by the signal it carried, the activation of its hidden neuron. It is not split into pieces that add up.',
       note: { es: 'Culpa de un peso = culpa de la neurona a la que llega × señal que llevaba.', en: 'A weight’s blame = blame of the neuron it feeds × the signal it carried.' },
       pad: 0.3,
     },
@@ -113,8 +114,8 @@ export default defineLesson({
     },
     {
       id: 'back-w14',
-      es: 'Por último, la culpa de cada neurona oculta se reparte entre sus pesos de entrada, multiplicándola por la entrada que cada peso recibió.',
-      en: 'Finally, each hidden neuron’s blame is shared among its input weights, multiplied by the input each weight received.',
+      es: 'Por último, la culpa de cada neurona oculta llega a sus pesos de entrada, multiplicada por la entrada que cada peso recibió.',
+      en: 'Finally, each hidden neuron’s blame reaches its input weights, multiplied by the input each weight received.',
       pad: 0.3,
     },
     {
@@ -132,9 +133,9 @@ export default defineLesson({
     },
     {
       id: 'cost',
-      es: 'Y cuesta poco: el viaje de vuelta pide aproximadamente el doble de cómputo que un pase hacia delante, sin importar cuántos pesos haya. Por eso se pueden entrenar redes enormes.',
-      en: 'And it is cheap: the trip back takes roughly twice the compute of a forward pass, no matter how many weights there are. That is why huge networks can be trained.',
-      note: { es: 'El viaje de vuelta cuesta del orden de un pase hacia delante, no uno por peso.', en: 'The trip back costs about one forward pass, not one per weight.' },
+      es: 'Y cuesta poco: en redes grandes, el viaje de vuelta pide del orden del doble de cómputo que un pase hacia delante, sin importar cuántos pesos haya. Por eso se pueden entrenar redes enormes.',
+      en: 'And it is cheap: in large networks, the trip back takes on the order of twice the compute of a forward pass, no matter how many weights there are. That is why huge networks can be trained.',
+      note: { es: 'El viaje de vuelta cuesta del orden de dos pases hacia delante, no uno por peso.', en: 'The trip back costs about two forward passes, not one per weight.' },
     },
     {
       id: 'read-sign',
@@ -148,8 +149,8 @@ export default defineLesson({
       gate: {
         id: 'hand',
         prompt: {
-          es: 'Baja la pérdida a 0,12 o menos moviendo pesos: sube los de culpa negativa y baja los de culpa positiva.',
-          en: 'Bring the loss down to 0.12 or less by moving weights: raise those with negative blame, lower those with positive blame.',
+          es: 'Baja la pérdida a 0.10 o menos moviendo pesos: sube los de culpa negativa y baja los de culpa positiva.',
+          en: 'Bring the loss down to 0.10 or less by moving weights: raise those with negative blame, lower those with positive blame.',
         },
       },
       pad: 0.4,
@@ -162,8 +163,8 @@ export default defineLesson({
     },
     {
       id: 'who',
-      es: 'Una confusión clásica: la retropropagación no mueve ningún peso. Solo calcula las culpas. Quien corrige los pesos es el descenso del gradiente, con esas culpas.',
-      en: 'A classic confusion: backpropagation does not move any weight. It only computes the blames. The one that corrects the weights is gradient descent, using those blames.',
+      es: 'Una confusión frecuente: hoy se llama retropropagación solo al cálculo de las culpas; no mueve ningún peso. Quien los corrige es el descenso del gradiente, con esas culpas.',
+      en: 'A common confusion: today backpropagation names only the computation of the blames; it does not move any weight. The one that corrects the weights is gradient descent, using those blames.',
       note: { es: 'La retropropagación calcula el gradiente; el descenso del gradiente corrige los pesos.', en: 'Backpropagation computes the gradient; gradient descent corrects the weights.' },
     },
     {
@@ -197,34 +198,34 @@ export default defineLesson({
     },
     {
       id: 'history-a',
-      es: 'La idea tiene historia. En 1970 Linnainmaa describió cómo derivar hacia atrás una cadena de cálculos, y Werbos la propuso para entrenar redes en su tesis doctoral de 1974.',
-      en: 'The idea has a history. In 1970 Linnainmaa described how to differentiate a chain of computations backward, and Werbos proposed it for training networks in his 1974 doctoral thesis.',
+      es: 'La idea tiene historia. En 1970 Linnainmaa, estudiando errores de redondeo, describió cómo recorrer un cálculo hacia atrás. Werbos lo desarrolló en su tesis de 1974 y en 1981 propuso aplicarlo a redes.',
+      en: 'The idea has a history. In 1970 Linnainmaa, studying rounding errors, described how to run a computation backward. Werbos developed it in his 1974 thesis and in 1981 proposed applying it to networks.',
       tts: {
-        es: 'La idea tiene historia. En mil novecientos setenta Linnainmaa describió cómo derivar hacia atrás una cadena de cálculos, y Werbos la propuso para entrenar redes en su tesis doctoral de mil novecientos setenta y cuatro.',
-        en: 'The idea has a history. In nineteen seventy Linnainmaa described how to differentiate a chain of computations backward, and Werbos proposed it for training networks in his nineteen seventy-four doctoral thesis.',
+        es: 'La idea tiene historia. En mil novecientos setenta Linnainmaa, estudiando errores de redondeo, describió cómo recorrer un cálculo hacia atrás. Werbos lo desarrolló en su tesis de mil novecientos setenta y cuatro y, en mil novecientos ochenta y uno, propuso aplicarlo a redes.',
+        en: 'The idea has a history. In nineteen seventy Linnainmaa, studying rounding errors, described how to run a computation backward. Werbos developed it in his nineteen seventy-four thesis and in nineteen eighty-one proposed applying it to networks.',
       },
       pad: 0.3,
     },
     {
       id: 'history-b',
-      es: 'En 1986, Rumelhart, Hinton y Williams mostraron en la revista Nature que servía para entrenar capas ocultas, que así aprendían representaciones internas útiles. Eso la hizo célebre.',
-      en: 'In 1986, Rumelhart, Hinton, and Williams showed in Nature that it could train hidden layers, which then learned useful internal representations. That made it famous.',
+      es: 'En 1986, Rumelhart, Hinton y Williams publicaron en Nature la versión que la hizo célebre: las capas ocultas aprenden representaciones internas útiles. También Parker y LeCun hallaron variantes por su cuenta.',
+      en: 'In 1986, Rumelhart, Hinton, and Williams published in Nature the version that made it famous: hidden layers learn useful internal representations. Parker and LeCun also found variants on their own.',
       tts: {
-        es: 'En mil novecientos ochenta y seis, Rumelhart, Hinton y Williams mostraron en la revista Néichur que servía para entrenar capas ocultas, que así aprendían representaciones internas útiles. Eso la hizo célebre.',
-        en: 'In nineteen eighty-six, Rumelhart, Hinton, and Williams showed in Nature that it could train hidden layers, which then learned useful internal representations. That made it famous.',
+        es: 'En mil novecientos ochenta y seis, Rumelhart, Hinton y Williams publicaron en la revista Néichur la versión que la hizo célebre: las capas ocultas aprenden representaciones internas útiles. También Parker y Le Cun hallaron variantes por su cuenta.',
+        en: 'In nineteen eighty-six, Rumelhart, Hinton, and Williams published in Nature the version that made it famous: hidden layers learn useful internal representations. Parker and Le Cun also found variants on their own.',
       },
       pad: 0.3,
     },
     {
       id: 'limit-memory',
-      es: 'Dos límites honestos. Primero, para calcular las culpas hay que recordar todos los valores del pase hacia delante, por eso entrenar gasta mucha más memoria que usar el modelo.',
-      en: 'Two honest limits. First, to compute the blames you must remember every value from the forward pass, which is why training uses far more memory than using the model.',
+      es: 'Dos límites honestos. Primero, para calcular las culpas hay que recordar los valores del pase hacia delante; es una de las razones por las que entrenar gasta mucha más memoria que usar el modelo.',
+      en: 'Two honest limits. First, to compute the blames you must remember the values from the forward pass; that is one of the reasons training uses far more memory than using the model.',
       pad: 0.3,
     },
     {
       id: 'limit-fade',
-      es: 'Segundo, la culpa se atenúa al cruzar capas. Cada sigmoide la multiplica por un cuarto o menos, así que con muchas capas puede casi desaparecer. Lo retomaremos con las redes recurrentes.',
-      en: 'Second, the blame fades as it crosses layers. Each sigmoid multiplies it by one quarter or less, so with many layers it can almost vanish. We will come back to this with recurrent networks.',
+      es: 'Segundo, la culpa puede atenuarse al cruzar capas. La pendiente de una sigmoide es un cuarto o menos, así que con muchas capas el producto puede casi desaparecer. Lo retomaremos con las redes recurrentes.',
+      en: 'Second, the blame can fade as it crosses layers. A sigmoid’s slope is one quarter or less, so with many layers the product can almost vanish. We will come back to this with recurrent networks.',
       pad: 0.3,
     },
     {
@@ -240,14 +241,14 @@ export default defineLesson({
       'La regla de la cadena dice que la influencia total de un peso sobre el error es el producto de la influencia de cada eslabón del camino.',
       'La retropropagación recorre la red de la salida hacia la entrada, calcula la culpa de cada neurona y la reutiliza para la capa anterior: obtiene todo el gradiente en un solo viaje.',
       'La retropropagación solo calcula el gradiente. Quien corrige los pesos es el descenso del gradiente: w ← w − η · culpa.',
-      'Es barata (del orden de un par de pases hacia delante), pero exige guardar los valores del pase hacia delante, y la culpa puede atenuarse al cruzar muchas capas.',
+      'Es barata (en redes grandes, del orden de un par de pases hacia delante), pero exige guardar los valores del pase hacia delante, y la culpa puede atenuarse al cruzar muchas capas.',
     ],
     en: [
       'A network’s final error is shared among thousands of weights hidden in layers. Knowing how much blame each one carries is the credit assignment problem.',
       'The chain rule says that a weight’s total influence on the error is the product of the influence of each link along the path.',
       'Backpropagation sweeps the network from output to input, computes each neuron’s blame, and reuses it for the previous layer: it gets the whole gradient in a single trip.',
       'Backpropagation only computes the gradient. The one that corrects the weights is gradient descent: w ← w − η · blame.',
-      'It is cheap (about a couple of forward passes), but it needs the values of the forward pass to be stored, and the blame can fade as it crosses many layers.',
+      'It is cheap (in large networks, on the order of a couple of forward passes), but it needs the values of the forward pass to be stored, and the blame can fade as it crosses many layers.',
     ],
   },
 
@@ -257,8 +258,8 @@ export default defineLesson({
       en: 'Backpropagation is the mechanism by which the network corrects its weights.',
     },
     right: {
-      es: 'Solo calcula cuánta culpa tiene cada peso (el gradiente), con un viaje hacia atrás. Mover los pesos es trabajo del descenso del gradiente (u otro optimizador), que usa esos números.',
-      en: 'It only computes how much blame each weight carries (the gradient), with one trip backward. Moving the weights is the job of gradient descent (or another optimizer), which uses those numbers.',
+      es: 'En el uso actual, solo calcula cuánta culpa tiene cada peso (el gradiente), con un viaje hacia atrás. Mover los pesos es trabajo del descenso del gradiente (u otro optimizador), que usa esos números.',
+      en: 'In current usage, it only computes how much blame each weight carries (the gradient), with one trip backward. Moving the weights is the job of gradient descent (or another optimizer), which uses those numbers.',
     },
   },
 
@@ -271,7 +272,7 @@ $$z_1 = w_1x_1 + w_2x_2,\\quad z_2 = w_3x_1 + w_4x_2,\\quad a_j=\\sigma(z_j)$$
 
 $$z = w_5a_1 + w_6a_2,\\quad \\hat y=\\sigma(z),\\quad L=\\tfrac12(\\hat y-t)^2$$
 
-Con $\\mathbf x=(1;\\,0{,}5)$, $t=1$ y $\\mathbf w=(0{,}6;\\,-0{,}3;\\,0{,}7;\\,0{,}5;\\,0{,}8;\\,-0{,}9)$ resulta $\\hat y\\approx 0{,}460$ y $L\\approx 0{,}146$. Los pesos de partida se eligieron de modo que cada cuenta mostrada con tres decimales se pueda repetir a mano sin discrepancias de redondeo.
+Con $\\mathbf x=(1,\\,0.5)$, $t=1$ y $\\mathbf w=(0.6,\\,-0.3,\\,0.7,\\,0.5,\\,0.8,\\,-0.9)$ resulta $\\hat y\\approx 0.460$ y $L\\approx 0.146$. Los pesos de partida se eligieron de modo que cada cuenta mostrada con tres decimales se pueda repetir a mano, con las cifras ya redondeadas, sin discrepancias (el script \`verify-data.ts\` de la lección lo comprueba, y compara el gradiente con diferencias finitas).
 
 ## La regla de la cadena, paso a paso
 
@@ -285,7 +286,7 @@ $$\\delta_y=(\\hat y-t)\\,\\hat y(1-\\hat y),\\qquad \\frac{\\partial L}{\\parti
 
 $$\\delta_j=\\delta_y\\,w_{4+j}\\,a_j(1-a_j),\\qquad \\frac{\\partial L}{\\partial w}=\\delta_j\\,x_i$$
 
-Con los números de la lección: $\\delta_y=-0{,}540\\cdot0{,}248\\approx-0{,}134$; $\\partial L/\\partial w_5=-0{,}134\\cdot0{,}611\\approx-0{,}082$; $\\delta_1=-0{,}134\\cdot0{,}8\\cdot0{,}238\\approx-0{,}026$ y $\\partial L/\\partial w_1=\\delta_1\\,x_1\\approx-0{,}026$. Como $w_6<0$, $\\delta_2$ sale con signo contrario ($+0{,}024$).
+Con los números de la lección: $\\delta_y=-0.540\\cdot0.248\\approx-0.134$; $\\partial L/\\partial w_5=-0.134\\cdot0.611\\approx-0.082$; $\\delta_1=-0.134\\cdot0.8\\cdot0.238\\approx-0.026$ y $\\partial L/\\partial w_1=\\delta_1\\,x_1\\approx-0.026$. Como $w_6<0$, $\\delta_2$ sale con signo contrario ($+0.024$). Observa que las culpas $\\partial L/\\partial w_5$ y $\\partial L/\\partial w_6$ no suman $\\delta_y$: cada peso recibe la culpa de la neurona multiplicada por su propia señal, no una parte de ella.
 
 ## En capas y en forma de matriz
 
@@ -297,11 +298,20 @@ Cada $\\boldsymbol\\delta^{(l)}$ se calcula **una vez** a partir de la capa sigu
 
 ## Por qué es barata
 
-Para una pérdida escalar y $N$ pesos, el modo inverso de la diferenciación automática (la retropropagación es su caso particular para redes) entrega las $N$ derivadas en un solo recorrido; el modo directo, o tantear, necesita un recorrido por peso. En redes grandes, el pase hacia atrás cuesta aproximadamente el doble que el pase hacia delante: unos $2N$ FLOPs por ejemplo hacia delante y $4N$ hacia atrás, de ahí el $\\approx 6N$ de Kaplan et al. (2020). A cambio, hay que **guardar las activaciones** del pase hacia delante hasta usarlas.
+Para una pérdida escalar y $N$ pesos, el modo inverso de la diferenciación automática (las técnicas para derivar programas de forma exacta; la retropropagación es su caso particular para redes) entrega las $N$ derivadas en un solo recorrido hacia atrás. El modo directo, o tantear con diferencias finitas, necesita un recorrido por peso. El gradiente completo cuesta una constante pequeña por el costo de evaluar la función: Baydin et al. (2018), citando a Griewank y Walther (2008), dan $c<6$ y típicamente entre 2 y 3, y Griewank (2012) lo llama el «principio del gradiente barato».
 
-## Un límite: la culpa se atenúa
+En un transformer grande, Kaplan et al. (2020) cuentan unos $2N$ FLOPs por token hacia delante, con $N$ los parámetros sin contar los de embeddings, y observan que el pase hacia atrás cuesta aproximadamente el doble: de ahí su $\\approx 6N$ FLOPs por token de entrenamiento. A cambio, hay que **guardar las activaciones** del pase hacia delante hasta usarlas: el propio artículo de 1986 señala que las salidas de las capas intermedias del pase hacia delante hacen falta para el pase hacia atrás.
 
-Como $\\sigma'(z)\\le \\tfrac14$, cada capa de sigmoides multiplica la culpa por a lo sumo $\\tfrac14$ (además del peso): $(\\tfrac14)^n$ tras $n$ capas. Por eso en redes profundas se prefieren otras activaciones, conexiones residuales y variantes como la LSTM, temas de las lecciones 12 y 13.
+## Un límite: la culpa puede atenuarse
+
+Como $\\sigma'(z)\\le \\tfrac14$, cada capa de sigmoides aporta un factor de a lo sumo $\\tfrac14$ a la culpa: $(\\tfrac14)^n$ tras $n$ capas. Los pesos también multiplican en cada capa y podrían compensarlo, pero con pesos moderados el producto se encoge de forma exponencial. Por eso en redes profundas se prefieren otras activaciones, conexiones residuales y variantes como la LSTM, temas de las lecciones 12 y 13.
+
+## De dónde viene, con cuidado
+
+El nombre y la fama son de 1986, pero la idea es más vieja y tuvo varios descubridores:
+- **Linnainmaa.** Su tesis de maestría (Universidad de Helsinki, 1970, en finés; resultados en inglés en *BIT*, 1976) estudia cómo se acumula el error de redondeo de un algoritmo y propone lo que hoy se llama modo inverso. Según Griewank (2012), él no lo presentó como un método para obtener gradientes de forma barata.
+- **Werbos.** Su tesis doctoral en estadística (Harvard, agosto de 1974) desarrolla las «derivadas ordenadas» y la «retroalimentación dinámica» para modelos de predicción. Él mismo cuenta (Werbos, 2006) que de las redes neuronales solo escribió unas palabras en el capítulo 5; Goodfellow et al. (2016) fechan en 1981 su propuesta de aplicarlo a entrenar redes neuronales.
+- **Rumelhart, Hinton y Williams (*Nature*, 1986).** Usan la misma matemática de esta lección: error $\\tfrac12\\sum(y-d)^2$, sigmoide, un pase hacia delante y uno hacia atrás que «propaga derivadas». Reconocen que David Parker y Yann LeCun descubrieron variantes de forma independiente. En el artículo, «back-propagation» nombra todo el procedimiento de aprendizaje (con la actualización $\\Delta w=-\\varepsilon\\,\\partial E/\\partial w$ y una variante con término de aceleración, lo que hoy se llama momento); la distinción de hoy, retropropagación para el gradiente y otro algoritmo para aprender con él, es la que explican Goodfellow et al. (2016). Los autores cierran diciendo que el procedimiento, «en su forma actual, no es un modelo plausible del aprendizaje en los cerebros».
 
 ## En código
 
@@ -360,7 +370,7 @@ $$z_1 = w_1x_1 + w_2x_2,\\quad z_2 = w_3x_1 + w_4x_2,\\quad a_j=\\sigma(z_j)$$
 
 $$z = w_5a_1 + w_6a_2,\\quad \\hat y=\\sigma(z),\\quad L=\\tfrac12(\\hat y-t)^2$$
 
-With $\\mathbf x=(1,\\,0.5)$, $t=1$, and $\\mathbf w=(0.6,\\,-0.3,\\,0.7,\\,0.5,\\,0.8,\\,-0.9)$ we get $\\hat y\\approx 0.460$ and $L\\approx 0.146$. The starting weights were chosen so that every calculation shown with three decimals can be repeated by hand without rounding discrepancies.
+With $\\mathbf x=(1,\\,0.5)$, $t=1$, and $\\mathbf w=(0.6,\\,-0.3,\\,0.7,\\,0.5,\\,0.8,\\,-0.9)$ we get $\\hat y\\approx 0.460$ and $L\\approx 0.146$. The starting weights were chosen so that every calculation shown with three decimals can be repeated by hand, using the already-rounded figures, without discrepancies (the lesson’s \`verify-data.ts\` script checks it, and compares the gradient with finite differences).
 
 ## The chain rule, step by step
 
@@ -374,7 +384,7 @@ $$\\delta_y=(\\hat y-t)\\,\\hat y(1-\\hat y),\\qquad \\frac{\\partial L}{\\parti
 
 $$\\delta_j=\\delta_y\\,w_{4+j}\\,a_j(1-a_j),\\qquad \\frac{\\partial L}{\\partial w}=\\delta_j\\,x_i$$
 
-With the lesson’s numbers: $\\delta_y=-0.540\\cdot0.248\\approx-0.134$; $\\partial L/\\partial w_5=-0.134\\cdot0.611\\approx-0.082$; $\\delta_1=-0.134\\cdot0.8\\cdot0.238\\approx-0.026$ and $\\partial L/\\partial w_1=\\delta_1\\,x_1\\approx-0.026$. Since $w_6<0$, $\\delta_2$ comes out with the opposite sign ($+0.024$).
+With the lesson’s numbers: $\\delta_y=-0.540\\cdot0.248\\approx-0.134$; $\\partial L/\\partial w_5=-0.134\\cdot0.611\\approx-0.082$; $\\delta_1=-0.134\\cdot0.8\\cdot0.238\\approx-0.026$ and $\\partial L/\\partial w_1=\\delta_1\\,x_1\\approx-0.026$. Since $w_6<0$, $\\delta_2$ comes out with the opposite sign ($+0.024$). Note that the blames $\\partial L/\\partial w_5$ and $\\partial L/\\partial w_6$ do not add up to $\\delta_y$: each weight gets the neuron’s blame multiplied by its own signal, not a share of it.
 
 ## In layers and in matrix form
 
@@ -386,11 +396,20 @@ Each $\\boldsymbol\\delta^{(l)}$ is computed **once** from the next layer: that 
 
 ## Why it is cheap
 
-For a scalar loss and $N$ weights, the reverse mode of automatic differentiation (backpropagation is its special case for networks) delivers all $N$ derivatives in a single sweep; the forward mode, or probing, needs one sweep per weight. In large networks the backward pass costs about twice the forward pass: roughly $2N$ FLOPs per example going forward and $4N$ going backward, hence the $\\approx 6N$ of Kaplan et al. (2020). In exchange, the **activations** of the forward pass must be stored until they are used.
+For a scalar loss and $N$ weights, the reverse mode of automatic differentiation (the techniques for differentiating programs exactly; backpropagation is its special case for networks) delivers all $N$ derivatives in a single backward sweep. The forward mode, or probing with finite differences, needs one sweep per weight. The whole gradient costs a small constant times the cost of evaluating the function: Baydin et al. (2018), citing Griewank and Walther (2008), give $c<6$ and typically between 2 and 3, and Griewank (2012) calls it the “cheap gradient principle”.
 
-## A limit: the blame fades
+In a large transformer, Kaplan et al. (2020) count about $2N$ FLOPs per token going forward, with $N$ the parameters excluding embeddings, and note that the backward pass costs approximately twice as much: hence their $\\approx 6N$ FLOPs per training token. In exchange, the **activations** of the forward pass must be stored until they are used: the 1986 paper itself points out that the outputs of the intermediate layers in the forward pass are needed for the backward pass.
 
-Since $\\sigma'(z)\\le \\tfrac14$, each layer of sigmoids multiplies the blame by at most $\\tfrac14$ (besides the weight): $(\\tfrac14)^n$ after $n$ layers. That is why deep networks favor other activations, residual connections, and variants such as the LSTM, topics of lessons 12 and 13.
+## A limit: the blame can fade
+
+Since $\\sigma'(z)\\le \\tfrac14$, each layer of sigmoids contributes a factor of at most $\\tfrac14$ to the blame: $(\\tfrac14)^n$ after $n$ layers. The weights also multiply at every layer and could compensate, but with moderate weights the product shrinks exponentially. That is why deep networks favor other activations, residual connections, and variants such as the LSTM, topics of lessons 12 and 13.
+
+## Where it comes from, carefully
+
+The name and the fame date from 1986, but the idea is older and had several discoverers:
+- **Linnainmaa.** His master’s thesis (University of Helsinki, 1970, in Finnish; results in English in *BIT*, 1976) studies how the rounding error of an algorithm accumulates and proposes what is now called reverse mode. According to Griewank (2012), he did not present it as a way to get gradients cheaply.
+- **Werbos.** His doctoral thesis in statistics (Harvard, August 1974) develops “ordered derivatives” and “dynamic feedback” for prediction models. He himself says (Werbos, 2006) that he wrote only a few words about neural networks, in chapter 5; Goodfellow et al. (2016) date to 1981 his proposal to apply it to training neural networks.
+- **Rumelhart, Hinton, and Williams (*Nature*, 1986).** They use the same mathematics as this lesson: error $\\tfrac12\\sum(y-d)^2$, sigmoid, one forward pass and one backward pass that “propagates derivatives”. They acknowledge that David Parker and Yann LeCun discovered variants independently. In the paper, “back-propagation” names the whole learning procedure (with the update $\\Delta w=-\\varepsilon\\,\\partial E/\\partial w$ and a variant with an acceleration term, what is now called momentum); today’s distinction, backpropagation for the gradient and another algorithm to learn with it, is the one Goodfellow et al. (2016) explain. The authors close by saying that the procedure, “in its current form, is not a plausible model of learning in brains”.
 
 ## In code
 
@@ -448,13 +467,13 @@ With real data the gradient is computed on a batch of examples rather than on a 
       'Un paso de entrenamiento cuesta del orden de tres pases hacia delante: uno hacia delante y uno hacia atrás que cuesta el doble. Pide el costo por token de entrenamiento, no solo el de uso.',
       'Entrenar exige guardar los valores intermedios del pase hacia delante: la memoria de la GPU, no solo el cómputo, limita qué modelo cabe. Pregunta cuánta memoria pide entrenar frente a usar.',
       'Por retropropagación solo se entrena lo que es derivable. Una regla dura, una búsqueda en una base de datos o una decisión discreta en medio del sistema cortan el flujo de la culpa: ahí hacen falta otros métodos.',
-      'Nadie programa la retropropagación a mano: PyTorch y TensorFlow la derivan automáticamente. Las preguntas útiles son qué partes se entrenan y cuáles se congelan, porque congelar capas ahorra cómputo y memoria de gradientes.',
+      'Casi nadie programa la retropropagación a mano: PyTorch y TensorFlow la derivan automáticamente. Las preguntas útiles son qué partes se entrenan y cuáles se congelan, porque congelar capas ahorra cómputo y memoria de gradientes.',
     ],
     en: [
       'One training step costs about three forward passes: one forward and one backward that costs twice as much. Ask for the training cost per token, not just the cost of use.',
       'Training requires storing the intermediate values of the forward pass: GPU memory, not just compute, limits which model fits. Ask how much memory training needs compared with using the model.',
       'Only what is differentiable can be trained by backpropagation. A hard rule, a database lookup, or a discrete decision in the middle of the system cuts the flow of blame: other methods are needed there.',
-      'Nobody codes backpropagation by hand: PyTorch and TensorFlow derive it automatically. The useful questions are which parts are trained and which are frozen, because freezing layers saves compute and gradient memory.',
+      'Almost nobody codes backpropagation by hand: PyTorch and TensorFlow derive it automatically. The useful questions are which parts are trained and which are frozen, because freezing layers saves compute and gradient memory.',
     ],
   },
 
@@ -473,8 +492,8 @@ With real data the gradient is computed on a batch of examples rather than on a 
       ],
       answer: 1,
       why: {
-        es: 'La retropropagación solo calcula el gradiente: cuánto cambiaría el error con cada peso. Quien actualiza los pesos, restando la tasa de aprendizaje por la culpa, es el descenso del gradiente (u otro optimizador).',
-        en: 'Backpropagation only computes the gradient: how much the error would change with each weight. The one that updates the weights, subtracting the learning rate times the blame, is gradient descent (or another optimizer).',
+        es: 'En el uso actual, la retropropagación solo calcula el gradiente: cuánto cambiaría el error con cada peso. Quien actualiza los pesos, restando la tasa de aprendizaje por la culpa, es el descenso del gradiente (u otro optimizador).',
+        en: 'In current usage, backpropagation only computes the gradient: how much the error would change with each weight. The one that updates the weights, subtracting the learning rate times the blame, is gradient descent (or another optimizer).',
       },
     },
     {
@@ -491,25 +510,25 @@ With real data the gradient is computed on a batch of examples rather than on a 
       ],
       answer: 3,
       why: {
-        es: 'Tantear exige un pase hacia delante extra por cada peso. La retropropagación aplica la regla de la cadena capa por capa y reutiliza cada culpa: su costo es del orden de un par de pases hacia delante, sin importar cuántos pesos haya.',
-        en: 'Probing needs one extra forward pass for every weight. Backpropagation applies the chain rule layer by layer and reuses each blame: its cost is about a couple of forward passes, no matter how many weights there are.',
+        es: 'Tantear exige un pase hacia delante extra por cada peso. La retropropagación aplica la regla de la cadena capa por capa y reutiliza cada culpa: en redes grandes su costo es del orden de un par de pases hacia delante, sin importar cuántos pesos haya.',
+        en: 'Probing needs one extra forward pass for every weight. Backpropagation applies the chain rule layer by layer and reuses each blame: in large networks its cost is about a couple of forward passes, no matter how many weights there are.',
       },
     },
     {
       kind: 'calc',
       q: {
-        es: 'La culpa de la neurona de salida es −0,2. Un peso de 0,5 une una neurona oculta con la salida, y la pendiente de la sigmoide de esa neurona oculta vale 0,25. ¿Cuál es la culpa de la neurona oculta?',
+        es: 'La culpa de la neurona de salida es −0.2. Un peso de 0.5 une una neurona oculta con la salida, y la pendiente de la sigmoide de esa neurona oculta vale 0.25. ¿Cuál es la culpa de la neurona oculta?',
         en: 'The output neuron’s blame is −0.2. A weight of 0.5 connects a hidden neuron to the output, and the slope of that hidden neuron’s sigmoid is 0.25. What is the hidden neuron’s blame?',
       },
       options: [
-        { es: '−0,025', en: '−0.025' },
-        { es: '−0,1', en: '−0.1' },
-        { es: '0,025', en: '0.025' },
-        { es: '−0,05', en: '−0.05' },
+        { es: '−0.025', en: '−0.025' },
+        { es: '−0.1', en: '−0.1' },
+        { es: '0.025', en: '0.025' },
+        { es: '−0.05', en: '−0.05' },
       ],
       answer: 0,
       why: {
-        es: 'Culpa oculta = culpa de salida × peso × pendiente = (−0,2) × 0,5 × 0,25 = −0,025. Olvidar la pendiente da −0,1; olvidar el peso, −0,05.',
+        es: 'Culpa oculta = culpa de salida × peso × pendiente = (−0.2) × 0.5 × 0.25 = −0.025. Olvidar la pendiente da −0.1; olvidar el peso, −0.05.',
         en: 'Hidden blame = output blame × weight × slope = (−0.2) × 0.5 × 0.25 = −0.025. Forgetting the slope gives −0.1; forgetting the weight, −0.05.',
       },
     },
@@ -540,8 +559,8 @@ With real data the gradient is computed on a batch of examples rather than on a 
       id: 'backpropagation',
       term: { es: 'Retropropagación', en: 'Backpropagation' },
       def: {
-        es: 'Algoritmo que calcula el gradiente de la pérdida respecto de todos los pesos de una red en un solo recorrido hacia atrás, aplicando la regla de la cadena capa por capa. Calcula las culpas; no mueve los pesos.',
-        en: 'An algorithm that computes the gradient of the loss with respect to every weight of a network in a single backward sweep, applying the chain rule layer by layer. It computes the blames; it does not move the weights.',
+        es: 'Algoritmo que calcula el gradiente de la pérdida respecto de todos los pesos de una red en un solo recorrido hacia atrás, aplicando la regla de la cadena capa por capa. Calcula las culpas; no mueve los pesos (en el artículo de 1986, el nombre abarcaba todo el procedimiento de aprendizaje).',
+        en: 'An algorithm that computes the gradient of the loss with respect to every weight of a network in a single backward sweep, applying the chain rule layer by layer. It computes the blames; it does not move the weights (in the 1986 paper, the name covered the whole learning procedure).',
       },
     },
     {
@@ -556,19 +575,22 @@ With real data the gradient is computed on a batch of examples rather than on a 
       id: 'credit-assignment',
       term: { es: 'Asignación de crédito (reparto de la culpa)', en: 'Credit assignment (sharing the blame)' },
       def: {
-        es: 'El problema de decidir cuánto contribuyó al error final cada peso o neurona escondido en medio de una red. La retropropagación lo resuelve de forma eficiente.',
-        en: 'The problem of deciding how much each weight or neuron hidden in the middle of a network contributed to the final error. Backpropagation solves it efficiently.',
+        es: 'El problema de decidir cuánto contribuyó al resultado final cada decisión, peso o neurona escondido en medio de un sistema (Minsky lo planteó así en 1961, para el aprendizaje por refuerzo). En una red derivable, la retropropagación lo resuelve de forma eficiente.',
+        en: 'The problem of deciding how much each decision, weight, or neuron hidden in the middle of a system contributed to the final outcome (Minsky posed it this way in 1961, for reinforcement learning). In a differentiable network, backpropagation solves it efficiently.',
       },
     },
   ],
 
   sources: [
     { title: 'Learning representations by back-propagating errors', authors: 'Rumelhart, D. E., Hinton, G. E., Williams, R. J. · Nature 323, 533–536', year: 1986, url: 'https://doi.org/10.1038/323533a0' },
-    { title: 'Algoritmin kumulatiivinen pyöristysvirhe yksittäisten pyöristysvirheiden Taylor-kehitelmänä (tesis de maestría, Universidad de Helsinki)', authors: 'Linnainmaa, S.', year: 1970 },
-    { title: 'Taylor expansion of the accumulated rounding error · BIT 16(2), 146–160', authors: 'Linnainmaa, S.', year: 1976, url: 'https://doi.org/10.1007/BF01931367' },
-    { title: 'Beyond Regression: New Tools for Prediction and Analysis in the Behavioral Sciences (tesis doctoral, Universidad de Harvard)', authors: 'Werbos, P. J.', year: 1974 },
+    { title: 'Who invented the reverse mode of differentiation? · Documenta Mathematica, Extra Volume ISMP, 389–400', authors: 'Griewank, A.', year: 2012, url: 'https://doi.org/10.4171/dms/6/38' },
+    { title: 'Taylor expansion of the accumulated rounding error · BIT 16(2), 146–160 (versión en inglés de resultados de su tesis de maestría de 1970, Universidad de Helsinki)', authors: 'Linnainmaa, S.', year: 1976, url: 'https://doi.org/10.1007/BF01931367' },
+    { title: 'Beyond Regression: New Tools for Prediction and Analysis in the Behavioral Sciences (tesis doctoral, Universidad de Harvard; copia escaneada)', authors: 'Werbos, P. J.', year: 1974, url: 'https://gwern.net/doc/ai/nn/1974-werbos.pdf' },
+    { title: 'Backwards differentiation in AD and neural nets: past links and new opportunities · en Automatic Differentiation: Applications, Theory, and Implementations, LNCSE 50, 15–34', authors: 'Werbos, P. J.', year: 2006, url: 'https://doi.org/10.1007/3-540-28438-9_2' },
+    { title: 'Deep Learning, secciones 6.5 (Back-Propagation and Other Differentiation Algorithms) y 6.6 (Historical Notes)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/mlp.html' },
     { title: 'Automatic differentiation in machine learning: a survey · JMLR 18(153), 1–43', authors: 'Baydin, A. G., Pearlmutter, B. A., Radul, A. A., Siskind, J. M.', year: 2018, url: 'https://arxiv.org/abs/1502.05767' },
-    { title: 'Scaling Laws for Neural Language Models (cómputo de entrenamiento ≈ 6N por token)', authors: 'Kaplan, J., McCandlish, S., Henighan, T., et al.', year: 2020, url: 'https://arxiv.org/abs/2001.08361' },
-    { title: 'Deep Learning, sección 6.5: Back-Propagation and Other Differentiation Algorithms', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
+    { title: 'Scaling Laws for Neural Language Models (cómputo de entrenamiento ≈ 6N por token; pase hacia atrás ≈ el doble que el de ida)', authors: 'Kaplan, J., McCandlish, S., Henighan, T., et al.', year: 2020, url: 'https://arxiv.org/abs/2001.08361' },
+    { title: 'Language Models are Few-Shot Learners (GPT-3: 175 mil millones de parámetros)', authors: 'Brown, T. B., Mann, B., Ryder, N., et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
+    { title: 'Steps toward Artificial Intelligence · Proceedings of the IRE 49(1), 8–30 (§ «The basic credit-assignment problem for complex reinforcement learning systems»)', authors: 'Minsky, M.', year: 1961, url: 'https://doi.org/10.1109/JRPROC.1961.287775' },
   ],
 });

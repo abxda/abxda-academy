@@ -18,15 +18,15 @@ export const setK = (k: number) => { K = k; };
 export const getK = () => K;
 /** Tamaño pedido a d.text() para que el texto efectivo (size × u) nunca baje de ~12 px. */
 export const fz = (S: Frame, n = 12.5) => Math.max(n * K, 12.3 / S.u);
-/** Número con el formato del idioma. (S.n usa es-MX, que escribe punto decimal; aquí el español lleva coma, como la narración y el quiz.) */
+/** Número con el formato del curso: punto decimal en español (México) y en inglés, y signo menos «−». (Se evita S.n solo porque aquí el signo «+» y el menos tipográfico importan en las tablas.) */
 export const num = (S: Frame, v: number, digits = 3, sign = false) => {
-  let s = Math.abs(v).toFixed(digits);
+  void S;
+  const s = Math.abs(v).toFixed(digits);
   const neg = v < 0 && Number(s) !== 0;
-  if (S.lang === 'es') s = s.replace('.', ',');
-  return (neg ? '−' : sign && Number(s.replace(',', '.')) !== 0 ? '+' : '') + s;
+  return (neg ? '−' : sign && Number(s) !== 0 ? '+' : '') + s;
 };
-/** Entero grande con separador de miles del idioma. */
-export const big = (S: Frame, v: number) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, S.lang === 'es' ? ' ' : ',');
+/** Entero grande con separador de miles: espacio duro en español (NOM-008-SCFI, como S.n), coma en inglés. */
+export const big = (S: Frame, v: number) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, S.lang === 'es' ? '\u00A0' : ',');
 
 export type Role = Tone | 'ink2';
 export type Part = [string, Role, boolean?];
@@ -196,7 +196,7 @@ export function drawTable(S: Frame, r: Rect, o: TableOpts) {
   const { d, pal: p } = S, u = S.u, err = tone(S, 'err'), wt = tone(S, 'w');
   const sz = fz(S, 12.5), headH = Math.max(18 * u, 12.3 * 1.5) * K;
   const rowH = Math.min(27 * u * K, Math.max(Math.max(20 * u, 12.3 * 1.55), (r.h - headH) / 6));
-  const nameW = 28 * u * K, valW = 50 * u * K, numW = 54 * u * K, newW = o.nw ? 58 * u * K : 0, arrW = o.arrows !== undefined ? 15 * u * K : 0;
+  const nameW = 28 * u * K, valW = 50 * u * K, numW = 54 * u * K, newW = o.nw ? 70 * u * K : 0, arrW = o.arrows !== undefined ? 15 * u * K : 0;
   const xv = r.x + nameW + valW, xb0 = xv + 8 * u, xnum = r.x + r.w - newW - arrW, xb1 = xnum - numW - 6 * u;
   const mid = (xb0 + xb1) / 2, half = Math.max(8, (xb1 - xb0) / 2), sc = o.scale ?? 0.12;
   d.withAlpha(o.a ?? 1, () => {
@@ -245,14 +245,22 @@ export interface StripOpts {
   res: { sym: string; val: number; cap: string }; resA: number; a?: number;
   bracket?: { from: number; to: number; text: string; a: number };
 }
-/** Fila «factor × factor × … = culpa». Devuelve la altura que ocupa. */
+/**
+ * Fila «factor × factor × … = culpa». Devuelve la altura que ocupa.
+ * Si las casillas quedarían más angostas que un número («−0.134») —teléfono en horizontal—, se omite la casilla del
+ * resultado: la línea de cuenta que va debajo lo muestra.
+ */
 export function drawStrip(S: Frame, r: Rect, o: StripOpts) {
   const { d, pal: p } = S, u = S.u, n = o.factors.length, opW = 15 * u;
-  const bw = (r.w - n * opW) / (n + 1), bh = 30 * u * K, sz = fz(S, 12.5);
+  const sz = fz(S, 12.5);
+  const minBox = d.measure('−0.000', { size: sz, weight: 700, font: 'mono' }) + 4 * u;
+  const narrow = (r.w - n * opW) / (n + 1) < minBox;
+  const cnt = narrow ? n : n + 1;
+  const bw = (r.w - (cnt - 1) * opW) / cnt, bh = 30 * u * K;
   const y0 = r.y + 26 * u * K;
   const bx = (i: number) => r.x + i * (bw + opW);
   d.withAlpha(o.a ?? 1, () => {
-    for (let i = 0; i <= n; i++) {
+    for (let i = 0; i < cnt; i++) {
       const isRes = i === n, f = isRes ? null : o.factors[i];
       const t = isRes ? tone(S, 'err') : tone(S, f!.tone);
       const fa = isRes ? o.resA : o.fill[i];
@@ -264,13 +272,16 @@ export function drawStrip(S: Frame, r: Rect, o: StripOpts) {
       const sym = isRes ? o.res.sym : f!.sym, cap = isRes ? o.res.cap : f!.cap;
       d.text(sym, x + bw / 2, y0 + bh + 12 * u * K, { size: sz, weight: 700, font: 'mono', color: t.ink, align: 'center', base: 'middle' });
       d.text(cap, x + bw / 2, y0 + bh + 22 * u * K, { size: fz(S, 12), weight: 500, color: p.mute, align: 'center', base: 'top', w: bw + opW - 2, lh: 1.15 });
-      if (i < n) d.text(i === n - 1 ? '=' : '×', x + bw + opW / 2, y0 + bh / 2, { size: fz(S, 14), weight: 800, font: 'mono', color: p.ink2, align: 'center', base: 'middle' });
+      if (i < cnt - 1) d.text(i === n - 1 ? '=' : '×', x + bw + opW / 2, y0 + bh / 2, { size: fz(S, 14), weight: 800, font: 'mono', color: p.ink2, align: 'center', base: 'middle' });
     }
     if (o.bracket && o.bracket.a > 0.01) {
       const b = o.bracket, x1 = bx(b.from), x2 = bx(b.to) + bw, by = y0 - 4 * u;
       d.withAlpha(b.a, () => {
         d.polyline([[x1, by + 5 * u], [x1, by], [x2, by], [x2, by + 5 * u]], tone(S, 'err').c, 1.6);
-        d.text(b.text, (x1 + x2) / 2, by - 9 * u, { size: sz, weight: 700, font: 'mono', color: tone(S, 'err').ink, align: 'center', base: 'middle' });
+        // si el rótulo es más ancho que el tramo (p. ej. sobre una sola casilla), se alinea a la izquierda para no salirse del panel
+        const tw = d.measure(b.text, { size: sz, weight: 700, font: 'mono' });
+        if (tw > x2 - x1) d.text(b.text, x1, by - 9 * u, { size: sz, weight: 700, font: 'mono', color: tone(S, 'err').ink, align: 'left', base: 'middle' });
+        else d.text(b.text, (x1 + x2) / 2, by - 9 * u, { size: sz, weight: 700, font: 'mono', color: tone(S, 'err').ink, align: 'center', base: 'middle' });
       });
     }
   });

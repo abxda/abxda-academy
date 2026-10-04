@@ -82,8 +82,8 @@ export default defineLesson({
     },
     {
       id: 'lr-small',
-      es: 'Con una tasa muy pequeña avanzas sin riesgo, pero tardas una eternidad: pasos diminutos y todavía lejos del fondo.',
-      en: 'With a very small learning rate you move without risk, but it takes forever: tiny steps, still far from the bottom.',
+      es: 'Con una tasa muy pequeña no te pasas, pero tardas una eternidad: pasos diminutos y todavía lejos del fondo.',
+      en: 'With a very small learning rate you do not overshoot, but it takes forever: tiny steps, still far from the bottom.',
       pad: 0.3,
     },
     {
@@ -117,8 +117,8 @@ export default defineLesson({
     },
     {
       id: 'path2d',
-      es: 'El gradiente apunta cuesta arriba, perpendicular a esas curvas. Avanzamos en sentido contrario y el camino baja en zigzag hacia el centro.',
-      en: 'The gradient points uphill, perpendicular to those lines. We step the opposite way and the path zigzags down toward the center.',
+      es: 'El gradiente apunta cuesta arriba, perpendicular a esas curvas. Avanzamos en sentido contrario y, como este valle es alargado, el camino baja en zigzag hacia el centro.',
+      en: 'The gradient points uphill, perpendicular to those lines. We step the opposite way and, because this valley is elongated, the path zigzags down toward the center.',
       pad: 0.6,
     },
     {
@@ -137,8 +137,8 @@ export default defineLesson({
     },
     {
       id: 'recap',
-      es: 'En resumen: medir el error, tantear la pendiente, avanzar en sentido contrario y repetir. Con ese bucle aprende todo, desde una recta hasta un chatbot.',
-      en: 'In short: measure the error, feel the slope, step the opposite way, and repeat. With that loop, everything learns, from a straight line to a chatbot.',
+      es: 'En resumen: medir el error, tantear la pendiente, avanzar en sentido contrario y repetir. Con ese bucle y sus variantes se entrena desde una recta hasta un chatbot.',
+      en: 'In short: measure the error, feel the slope, step the opposite way, and repeat. With that loop, and its variants, models are trained from a straight line to a chatbot.',
       note: { es: 'El bucle: medir, tantear, avanzar, repetir.', en: 'The loop: measure, feel, step, repeat.' },
     },
     {
@@ -154,14 +154,14 @@ export default defineLesson({
       'El gradiente es la pendiente del error respecto a cada peso. Apunta cuesta arriba, así que se avanza en sentido contrario.',
       'La tasa de aprendizaje fija el tamaño del paso: demasiado pequeña es lenta; demasiado grande oscila o diverge.',
       'Nadie ve el paisaje completo: el algoritmo solo conoce la pendiente local y llega al fondo tanteando.',
-      'El mismo bucle sirve desde una recta hasta modelos con cientos de miles de millones de pesos.',
+      'El mismo bucle, con variantes como Adam, sirve desde una recta hasta modelos con cientos de miles de millones de pesos.',
     ],
     en: [
       'Training a model means searching for the weights that minimize an error function.',
       'The gradient is the slope of the error with respect to each weight. It points uphill, so we step the opposite way.',
       'The learning rate sets the size of the step: too small is slow; too large oscillates or diverges.',
       'No one sees the whole landscape: the algorithm only knows the local slope and reaches the bottom by feeling its way.',
-      'The same loop works from a straight line to models with hundreds of billions of weights.',
+      'The same loop, with variants such as Adam, works from a straight line to models with hundreds of billions of weights.',
     ],
   },
 
@@ -183,7 +183,9 @@ Dado un error $L(\\mathbf{w})$ y un vector de pesos $\\mathbf{w}$, el descenso d
 
 $$\\mathbf{w}_{t+1} = \\mathbf{w}_t - \\eta\\,\\nabla L(\\mathbf{w}_t)$$
 
-donde $\\nabla L$ es el vector de derivadas parciales $\\partial L/\\partial w_i$ y $\\eta>0$ es la tasa de aprendizaje. El método se atribuye a Cauchy (1847).
+donde $\\nabla L$ es el vector de derivadas parciales $\\partial L/\\partial w_i$ y $\\eta>0$ es la tasa de aprendizaje. El gradiente apunta cuesta arriba porque, entre todas las direcciones de longitud 1, es la que más hace crecer a $L$; por eso se resta (Goodfellow et al., 2016, §4.3).
+
+El método se atribuye a Cauchy, que lo expuso en la sesión del 18 de octubre de 1847 de la Academia de Ciencias de París para resolver sistemas de ecuaciones: cambiaba el sistema por una sola ecuación, la suma de los cuadrados igualada a cero, y hacía bajar esa función paso a paso. El tamaño del paso lo fijaba resolviendo una ecuación de una variable o tomando un valor «suficientemente pequeño» (Cauchy, 1847; Lemaréchal, 2012).
 
 ## Por qué existe un umbral para la tasa
 
@@ -192,14 +194,24 @@ Para un error cuadrático de una variable, $L(w)=\\tfrac{h}{2}(w-w^*)^2 + c$ con
 $$w_{t+1}-w^* = (1-\\eta h)\\,(w_t-w^*)$$
 
 - si $0<\\eta h<1$, el peso se acerca al fondo sin cruzarlo;
+- si $\\eta h=1$, llega al fondo de un salto;
 - si $1<\\eta h<2$, lo cruza en cada paso pero converge (oscila);
+- si $\\eta h=2$, rebota entre dos puntos a la misma distancia del fondo, sin acercarse;
 - si $\\eta h>2$, la distancia crece en cada paso: diverge.
 
-En la lección $h=1$. Con $\\eta=0{,}5$ cada paso reduce a la mitad la distancia al fondo; con $\\eta=1$ llegaría de un salto; con $\\eta>2$ se aleja.
+Es el análisis clásico de LeCun et al. (1998, §5.1): la tasa óptima de una variable es $1/h$, y se diverge si la tasa pasa del doble de la óptima. En la lección $h=1$. Con $\\eta=0.5$ cada paso reduce a la mitad la distancia al fondo; con $\\eta=1$ llegaría de un salto; con $\\eta>2$ se aleja. Las cuatro tasas de la escena (0.06, 0.7, 1.7 y 2.08) son un caso lento, uno bueno, uno que oscila y uno que diverge.
+
+Una tasa muy pequeña no es del todo inocua en una red real: además de lenta, puede dejar el entrenamiento atascado con un error alto, un efecto que no ocurriría con una función convexa y que se entiende poco (Goodfellow et al., 2016, §11.4.1).
 
 ## Varias dimensiones: el condicionamiento
 
-En varias dimensiones la curvatura es la matriz hessiana $H$. Para converger hace falta $\\eta<2/\\lambda_{\\max}(H)$, pero el avance en la dirección más plana depende de $\\lambda_{\\min}$. Con el número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$ grande, el error cae despacio y el camino zigzaguea, como en la figura. Con la mejor tasa fija ($\\eta = 2/(\\lambda_{\\max}+\\lambda_{\\min})$) la distancia al fondo se reduce por un factor $(\\kappa-1)/(\\kappa+1)$ por paso.
+En varias dimensiones la curvatura es la matriz hessiana $H$. En una cuadrática, $\\mathbf{w}_{t+1}-\\mathbf{w}^*=(I-\\eta H)(\\mathbf{w}_t-\\mathbf{w}^*)$: en cada dirección propia la distancia se multiplica por $1-\\eta\\lambda_i$. Para converger hace falta $\\eta<2/\\lambda_{\\max}(H)$ (LeCun et al., 1998), pero el avance en la dirección más plana depende de $\\lambda_{\\min}$. Con el número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$ grande, el error cae despacio y el camino zigzaguea, como en la figura. Con la mejor tasa fija ($\\eta = 2/(\\lambda_{\\max}+\\lambda_{\\min})$) la distancia al fondo se reduce por un factor $(\\kappa-1)/(\\kappa+1)$ por paso (Goh, 2017).
+
+En la figura, $\\lambda_{\\min}=1$ y $\\lambda_{\\max}=7$ ($\\kappa=7$), y $\\eta=0.2$: en la dirección plana la distancia se multiplica por $0.8$ en cada paso, y en la empinada por $-0.4$ (cambia de lado: el zigzag). La mejor tasa fija sería $0.25$, con factor $0.75$.
+
+## Paisajes reales
+
+Las curvas de la lección son de juguete: $L(w)=\\tfrac12(w-2.4)^2+0.2$, el cuenco de dos pesos con curvaturas 1 y 7, y $R(w)=0.08w^4-0.6w^2+0.25w+2$, con dos valles de errores mínimos 0.38 y 1.35. El error de una red real no es convexo: tiene mínimos locales, mesetas y puntos de silla (gradiente cero, pero baja en una dirección y sube en otra). En redes grandes se sospecha hoy que la mayoría de los mínimos locales tienen un error cercano al mejor y que las mesetas y los puntos de silla estorban más que los malos mínimos (Goodfellow et al., 2016, §8.2; Dauphin et al., 2014). El punto de partida importa: puede decidir si el entrenamiento converge, a qué costo y con qué capacidad de generalizar (Goodfellow et al., 2016, §8.4), y cambiar solo la semilla aleatoria puede dar resultados muy distintos, como al ajustar BERT (Dodge et al., 2020).
 
 ## En código
 
@@ -219,14 +231,16 @@ print(descenso(lambda w: w - 2.4, w0=-0.6, eta=0.5, pasos=5))
 
 ## Lo que viene
 
-En modelos reales el gradiente se calcula sobre un subconjunto de los datos (descenso del gradiente estocástico) y se usan optimizadores como Adam; ambos aparecen en la lección 9. El cálculo eficiente de $\\nabla L$ en redes profundas es la retropropagación (lección 8).`,
+En modelos reales el gradiente se calcula sobre un subconjunto de los datos (descenso del gradiente estocástico; Bottou et al., 2018) y se usan optimizadores como Adam (Kingma y Ba, 2015); ambos aparecen en la lección 9. Así se entrenó GPT-3 (175 mil millones de pesos): con Adam, lotes de hasta 3.2 millones de tokens y, en el modelo grande, una tasa de aprendizaje de $6\\times 10^{-5}$ con calentamiento y caída gradual (Brown et al., 2020, tabla 2.1 y apéndice B). El cálculo eficiente de $\\nabla L$ en redes profundas es la retropropagación (lección 8).`,
     en: `## The update rule
 
 Given an error $L(\\mathbf{w})$ and a weight vector $\\mathbf{w}$, gradient descent repeats
 
 $$\\mathbf{w}_{t+1} = \\mathbf{w}_t - \\eta\\,\\nabla L(\\mathbf{w}_t)$$
 
-where $\\nabla L$ is the vector of partial derivatives $\\partial L/\\partial w_i$ and $\\eta>0$ is the learning rate. The method is credited to Cauchy (1847).
+where $\\nabla L$ is the vector of partial derivatives $\\partial L/\\partial w_i$ and $\\eta>0$ is the learning rate. The gradient points uphill because, among all directions of length 1, it is the one that makes $L$ grow fastest; that is why we subtract it (Goodfellow et al., 2016, §4.3).
+
+The method is credited to Cauchy, who presented it at the 18 October 1847 session of the Paris Academy of Sciences to solve systems of equations: he replaced the system with a single equation, the sum of the squares set to zero, and made that function go down step by step. He set the step size by solving an equation in one variable or by taking a “sufficiently small” value (Cauchy, 1847; Lemaréchal, 2012).
 
 ## Why there is a threshold for the rate
 
@@ -235,14 +249,24 @@ For a one-variable quadratic error, $L(w)=\\tfrac{h}{2}(w-w^*)^2 + c$ with curva
 $$w_{t+1}-w^* = (1-\\eta h)\\,(w_t-w^*)$$
 
 - if $0<\\eta h<1$, the weight approaches the bottom without crossing it;
+- if $\\eta h=1$, it reaches the bottom in one jump;
 - if $1<\\eta h<2$, it crosses at every step but converges (it oscillates);
+- if $\\eta h=2$, it bounces between two points at the same distance from the bottom, without getting closer;
 - if $\\eta h>2$, the distance grows at every step: it diverges.
 
-In the lesson $h=1$. With $\\eta=0.5$ each step halves the distance to the bottom; with $\\eta=1$ it would arrive in one jump; with $\\eta>2$ it moves away.
+This is the classic analysis of LeCun et al. (1998, §5.1): the optimal one-variable rate is $1/h$, and it diverges if the rate exceeds twice the optimal one. In the lesson $h=1$. With $\\eta=0.5$ each step halves the distance to the bottom; with $\\eta=1$ it would arrive in one jump; with $\\eta>2$ it moves away. The four rates in the scene (0.06, 0.7, 1.7, and 2.08) are a slow case, a good one, one that oscillates, and one that diverges.
+
+A very small rate is not entirely harmless in a real network: besides being slow, it can leave training stuck at a high error, an effect that would not happen with a convex function and that is poorly understood (Goodfellow et al., 2016, §11.4.1).
 
 ## Several dimensions: conditioning
 
-In several dimensions the curvature is the Hessian matrix $H$. Convergence needs $\\eta<2/\\lambda_{\\max}(H)$, but progress along the flattest direction depends on $\\lambda_{\\min}$. With a large condition number $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, the error falls slowly and the path zigzags, as in the figure. With the best fixed rate ($\\eta = 2/(\\lambda_{\\max}+\\lambda_{\\min})$) the distance to the bottom shrinks by a factor of $(\\kappa-1)/(\\kappa+1)$ per step.
+In several dimensions the curvature is the Hessian matrix $H$. For a quadratic, $\\mathbf{w}_{t+1}-\\mathbf{w}^*=(I-\\eta H)(\\mathbf{w}_t-\\mathbf{w}^*)$: along each eigendirection the distance is multiplied by $1-\\eta\\lambda_i$. Convergence needs $\\eta<2/\\lambda_{\\max}(H)$ (LeCun et al., 1998), but progress along the flattest direction depends on $\\lambda_{\\min}$. With a large condition number $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, the error falls slowly and the path zigzags, as in the figure. With the best fixed rate ($\\eta = 2/(\\lambda_{\\max}+\\lambda_{\\min})$) the distance to the bottom shrinks by a factor of $(\\kappa-1)/(\\kappa+1)$ per step (Goh, 2017).
+
+In the figure, $\\lambda_{\\min}=1$ and $\\lambda_{\\max}=7$ ($\\kappa=7$), and $\\eta=0.2$: along the flat direction the distance is multiplied by $0.8$ at every step, and along the steep one by $-0.4$ (it switches sides: the zigzag). The best fixed rate would be $0.25$, with factor $0.75$.
+
+## Real landscapes
+
+The curves in the lesson are toys: $L(w)=\\tfrac12(w-2.4)^2+0.2$, the two-weight bowl with curvatures 1 and 7, and $R(w)=0.08w^4-0.6w^2+0.25w+2$, with two valleys whose minimum errors are 0.38 and 1.35. The error of a real network is not convex: it has local minima, plateaus, and saddle points (zero gradient, but it goes down in one direction and up in another). In large networks it is now suspected that most local minima have an error close to the best one, and that plateaus and saddle points get in the way more than bad minima do (Goodfellow et al., 2016, §8.2; Dauphin et al., 2014). The starting point matters: it can decide whether training converges, at what cost, and with what ability to generalize (Goodfellow et al., 2016, §8.4), and changing only the random seed can give very different results, as when fine-tuning BERT (Dodge et al., 2020).
 
 ## In code
 
@@ -262,19 +286,19 @@ print(descent(lambda w: w - 2.4, w0=-0.6, eta=0.5, steps=5))
 
 ## What comes next
 
-In real models the gradient is computed on a subset of the data (stochastic gradient descent) and optimizers such as Adam are used; both appear in lesson 9. The efficient computation of $\\nabla L$ in deep networks is backpropagation (lesson 8).`,
+In real models the gradient is computed on a subset of the data (stochastic gradient descent; Bottou et al., 2018) and optimizers such as Adam are used (Kingma and Ba, 2015); both appear in lesson 9. This is how GPT-3 (175 billion weights) was trained: with Adam, batches of up to 3.2 million tokens and, for the large model, a learning rate of $6\\times 10^{-5}$ with warm-up and gradual decay (Brown et al., 2020, table 2.1 and appendix B). The efficient computation of $\\nabla L$ in deep networks is backpropagation (lesson 8).`,
   },
 
   lens: {
     es: [
-      'Entrenar es optimización iterativa: el costo crece con el número de pasos por el tamaño del modelo. Cada paso adicional es dinero en cómputo.',
-      'Si un equipo dice que «el entrenamiento no converge», la primera pregunta es por la tasa de aprendizaje y por los datos, no por «más GPUs».',
+      'Entrenar es optimización iterativa: el cómputo crece con el número de pasos, el tamaño del modelo y el tamaño del lote. Cada paso adicional es dinero en cómputo.',
+      'Si un equipo dice que «el entrenamiento no converge», la primera pregunta es por la tasa de aprendizaje (quizá el hiperparámetro más importante) y por los datos, no por «más GPUs».',
       'El resultado depende del punto de partida y de decisiones de entrenamiento: dos corridas con la misma receta pueden dar modelos distintos. Pide que se reporte esa variabilidad.',
       'No hay garantía de haber llegado al mejor punto posible: «suficientemente bueno» se comprueba con datos que el modelo no vio (lección 10).',
     ],
     en: [
-      'Training is iterative optimization: cost grows with the number of steps times the size of the model. Every extra step is compute money.',
-      'If a team says “training does not converge,” the first question is about the learning rate and the data, not about “more GPUs.”',
+      'Training is iterative optimization: compute grows with the number of steps, the size of the model, and the batch size. Every extra step is compute money.',
+      'If a team says “training does not converge,” the first question is about the learning rate (perhaps the most important hyperparameter) and the data, not about “more GPUs.”',
       'The outcome depends on the starting point and on training decisions: two runs with the same recipe can yield different models. Ask for that variability to be reported.',
       'There is no guarantee of having reached the best possible point: “good enough” is checked with data the model has not seen (lesson 10).',
     ],
@@ -341,8 +365,19 @@ In real models the gradient is computed on a subset of the data (stochastic grad
   ],
 
   sources: [
-    { title: 'Méthode générale pour la résolution des systèmes d’équations simultanées', authors: 'Cauchy, A.', year: 1847 },
+    { title: 'Méthode générale pour la résolution des systèmes d’équations simultanées (Comptes rendus de l’Académie des sciences, t. 25, pp. 536–538; sesión del 18 de octubre de 1847)', authors: 'Cauchy, A.', year: 1847, url: 'https://archive.org/details/comptes-rendus-hebdomadaires-academie-des-sciences_1847-10-18_25_16' },
+    { title: 'Cauchy and the gradient method (Documenta Mathematica, Extra Volume ISMP, pp. 251–254)', authors: 'Lemaréchal, C.', year: 2012, url: 'https://doi.org/10.4171/DMS/6/27' },
+    { title: 'Efficient BackProp (Neural Networks: Tricks of the Trade, LNCS 1524, pp. 9–50; §5.1: convergencia del descenso del gradiente)', authors: 'LeCun, Y., Bottou, L., Orr, G. B., Müller, K.-R.', year: 1998, url: 'http://yann.lecun.com/exdb/publis/pdf/lecun-98b.pdf' },
+    { title: 'Why Momentum Really Works (Distill 2(4); mejor tasa fija y factor (κ−1)/(κ+1) en una cuadrática)', authors: 'Goh, G.', year: 2017, url: 'https://distill.pub/2017/momentum/' },
+    { title: 'Deep Learning, capítulo 4: Numerical Computation (§4.3, gradiente y tasa de aprendizaje)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/numerical.html' },
+    { title: 'Deep Learning, capítulo 8: Optimization for Training Deep Models (§8.2: mínimos locales, mesetas y puntos de silla; §8.4: inicialización)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/optimization.html' },
+    { title: 'Deep Learning, capítulo 11: Practical Methodology (§11.4.1: la tasa de aprendizaje)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/guidelines.html' },
+    { title: 'Identifying and attacking the saddle point problem in high-dimensional non-convex optimization', authors: 'Dauphin, Y., Pascanu, R., Gulcehre, C., Cho, K., Ganguli, S., Bengio, Y.', year: 2014, url: 'https://arxiv.org/abs/1406.2572' },
+    { title: 'Fine-Tuning Pretrained Language Models: Weight Initializations, Data Orders, and Early Stopping', authors: 'Dodge, J., Ilharco, G., Schwartz, R., Farhadi, A., Hajishirzi, H., Smith, N.', year: 2020, url: 'https://arxiv.org/abs/2002.06305' },
     { title: 'Optimization Methods for Large-Scale Machine Learning', authors: 'Bottou, L., Curtis, F. E., Nocedal, J.', year: 2018, url: 'https://doi.org/10.1137/16M1080173' },
-    { title: 'Deep Learning, capítulo 8: Optimization for Training Deep Models', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/' },
+    { title: 'Adam: A Method for Stochastic Optimization', authors: 'Kingma, D. P., Ba, J.', year: 2015, url: 'https://arxiv.org/abs/1412.6980' },
+    { title: 'Language Models are Few-Shot Learners (GPT-3: 175 mil millones de parámetros; tabla 2.1 y apéndice B)', authors: 'Brown, T. B., et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
+    { title: 'The Llama 3 Herd of Models (el mayor, de 405 mil millones de parámetros)', authors: 'Grattafiori, A., et al. (Llama Team, Meta)', year: 2024, url: 'https://arxiv.org/abs/2407.21783' },
+    { title: 'Scaling Laws for Neural Language Models (el cómputo de entrenamiento ≈ 6·N·B·S)', authors: 'Kaplan, J., McCandlish, S., Henighan, T., et al.', year: 2020, url: 'https://arxiv.org/abs/2001.08361' },
   ],
 });
