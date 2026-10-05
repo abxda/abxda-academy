@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+# audio y salidas generadas: nunca al repositorio
+*.opus
+*.mp3
+dist/
+release/
