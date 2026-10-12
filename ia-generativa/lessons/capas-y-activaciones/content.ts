@@ -30,8 +30,14 @@ export default defineLesson({
     },
     {
       id: 'forward',
-      es: 'Probemos con números, por ahora sin sesgo ni activación: cada neurona solo suma. Entran dos y uno; la capa oculta da cuatro y cinco, y la salida, trece.',
-      en: 'Let’s try numbers, for now with no bias and no activation: each neuron only sums. Two and one go in; the hidden layer gives four and five, and the output gives thirteen.',
+      es: 'Probemos con números, por ahora sin sesgo ni activación: cada neurona solo suma. Entran dos y uno. La neurona de arriba hace uno por dos más dos por uno: cuatro.',
+      en: 'Let’s try numbers, for now with no bias and no activation: each neuron only sums. Two and one go in. The top neuron does one times two plus two times one: four.',
+      pad: 0.3,
+    },
+    {
+      id: 'forward-out',
+      es: 'La de abajo hace tres por dos menos uno por uno: cinco. Y la salida hace dos por cuatro más uno por cinco: trece.',
+      en: 'The bottom one does three times two minus one times one: five. And the output does two times four plus one times five: thirteen.',
       pad: 0.3,
     },
     {
@@ -123,13 +129,9 @@ export default defineLesson({
     },
     {
       id: 'approx-theorem',
-      es: 'Esa es la idea del teorema de aproximación universal. Cybenko lo probó en 1989 para sigmoides; ese año, Hornik y colegas, con otras condiciones; en 1993 se vio que vale la ReLU.',
-      en: 'That is the idea behind the universal approximation theorem. Cybenko proved it in 1989 for sigmoids; that year, Hornik and colleagues, under other conditions; in 1993 it was shown that ReLU works too.',
-      tts: {
-        es: 'Esa es la idea del teorema de aproximación universal. Cybenko lo probó en mil novecientos ochenta y nueve para sigmoides; ese año, Hornik y colegas, con otras condiciones; en mil novecientos noventa y tres se vio que vale la ReLU.',
-        en: 'That is the idea behind the universal approximation theorem. Cybenko proved it in nineteen eighty-nine for sigmoids; that year, Hornik and colleagues, under other conditions; in nineteen ninety-three it was shown that ReLU works too.',
-      },
-      note: { es: 'Aproximación universal: con suficientes neuronas, una capa oculta basta en teoría.', en: 'Universal approximation: with enough neurons, one hidden layer is enough in theory.' },
+      es: 'Esa es la idea del teorema de aproximación universal, demostrado a finales de los años ochenta: con suficientes neuronas, una sola capa puede imitar casi cualquier curva.',
+      en: 'That is the idea behind the universal approximation theorem, proved in the late nineteen-eighties: with enough neurons, a single layer can mimic almost any curve.',
+      pad: 0.3,
     },
     {
       id: 'approx-caveat',
@@ -139,11 +141,11 @@ export default defineLesson({
     },
     {
       id: 'try1',
-      es: 'Tu turno: sube el número de neuronas y observa el error máximo de la aproximación; en general baja, aunque no siempre en cada paso.',
-      en: 'Your turn: raise the number of neurons and watch the maximum error of the approximation; in general it drops, though not at every single step.',
+      es: 'Si quieres, sube tú el número de neuronas y mira el error máximo: en general baja, aunque no siempre en cada paso.',
+      en: 'If you like, raise the number of neurons yourself and watch the maximum error: it generally drops, though not at every single step.',
       gate: {
         id: 'approx',
-        prompt: { es: 'Lleva el error máximo por debajo de 0.05.', en: 'Bring the maximum error below 0.05.' },
+        prompt: { es: 'lleva el error máximo por debajo de 0.05.', en: 'bring the maximum error below 0.05.' },
       },
       pad: 0.4,
     },
@@ -201,11 +203,11 @@ export default defineLesson({
     },
     {
       id: 'try2',
-      es: 'Tu turno: con los controles elige capas, neuronas y activación, y separa los círculos de las cruces con al menos noventa y cinco por ciento de aciertos.',
-      en: 'Your turn: with the controls choose layers, neurons, and activation, and separate the circles from the crosses with at least ninety-five percent accuracy.',
+      es: 'Si quieres, cambia tú las capas, las neuronas o la activación, y mira cómo cambia la frontera: con una activación lineal nunca pasa de una recta.',
+      en: 'If you like, change the layers, the neurons, or the activation yourself, and watch the boundary change: with a linear activation it never gets past a straight line.',
       gate: {
         id: 'circles',
-        prompt: { es: 'Separa los círculos: 95 % de aciertos o más.', en: 'Separate the circles: 95% accuracy or better.' },
+        prompt: { es: 'separa los círculos con 95 % de aciertos o más.', en: 'separate the circles with 95% accuracy or better.' },
       },
       pad: 0.4,
     },
@@ -223,11 +225,11 @@ export default defineLesson({
     },
     {
       id: 'try3',
-      es: 'Tu turno: ahora con la espiral. Busca una configuración que llegue al noventa por ciento de aciertos o más.',
-      en: 'Your turn: now with the spiral. Find a configuration that reaches ninety percent accuracy or better.',
+      es: 'Aquí la red de tres capas sigue entrenándose. Si quieres, prueba otras configuraciones y mira cuáles llegan al noventa por ciento.',
+      en: 'Here the three-layer network keeps training. If you like, try other configurations and see which ones reach ninety percent.',
       gate: {
         id: 'spiral',
-        prompt: { es: 'Separa la espiral: 90 % de aciertos o más.', en: 'Separate the spiral: 90% accuracy or better.' },
+        prompt: { es: 'separa la espiral con 90 % de aciertos o más.', en: 'separate the spiral with 90% accuracy or better.' },
       },
       pad: 0.4,
     },

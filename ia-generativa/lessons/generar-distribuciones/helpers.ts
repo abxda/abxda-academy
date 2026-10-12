@@ -4,6 +4,14 @@ import { alpha, clamp, tone, type Frame, type Plot, type Rect, type Tone } from 
 
 /** Tamaño de texto que garantiza ≥ 12 px efectivos (el tamaño pedido se multiplica por S.u). */
 export const fs = (S: Frame, base: number) => Math.max(base, 12 / S.u);
+/** Duración (s) del segmento k. Las voces y los idiomas duran distinto: se anima por fracciones del segmento. */
+export const dur = (S: Frame, k: string) => Math.max(1, S.end(k) - S.start(k));
+/** Progreso 0..1 entre las fracciones a y b de la duración del segmento k (0 antes de que empiece, 1 después). */
+export const fr = (S: Frame, k: string, a: number, b = a + 0.12, e: 'lin' | 'out' | 'io' = 'out') => S.at(k, a * dur(S, k), b * dur(S, k), e);
+/** Escala de espaciados que no se encoge por debajo de 0.9. */
+export const kk = (S: Frame) => Math.max(S.u, 0.9);
+/** Imagen que «aparece» fila por fila (p de 0 a 1). */
+export const rowsReveal = (v: ArrayLike<number>, p: number) => Float32Array.from({ length: 64 }, (_, j) => v[j] * clamp(p * 8.6 - Math.floor(j / 8)));
 
 // ── colores de los 17 niveles de tinta (cacheados por tema) ──
 const lutCache = new Map<string, string[]>();
@@ -77,6 +85,43 @@ export function axes(S: Frame, plot: Plot, o: { xTicks?: number[]; yTicks?: numb
   });
 }
 
+/** Texto con ajuste de línea cuya ÚLTIMA línea termina en yBottom (así no se sale por abajo). */
+export function textUp(S: Frame, txt: string, x: number, yBottom: number, o: { size: number; weight?: number; color: string; w: number; a?: number; align?: CanvasTextAlign; halo?: string }) {
+  const lines = S.d.wrap(txt, o.w, { size: o.size, weight: o.weight ?? 600 }), lh = 1.3 * o.size * S.u;
+  S.d.text(txt, x, yBottom - (lines.length - 1) * lh, { size: o.size, weight: o.weight ?? 600, color: o.color, base: 'bottom', w: o.w, a: o.a, align: o.align, halo: o.halo });
+  return lines.length * lh;
+}
+/** Eje horizontal por separado (para presentarlo antes que el vertical). */
+export function axisX(S: Frame, plot: Plot, o: { ticks: number[]; label: string; a: number; fmt?: (v: number) => string }) {
+  if (o.a <= 0.01) return;
+  const { d, pal: p } = S, r = plot.r, u = S.u, sz = fs(S, 11.5);
+  d.withAlpha(o.a, () => {
+    d.line(r.x, r.y + r.h, r.x + r.w, r.y + r.h, p.lineStrong, 1.5);
+    o.ticks.forEach((v) => { const X = plot.X(v); d.line(X, r.y + r.h, X, r.y + r.h + 4 * u, p.lineStrong, 1.5); d.text((o.fmt ?? ((q: number) => S.n(q, 0)))(v), X, r.y + r.h + 7 * u, { size: sz, font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
+    d.text(o.label, r.x + r.w, r.y + r.h + 9 * u + sz * u, { size: fs(S, 12.5), weight: 700, color: p.ink2, align: 'right', base: 'top' });
+  });
+}
+/** Eje vertical por separado; su rótulo va arriba, sobre la gráfica. */
+export function axisY(S: Frame, plot: Plot, o: { ticks: number[]; label: string; a: number; fmt?: (v: number) => string }) {
+  if (o.a <= 0.01) return;
+  const { d, pal: p } = S, r = plot.r, u = S.u, sz = fs(S, 11.5);
+  d.withAlpha(o.a, () => {
+    d.line(r.x, r.y, r.x, r.y + r.h, p.lineStrong, 1.5);
+    o.ticks.forEach((v) => { const Y = plot.Y(v); d.line(r.x - 4 * u, Y, r.x, Y, p.lineStrong, 1.5); d.text((o.fmt ?? ((q: number) => S.n(q, 0)))(v), r.x - 7 * u, Y, { size: sz, font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
+    d.text(o.label, plot.outer.x + 2, r.y - 6 * u, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'bottom' });
+  });
+}
+/** Rótulo con valor (nombre arriba, número grande abajo). Devuelve la altura usada. */
+export function readout(S: Frame, x: number, y: number, name: string, value: string, t: Tone, o: { size?: number; a?: number; w?: number; ns?: number } = {}) {
+  const { d, pal: p } = S, k = kk(S), sz = o.size ?? 22, ns = fs(S, o.ns ?? 12.5);
+  const lines = o.w ? d.wrap(name, o.w, { size: ns, weight: 700 }).length : 1, nh = Math.max(17 * k, lines * ns * S.u * 1.3 + 2 * k);
+  d.withAlpha(o.a ?? 1, () => {
+    d.text(name, x, y, { size: ns, weight: 700, color: p.mute, base: 'top', w: o.w });
+    d.text(value, x, y + nh, { size: sz, weight: 700, font: 'mono', color: t === 'ink' ? p.ink : tone(S, t).ink, base: 'top' });
+  });
+  return nh + sz * S.u + 6 * k;
+}
+
 /** Tono y forma de cada dígito en los mapas: 5 tonos × 2 formas (cuadrado / círculo): la forma acompaña al color. */
 export const DIG_TONES: Tone[] = ['dat', 'err', 'w', 'lat', 'sig'];
 export const digTone = (k: number): Tone => DIG_TONES[k % 5];
@@ -93,39 +138,6 @@ export function mark(S: Frame, x: number, y: number, k: number, r: number, a = 1
 /** Elipse (alineada con los ejes) como polilínea. */
 export function ellipsePts(cx: number, cy: number, rx: number, ry: number, n = 40): [number, number][] {
   return Array.from({ length: n + 1 }, (_, i) => { const t = (i / n) * Math.PI * 2; return [cx + rx * Math.cos(t), cy + ry * Math.sin(t)] as [number, number]; });
-}
-
-// ── tira de puntos: una fila por grupo, un punto por valor ──
-export interface StripRow { label: string; vals: ArrayLike<number>; tone: Tone; ex?: ArrayLike<number>; seed: number; a?: number }
-export function strip(S: Frame, r: Rect, rows: StripRow[], o: { xmax: number; xTicks: number[]; xLabel: string; show?: number; ex?: boolean; zero?: string; fmt?: (v: number) => string }) {
-  const { d, pal: p } = S, u = S.u, fm = o.fmt ?? ((v: number) => S.n(v, 1));
-  const cellEx = S.portrait ? 3 : 4, exW = o.ex === false ? 0 : 8 * cellEx + 10 * u;
-  const left = r.x + exW, axisH = Math.max(44 * u, 19 * u + 34), rowH = (r.h - axisH) / rows.length, W = r.w - exW - 8 * u;
-  const X = (v: number) => left + (v / o.xmax) * W;
-  d.line(left, r.y + r.h - axisH + 6 * u, left + W, r.y + r.h - axisH + 6 * u, p.lineStrong, 1.5);
-  o.xTicks.forEach((v) => { d.line(X(v), r.y + r.h - axisH + 6 * u, X(v), r.y + r.h - axisH + 10 * u, p.lineStrong, 1.5); d.text(fm(v), X(v), r.y + r.h - axisH + 13 * u, { size: fs(S, 11.5), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
-  d.text(o.xLabel, left + W, r.y + r.h - 2, { size: fs(S, 12), weight: 700, color: p.ink2, align: 'right', base: 'bottom', w: Math.max(120, W) });
-  if (o.zero !== undefined) {
-    d.line(X(0), r.y + 2, X(0), r.y + r.h - axisH + 6 * u, tone(S, 'err').c, 2, [5, 4]);
-  }
-  rows.forEach((row, i) => {
-    const y0 = r.y + i * rowH, cy = y0 + rowH * 0.58, t = tone(S, row.tone), a = row.a ?? 1;
-    d.withAlpha(a, () => {
-      d.text(row.label, left + (o.zero !== undefined ? 8 * u : 0), y0 + 2, { size: fs(S, 12.5), weight: 700, color: p.ink2, base: 'top' });
-      if (row.ex && o.ex !== false) digit(S, r.x, cy - 4 * cellEx, row.ex, cellEx, { kind: 'real' });
-      const n = Math.floor(row.vals.length * (o.show ?? 1));
-      let sum = 0;
-      for (let k = 0; k < row.vals.length; k++) sum += row.vals[k];
-      for (let k = 0; k < n; k++) {
-        const jx = (((k * 2654435761 + row.seed * 97) >>> 0) % 1000) / 1000;
-        d.circle(X(row.vals[k]), cy + (jx - 0.5) * rowH * 0.42, 2.6 * u, { fill: alpha(t.c, 0.5) });
-      }
-      const m = sum / row.vals.length;
-      d.line(X(m), cy - rowH * 0.28, X(m), cy + rowH * 0.28, t.ink, 2.5);
-      d.text(fm(m), X(m), cy - rowH * 0.3, { size: fs(S, 13), weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'bottom', halo: p.stage });
-    });
-  });
-  return { X, axisH, rowH };
 }
 
 /** Barras de la frecuencia de cada dígito (0–9) con la línea del reparto parejo (10 %). */
@@ -150,7 +162,8 @@ export function digitBars(S: Frame, r: Rect, counts: number[], o: { tone: Tone; 
     } else d.text(S.l('parejo: 10 %', 'even: 10%'), r.x + r.w, yRef - 3, { size: fs(S, 11.5), weight: 600, color: p.ink2, align: 'right', base: 'bottom', halo: p.stage });
     if (o.stats && total > 0) {
       let hi = 0, lo = 0; f.forEach((v, k) => { if (v > f[hi]) hi = k; if (v < f[lo]) lo = k; });
-      d.text(S.l(`más: ${hi} (${S.n(f[hi] * 100, 0)} %) · menos: ${lo} (${S.n(f[lo] * 100, 0)} %)`, `most: ${hi} (${S.n(f[hi] * 100, 0)}%) · least: ${lo} (${S.n(f[lo] * 100, 0)}%)`), r.x, r.y + r.h, { size: fs(S, 12.5), weight: 700, color: p.ink, base: 'bottom' });
+      const pc = (v: number) => S.n(v * 100, v < 0.1 ? 1 : 0) + (S.lang === 'es' ? ' %' : '%');
+      d.text(S.l(`más: ${hi} (${pc(f[hi])}) · menos: ${lo} (${pc(f[lo])})`, `most: ${hi} (${pc(f[hi])}) · least: ${lo} (${pc(f[lo])})`), r.x, r.y + r.h, { size: fs(S, 12.5), weight: 700, color: p.ink, base: 'bottom', w: r.w });
     }
   });
 }

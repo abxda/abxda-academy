@@ -80,11 +80,11 @@ export default defineLesson({
     },
     {
       id: 'predict',
-      es: 'Tu turno: tras «flores», el estado pasa por cinco celdas más. Predice cuánto de un cambio en «flores» llega todavía al final.',
-      en: 'Your turn: after “flowers,” the state passes through five more cells. Predict how much of a change in “flowers” still reaches the end.',
+      es: 'Una pregunta: tras «flores», el estado pasa por cinco celdas más. ¿Cuánto de un cambio en «flores» llegará todavía al final? Si quieres, elige tu predicción.',
+      en: 'A question: after “flowers,” the state passes through five more cells. How much of a change in “flowers” will still reach the end? If you like, pick your prediction.',
       gate: {
         id: 'guess',
-        prompt: { es: 'Elige una opción: casi todo, cerca de la mitad o casi nada.', en: 'Pick one: almost all, about half, or almost nothing.' },
+        prompt: { es: 'elige una opción: casi todo, cerca de la mitad o casi nada.', en: 'pick one: almost all, about half, or almost nothing.' },
       },
       pad: 0.4,
     },
@@ -131,11 +131,11 @@ export default defineLesson({
     },
     {
       id: 'try-g',
-      es: 'Tu turno: sube el tamaño de los pesos recurrentes e intenta que, a diez pasos de distancia, todavía llegue la mitad de la culpa. Fíjate en lo que cuesta.',
-      en: 'Your turn: raise the size of the recurrent weights and try to keep half of the blame alive ten steps away. Notice what it costs.',
+      es: 'Si quieres, sube tú el tamaño de los pesos recurrentes e intenta que, a diez pasos de distancia, todavía llegue la mitad de la culpa. Fíjate en lo que cuesta.',
+      en: 'If you like, raise the size of the recurrent weights yourself and try to keep half of the blame alive ten steps away. Notice what it costs.',
       gate: {
         id: 'g',
-        prompt: { es: 'Mueve g hasta que la línea gruesa llegue a ×0.5 a diez pasos.', en: 'Move g until the thick line reaches ×0.5 at ten steps.' },
+        prompt: { es: 'mueve g hasta que la línea gruesa llegue a ×0.5 a diez pasos.', en: 'move g until the thick line reaches ×0.5 at ten steps.' },
       },
       pad: 0.4,
     },
@@ -158,7 +158,7 @@ export default defineLesson({
     },
     {
       id: 'gate-forget',
-      es: 'Sobre la cinta hay compuertas, valores entre cero y uno. La de olvido multiplica lo que ya hay: uno lo conserva, cero lo borra. Con cero coma seis, la pista de «flores» se apaga rápido.',
+      es: 'Sobre la cinta hay compuertas, valores entre cero y uno. La de olvido multiplica lo que ya hay: uno lo conserva, cero lo borra. Con cero punto seis, la pista de «flores» se apaga rápido.',
       en: 'On the belt sit gates, values between zero and one. The forget gate multiplies what is already there: one keeps it, zero erases it. At zero point six, the “flowers” cue fades fast.',
       pad: 0.5,
     },
@@ -183,18 +183,24 @@ export default defineLesson({
     },
     {
       id: 'gradient',
-      es: 'Así se arregla lo otro: por la cinta, la culpa solo se multiplica por la compuerta de olvido. Con cero coma noventa y siete llega a «flores» casi intacta: ochenta y seis por ciento, contra siete en la RNN.',
+      es: 'Así se arregla lo otro: por la cinta, la culpa solo se multiplica por la compuerta de olvido. Con cero punto noventa y siete llega a «flores» casi intacta: ochenta y seis por ciento, contra siete en la RNN.',
       en: 'That is how the other problem is fixed: along the belt, the blame is only multiplied by the forget gate. At zero point nine seven it reaches “flowers” nearly intact: eighty-six percent, against seven in the RNN.',
       note: { es: 'Con la compuerta de olvido cerca de uno, la culpa llega casi intacta por la cinta.', en: 'With the forget gate near one, the blame reaches back almost intact along the belt.' },
       pad: 0.5,
     },
     {
+      id: 'gates-demo',
+      es: 'Mira cómo ajustamos las tres compuertas: olvido casi en uno, para conservar «flores»; entrada casi cerrada para las palabras sin importancia; y salida abierta, para leer la cinta al final.',
+      en: 'Watch us set the three gates: forget almost at one, to keep “flowers”; input almost closed for the unimportant words; and output open, to read the belt at the end.',
+      pad: 0.6,
+    },
+    {
       id: 'try-gates',
-      es: 'Tu turno: mueve a mano las tres compuertas de esta celda de juguete para que, al final, recuerde «plural» y la red elija «están». Cuidado con «mercado».',
-      en: 'Your turn: move by hand the three gates of this toy cell so that, at the end, it remembers “plural” and the network picks “are.” Watch out for “market.”',
+      es: 'Así la celda recuerda «plural» y elige «están». Si quieres, mueve tú las compuertas: abre la de entrada y mira cómo «mercado» borra la pista.',
+      en: 'That way the cell remembers “plural” and picks “are.” If you like, move the gates yourself: open the input gate and watch “market” erase the cue.',
       gate: {
         id: 'gates',
-        prompt: { es: 'Logra una lectura final «plural» (al menos el 60 % de la ideal).', en: 'Get a final “plural” reading (at least 60% of the ideal).' },
+        prompt: { es: 'logra una lectura final «plural» (al menos el 60 % de la ideal).', en: 'get a final “plural” reading (at least 60% of the ideal).' },
       },
       pad: 0.4,
     },

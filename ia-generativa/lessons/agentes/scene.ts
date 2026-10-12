@@ -1,105 +1,132 @@
-// Escena: Agentes y herramientas.
-//  Acto 1 · anatomía: contexto → modelo → programa → herramientas (hook … loop)
-//  Acto 2 · la consola de un agente en vivo, con herramientas reales y un «modelo» de guion (demo-intro … run-done)
-//  Acto 3 · costo del bucle, plan y memoria, MCP · Acto 4 · fiabilidad de una cadena (chain … horizon)
-//  Acto 5 · contener el error: puntos de control, permisos, niveles y persona en el bucle (checkpoints … hitl) · cierre
-// Tres turnos: encontrar dónde el éxito cruza el 50 %, colocar puntos de control, y correr el agente con distintos permisos.
+// Escena: Agentes y herramientas. Vistas que se funden una en otra (cada una entra al empezar su segmento y sale al
+// empezar la siguiente):
+//  1 · hablar no es actuar: el pedido de boletos, el modelo que solo escribe            (hook … cant-know)
+//  2 · el agente por dentro: herramientas, descripción en el contexto, llamada a función, el programa que ejecuta y
+//      pega el resultado, la segunda vuelta, el bucle con nombre, el agente y ReAct      (tool-def … react)
+//  3 · plan y memoria: el plan en el contexto, lo que relee cada vuelta, notas fuera     (plan … memory-out)
+//  4 · MCP: de 3 × 4 conexiones a la medida a un estándar común                          (mcp-problem, mcp)
+//  5 · los errores se acumulan: la compra en pasos; cien intentos con uno y dos pasos    (risk … two-steps)
+//  6 · el simulador: veinte intentos, el contador, la gráfica 0.95ⁿ; «tu turno» con los pasos (sim-intro … caveat)
+//  7 · τ-bench (real) · 8 · revisión humana cada cinco pasos; «tu turno» con la revisión  (real; review-idea … try-review)
+//  9 · lo que no se deshace · 10 · el caso Replit · 11 · ruego o permiso, persona en el bucle y la compra equivocada;
+//      «tu turno»: aprobar o rechazar · 12 · niveles de autonomía · 13 · cómo empezar · repaso y puente.
+// Cada «tu turno» va precedido de una demostración que mueve sola el control (S.drive) o hace sola la acción; es opcional
+// y solo cuenta lo que hizo la persona (S.touched). Las animaciones van por fracciones de la duración de cada segmento.
+//
+// REAL: ReAct (Yao et al. 2022), MCP (Anthropic 2024), τ-bench (Yao et al. 2024), el caso Replit (The Register 2025).
+// SIMULACIÓN REAL con supuestos rotulados (sim.ts): 95 % por paso, errores independientes, quien revisa detecta 9 de 10.
+// ILUSTRATIVO (rotulado): la compra de boletos, las herramientas, la cartelera, las respuestas, las conexiones de MCP.
 import { clamp, type Frame, type SceneFactory } from '../../../../../theme/kit';
-import { drawAnatomy } from './anatomy';
-import { approvalHit, conAction, conUpdate, drawConsole, viewOfNarration, viewOfState } from './console';
-import { drawBridge, drawCost, drawHitl, drawHorizon, drawIncident, drawLevels, drawMcp, drawPerm, drawPlan, drawReal, drawStart } from './acts';
-import { drawChain, drawChk, drawRel } from './lab';
-import { n50, stats } from './rel';
+import { MAXN } from './sim';
+import { drawIntro } from './v-intro';
+import { drawAgent } from './v-agent';
+import { drawBridge, drawMcp, drawMemory, drawRecap } from './v-end';
+import { drawReal, drawReview, drawSim, drawSteps } from './v-chain';
+import { drawIncident, drawIrreversible, drawLevels, drawPerm, drawStart, permButtons } from './v-safety';
+import { fr, provenance, win } from './ui';
 
-type Group = 'anatomy' | 'console' | 'cost' | 'plan' | 'mcp' | 'chain' | 'lab' | 'real' | 'horizon' | 'chk' | 'incident' | 'perm' | 'levels' | 'agent' | 'hitl' | 'start' | 'bridge';
+interface View { from: string; to?: string; draw: (S: Frame) => void; src?: (S: Frame) => string }
+const VIEWS: View[] = [
+  { from: 'hook', to: 'tool-def', draw: drawIntro, src: (S) => S.l('Respuesta ilustrativa', 'Illustrative answer') },
+  { from: 'tool-def', to: 'plan', draw: drawAgent, src: (S) => (S.on('react') ? S.l('ReAct: Yao y colaboradores (2022) · ejemplo ilustrativo', 'ReAct: Yao and colleagues (2022) · illustrative example') : S.l('Ejemplo ilustrativo: herramientas, cartelera y respuestas inventadas', 'Illustrative example: made-up tools, listings, and answers')) },
+  { from: 'plan', to: 'mcp-problem', draw: drawMemory, src: (S) => S.l('Ilustrativo · largos proporcionales al texto de cada mensaje', 'Illustrative · lengths proportional to each message’s text') },
+  { from: 'mcp-problem', to: 'risk', draw: drawMcp, src: (S) => (S.on('mcp') ? S.l('MCP: Anthropic (25 de noviembre de 2024) · conexiones ilustrativas', 'MCP: Anthropic (November 25, 2024) · illustrative connections') : S.l('Ilustrativo', 'Illustrative')) },
+  { from: 'risk', to: 'sim-intro', draw: drawSteps, src: (S) => S.l('Supuesto ilustrativo: cada paso sale bien el 95 % de las veces', 'Illustrative assumption: each step goes right 95% of the time') },
+  { from: 'sim-intro', to: 'real', draw: drawSim, src: (S) => S.l('Simulación con supuestos: 95 % por paso, errores independientes', 'Simulation with assumptions: 95% per step, independent errors') },
+  { from: 'real', to: 'review-idea', draw: drawReal, src: (S) => S.l('Yao, Shinn, Razavi y Narasimhan (2024), τ-bench: tabla 2 y texto', 'Yao, Shinn, Razavi, and Narasimhan (2024), τ-bench: table 2 and text') },
+  { from: 'review-idea', to: 'irreversible', draw: drawReview, src: (S) => S.l('Simulación: 95 % por paso; quien revisa detecta 9 de cada 10 errores (supuestos)', 'Simulation: 95% per step; the reviewer catches 9 errors in 10 (assumptions)') },
+  { from: 'irreversible', to: 'incident', draw: drawIrreversible },
+  { from: 'incident', to: 'plea', draw: drawIncident, src: (S) => S.l('The Register, 22 de julio de 2025: relato del usuario y respuesta de Replit', 'The Register, July 22, 2025: the user’s account and Replit’s response') },
+  { from: 'plea', to: 'levels', draw: drawPerm, src: (S) => S.l('Ejemplo ilustrativo', 'Illustrative example') },
+  { from: 'levels', to: 'start-small', draw: drawLevels, src: (S) => S.l('Escala simplificada a partir de Feng, McDonald y Zhang (2025)', 'Scale simplified from Feng, McDonald, and Zhang (2025)') },
+  { from: 'start-small', to: 'recap', draw: drawStart, src: (S) => S.l('Especificación de MCP (2025) · Anthropic, «Building effective agents» (2024)', 'MCP specification (2025) · Anthropic, “Building effective agents” (2024)') },
+  { from: 'recap', to: 'bridge', draw: drawRecap },
+  { from: 'bridge', draw: drawBridge },
+];
 
-function groupOf(S: Frame): Group {
-  const i = (k: string) => S.segIndex(k);
-  const s = S.seg;
-  if (s < i('demo-intro')) return 'anatomy';
-  if (s < i('cost-loop')) return 'console';
-  if (s < i('plan-memory')) return 'cost';
-  if (s < i('mcp')) return 'plan';
-  if (s < i('chain')) return 'mcp';
-  if (s < i('grid')) return 'chain';
-  if (s < i('real')) return 'lab';
-  if (s < i('horizon')) return 'real';
-  if (s < i('checkpoints')) return 'horizon';
-  if (s < i('incident')) return 'chk';
-  if (s < i('perm')) return 'incident';
-  if (s < i('levels')) return 'perm';
-  if (s < i('try-agent')) return 'levels';
-  if (s < i('hitl')) return 'agent';
-  if (s < i('start-small')) return 'hitl';
-  if (s < i('bridge')) return 'start';
-  return 'bridge';
+interface St { lastT: number; nShown: number; maxN: number; rev: number; seen: number[]; dec?: 'approve' | 'reject'; decAt?: number }
+const fresh = (): St => ({ lastT: -1, nShown: 10, maxN: 10, rev: 0, seen: [] });
+const st = (S: Frame): St => (S.st.ag ??= fresh()) as St;
+
+/** Pasos durante la demostración: 10 → 14 → 20 → 40, de entero en entero. */
+function demoSteps(S: Frame): number {
+  if (S.on('try-steps')) return MAXN;
+  const a = fr(S, 'demo-steps', 0.12, 0.24, 'io'), b = fr(S, 'demo-steps', 0.4, 0.52, 'io'), c = fr(S, 'demo-steps', 0.68, 0.84, 'io');
+  return Math.round(c > 0 ? 20 + 20 * c : b > 0 ? 14 + 6 * b : 10 + 4 * a);
+}
+/** La revisión se enciende sola a un tercio de «review-demo». */
+const demoReview = (S: Frame) => S.on('review-demo') && fr(S, 'review-demo', 0.32, 0.33) > 0;
+
+function decide(S: Frame, which: 'approve' | 'reject') {
+  const s = st(S);
+  s.dec = which; s.decAt = S.clock;
+  if (S.between('hitl-demo', 'levels')) S.complete('decide');
 }
 
 const scene: SceneFactory = () => ({
   controls: [
-    // ── turno 1: ¿cuántos pasos hasta que el éxito cruza la mitad? ──
-    { id: 'pstep', kind: 'slider', label: { es: 'Acierto por paso', en: 'Accuracy per step' }, min: 80, max: 99, step: 1, value: 95, from: 'try-rel', to: 'real', fmt: (v) => `${v} %` },
-    { id: 'nsteps', kind: 'slider', label: { es: 'Pasos de la tarea', en: 'Steps in the task' }, min: 1, max: 40, step: 1, value: 10, from: 'try-rel', to: 'real', fmt: (v) => String(v) },
-    // ── turno 2: puntos de control ──
-    { id: 'chk', kind: 'choice', label: { es: 'Revisar', en: 'Review' }, value: 0, from: 'try-chk', to: 'incident', options: [
-      { value: 0, label: { es: 'Nunca', en: 'Never' } }, { value: 20, label: { es: 'Solo al final', en: 'Only at the end' } }, { value: 10, label: { es: 'Cada 10', en: 'Every 10' } },
-      { value: 5, label: { es: 'Cada 5', en: 'Every 5' } }, { value: 4, label: { es: 'Cada 4', en: 'Every 4' } }, { value: 2, label: { es: 'Cada 2', en: 'Every 2' } }, { value: 1, label: { es: 'Cada 1', en: 'Every 1' } }] },
-    { id: 'qrev', kind: 'slider', label: { es: 'Errores que detecta quien revisa', en: 'Errors the reviewer catches' }, min: 50, max: 100, step: 5, value: 90, from: 'try-chk', to: 'incident', fmt: (v) => `${v} %` },
-    // ── turno 3: el agente con permisos distintos ──
-    { id: 'scenario', kind: 'choice', label: { es: 'Escenario', en: 'Scenario' }, value: 'slip', from: 'try-agent', to: 'hitl', options: [
-      { value: 'normal', label: { es: 'Normal', en: 'Normal' } }, { value: 'none', label: { es: 'Nada que reponer', en: 'Nothing to restock' } },
-      { value: 'outage', label: { es: 'Falla el servicio de precios', en: 'Price service down' } }, { value: 'slip', label: { es: 'Error de cantidad', en: 'Quantity slip' } }] },
-    { id: 'limit', kind: 'slider', label: { es: 'Límite de gasto sin pedir aprobación', en: 'Spending limit without asking approval' }, min: 0, max: 3000, step: 50, value: 3000, from: 'try-agent', to: 'hitl', fmt: (v, l) => (v >= 3000 ? (l === 'es' ? 'sin límite' : 'no limit') : v <= 0 ? (l === 'es' ? 'siempre pide aprobación' : 'always asks approval') : (l === 'es' ? 'US$ ' : '$') + v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US')) },
-    { id: 'run', kind: 'button', primary: true, label: { es: 'Correr el agente', en: 'Run the agent' }, from: 'try-agent', to: 'hitl' },
-    { id: 'approve', kind: 'button', label: { es: 'Aprobar el pedido', en: 'Approve the order' }, from: 'try-agent', to: 'hitl' },
-    { id: 'reject', kind: 'button', label: { es: 'Rechazar el pedido', en: 'Reject the order' }, from: 'try-agent', to: 'hitl' },
+    { id: 'steps', kind: 'slider', label: { es: 'Pasos de la tarea', en: 'Steps in the task' }, min: 1, max: MAXN, step: 1, value: 10, from: 'demo-steps', to: 'real', fmt: (v) => String(v) },
+    { id: 'review', kind: 'toggle', label: { es: 'Revisión humana cada 5 pasos', en: 'Human review every 5 steps' }, value: false, from: 'review-demo', to: 'irreversible' },
+    { id: 'approve', kind: 'button', label: { es: 'Aprobar la compra', en: 'Approve the purchase' }, from: 'hitl-demo', to: 'levels' },
+    { id: 'reject', kind: 'button', label: { es: 'Rechazar la compra', en: 'Reject the purchase' }, from: 'hitl-demo', to: 'levels' },
   ],
-  action(S, id) { conAction(S, id); },
-  pointer(S, e) {
-    if (e.type !== 'down') return;
-    const h = approvalHit(), inR = (r: { x: number; y: number; w: number; h: number }) => e.x >= r.x && e.x <= r.x + r.w && e.y >= r.y && e.y <= r.y + r.h;
-    if (h && S.between('try-agent', 'hitl')) { if (inR(h.approve)) conAction(S, 'approve'); else if (inR(h.reject)) conAction(S, 'reject'); }
+
+  init(S) { S.st.ag = fresh(); },
+
+  action(S, id) {
+    if ((id === 'approve' || id === 'reject') && S.between('hitl-demo', 'levels')) decide(S, id);
   },
+
+  pointer(S, e) {
+    if (e.type !== 'down' || !S.between('hitl-demo', 'levels') || fr(S, 'hitl-demo', 0.7, 0.85) < 0.5) return;
+    const B = permButtons(S);
+    if (!B) return;
+    const inR = (r: { x: number; y: number; w: number; h: number }) => e.x >= r.x && e.x <= r.x + r.w && e.y >= r.y && e.y <= r.y + r.h;
+    if (inR(B.approve)) { S.touched.add('approve'); decide(S, 'approve'); }
+    else if (inR(B.reject)) { S.touched.add('reject'); decide(S, 'reject'); }
+  },
+
   cursor(S, x, y) {
-    const h = approvalHit();
-    if (h && S.between('try-agent', 'hitl') && [h.approve, h.reject].some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h)) return 'pointer';
+    if (!S.between('hitl-demo', 'levels') || fr(S, 'hitl-demo', 0.7, 0.85) < 0.5) return undefined;
+    const B = permButtons(S);
+    if (B && [B.approve, B.reject].some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h)) return 'pointer';
     return undefined;
   },
-  init(S) { S.st = {}; },
+
+  // Estado interactivo: avanza siempre, aunque el escenario no se vea. render() solo dibuja.
   update(S) {
-    if (S.between('try-rel', 'cost-success')) {
-      const pp = clamp((S.p.pstep ?? 95) / 100, 0.5, 0.995), n = Math.round(S.p.nsteps ?? 10);
-      if (Math.abs(n - n50(pp)) <= 1) S.complete('cross');
-    }
-    if (S.between('try-chk', 'tradeoff')) {
-      const k = Math.round(S.p.chk ?? 0), st = stats(0.95, 20, k, clamp((S.p.qrev ?? 90) / 100));
-      if (k > 0 && st.success >= 0.85 && st.reviews <= 4 && st.steps <= 35) S.complete('chk');
-    }
-    if (S.between('try-agent', 'hitl') && conUpdate(S)) S.complete('autonomy');
-  },
-  render(S) {
-    const g = groupOf(S);
-    S.d.withAlpha(1, () => {
-      switch (g) {
-        case 'anatomy': return drawAnatomy(S);
-        case 'console': return drawConsole(S, viewOfNarration(S));
-        case 'agent': return drawConsole(S, viewOfState(S));
-        case 'cost': return drawCost(S);
-        case 'plan': return drawPlan(S);
-        case 'mcp': return drawMcp(S);
-        case 'chain': return drawChain(S);
-        case 'lab': return drawRel(S);
-        case 'real': return drawReal(S);
-        case 'horizon': return drawHorizon(S);
-        case 'chk': return drawChk(S);
-        case 'incident': return drawIncident(S);
-        case 'perm': return drawPerm(S);
-        case 'levels': return drawLevels(S);
-        case 'hitl': return drawHitl(S);
-        case 'start': return drawStart(S);
-        case 'bridge': return drawBridge(S);
+    const s = st(S), dt = Math.min(S.dt || 0.016, 0.1);
+    const jump = s.lastT < 0 || Math.abs(S.t - s.lastT) > 0.35;   // salto (o captura): sin transición
+    s.lastT = S.t;
+    const ease = (cur: number, target: number, rate = 7) => (jump ? target : cur + (target - cur) * (1 - Math.exp(-dt * rate)));
+
+    // ── el simulador: pasos de la tarea ──
+    if (S.between('demo-steps', 'real')) {
+      const n = clamp(Math.round(Number(S.drive('steps', demoSteps(S)))), 1, MAXN);
+      s.nShown = ease(s.nShown, n, 6);
+      s.maxN = Math.max(s.maxN, n);
+      if (S.touched.has('steps')) {
+        if (!s.seen.includes(n)) s.seen.push(n);
+        if (s.seen.length >= 2) S.complete('steps');
       }
-    });
+    } else if (!S.on('demo-steps')) { s.nShown = 10; s.maxN = 10; }
+
+    // ── la revisión humana ──
+    if (S.between('review-idea', 'irreversible')) {
+      const on = Boolean(S.drive('review', demoReview(S)));
+      s.rev = ease(s.rev, on ? 1 : 0, 4);
+      if (S.touched.has('review') && S.on('review-demo')) S.complete('review');
+    } else if (!S.on('review-idea')) s.rev = 0;
+  },
+
+  render(S) {
+    const d = S.d;
+    for (const v of VIEWS) {
+      const a = win(S, v.from, v.to);
+      if (a <= 0.004) continue;
+      d.withAlpha(a, () => v.draw(S));
+      if (v.src) provenance(S, v.src(S), a);
+    }
   },
 });
 

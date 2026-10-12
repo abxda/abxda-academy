@@ -32,7 +32,7 @@ export function updateKnn(S: Frame) {
   if (v.key !== st.key) { st.key = v.key; st.dwell = st.src === 'typed' ? 0 : DWELL; }
   else st.dwell += S.dt;
   if (v.ids.length && st.dwell >= DWELL && (st.src !== 'preset' || st.k > 0 || S.p.nextW > 0) && !st.seen.includes(v.key)) st.seen.push(v.key);
-  if (st.seen.length >= 3) S.complete('knn');
+  if (st.seen.length >= 3 && (S.touched.has('w') || S.touched.has('nextW'))) S.complete('knn');
 }
 export function actionKnn(S: Frame, id: string) {
   const st = knnOf(S);
@@ -78,7 +78,7 @@ export function updateArith(S: Frame) {
   if (v.key !== st.key) { st.key = v.key; st.dwell = st.src === 'typed' ? 0 : DWELL; } else st.dwell += S.dt;
   if (v.valid) { if (S.p.excl === false) st.off = true; else st.on = true; }
   if (v.valid && st.dwell >= DWELL && (st.src !== 'preset' || st.k > 0 || S.p.nextE > 0) && !st.seen.includes(v.key)) st.seen.push(v.key);
-  if (st.seen.length >= 2 && st.on && st.off) S.complete('arith');
+  if (st.seen.length >= 2 && st.on && st.off && ['expr', 'nextE', 'excl'].some((k) => S.touched.has(k))) S.complete('arith');
 }
 export function actionArith(S: Frame, id: string) {
   const st = arOf(S);
@@ -111,7 +111,7 @@ export function updateSearch(S: Frame) {
     st.seen.push(v.key);
     if (v.res.exact.every((h) => h.score === 0)) st.zero = true;
   }
-  if (st.seen.length >= 3 && st.zero) S.complete('search');
+  if (st.seen.length >= 3 && st.zero && (S.touched.has('qry') || S.touched.has('nextQ'))) S.complete('search');
 }
 export function actionSearch(S: Frame, id: string) {
   const st = seOf(S);

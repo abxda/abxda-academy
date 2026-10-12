@@ -95,14 +95,20 @@ export default defineLesson({
       pad: 0.5,
     },
     {
+      id: 'race-demo',
+      es: 'Mira una carrera de multiplicar matrices: con una matriz pequeña, la GPU apenas gana; con una grande, sus núcleos trabajan todos a la vez y deja muy atrás a la CPU.',
+      en: 'Watch a matrix-multiplication race: with a small matrix, the GPU barely wins; with a large one, all its cores work at once and it leaves the CPU far behind.',
+      pad: 0.6,
+    },
+    {
       id: 'race-try',
-      es: 'Tu turno: una carrera de multiplicación de matrices. Cambia el tamaño y la GPU. Es un conteo ideal de pasos, no un cronómetro: lo medido viene después.',
-      en: 'Your turn: a matrix-multiplication race. Change the size and the GPU. It is an idealized step count, not a stopwatch: real measurements come next.',
+      es: 'Si quieres, cambia tú el tamaño y la GPU. Es un conteo ideal de pasos, no un cronómetro: lo medido de verdad viene después.',
+      en: 'If you like, change the size and the GPU yourself. It is an idealized step count, not a stopwatch: real measurements come next.',
       gate: {
         id: 'race',
         prompt: {
-          es: 'Corre la carrera con una matriz pequeña (8 o menos) y con una grande (64 o más) y compara la ventaja.',
-          en: 'Run the race with a small matrix (8 or less) and a large one (64 or more) and compare the advantage.',
+          es: 'corre la carrera con una matriz pequeña (8 o menos) y con una grande (64 o más) y compara la ventaja.',
+          en: 'run the race with a small matrix (8 or less) and a large one (64 or more) and compare the advantage.',
         },
       },
       pad: 0.4,
@@ -175,7 +181,7 @@ export default defineLesson({
       es: 'En 2012, AlexNet logró un error top-5 de 15.3 %. El segundo lugar, con métodos clásicos, quedó en 26.2 %.',
       en: 'In 2012, AlexNet reached a top-5 error of 15.3%. The runner-up, using classic methods, scored 26.2%.',
       tts: {
-        es: 'En dos mil doce, alex net logró un error top cinco de quince coma tres por ciento. El segundo lugar, con métodos clásicos, quedó en veintiséis coma dos por ciento.',
+        es: 'En dos mil doce, alex net logró un error top cinco de quince punto tres por ciento. El segundo lugar, con métodos clásicos, quedó en veintiséis punto dos por ciento.',
         en: 'In twenty twelve, alex net reached a top five error of fifteen point three percent. The runner-up, using classic methods, scored twenty-six point two percent.',
       },
       note: { es: '2012: error top-5 de 15.3 % frente a 26.2 % del segundo lugar.', en: '2012: top-5 error of 15.3% versus the runner-up’s 26.2%.' },
@@ -183,12 +189,8 @@ export default defineLesson({
     },
     {
       id: 'jump',
-      es: 'Entre 2010 y 2011, el mejor error bajó unos dos puntos. Entre 2011 y 2012, unos diez. Al año siguiente, la gran mayoría de las participaciones usaba redes convolucionales profundas.',
-      en: 'Between 2010 and 2011, the best error fell by about two points. Between 2011 and 2012, by about ten. The next year, the vast majority of entries used deep convolutional networks.',
-      tts: {
-        es: 'Entre dos mil diez y dos mil once, el mejor error bajó unos dos puntos. Entre dos mil once y dos mil doce, unos diez. Al año siguiente, la gran mayoría de las participaciones usaba redes convolucionales profundas.',
-        en: 'Between twenty ten and twenty eleven, the best error fell by about two points. Between twenty eleven and twenty twelve, by about ten. The next year, the vast majority of entries used deep convolutional networks.',
-      },
+      es: 'Fue un salto enorme: antes, el mejor error bajaba uno o dos puntos por año; esta vez bajó unos diez. Al año siguiente, casi todos los participantes usaban redes convolucionales profundas.',
+      en: 'It was a huge leap: before, the best error dropped one or two points a year; this time it dropped about ten. The next year, almost every entry used deep convolutional networks.',
       pad: 0.5,
     },
     {
@@ -231,14 +233,20 @@ export default defineLesson({
       pad: 0.6,
     },
     {
+      id: 'skip-demo',
+      es: 'Mira cuánto gradiente llega a la primera capa con treinta capas: en la red simple, casi nada; con atajos, llega casi entero.',
+      en: 'Watch how much gradient reaches the first layer with thirty layers: in the plain network, almost nothing; with shortcuts, nearly all of it.',
+      pad: 0.6,
+    },
+    {
       id: 'skip-try',
-      es: 'Tu turno: cambia entre red simple y red con atajos, y mueve la profundidad. Observa cuánto gradiente llega a la primera capa.',
-      en: 'Your turn: switch between a plain network and one with shortcuts, and move the depth. Watch how much gradient reaches the first layer.',
+      es: 'Si quieres, cambia tú entre red simple y red con atajos, y mueve la profundidad.',
+      en: 'If you like, switch between the plain network and the one with shortcuts yourself, and move the depth.',
       gate: {
         id: 'skip',
         prompt: {
-          es: 'Con 30 capas o más, mira tanto la red simple como la red con atajos.',
-          en: 'With 30 layers or more, look at both the plain network and the one with shortcuts.',
+          es: 'con 30 capas o más, mira tanto la red simple como la red con atajos.',
+          en: 'with 30 layers or more, look at both the plain network and the one with shortcuts.',
         },
       },
       pad: 0.4,
@@ -258,7 +266,7 @@ export default defineLesson({
       es: 'Con atajos, más capas volvieron a mejorar el resultado. En 2015, un conjunto de ResNets de hasta 152 capas logró un error top-5 de 3.57 % y ganó el concurso.',
       en: 'With shortcuts, more layers improved results again. In 2015, an ensemble of ResNets with up to 152 layers reached a top-5 error of 3.57% and won the contest.',
       tts: {
-        es: 'Con atajos, más capas volvieron a mejorar el resultado. En dos mil quince, un conjunto de res nets de hasta ciento cincuenta y dos capas logró un error top cinco de tres coma cincuenta y siete por ciento y ganó el concurso.',
+        es: 'Con atajos, más capas volvieron a mejorar el resultado. En dos mil quince, un conjunto de res nets de hasta ciento cincuenta y dos capas logró un error top cinco de tres punto cincuenta y siete por ciento y ganó el concurso.',
         en: 'With shortcuts, more layers improved results again. In twenty fifteen, an ensemble of res nets with up to one hundred fifty-two layers reached a top five error of three point five seven percent and won the contest.',
       },
       pad: 0.5,
@@ -268,7 +276,7 @@ export default defineLesson({
       es: 'En seis ediciones del concurso, el error del ganador cayó de 28.2 % a 3.57 %. Las redes ganadoras pasaron de 8 capas en 2012 a 152 en 2015.',
       en: 'Across six editions of the contest, the winner’s error fell from 28.2% to 3.57%. The winning networks went from 8 layers in 2012 to 152 in 2015.',
       tts: {
-        es: 'En seis ediciones del concurso, el error del ganador cayó de veintiocho coma dos por ciento a tres coma cincuenta y siete por ciento. Las redes ganadoras pasaron de ocho capas en dos mil doce a ciento cincuenta y dos en dos mil quince.',
+        es: 'En seis ediciones del concurso, el error del ganador cayó de veintiocho punto dos por ciento a tres punto cincuenta y siete por ciento. Las redes ganadoras pasaron de ocho capas en dos mil doce a ciento cincuenta y dos en dos mil quince.',
         en: 'Across six editions of the contest, the winner’s error fell from twenty-eight point two percent to three point five seven percent. The winning networks went from eight layers in twenty twelve to one hundred fifty-two in twenty fifteen.',
       },
       pad: 0.6,
@@ -278,18 +286,18 @@ export default defineLesson({
       es: 'Un anotador humano experto tuvo 5.1 % en una muestra; otro, 12 %. Pero esto mide una tarea concreta: mil categorías, una etiqueta por foto. No es entender escenas.',
       en: 'One expert human annotator scored 5.1% on a sample; another, 12%. But this measures one specific task: a thousand categories, one label per photo. It is not understanding scenes.',
       tts: {
-        es: 'Un anotador humano experto tuvo cinco coma uno por ciento en una muestra; otro, doce por ciento. Pero esto mide una tarea concreta: mil categorías, una etiqueta por foto. No es entender escenas.',
+        es: 'Un anotador humano experto tuvo cinco punto uno por ciento en una muestra; otro, doce por ciento. Pero esto mide una tarea concreta: mil categorías, una etiqueta por foto. No es entender escenas.',
         en: 'One expert human annotator scored five point one percent on a sample; another, twelve percent. But this measures one specific task: a thousand categories, one label per photo. It is not understanding scenes.',
       },
       pad: 0.4,
     },
     {
       id: 'compute-growth',
-      es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada 3.4 meses entre 2012 y 2017, según OpenAI: más de 300 000 veces en total.',
-      en: 'Counted in operations, the compute of the largest training runs doubled every 3.4 months between 2012 and 2017, according to OpenAI: over 300,000 times in all.',
+      es: 'Y el cómputo de los mayores entrenamientos creció sin parar: según OpenAI, entre 2012 y 2017 se duplicó cada 3.4 meses, más de 300 000 veces en total.',
+      en: 'And the compute of the largest training runs grew nonstop: according to OpenAI, between 2012 and 2017 it doubled every 3.4 months, over 300,000 times in all.',
       tts: {
-        es: 'Medido en operaciones, el cómputo de los mayores entrenamientos se duplicó cada tres coma cuatro meses entre dos mil doce y dos mil diecisiete, según OpenAI: más de trescientas mil veces en total.',
-        en: 'Counted in operations, the compute of the largest training runs doubled every three point four months between twenty twelve and twenty seventeen, according to OpenAI: over three hundred thousand times in all.',
+        es: 'Y el cómputo de los mayores entrenamientos creció sin parar: según Open ei ai, entre dos mil doce y dos mil diecisiete se duplicó cada tres punto cuatro meses, más de trescientas mil veces en total.',
+        en: 'And the compute of the largest training runs grew nonstop: according to Open A I, between twenty twelve and twenty seventeen it doubled every three point four months, over three hundred thousand times in all.',
       },
       note: { es: 'Cómputo: se duplicó cada 3.4 meses entre 2012 y 2017 (OpenAI).', en: 'Compute: doubled every 3.4 months between 2012 and 2017 (OpenAI).' },
       pad: 0.6,

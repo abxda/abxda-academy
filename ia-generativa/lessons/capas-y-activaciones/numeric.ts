@@ -33,7 +33,8 @@ export function drawNumeric(S: Frame, all: Rect, mode: 'sum' | 'relu') {
   const reluTag = isR ? ph(S, 'break', 0.45, 0.58, 'out') : 0;
   let inA = 0, fp = 0, shown = 0;           // fp: 0..2 (entrada→oculta→salida)
   let reluK = 0;                            // 0..1: aplicar ReLU a la oculta
-  if (!isR) { inA = ph(S, 'forward', 0, 0.1, 'out'); fp = ph(S, 'forward', 0.12, 0.8, 'lin') * 2; shown = fp; }
+  // «forward»: la señal llega a la capa oculta; «forward-out»: de la oculta a la salida
+  if (!isR) { inA = ph(S, 'forward', 0, 0.1, 'out'); fp = ph(S, 'forward', 0.3, 0.9, 'lin') + ph(S, 'forward-out', 0.45, 0.9, 'lin'); shown = fp; }
   else { inA = ph(S, 'break', 0.02, 0.14, 'out'); const a = ph(S, 'break', 0.14, 0.42, 'lin'); reluK = ph(S, 'break', 0.5, 0.64); const b = ph(S, 'break', 0.7, 0.9, 'lin'); fp = a + b; shown = a + b; }
 
   // ── aristas ──

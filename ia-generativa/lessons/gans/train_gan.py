@@ -15,7 +15,7 @@ Un solo hiperparámetro cambia entre las dos series:
 Se entrenan 20 semillas (0–19) con cada k. Se exportan:
       · A = semilla 0 con k = 1 (entrenamiento «sano»), con puntos de control (G y D) a lo largo del entrenamiento;
       · B = la primera semilla con k = 5 cuyo generador termina en una sola montaña (colapso), igual con puntos de control;
-      · el generador final de las 40 corridas (para contar cuántas colapsan; definición de «cubre una montaña» en scene/data.ts).
+      · el generador final de las 40 corridas (para contar cuántas colapsan; definición de «cubre una montaña» en data.ts).
 Los pesos se cuantizan a enteros de 16 bits (escala SCALE) y se guardan en base64 (little-endian).
 """
 import base64, copy, json, math, struct, sys

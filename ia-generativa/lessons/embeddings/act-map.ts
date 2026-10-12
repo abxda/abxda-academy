@@ -51,7 +51,7 @@ function pick(S: Frame, x: number, y: number): number {
 export function pointerMap(S: Frame, e: PointerEvt) {
   if (!inTry1(S) || e.type !== 'down') return;
   const i = pick(S, e.x, e.y);
-  if (i >= 0) { const st = knnOf(S); st.src = 'tap'; st.tap = i; st.dwell = 1; }
+  if (i >= 0) { const st = knnOf(S); st.src = 'tap'; st.tap = i; st.dwell = 1; S.touched.add('nextW'); }   // tocar el mapa cuenta como interacción de la persona
 }
 export function cursorMap(S: Frame, x: number, y: number): string | undefined { return inTry1(S) && pick(S, x, y) >= 0 ? 'pointer' : undefined; }
 

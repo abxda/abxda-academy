@@ -1,6 +1,7 @@
 // Escena: Capas y activaciones. Una red 2-2-1 con números (pase hacia delante y colapso lineal), la ReLU que rompe el colapso,
 // el doblez del espacio, la aproximación universal con esquinas ReLU, la profundidad (la sierra de Telgarsky) y el patio de
-// juegos: una MLP real que se entrena en el navegador. Tres turnos: aproximar una curva, separar círculos, separar la espiral.
+// juegos: una MLP real que se entrena en el navegador. La voz va acompañada de demostraciones automáticas; tres «tu turno»
+// opcionales (aproximar una curva, separar círculos, separar la espiral) que arrancan ya con una configuración que funciona.
 import { box, clamp, drawNet, inset, link, neu, regions, tone, type Frame, type Rect, type SceneFactory } from '../../../../../theme/kit';
 import { drawActs, drawFold } from './acts';
 import { APPROX_GOAL, N_MAX, approxErrOf, drawApprox, drawDepth } from './approx';
@@ -30,18 +31,20 @@ function pgControls(pf: 'b-' | 'c-', from: string, to: string, def: { layers: nu
 const scene: SceneFactory = () => ({
   controls: [
     { id: 'n', kind: 'slider', label: L('Neuronas ReLU', 'ReLU neurons'), min: 1, max: N_MAX, step: 1, value: 3, from: 'try1', to: 'depth', fmt: int },
-    ...pgControls('b-', 'try2', 'shapes', { layers: 1, width: 2, act: 'linear' }),
-    ...pgControls('c-', 'try3', 'recap', { layers: 1, width: 8, act: 'tanh' }),
+    ...pgControls('b-', 'try2', 'shapes', { layers: 1, width: 6, act: 'relu' }),
+    ...pgControls('c-', 'try3', 'recap', { layers: 3, width: 8, act: 'tanh' }),
   ],
 
   init(S) { S.st = {}; },
   action(S, id) { pgAction(S, id); },
 
   update(S) {
-    if (S.between('try1', 'depth') && approxErrOf(Math.round(S.p.n ?? 3)) < APPROX_GOAL) S.complete('approx');
+    // los «tu turno» cuentan solo lo que hizo la persona (las configuraciones de partida ya funcionan)
+    const touched = (pf: string) => ['layers', 'width', 'act', 'train', 'reset'].some((k) => S.touched.has(pf + k));
+    if (S.between('try1', 'depth') && S.touched.has('n') && approxErrOf(Math.round(S.p.n ?? 3)) < APPROX_GOAL) S.complete('approx');
     const won = pgUpdate(S);
-    if (won.B) S.complete('circles');
-    if (won.C) S.complete('spiral');
+    if (won.B && touched('b-')) S.complete('circles');
+    if (won.C && touched('c-')) S.complete('spiral');
   },
 
   render(S) {

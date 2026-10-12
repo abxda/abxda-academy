@@ -1,6 +1,7 @@
 // Escena: La neurona artificial. De la biología (McCulloch y Pitts, 1943) a la fórmula, armada pieza por pieza con números reales;
 // la neurona como recta en el plano (frontera de decisión); escalón y sigmoide; el perceptrón de Rosenblatt (1958) y su regla;
-// y los límites de la analogía con el cerebro. Tres turnos: las entradas, los pesos y el sesgo, y la regla del perceptrón.
+// y los límites de la analogía con el cerebro. La escena hace sola cada demostración (S.drive y pasos de aprendizaje automáticos);
+// tres «tu turno» opcionales: las entradas, los pesos y el sesgo, y la regla del perceptrón.
 import {
   alpha, clamp, ease, lerp, neu, regions, tone,
   type Frame, type Rect, type SceneFactory,
@@ -57,12 +58,12 @@ function percShown(S: Frame, pv: PercState): { p: Params; ghost: Params | null; 
 // ── la escena ─────────────────────────────────────────────────────────────
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'x1', kind: 'slider', label: { es: 'Enlaces x₁', en: 'Links x₁' }, min: 0, max: 1, step: 0.05, value: EX.x1, from: 'try0', to: 'plane', fmt: (v, l) => fmt2(v, l) },
-    { id: 'x2', kind: 'slider', label: { es: 'Confianza x₂', en: 'Trust x₂' }, min: 0, max: 1, step: 0.05, value: EX.x2, from: 'try0', to: 'plane', fmt: (v, l) => fmt2(v, l) },
+    { id: 'x1', kind: 'slider', label: { es: 'Enlaces x₁', en: 'Links x₁' }, min: 0, max: 1, step: 0.05, value: EX.x1, from: 'off-demo', to: 'plane', fmt: (v, l) => fmt2(v, l) },
+    { id: 'x2', kind: 'slider', label: { es: 'Confianza x₂', en: 'Trust x₂' }, min: 0, max: 1, step: 0.05, value: EX.x2, from: 'off-demo', to: 'plane', fmt: (v, l) => fmt2(v, l) },
     { id: 'w1', kind: 'slider', label: { es: 'Peso w₁', en: 'Weight w₁' }, min: -4, max: 4, step: 0.1, value: BASE.w1, from: 'try1', to: 'step-limit', fmt: (v, l) => fmt1(v, l) },
     { id: 'w2', kind: 'slider', label: { es: 'Peso w₂', en: 'Weight w₂' }, min: -4, max: 4, step: 0.1, value: BASE.w2, from: 'try1', to: 'step-limit', fmt: (v, l) => fmt1(v, l) },
     { id: 'b', kind: 'slider', label: { es: 'Sesgo b', en: 'Bias b' }, min: -3, max: 3, step: 0.1, value: BASE.b, from: 'try1', to: 'step-limit', fmt: (v, l) => fmt1(v, l) },
-    { id: 'step2', kind: 'button', primary: true, label: { es: 'Un paso de aprendizaje', en: 'One learning step' }, from: 'try2', to: 'converge' },
+    { id: 'step2', kind: 'button', primary: true, label: { es: 'Un paso de aprendizaje', en: 'One learning step' }, from: 'learn-demo', to: 'converge' },
     { id: 'run2', kind: 'button', label: { es: 'Correr hasta acertar', en: 'Run until correct' }, from: 'try2', to: 'converge' },
     { id: 'reset2', kind: 'button', label: { es: 'Reiniciar', en: 'Reset' }, from: 'try2', to: 'converge' },
   ],
@@ -79,8 +80,9 @@ const scene: SceneFactory = () => ({
   pointer(S, e) {
     if (e.type !== 'down') return;
     const R_ = regions(S, 0.66), plot = planePlot(S, R_.main);
-    if (S.between('try2', 'limits')) {
+    if (S.between('learn-demo', 'limits')) {
       const pv = percOf(S);
+      S.touched.add('step2');
       let best = -1, bd = S.hitR * 1.3;
       wrongOf(pv.w1, pv.w2, pv.b).forEach((i) => { const dd = Math.hypot(plot.X(DATA[i].x) - e.x, plot.Y(DATA[i].y) - e.y); if (dd < bd) { bd = dd; best = i; } });
       if (best >= 0) learn(pv, best, S.clock);
@@ -91,7 +93,7 @@ const scene: SceneFactory = () => ({
 
   cursor(S, x, y) {
     const R_ = regions(S, 0.66), plot = planePlot(S, R_.main);
-    if (S.between('try2', 'limits')) {
+    if (S.between('learn-demo', 'limits')) {
       const pv = percOf(S);
       return wrongOf(pv.w1, pv.w2, pv.b).some((i) => Math.hypot(plot.X(DATA[i].x) - x, plot.Y(DATA[i].y) - y) < S.hitR * 1.3) ? 'pointer' : undefined;
     }
@@ -101,15 +103,24 @@ const scene: SceneFactory = () => ({
 
   // El estado interactivo avanza siempre, aunque el escenario no se vea; render() solo dibuja.
   update(S) {
-    // turno 1: apagar la neurona moviendo las entradas
-    if (S.between('try0', 'plane')) {
+    // demostración: la confianza sube de 0.2 a 0.9 y la neurona deja de activarse
+    if (S.between('off-demo', 'plane')) {
+      S.drive('x1', EX.x1);
+      S.drive('x2', S.on('try0') ? 0.9 : Math.round(lerp(EX.x2, 0.9, tr(tau(S, 'off-demo'), 0.25, 0.7, 'io')) * 20) / 20);
+    }
+    // turno 1 (opcional): apagar la neurona moviendo las entradas
+    if (S.between('try0', 'plane') && (S.touched.has('x1') || S.touched.has('x2'))) {
       const z = zOf(BASE.w1, BASE.w2, BASE.b, S.p.x1 ?? EX.x1, S.p.x2 ?? EX.x2);
       if (fire(z) === 0) S.complete('off');
     }
-    // turno 2: separar los dos grupos con los controles
-    if (S.between('try1', 'step-limit')) { const q = rawParams(S); if (hitsOf(q.w1, q.w2, q.b) === N) S.complete('sep'); }
-    // turno 3: la regla del perceptrón
+    // turno 2 (opcional): separar los dos grupos con los controles
+    if (S.between('try1', 'step-limit') && (S.touched.has('w1') || S.touched.has('w2') || S.touched.has('b'))) { const q = rawParams(S); if (hitsOf(q.w1, q.w2, q.b) === N) S.complete('sep'); }
+    // turno 3: la regla del perceptrón; en «learn-demo» la escena da sola un paso cada ~1.2 s (cuatro pasos) mientras nadie toque el botón
     const pv = percOf(S), run = S.st.run as { acc: number } | null;
+    if (S.is('learn-demo') && !S.touched.has('step2') && !run) {
+      const want = Math.min(4, Math.floor(tr(tau(S, 'learn-demo'), 0.1, 0.9, 'lin') * 4.999));
+      while (pv.steps < want) { const i = nextIdx(pv); if (i < 0) break; learn(pv, i, S.clock); }
+    }
     if (run) {
       run.acc += S.dt;
       while (run.acc >= 0.5) {
@@ -120,7 +131,7 @@ const scene: SceneFactory = () => ({
       }
       if (nextIdx(pv) < 0) S.st.run = null;
     }
-    if (S.between('try2', 'converge') && nextIdx(pv) < 0 && pv.steps > 0) S.complete('learn');
+    if (S.between('try2', 'converge') && S.touched.has('step2') && nextIdx(pv) < 0 && pv.steps > 0) S.complete('learn');
   },
 
   render(S) {
@@ -128,7 +139,7 @@ const scene: SceneFactory = () => ({
     const phases: [string | null, string | null, () => void][] = [
       [null, 'bio', () => drawHook(S, D)],
       ['bio', 'inputs', () => drawBioMp(S, D)],
-      ['inputs', 'plane', () => drawDiagram(S, D, S.between('try0', 'plane') ? { x1: S.p.x1 ?? EX.x1, x2: S.p.x2 ?? EX.x2 } : { x1: EX.x1, x2: EX.x2 })],
+      ['inputs', 'plane', () => drawDiagram(S, D, S.between('off-demo', 'plane') ? { x1: S.p.x1 ?? EX.x1, x2: S.p.x2 ?? EX.x2 } : { x1: EX.x1, x2: EX.x2 })],
       ['plane', 'rosenblatt', () => drawPlaneStage(S, R_)],
       ['rosenblatt', 'rule', () => drawRosenblatt(S, D)],
       ['rule', 'limits', () => drawPerceptronStage(S, R_)],
@@ -244,8 +255,9 @@ function asidePlane(S: Frame, A: Rect, prm: Params, blend: number, k: number) {
 function drawPerceptronStage(S: Frame, R_: { main: Rect; aside: Rect; all: Rect }) {
   const { d, pal: p } = S, u = S.u;
   const pv = percOf(S);
-  const interactive = S.on('try2');
-  const useRef = S.on('converge') && !(S.done.has('learn') || pv.steps >= 4);
+  const interactive = S.on('learn-demo');
+  // en «converge» se muestra el recorrido completo de referencia, salvo que la persona haya llegado ella misma a cero errores
+  const useRef = S.on('converge') && !S.done.has('learn');
   let prm: Params, ghost: Params | null = null, hot = -1, hist: number[], steps: number;
   if (!interactive) {
     // narración: un primer paso con números reales
@@ -313,10 +325,10 @@ function asidePerceptron(S: Frame, A: Rect, prm: Params, hist: number[], steps: 
     }
     // «try2» y «converge»
     if (S.is('converge')) {
-      const h = Math.min(A.h - 60 * u, port ? 80 * u : 170 * u);
+      const h = Math.min(A.h - 60 * u, port ? 80 * u : 170 * u) - (useRef ? 22 * u : 0);   // con la nota debajo, la gráfica cede su sitio
       statBlock(S, { x: A.x, y, w: A.w, h: 60 * u }, [{ l: S.l('pasos', 'steps'), v: String(steps), t: 'ink' }, { l: S.l('aciertos', 'hits'), v: `${hits}/${N}`, t: hits === N ? 'dat' : 'ink' }], { row: true, size: 20 });
       drawHist(S, { x: A.x, y: y + 52 * u, w: A.w, h }, hist, 1);
-      if (useRef) txt(S, S.l('(recorrido de referencia)', '(reference run)'), A.x, A.y + A.h, { size: 12, color: p.mute, base: 'bottom' });
+      if (useRef) txt(S, S.l('(recorrido de referencia)', '(reference run)'), A.x, y + 52 * u + h + 8 * u, { size: 12, color: p.mute, base: 'top' });
       return;
     }
     const err = N - hits;

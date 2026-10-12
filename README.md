@@ -6,9 +6,15 @@ El primer curso es **«IA generativa: de la neurona al chatbot»** (37 lecciones
 
 | Parte | Lecciones | Estado |
 |---|---|---|
-| 1 · Cómo aprende una máquina | 1–14 | revisada |
-| 2 · Generar: imágenes y lenguaje | 15–26 | en preparación (borradores) |
-| 3 · Del modelo al asistente y a la decisión | 27–37 | en preparación (borradores) |
+| 1 · Cómo aprende una máquina | 1–14 | publicada, con voz |
+| 2 · Generar: imágenes y lenguaje | 15–26 | publicada; voz en grabación |
+| 3 · Del modelo al asistente y a la decisión | 27–37 | publicada; voz en grabación |
+
+Todas las lecciones se escribieron para quien **nunca ha visto estos temas**: un concepto por paso, demostraciones automáticas antes de cada interacción y la interacción siempre opcional.
+
+## Revisión humana
+
+El curso lo revisan personas que están aprendiendo estos temas, y la revisión es pública: cada comentario queda como un *issue* en este repositorio, ligado a la lección y al paso exacto donde surgió, y cada corrección entra como un cambio que el autor revisa y acepta. **Cómo revisar:** [REVISION.md](REVISION.md).
 
 ## Cómo está organizado
 
@@ -29,11 +35,11 @@ docs/
 
 ## Cómo ayudar
 
-Se agradece que se señalen errores, se propongan mejores explicaciones o se aporten fuentes. Lee **[CONTRIBUTING.md](CONTRIBUTING.md)**: explica qué se puede cambiar, cómo citar fuentes y qué cambios implican regenerar la voz.
+Se agradece que se señalen errores, se propongan mejores explicaciones o se aporten fuentes. Para comentar mientras ves una lección, sigue **[REVISION.md](REVISION.md)**; para proponer cambios, lee **[CONTRIBUTING.md](CONTRIBUTING.md)**: explica qué se puede cambiar, cómo citar fuentes y qué cambios implican regenerar la voz.
 
 ## Licencia
 
 Este contenido se publica bajo **[CC BY-NC 4.0](LICENSE)**: puedes compartirlo y adaptarlo (por ejemplo, traducirlo) citando la autoría, indicando los cambios y sin fines comerciales. Los datos y materiales de terceros conservan su licencia (ver [`docs/CREDITS.md`](docs/CREDITS.md)).
 
 ---
-Potenciado por Inteligencia Artificial · Aguascalientes, Aguascalientes, México
+Co-creado con Claude (IA) y revisado por personas · Aguascalientes, Aguascalientes, México

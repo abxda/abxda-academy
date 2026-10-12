@@ -1,139 +1,160 @@
-// Ayudas de dibujo propias de la lección (el kit no trae tarjetas de calculadora, marcas ✓/✗ ni llaves con rótulo).
-// Todo texto respeta ≥ 12 px efectivos (FS) y todos los colores salen de tone()/S.pal (nunca hex).
-import { alpha, clamp, inset, lerp, tone, type Frame, type Plot, type Rect, type Tone } from '../../../../../theme/kit';
-import type { Lang } from './model';
+// Ayudas propias de la lección: tiempo por fracciones del segmento, tamaños con piso de 12 px efectivos, texto que se
+// achica o se parte para caber, piezas de dibujo (tokens, pastillas, barras) y formato de números (siempre a partir de
+// S.n: punto decimal y espacio para los miles en español). Todo color sale de tone()/S.pal: nunca hex.
+import { alpha, clamp, inset, tone, type Frame, type Rect, type Tone } from '../../../../../theme/kit';
 
-export const lang = (S: Frame) => S.lang as Lang;
-/** Tamaño de fuente (antes de escalar por S.u) que garantiza ≥ 12 px efectivos. */
-export const FS = (S: Frame, px: number) => Math.max(px, 12.2 / S.u);
-export const smooth = (x: number) => { const t = clamp(x); return t * t * (3 - 2 * t); };
-/** Verdadero cuando `cond` se ha cumplido sin interrupción durante `secs` segundos: para que un gate se complete al detenerse en la respuesta y no al pasar de largo con el deslizador. */
-export function holds(S: Frame, key: string, cond: boolean, secs = 0.5): boolean {
-  const st = (S.st.hold ??= {} as Record<string, number>);
-  st[key] = cond ? (st[key] ?? 0) + S.dt : 0;
-  return st[key] >= secs;
+/** Duración (s) del segmento k. Las voces y los idiomas duran distinto: se anima por fracciones del segmento. */
+export const dur = (S: Frame, k: string) => Math.max(1, S.end(k) - S.start(k));
+/** Progreso 0..1 entre las fracciones a y b de la duración del segmento k (0 antes de que empiece, 1 después). */
+export const fr = (S: Frame, k: string, a: number, b = a + 0.1, e: 'lin' | 'out' | 'io' = 'out') => S.at(k, a * dur(S, k), b * dur(S, k), e);
+/** Opacidad de una vista que entra al empezar `from` y sale al empezar `to`. */
+export const win = (S: Frame, from: string, to?: string) => (!S.on(from) ? 0 : S.at(from, 0, 0.5, 'out') * (to ? 1 - S.at(to, 0, 0.45, 'out') : 1));
+/** Tamaño de texto (antes de escalar por S.u) con piso de 12 px efectivos. */
+export const fz = (S: Frame, n: number) => Math.max(n, 12.2 / S.u);
+/** Alto en px de una línea de texto a tamaño `n`. */
+export const lh = (S: Frame, n: number, k = 1.3) => fz(S, n) * S.u * k;
+export const lg = (S: Frame) => S.lang as 'es' | 'en';
+/** Área de trabajo: márgenes y una franja al pie para la procedencia de los datos. */
+export const area = (S: Frame): Rect => inset(S.full(), 14 * S.u, 16 * S.u, Math.max(20, 22 * S.u), 16 * S.u);
+/** Escenario apretado (teléfono horizontal o casi cuadrado). */
+export const tight = (S: Frame) => S.H < 360 || (S.portrait && S.H < S.W * 1.15);
+
+export interface TOpts { size?: number; weight?: number; font?: 'ui' | 'mono'; color?: string; align?: CanvasTextAlign; base?: CanvasTextBaseline; a?: number; halo?: boolean; italic?: boolean }
+
+/** Tamaño que hace caber `str` en `w` px sin bajar de 12 px efectivos. */
+export function fitSize(S: Frame, str: string, w: number, size: number, o: TOpts = {}) {
+  const min = fz(S, 12);
+  let s = fz(S, size);
+  while (s > min && S.d.measure(str, { size: s, weight: o.weight ?? 600, font: o.font }) > w) s -= 0.5;
+  return Math.max(min, s);
 }
-/** Área útil con márgenes. */
-export const pad = (S: Frame, m = 14) => inset(S.full(), m * S.u);
+/** ¿Cabe `str` en `w` al tamaño `size` (o al mínimo legible)? */
+export const fits = (S: Frame, str: string, w: number, o: TOpts = {}) => S.d.measure(str, { size: fz(S, o.size ?? 12), weight: o.weight ?? 600, font: o.font }) <= w;
 
-/** Texto que se encoge hasta caber en `w` (sin bajar de 12 px efectivos). */
-export function fitText(S: Frame, str: string, x: number, y: number, w: number, size: number, o: { weight?: number; font?: 'ui' | 'mono'; color?: string; align?: CanvasTextAlign; base?: CanvasTextBaseline; halo?: string; a?: number } = {}) {
-  const d = S.d, minS = FS(S, 12);
-  let s = Math.max(size, minS);
-  while (s > minS && d.measure(str, { size: s, weight: o.weight ?? 600, font: o.font }) > w) s -= 0.5;
-  return d.text(str, x, y, { size: s, weight: o.weight ?? 600, font: o.font, color: o.color, align: o.align, base: o.base, halo: o.halo, a: o.a });
+/** Texto de una línea que se achica para caber en `w`. */
+export function fitText(S: Frame, str: string, x: number, y: number, w: number, o: TOpts = {}) {
+  const size = fitSize(S, str, w, o.size ?? 13, o);
+  return S.d.text(str, x, y, { size, weight: o.weight ?? 600, font: o.font, color: o.color ?? S.pal.ink, align: o.align, base: o.base, a: o.a, italic: o.italic, halo: o.halo ? S.pal.stage : undefined, haloW: 4 });
 }
-
-/** Texto con halo del color del escenario (legible sobre líneas y rellenos). */
-export function tagText(S: Frame, str: string, x: number, y: number, o: { t?: Tone; align?: CanvasTextAlign; base?: CanvasTextBaseline; size?: number; weight?: number; font?: 'ui' | 'mono'; a?: number; w?: number } = {}) {
-  const c = tone(S, o.t ?? 'ink');
-  return S.d.text(str, x, y, { size: FS(S, o.size ?? 13), weight: o.weight ?? 700, color: o.t ? c.ink : S.pal.ink, align: o.align, base: o.base ?? 'middle', font: o.font, halo: S.pal.stage, haloW: 4, a: o.a, w: o.w });
+/** Texto que se parte en líneas de ancho `w`. Devuelve el alto usado. */
+export function para(S: Frame, str: string, x: number, y: number, w: number, o: TOpts & { lh?: number } = {}) {
+  const size = fz(S, o.size ?? 13);
+  const r = S.d.text(str, x, y, { size, weight: o.weight ?? 600, font: o.font, color: o.color ?? S.pal.ink2, align: o.align, base: o.base ?? 'top', a: o.a, w, lh: o.lh ?? 1.25, italic: o.italic, halo: o.halo ? S.pal.stage : undefined, haloW: 4 });
+  return r.h;
 }
+/** Alto que ocuparía `para` (sin dibujar). */
+export const paraH = (S: Frame, str: string, w: number, size = 13, weight = 600, k = 1.25) => S.d.wrap(str, w, { size: fz(S, size), weight }).length * fz(S, size) * S.u * k;
 
-/** Nota al pie que puede ocupar varias líneas: la última línea queda en `yBottom` y el resto crece hacia arriba (nunca se sale del escenario). */
-export function noteUp(S: Frame, str: string, x: number, yBottom: number, w: number, o: { t?: Tone; align?: CanvasTextAlign; size?: number; weight?: number } = {}) {
-  const size = FS(S, o.size ?? 12), weight = o.weight ?? 600, n = S.d.wrap(str, w, { size, weight }).length, lh = 1.3 * size * S.u;
-  return S.d.text(str, x, yBottom - (n - 1) * lh, { size, weight, color: tone(S, o.t ?? 'mute').ink, align: o.align ?? 'left', base: 'bottom', halo: S.pal.stage, haloW: 4, w });
-}
-
-/** Rótulo en pastilla (≥ 12 px efectivos). */
-export function pill(S: Frame, str: string, x: number, y: number, o: { t?: Tone; align?: CanvasTextAlign; a?: number; mono?: boolean } = {}) {
-  const c = tone(S, o.t ?? 'ink');
-  return S.d.tag(str, x, y, { color: o.t ? c.ink : S.pal.ink2, fill: o.t ? c.soft : S.pal.surface, stroke: o.t ? c.c : S.pal.line, align: o.align, a: o.a, size: FS(S, 12), font: o.mono ? 'mono' : 'ui' });
-}
-
-/** Tarjeta: rótulo arriba, valor abajo. `assume` = borde punteado (supuesto ilustrativo). */
-export function chip(S: Frame, r: Rect, label: string, value: string, t: Tone, o: { assume?: boolean; a?: number; hot?: number; vsize?: number } = {}) {
-  const { d, pal: p } = S, u = S.u, c = tone(S, t), hot = o.hot ?? 0;
+/** Pastilla con borde (rótulo corto). `dash` = supuesto o estimación. Devuelve su caja. */
+export function chip(S: Frame, str: string, x: number, y: number, t: Tone, o: { size?: number; a?: number; align?: CanvasTextAlign; dash?: boolean; fill?: number; maxW?: number; weight?: number } = {}) {
+  const { d } = S, c = tone(S, t), u = S.u;
+  let size = fz(S, o.size ?? 12.5);
+  const padX = 7 * u;
+  if (o.maxW) size = fitSize(S, str, o.maxW - 2 * padX, size, { weight: o.weight ?? 700 });
+  const tw = d.measure(str, { size, weight: o.weight ?? 700 }), h = size * u + 9 * u, w = tw + 2 * padX;
+  const al = o.align ?? 'center', x0 = al === 'center' ? x - w / 2 : al === 'right' ? x - w : x;
   d.withAlpha(o.a ?? 1, () => {
-    d.rect(r.x, r.y, r.w, r.h, { fill: alpha(c.c, 0.07 + 0.3 * hot), stroke: c.c, lw: hot > 0.3 ? 2.2 : 1.4, r: 3, dash: o.assume ? [5, 3] : undefined });
-    fitText(S, label, r.x + r.w / 2, r.y + 4 * u, r.w - 8 * u, 12, { weight: 700, color: p.mute, align: 'center', base: 'top' });
-    fitText(S, value, r.x + r.w / 2, r.y + r.h - 5 * u, r.w - 8 * u, o.vsize ?? 16, { weight: 700, font: 'mono', color: c.ink, align: 'center', base: 'bottom' });
+    d.rect(x0, y - h / 2, w, h, { fill: t === 'ink' ? S.pal.surface : alpha(c.c, o.fill ?? 0.13), stroke: t === 'ink' ? S.pal.lineStrong : c.c, lw: 1.4, r: 3, dash: o.dash ? [4, 3] : undefined });
+    d.text(str, x0 + w / 2, y + 0.5, { size, weight: o.weight ?? 700, color: t === 'ink' ? S.pal.ink : c.ink, align: 'center', base: 'middle' });
+  });
+  return { x: x0, y: y - h / 2, w, h };
+}
+/** Nota centrada en `cx` que se parte en varias líneas si no cabe (fondo suave y borde del tono). Devuelve su alto. */
+export function note(S: Frame, str: string, cx: number, y: number, maxW: number, t: Tone, o: { a?: number; size?: number; dash?: boolean; base?: 'top' | 'middle' } = {}) {
+  const { d } = S, u = S.u, c = tone(S, t), size = fz(S, o.size ?? 13), padX = 8 * u, padY = 4 * u;
+  const lines = d.wrap(str, maxW - 2 * padX, { size, weight: 700 });
+  const w = Math.min(maxW, Math.max(...lines.map((l) => d.measure(l, { size, weight: 700 }))) + 2 * padX);
+  const lhh = size * u * 1.25, h = lines.length * lhh + 2 * padY;
+  const y0 = o.base === 'middle' ? y - h / 2 : y;
+  d.withAlpha(o.a ?? 1, () => {
+    d.rect(cx - w / 2, y0, w, h, { fill: t === 'ink' ? S.pal.surface : alpha(c.c, 0.13), stroke: t === 'ink' ? S.pal.lineStrong : c.c, lw: 1.3, r: 3, dash: o.dash ? [4, 3] : undefined });
+    lines.forEach((l, i) => d.text(l, cx, y0 + padY + i * lhh + lhh / 2, { size, weight: 700, color: t === 'ink' ? S.pal.ink : c.ink, align: 'center', base: 'middle' }));
+  });
+  return h;
+}
+/** Alto que ocuparía `note`. */
+export const noteH = (S: Frame, str: string, maxW: number, size = 13) => S.d.wrap(str, maxW - 16 * S.u, { size: fz(S, size), weight: 700 }).length * fz(S, size) * S.u * 1.25 + 8 * S.u;
+/** Escenarios holgados (escritorio, tableta en horizontal): todo un poco más grande; teléfono: tamaño base. */
+export const roomy = (S: Frame) => (S.portrait || S.H < 360 ? 1 : Math.min(1.25, Math.max(1, S.H / 420)));
+
+/** Ancho de una pastilla sin dibujarla. */
+export const chipW = (S: Frame, str: string, size = 12.5, weight = 700) => S.d.measure(str, { size: fz(S, size), weight }) + 14 * S.u;
+
+/** Un token: caja con su texto (se achica para caber). `ghost` = casilla vacía punteada; `hot` = resaltado. */
+export function tok(S: Frame, r: Rect, str: string, o: { t?: Tone; a?: number; hot?: number; ghost?: boolean; size?: number } = {}) {
+  const { d, pal: p } = S, c = tone(S, o.t ?? 'lat'), hot = o.hot ?? 0;
+  d.withAlpha(o.a ?? 1, () => {
+    if (o.ghost) { d.rect(r.x, r.y, r.w, r.h, { stroke: p.lineStrong, lw: 1.3, r: 3, dash: [4, 3] }); if (str) fitText(S, str, r.x + r.w / 2, r.y + r.h / 2 + 0.5, r.w - 6 * S.u, { size: o.size ?? 14, weight: 700, color: p.mute, align: 'center', base: 'middle' }); return; }
+    d.rect(r.x, r.y, r.w, r.h, { fill: alpha(c.c, 0.14 + 0.3 * hot), stroke: c.c, lw: 1.4 + hot, r: 3 });
+    fitText(S, str, r.x + r.w / 2, r.y + r.h / 2 + 0.5, r.w - 8 * S.u, { size: o.size ?? 14, weight: 650, color: c.ink, align: 'center', base: 'middle' });
   });
 }
 
-/** Operador entre tarjetas (×, ÷, =). */
-export function op(S: Frame, x: number, y: number, ch: string, a = 1) {
-  S.d.text(ch, x, y, { size: FS(S, 17), weight: 700, font: 'mono', color: S.pal.mute, align: 'center', base: 'middle', a });
-}
-
-/** Marca ✓ (cabe, se cumple) o ✗ (no cabe): la forma acompaña al color. */
-export function mark(S: Frame, x: number, y: number, ok: boolean, o: { r?: number; a?: number } = {}) {
-  const { d } = S, r = (o.r ?? 7) * S.u, c = tone(S, ok ? 'dat' : 'err').c;
-  d.withAlpha(o.a ?? 1, () => {
-    if (ok) d.polyline([[x - r * 0.9, y + r * 0.05], [x - r * 0.25, y + r * 0.7], [x + r, y - r * 0.8]], c, 2.8);
-    else { d.line(x - r * 0.8, y - r * 0.8, x + r * 0.8, y + r * 0.8, c, 2.8); d.line(x - r * 0.8, y + r * 0.8, x + r * 0.8, y - r * 0.8, c, 2.8); }
-  });
-}
-
-/** Llave horizontal con rótulo (marca un tramo). `up` = la llave abre hacia arriba y el texto va debajo. */
-export function brace(S: Frame, x1: number, x2: number, y: number, label: string, t: Tone = 'ink', o: { up?: boolean; a?: number } = {}) {
-  const { d } = S, c = tone(S, t), h = 6 * S.u, s = o.up ? -1 : 1;
-  d.withAlpha(o.a ?? 1, () => {
-    d.polyline([[x1, y - s * h], [x1, y], [x2, y], [x2, y - s * h]], c.c, 1.6);
-    S.d.text(label, (x1 + x2) / 2, y + s * 4 * S.u, { size: FS(S, 12), weight: 700, color: c.ink, align: 'center', base: o.up ? 'bottom' : 'top', halo: S.pal.stage, haloW: 4 });
-  });
-}
-
-/** Barra horizontal de una sola cifra: fondo + relleno (0..1). */
-export function hbar(S: Frame, r: Rect, frac: number, t: Tone, o: { a?: number; hatch?: boolean; stroke?: boolean } = {}) {
+/** Barra horizontal: fondo + relleno (0..1). */
+export function hbar(S: Frame, r: Rect, frac: number, t: Tone, o: { a?: number; dash?: boolean; min?: number } = {}) {
   const { d, pal: p } = S, c = tone(S, t);
   d.withAlpha(o.a ?? 1, () => {
     d.rect(r.x, r.y, r.w, r.h, { fill: p.surface2 });
-    const w = Math.max(frac > 0 ? 2 : 0, r.w * clamp(frac));
-    if (o.hatch) { d.rect(r.x, r.y, w, r.h, { fill: alpha(c.c, 0.18) }); d.rect(r.x, r.y, w, r.h, { stroke: c.c, lw: 1.4, dash: [4, 3] }); }
-    else d.rect(r.x, r.y, w, r.h, { fill: c.c });
-    if (o.stroke) d.rect(r.x, r.y, r.w, r.h, { stroke: p.lineStrong, lw: 1 });
+    const w = Math.max(frac > 0 ? (o.min ?? 2) : 0, r.w * clamp(frac));
+    d.rect(r.x, r.y, w, r.h, { fill: alpha(c.c, 0.85) });
+    if (o.dash) d.rect(r.x, r.y, r.w, r.h, { stroke: p.lineStrong, lw: 1, dash: [4, 3] });
   });
 }
 
-/** Rectángulo intermedio entre dos (para que una pieza se desplace al cambiar de segmento). */
-export const lerpRect = (a: Rect, b: Rect, t: number): Rect => ({ x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), w: lerp(a.w, b.w, t), h: lerp(a.h, b.h, t) });
-
-/** Aparición de una escena entre su primer segmento y el primero de la siguiente (fundido corto). */
-export function fadeFor(S: Frame, from: string, to?: string, dur = 0.5): number {
-  if (!S.on(from)) return 0;
-  const a = S.at(from, 0, dur, 'out'), b = to ? S.at(to, 0, dur * 0.8, 'out') : 0;
-  return a * (1 - b);
+/** Rayado diagonal dentro de un rectángulo (trabajo repetido, espera). */
+export function hatch(S: Frame, r: Rect, color: string, step = 5, lw = 1.2) {
+  S.d.clip(r.x, r.y, r.w, r.h, () => {
+    const s = step * Math.max(0.8, S.u);
+    for (let x = r.x - r.h; x < r.x + r.w; x += s) S.d.line(x, r.y + r.h, x + r.h, r.y, color, lw);
+  });
 }
 
-/** Dibuja `fn` con la opacidad dada, solo si es visible. */
-export const show = (S: Frame, a: number, fn: () => void) => { if (a > 0.004) S.d.withAlpha(a, fn); };
+/** Rótulo de procedencia al pie (pequeño, gris, se achica; se omite si no cabe ni a 12 px). */
+export function provenance(S: Frame, str: string, a = 1) {
+  const x = 16 * S.u, w = S.W - 32 * S.u, y = S.H - 4 * S.u;
+  if (!fits(S, str, w, { weight: 600 })) return;
+  fitText(S, str, x, y, w, { size: 12, weight: 600, color: S.pal.mute, base: 'bottom', a: a * 0.95, italic: true });
+}
 
-/** Palabras de ejemplo para los diagramas de tokens (palabras en lugar de piezas: simplificación rotulada). */
+/** Flecha curva (cuadrática) con punta. */
+export function curveArrow(S: Frame, x1: number, y1: number, cx: number, cy: number, x2: number, y2: number, color: string, lw = 1.8, prog = 1) {
+  const n = 24, pts: [number, number][] = [];
+  const k = clamp(prog);
+  for (let i = 0; i <= n * k; i++) { const t = i / n; pts.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2]); }
+  if (pts.length < 2) return;
+  S.d.polyline(pts, color, lw);
+  if (k > 0.97) { const a = pts[pts.length - 2], b = pts[pts.length - 1]; S.d.arrow(a[0], a[1], b[0], b[1], color, lw, 7 * Math.max(0.8, S.u)); }
+}
+
+// ── números ─────────────────────────────────────────────────────────────────────────────────────────────────────
+/** Número con `n` cifras significativas, sin ceros finales tras el punto. */
+export function sig(S: Frame, x: number, n = 3) {
+  if (x === 0) return '0';
+  const e = Math.floor(Math.log10(Math.abs(x))), d = Math.max(0, n - 1 - e);
+  const r = Math.round(x * 10 ** d) / 10 ** d;
+  const s = S.n(r, d);
+  return d > 0 ? s.replace(/\.?0+$/, '') : s;
+}
+/** Bytes → «16 GB», «8.4 GB», «1.05 GB». */
+export const gb = (S: Frame, bytes: number, n = 3) => `${sig(S, bytes / 1e9, n)} GB`;
+/** Entero con separador de miles. */
+export const int = (S: Frame, x: number) => S.n(Math.round(x), 0);
+/** Dólares: «US$ 0.218» / «$0.218». */
+export function usd(S: Frame, x: number, digits?: number) {
+  const d = digits ?? (x >= 1 ? 2 : x >= 0.1 ? 2 : x >= 0.01 ? 3 : 4);
+  const v = S.n(x, d);
+  return S.lang === 'es' ? `US$ ${v}` : `$${v}`;
+}
+/** Segundos → «84 ms», «1.5 s», «20 s». */
+export function secs(S: Frame, s: number) {
+  if (s < 1) return `${sig(S, s * 1000, 2)} ms`;
+  return `${sig(S, s, s < 10 ? 2 : 2)} s`;
+}
+/** Formato de los controles (sin Frame): miles con espacio fino en español, coma en inglés. */
+export const fmtInt = (v: number, l: 'es' | 'en') => { const s = Math.round(v).toLocaleString('en-US'); return l === 'es' ? s.replace(/,/g, ' ') : s; };
+
+// ── el ejemplo del chat ─────────────────────────────────────────────────────────────────────────────────────────
 export const WORDS = {
-  es: {
-    prompt: ['Resume', 'este', 'contrato', 'en', 'tres', 'puntos', 'breves', ',', 'por', 'favor'],
-    reply: ['El', 'plazo', 'es', 'de', 'doce', 'meses', ',', 'se', 'paga', 'cada', 'mes', 'y', 'se', 'renueva', 'solo', '.'],
-  },
-  en: {
-    prompt: ['Please', 'summarize', 'this', 'contract', 'for', 'me', 'in', 'three', 'short', 'points'],
-    reply: ['The', 'term', 'is', 'twelve', 'months', ',', 'it', 'is', 'paid', 'every', 'month', 'and', 'renews', 'by', 'itself', '.'],
-  },
+  es: { msg: ['Resume', 'este', 'contrato', 'en', 'tres', 'puntos'], ans: ['El', 'plazo', 'es', 'de', 'doce', 'meses'], full: 'Resume este contrato en tres puntos', reply: 'El plazo es de doce meses, se paga cada mes y se renueva solo.' },
+  en: { msg: ['Summarize', 'this', 'contract', 'in', 'three', 'points'], ans: ['The', 'term', 'is', 'twelve', 'months', 'long'], full: 'Summarize this contract in three points', reply: 'The term is twelve months long, it is paid monthly, and it renews on its own.' },
 } as const;
-
-/** Ejes de una gráfica con texto ≥ 12 px (usa las coordenadas del Plot del kit: X, Y, r, outer). */
-export function axes(S: Frame, pl: Plot, o: { xTicks: number[]; yTicks: number[]; xFmt: (v: number) => string; yFmt: (v: number) => string; xLabel?: string; yLabel?: string; grid?: boolean; a?: number }) {
-  const { d, pal: p } = S, u = S.u, r = pl.r, a = o.a ?? 1, ts = FS(S, 11.5);
-  d.withAlpha(a, () => {
-    if (o.grid) {
-      o.xTicks.forEach((v) => d.line(pl.X(v), r.y, pl.X(v), r.y + r.h, p.line, 1));
-      o.yTicks.forEach((v) => d.line(r.x, pl.Y(v), r.x + r.w, pl.Y(v), p.line, 1));
-    }
-    d.line(r.x, r.y + r.h, r.x + r.w, r.y + r.h, p.lineStrong, 1.5);
-    d.line(r.x, r.y, r.x, r.y + r.h, p.lineStrong, 1.5);
-    o.xTicks.forEach((v) => { const x = pl.X(v); d.line(x, r.y + r.h, x, r.y + r.h + 4 * u, p.lineStrong, 1.5); d.text(o.xFmt(v), x, r.y + r.h + 7 * u, { size: ts, font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
-    o.yTicks.forEach((v) => { const y = pl.Y(v); d.line(r.x - 4 * u, y, r.x, y, p.lineStrong, 1.5); d.text(o.yFmt(v), r.x - 7 * u, y, { size: ts, font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
-    if (o.xLabel) d.text(o.xLabel, r.x + r.w, r.y + r.h + 7 * u + ts * u + 5 * u, { size: FS(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
-    if (o.yLabel) d.text(o.yLabel, pl.outer.x + 2, r.y - 6 * u, { size: FS(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
-  });
-}
-
-/** Polilínea recortada al área de la gráfica. */
-export function line2(S: Frame, pl: Plot, pts: [number, number][], t: Tone, lw = 2.5, o: { dash?: number[]; a?: number } = {}) {
-  const c = tone(S, t).c;
-  S.d.clip(pl.r.x, pl.r.y - 2, pl.r.w, pl.r.h + 4, () => S.d.polyline(pts.map(([x, y]) => [pl.X(x), pl.Y(y)] as [number, number]), c, lw, { dash: o.dash, a: o.a }));
-}
-
-/** Ancho de un token del kit (sin dibujarlo): texto + 18 px de margen. */
-export const tokW = (S: Frame, text: string, size: number) => S.d.measure(text, { size, weight: 600 }) + 18 * S.u;

@@ -3,7 +3,7 @@
 Genera `pythia-data.ts`: mediciones REALES sobre puntos de control de Pythia-1.4B para la lección «Preentrenamiento».
 Nada de lo que contiene es ilustrativo: cada número y cada texto salen de ejecutar el modelo en cada punto de control.
 
-Reproducir (desde esta carpeta; requiere torch + transformers, una GPU de ≥ 6 GB y red la primera vez; ~5,7 GB por punto de control):
+Reproducir (desde esta carpeta; requiere torch + transformers, una GPU de ≥ 6 GB y red la primera vez; ~5.7 GB por punto de control):
     python build-pythia.py              # escribe pythia-data.ts junto a este archivo
 Entorno usado: torch 2.5.1 (CUDA 12.1), transformers 4.57.3, GPU RTX 3060 de 12 GB; los pesos (guardados en fp32) se cargan en fp16
 (Pythia se entrenó con precisión mixta fp16; el redondeo cambia las cifras de la tercera cifra decimal en adelante) y los logits

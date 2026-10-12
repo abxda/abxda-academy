@@ -1,0 +1,54 @@
+name: "Terminé una lección"
+description: "Al final de cada lección: qué tan clara fue y qué te llevas. Se abre desde el botón «Terminé la lección» del modo revisión."
+title: "[lección] Terminé la lección"
+labels: ["lección terminada"]
+body:
+  - type: input
+    id: leccion
+    attributes:
+      label: Lección
+      description: Viene llena desde el curso.
+    validations:
+      required: true
+  - type: dropdown
+    id: idioma
+    attributes:
+      label: Idioma
+      options: ["Español", "Inglés"]
+  - type: dropdown
+    id: dispositivo
+    attributes:
+      label: ¿Dónde la viste?
+      options: ["Computadora", "Teléfono", "Tableta"]
+  - type: dropdown
+    id: claridad
+    attributes:
+      label: ¿Qué tan clara te pareció?
+      options:
+        - "5 · La entendí completa"
+        - "4 · Casi toda"
+        - "3 · La mitad"
+        - "2 · Muy poco"
+        - "1 · No la entendí"
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Explica con tus palabras la idea principal
+      description: "Como se la contarías a un amigo, en dos o tres frases. No busques la respuesta: lo que importa es qué te quedó."
+    validations:
+      required: true
+  - type: textarea
+    id: dificil
+    attributes:
+      label: ¿Qué parte fue la más difícil?
+  - type: dropdown
+    id: interaccion
+    attributes:
+      label: ¿Usaste algún «Si quieres» (tu turno)?
+      options: ["Sí, y me ayudó", "Sí, pero no entendí qué hacer", "No, lo dejé pasar"]
+  - type: input
+    id: minutos
+    attributes:
+      label: ¿Cuántos minutos te tomó, más o menos?

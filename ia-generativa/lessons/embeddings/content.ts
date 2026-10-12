@@ -45,8 +45,8 @@ export default defineLesson({
     },
     {
       id: 'dense',
-      es: 'La salida son vectores cortos y densos. En vez de decenas de miles de números casi todos cero, unos cien, todos con valor, colocados para que lo parecido quede cerca.',
-      en: 'The way out is short, dense vectors. Instead of tens of thousands of numbers, nearly all zero, about a hundred, each with a value, placed so that similar things end up close.',
+      es: 'La solución son vectores cortos y densos: en vez de miles de números casi todos cero, unos cien, todos con valor, colocados para que lo parecido quede cerca.',
+      en: 'The way out is short, dense vectors: instead of thousands of numbers, nearly all zero, about a hundred, each with a value, placed so that similar things end up close.',
       pad: 0.3,
     },
     {
@@ -102,7 +102,7 @@ export default defineLesson({
     },
     {
       id: 'cos-real',
-      es: 'Con los vectores reales: «perro» y «gato» dan cero coma ochenta y ocho; «perro» y «pan», cero coma treinta. Cerca en los números es cerca en significado.',
+      es: 'Con los vectores reales: «perro» y «gato» dan cero punto ochenta y ocho; «perro» y «pan», cero punto treinta. Cerca en los números es cerca en significado.',
       en: 'With the real vectors: “dog” and “cat” score zero point eight eight; “dog” and “bread,” zero point three. Close in the numbers means close in meaning.',
       pad: 0.4,
     },
@@ -131,11 +131,11 @@ export default defineLesson({
     },
     {
       id: 'try1',
-      es: 'Tu turno: escribe una palabra y mira a sus vecinos más cercanos. Prueba con tres distintas, y busca una que te sorprenda.',
-      en: 'Your turn: type a word and see its nearest neighbors. Try three different ones, and look for one that surprises you.',
+      es: 'Aquí van los vecinos de otras palabras. Si quieres, escribe tú una palabra y busca una cuyos vecinos te sorprendan.',
+      en: 'Here are the neighbors of other words. If you like, type a word yourself and look for one whose neighbors surprise you.',
       gate: {
         id: 'knn',
-        prompt: { es: 'Escribe tres palabras distintas, o pulsa «Otra palabra», y mira a sus vecinos.', en: 'Type three different words, or press “Another word,” and look at their neighbors.' },
+        prompt: { es: 'escribe tres palabras distintas, o pulsa «Otra palabra», y mira a sus vecinos.', en: 'type three different words, or press “Another word,” and look at their neighbors.' },
       },
       pad: 0.4,
     },
@@ -173,11 +173,11 @@ export default defineLesson({
     },
     {
       id: 'try2',
-      es: 'Tu turno: escribe una operación como «rey - hombre + mujer» y apaga «excluir las palabras escritas» para ver cómo cambia la respuesta. Busca alguna que falle.',
-      en: 'Your turn: type an operation like “king - man + woman” and switch off “exclude the typed words” to see how the answer changes. Look for one that fails.',
+      es: 'Aquí van otras operaciones: capitales, familia, animales. Si quieres, escribe tú una, o apaga «excluir las palabras escritas» y mira cómo cambia la respuesta.',
+      en: 'Here are other operations: capitals, family, animals. If you like, type one yourself, or switch off “exclude the typed words” and watch the answer change.',
       gate: {
         id: 'arith',
-        prompt: { es: 'Prueba dos operaciones y alterna «excluir las palabras escritas» al menos una vez.', en: 'Try two operations and switch “exclude the typed words” at least once.' },
+        prompt: { es: 'prueba dos operaciones y alterna «excluir las palabras escritas» al menos una vez.', en: 'try two operations and switch “exclude the typed words” at least once.' },
       },
       pad: 0.4,
     },
@@ -233,11 +233,11 @@ export default defineLesson({
     },
     {
       id: 'try3',
-      es: 'Tu turno: escribe una pregunta propia y compara los tres métodos. Busca una donde la búsqueda por palabras se quede en cero.',
-      en: 'Your turn: type a question of your own and compare the three methods. Look for one where the word search comes up empty.',
+      es: 'Aquí van otras preguntas de la lista. Si quieres, escribe una tuya y compara los tres métodos: busca una donde la búsqueda por palabras se quede en cero.',
+      en: 'Here are other questions from the list. If you like, type one of your own and compare the three methods: look for one where the word search comes up empty.',
       gate: {
         id: 'search',
-        prompt: { es: 'Prueba tres preguntas, tuyas o de la lista, y encuentra una donde la búsqueda por palabras no halle nada.', en: 'Try three questions, yours or from the list, and find one where the word search finds nothing.' },
+        prompt: { es: 'prueba tres preguntas, tuyas o de la lista, y encuentra una donde la búsqueda por palabras no halle nada.', en: 'try three questions, yours or from the list, and find one where the word search finds nothing.' },
       },
       pad: 0.4,
     },

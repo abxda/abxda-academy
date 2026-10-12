@@ -44,3 +44,25 @@ Se aplicaron tres candidatas de la reauditoría porque exageraban lo que la fuen
 - `lr-small`: «avanzas sin riesgo» → «no te pasas» (solo es cierto en la parábola; una tasa muy pequeña también puede atascar una red real).
 - `path2d`: el zigzag se liga a la forma alargada del valle de la figura, no a cualquier caso.
 
+
+## Reescritura para principiantes (2026-10-11)
+Revisión pedida por el autor («se usó el concepto "pendiente" de forma bastante arbitraria»; «llevar de la mano»). **Cambian la narración (de 19 a 42 segmentos), la escena y los números de la curva, así que el audio de esta lección se regenera.** Las 14 fuentes no cambian (solo se precisa el título de Goodfellow, cap. 4).
+
+### Qué cambió en lo factual
+- **Curva de un peso**: de $L(w)=\tfrac12(w-2.4)^2+0.2$ desde $w=-0.6$ a $L(w)=\tfrac12(w-3)^2+1$ desde $w=-1$, para que la narración use números sencillos: error 9 y pendiente −4 al empezar; mejor peso 3 con error 1; con tasa ½ los pesos son −1 → 1 → 2 → 2.5 → 2.75… (pasos 2, 1, 0.5, 0.25) y los errores 9 → 3 → 1.5 → 1.125… Puntos de muestra (tabla «peso → error»): 9, 5.5, 3, 1.5, 1, 1.5, 3, 5.5, 9 para los pesos −1 a 7. El código de «por dentro» da ahora `[-1.0, 1.0, 2.0, 2.5, 2.75, 2.875]` (Python 3, es y en).
+- **La pendiente desde cero**: se mide con un movimiento de una décima: en −1, el error pasa de 9 a 8.605 (−0.395), cociente −3.95; con 0.01, −3.995; en el límite, la derivada −4. En esta curva el cociente es exactamente $(w-3)+\varepsilon/2$. Tangente en −1: un paso a la derecha, baja 4; en el peso 6, pendiente +3; en el 3, pendiente 0. Respaldo de la idea (derivada = pendiente; escala un cambio pequeño de la entrada, $f(x+\varepsilon)\approx f(x)+\varepsilon f'(x)$; moverse en pasos pequeños con el signo contrario de la derivada es el descenso del gradiente, Cauchy 1847; figura 4.1: «for x < 0, f′(x) < 0, so we can decrease f by moving rightward»; el gradiente es el vector de todas las derivadas parciales, y la derivada parcial mide cómo cambia f cuando solo aumenta $x_i$): Goodfellow, Bengio y Courville 2016, §4.3, texto HTML de deeplearningbook.org/contents/numerical.html descargado y leído hoy.
+- **Tasas de la demostración**: de 0.06 / 1.7 / 2.08 / 0.7 a **0.05** (no cruza; tras 12 pasos sigue a 2.16 del fondo, que estaba a 4), **1.7** (cruza en los 8 pasos y se acerca), **2.05** (cruza y se aleja; el error pasa de 9 a 12.82 en 4 pasos; los cuatro saltos caben en la gráfica) y **0.8** (sin cruzar, a 0.032 del fondo en 3 pasos). La clasificación en cinco regímenes (LeCun et al. 1998, §5.1) no cambia.
+- **Turnos**: el turno 1 se completa con tres pasos de la persona (de −1 a 2.5); el turno 2 ya no usa «Correr»: cada vez que la persona cambia la tasa, la bolita vuelve a bajar 15 pasos desde −1, y se completa si llega a menos de 0.08 del fondo en ≤ 10 pasos sin cruzarlo: tasas de **0.33 a 1** con el deslizador (0.01 a 2.2, de 0.01 en 0.01). `verify-data.ts` comprueba que el veredicto de la escena (`verdictOf`) coincide con ese cálculo para las 220 posiciones.
+- **Dos pesos**: mismo cuenco (curvaturas 1 y 7, η = 0.2, 16 pasos). Nuevo en la escena y en «por dentro»: las dos pendientes en el punto de partida, −6.24 y +7.80 (coinciden con las numéricas), y el error 8.43.
+- Lo demás (GPT-3, Cauchy, Goh, Kaplan, Dodge, Dauphin, Llama 3, Adam, SGD, lente, paisaje con dos valles 0.38 y 1.35) queda igual y conserva la verificación anterior.
+
+### Comprobado
+- `npx tsx src/content/courses/ia-generativa/lessons/descenso-del-gradiente/verify-data.ts` → «todo coincide» (47 comprobaciones; compara las curvas recalculadas con `curves.ts`, que es lo que dibuja la escena, y las cifras de la narración y de «por dentro»).
+- `check-lesson` (0 errores; 1 aviso: ≈10 min frente a los 5 del currículo, que se sincroniza al generar el audio), `tsc --noEmit`, `check-layers`, `check:decimals` (0) y `test:gates` limpios.
+- Gates con el navegador (Playwright, es y en): tres pulsaciones de «Dar un paso» completan `steps`; la tasa 1.7 no completa `lr` y la 0.6 sí; recorrer los 42 segmentos en tres instantes cada uno no produce errores de consola.
+- `check:sources --online`: 14 fuentes con autores y enlace; el verificador marcó «sin respuesta» los DOI de Lemaréchal y de Bottou et al., pero ambos existen en Crossref (título, revista y año coinciden) y doi.org responde 302 hacia la editorial: es el bloqueo de esas editoriales a clientes automáticos, no un enlace roto.
+
+### Dudoso o pendiente
+- Ritmo: la escena se anima por fracciones de cada segmento y se revisó con la duración estimada (sin audio). Conviene revisar la sincronía fina con el audio nuevo (sobre todo `slope-tangent`, `slope-sign`, `first-step` y `gradient`).
+- La aclaración de «por dentro» de que en la lección 3 el peso era la pendiente de la recta del modelo depende de cómo quede la lección 3 reescrita.
+- Duración: el currículo dice 5 min y la lección dura ahora ≈ 10 (decisión del coordinador).

@@ -14,15 +14,15 @@ En latent.json las imágenes van ordenadas: primero las 1500 de entrenamiento y 
 MODELOS (todos con 32 neuronas ocultas y activación tanh; la salida del decodificador es un sigmoide):
   AE   codificador 64 → 32 → 2   ·  decodificador 2 → 32 → 64   ·  pérdida = error cuadrático de reconstrucción (suma de los 64 píxeles)
   VAE  codificador 64 → 32 → (μ, log σ²) de 2 números  ·  mismo decodificador
-       pérdida = Σ(x − x̂)² / (2·σ²obs) + KL( N(μ, σ²) ‖ N(0, I) ),  con σ²obs = 0,1 (verosimilitud gaussiana de varianza fija)
-  Entrenamiento: gradiente completo (lote = todo el conjunto), Adam, tasa 0,003, 1500 épocas.
+       pérdida = Σ(x − x̂)² / (2·σ²obs) + KL( N(μ, σ²) ‖ N(0, I) ),  con σ²obs = 0.1 (verosimilitud gaussiana de varianza fija)
+  Entrenamiento: gradiente completo (lote = todo el conjunto), Adam, tasa 0.003, 1500 épocas.
   AE de comparación con cuello de 1, 4, 8 y 16 números (misma arquitectura, otro tamaño del código).
 
 SEMILLAS. La arquitectura y los hiperparámetros se fijaron antes de mirar resultados. Para comparar «sortear al azar» en el AE y en el VAE se mide qué tan
 pareja sale la mezcla de dígitos (un clasificador de regresión logística etiqueta 3000 imágenes generadas; distancia de variación total TV a la mezcla
-uniforme, 0 = pareja). Con ocho semillas (0–7; SCAN=1 python train_toy.py reproduce el cuadro): AE sorteando en el recuadro de sus códigos, TV = 0,21–0,37
-(media 0,28); VAE sorteando de N(0, I), TV = 0,09–0,16 (media 0,12); en TODAS las semillas el VAE sale más parejo. La semilla 5 es la usada porque queda
-más cerca del promedio de las ocho (AE 0,26; VAE 0,11): ni la mejor ni la peor.
+uniforme, 0 = pareja). Con ocho semillas (0–7; SCAN=1 python train_toy.py reproduce el cuadro): AE sorteando en el recuadro de sus códigos, TV = 0.21–0.37
+(media 0.28); VAE sorteando de N(0, I), TV = 0.09–0.16 (media 0.12); en TODAS las semillas el VAE sale más parejo. La semilla 5 es la usada porque queda
+más cerca del promedio de las ocho (AE 0.26; VAE 0.11): ni la mejor ni la peor.
 
 SALIDA latent.json (imágenes como cadenas de un carácter por píxel, base 17: '0'–'9','a'–'g'):
   imgs, lab, ntrain, show (índices de las 8 imágenes reservadas que la escena reconstruye), ae, vae, clf (regresión logística para ETIQUETAR muestras),

@@ -1,5 +1,6 @@
 // Escena: Generalizar y evaluar. Ajuste polinómico real (sub/sobreajuste, regularización, parada temprana),
 // y un clasificador de juguete con umbral, matriz de confusión, costos y tasa base. Todo se calcula de verdad en math.ts.
+// La escena hace sola las demostraciones (grado, lambda, umbral) con S.drive; los «tu turno» son opcionales.
 import {
   Plot, alpha, badge, bars, box, clamp, hash, inset, lerp, neu, regions, rng, tone, type Frame, type Rect, type SceneFactory,
 } from '../../../../../theme/kit';
@@ -12,12 +13,14 @@ const COSTS: Record<string, [number, number]> = { equal: [1, 1], fn: [10, 1], fp
 
 interface St { degSeen: Record<number, boolean>; thrSeen: number }
 const stOf = (S: Frame): St => (S.st.s ??= { degSeen: {}, thrSeen: 0 });
+/** Progreso 0..1 entre las fracciones a y b del segmento k. */
+const fr = (S: Frame, k: string, a: number, b: number) => clamp(((S.t - S.start(k)) / Math.max(0.5, S.end(k) - S.start(k)) - a) / (b - a));
 
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'deg', kind: 'slider', label: { es: 'Grado del polinomio', en: 'Polynomial degree' }, min: 1, max: 10, step: 1, value: 1, from: 'try1', to: 'gap', fmt: (v) => String(v) },
-    { id: 'lam', kind: 'slider', label: { es: 'Regularización λ (escala logarítmica)', en: 'Regularization λ (log scale)' }, min: -6, max: 1, step: 0.25, value: -6, from: 'try2', to: 'early', fmt: (v) => (v <= -5.9 ? '0' : (10 ** v).toExponential(0).replace('e-', '·10⁻').replace('e+', '·10')) },
-    { id: 'thr', kind: 'slider', label: { es: 'Umbral de decisión', en: 'Decision threshold' }, min: -1, max: 5, step: 0.05, value: THR0, from: 'try3', to: 'base', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+    { id: 'deg', kind: 'slider', label: { es: 'Grado del polinomio', en: 'Polynomial degree' }, min: 1, max: 10, step: 1, value: 1, from: 'deg-demo', to: 'gap', fmt: (v) => String(v) },
+    { id: 'lam', kind: 'slider', label: { es: 'Regularización λ (escala logarítmica)', en: 'Regularization λ (log scale)' }, min: -6, max: 1, step: 0.25, value: -6, from: 'reg-demo', to: 'early', fmt: (v) => (v <= -5.9 ? '0' : (10 ** v).toExponential(0).replace('e-', '·10⁻').replace('e+', '·10')) },
+    { id: 'thr', kind: 'slider', label: { es: 'Umbral de decisión', en: 'Decision threshold' }, min: -1, max: 5, step: 0.05, value: THR0, from: 'thr-demo', to: 'base', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
     { id: 'costs', kind: 'choice', label: { es: 'Qué cuesta más', en: 'What costs more' }, value: 'equal', from: 'cost', to: 'base', options: [{ value: 'equal', label: { es: 'Igual', en: 'Equal' } }, { value: 'fn', label: { es: 'Perder un caso', en: 'Missing a case' } }, { value: 'fp', label: { es: 'Falsa alarma', en: 'False alarm' } }] },
   ],
 
@@ -25,17 +28,24 @@ const scene: SceneFactory = () => ({
 
   update(S) {
     const st = stOf(S);
-    if (S.between('try1', 'gap')) {
+    // demostraciones guiadas (mientras la persona no toque ese control)
+    if (S.between('deg-demo', 'gap')) S.drive('deg', S.on('try1') ? 4 : 1 + Math.min(9, Math.floor(fr(S, 'deg-demo', 0.08, 0.85) * 9.999)));
+    if (S.between('reg-demo', 'early')) S.drive('lam', S.on('try2') ? -2.5 : Math.round((-6 + 3.5 * fr(S, 'reg-demo', 0.15, 0.75)) * 4) / 4);
+    if (S.between('thr-demo', 'base')) {
+      const t = S.on('try3') ? 1.7 : fr(S, 'thr-demo', 0.12, 0.42) < 1 ? 1.7 - 1.1 * fr(S, 'thr-demo', 0.12, 0.42) : 0.6 + 2.4 * fr(S, 'thr-demo', 0.55, 0.85);
+      S.drive('thr', Math.round(t * 20) / 20);
+    }
+    if (S.between('try1', 'gap') && S.touched.has('deg')) {
       const d = S.p.deg ?? 1;
       st.degSeen[d] = true;
       const seen = Object.keys(st.degSeen).length, v = BY_DEGREE[d - 1].val;
       if (seen >= 4 && v <= BEST_VAL * 1.03) S.complete('degree');
     }
-    if (S.between('try2', 'early')) {
+    if (S.between('try2', 'early') && S.touched.has('lam')) {
       const w = fitPoly(10, lamOf(S.p.lam ?? -6));
       if (rmse(w, VAL) <= 0.262) S.complete('reg');
     }
-    if (S.between('try3', 'cost')) {
+    if (S.between('try3', 'cost') && S.touched.has('thr')) {
       const c = confusion(S.p.thr ?? THR0);
       if (c.recall >= 0.85 && c.precision >= 0.6) S.complete('threshold');
     }
@@ -92,12 +102,17 @@ function drawFit(S: Frame, reg: boolean) {
   // qué modelo se dibuja
   const ids = (k: string) => S.on(k);
   let w: number[] | null = null, wPrev: number[] | null = null, t = 1, label = '';
-  const narr = S.between('underfit', 'try1');
+  const narr = S.between('underfit', 'deg-demo');
   if (reg) { w = fitPoly(10, lamOf(S.p.lam ?? -6)); label = `${S.l('grado', 'degree')} 10 · λ = ${lamOf(S.p.lam ?? -6) === 0 ? '0' : (10 ** (S.p.lam ?? -6)).toExponential(0)}`; }
-  else if (S.between('try1', 'gap')) { const dd = S.p.deg ?? 1; w = BY_DEGREE[dd - 1].w; label = `${S.l('grado', 'degree')} ${dd}`; }
+  else if (S.between('deg-demo', 'gap')) { const dd = S.p.deg ?? 1; w = BY_DEGREE[dd - 1].w; label = `${S.l('grado', 'degree')} ${dd}`; }
   else if (narr) {
     if (ids('overfit')) { w = BY_DEGREE[9].w; wPrev = BY_DEGREE[3].w; t = S.at('overfit', 0.2, 1.6, 'io'); label = `${S.l('grado', 'degree')} 10`; }
-    else if (ids('good')) { w = BY_DEGREE[3].w; wPrev = BY_DEGREE[0].w; t = S.at('good', 0.2, 1.4, 'io'); label = `${S.l('grado', 'degree')} 4`; }
+    else if (ids('good')) { w = BY_DEGREE[3].w; wPrev = BY_DEGREE[2].w; t = S.at('good', 0.2, 1.4, 'io'); label = `${S.l('grado', 'degree')} 4`; }
+    else if (ids('flex')) {
+      // cada grado más permite una curva más: grado 1 → 2 → 3
+      const f = fr(S, 'flex', 0.35, 0.95) * 2, k = Math.min(1, Math.floor(f)), q = clamp((f - k) / 0.6);
+      wPrev = BY_DEGREE[k].w; w = BY_DEGREE[k + 1].w; t = q; label = `${S.l('grado', 'degree')} ${q > 0.5 ? k + 2 : k + 1}`;
+    }
     else { w = BY_DEGREE[0].w; t = S.at('underfit', 0.2, 1.2); label = `${S.l('grado', 'degree')} 1`; }
   }
   const showVal = S.on('val') || reg;
@@ -158,6 +173,8 @@ function drawSplit(S: Frame) {
   let x = x0;
   parts.forEach((pt, i) => {
     const w = (W * pt.k) / 100, a = S.reveal('split', 0.2 + i * 0.5, 0.5), t = tone(S, pt.t);
+    const once = i === 2 && S.is('test-once') ? fr(S, 'test-once', 0.1, 0.25) : 0;
+    if (once > 0.01) d.withAlpha(once, () => { d.rect(x - 4 * u, y0 - 4 * u, w + 5 * u, h + 8 * u, { stroke: tone(S, 'sig').c, lw: 3, r: 4 }); badge(S, S.l('se usa una sola vez', 'used only once'), x + w / 2, y0 - 22 * u, { tone: 'sig' }); });
     d.withAlpha(a, () => {
       d.rect(x, y0, w - 3, h, { fill: i === 2 ? p.surface2 : alpha(t.c, 0.2), stroke: t.c, lw: 2, r: 3 });
       d.text(`${pt.k} %`, x + w / 2, y0 + h / 2, { size: S.portrait && i > 0 ? 12 : 16, weight: 800, font: 'mono', color: t.ink, align: 'center', base: 'middle' });
@@ -215,7 +232,7 @@ function drawPeople(S: Frame, base: boolean) {
     const arr = [...sick]; arr.forEach((i, k) => { if (k < 19) { flagged.add(i); tp++; } });
     const rr = rng(5); while (fp < 99) { const i = Math.floor(rr() * n); if (!sick.has(i) && !flagged.has(i)) { flagged.add(i); fp++; } }
   }
-  const aSick = S.reveal(base ? 'base' : 'metric', 0.4, 0.8), aFlag = base ? S.at('base2', 0.4, 2.2) : 0;
+  const aSick = S.reveal(base ? 'base' : 'metric', 0.4, 0.8), aFlag = base && S.on('base3') ? fr(S, 'base3', 0.05, 0.6) : 0;
   const order = [...flagged].sort((a, b) => hash(a, 3) - hash(b, 3));
   for (let i = 0; i < n; i++) {
     const cx = x0 + (i % cols) * cs, cy = y0 + Math.floor(i / cols) * cs, isSick = sick.has(i);
@@ -232,20 +249,21 @@ function drawPeople(S: Frame, base: boolean) {
     if (S.on('trap')) d.withAlpha(S.reveal('trap', 0.3, 0.6), () => { badge(S, S.l('el clasificador siempre dice «sano»', 'the classifier always says “healthy”'), R.x + R.w / 2, ty + 34 * u, { tone: 'mute' }); lead(R.x + R.w * 0.15, ty + 60 * u, S.l('exactitud', 'accuracy'), '99 %', 'dat'); lead(R.x + R.w * 0.55, ty + 60 * u, S.l('enfermos detectados (recall)', 'sick detected (recall)'), '0 %', 'err'); });
   } else {
     d.withAlpha(S.reveal('base', 0.8, 0.5), () => d.text(S.l('2 000 personas · 20 enfermas (1 %)', '2,000 people · 20 sick (1%)'), R.x + R.w / 2, ty, { size: 14, weight: 700, color: p.ink2, align: 'center' }));
-    if (S.on('base2')) d.withAlpha(clamp(aFlag * 2), () => {
+    if (S.is('base2')) badge(S, S.l('la prueba acierta el 95 % con sanos y con enfermos', 'the test is right 95% of the time, healthy or sick'), R.x + R.w / 2, ty + 34 * u, { tone: 'ink', a: fr(S, 'base2', 0.35, 0.5) });
+    if (S.on('base3')) d.withAlpha(clamp(aFlag * 2), () => {
       const k = aFlag >= 0.99;
       lead(R.x + R.w * 0.04, ty + 30 * u, S.l('enfermos detectados', 'sick detected'), k ? '19 / 20' : String(Math.round(aFlag * 19)), 'err');
       lead(R.x + R.w * 0.36, ty + 30 * u, S.l('falsas alarmas', 'false alarms'), k ? '99' : String(Math.round(aFlag * 99)), 'w');
       lead(R.x + R.w * 0.66, ty + 30 * u, S.l('precisión', 'precision'), k ? '16 %' : '…', 'ink');
     });
-    neu(S, R.x + R.w - 70 * u, R.y + R.h - 58 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'think', a: S.at('base2', 2.4, 3.0) });
+    neu(S, R.x + R.w - 70 * u, R.y + R.h - 58 * u, { scale: Math.max(2, Math.round(2.4 * u)), mood: 'think', a: fr(S, 'base3', 0.65, 0.8) });
   }
 }
 
 // ═════════ distribución de puntuaciones, matriz de confusión, costos ═════════
 function drawConf(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = regions(S, S.portrait ? 0.62 : 0.6);
-  const fixed = S.between('confusion', 'try3');
+  const fixed = S.between('confusion', 'thr-demo');
   const t = fixed ? 1.7 : S.p.thr ?? THR0, c = confusion(t);
   const plot = new Plot(S, R.main, { xr: [-3, 6.5], yr: [0, 1.0], xLabel: S.l('puntuación del modelo', 'model score'), yLabel: S.l('personas', 'people'), xTicks: [-2, 0, 2, 4, 6], yTicks: [], pad: { l: 14, b: 32, t: 10, r: 10 } });
   plot.axes();
@@ -271,8 +289,9 @@ function drawConf(S: Frame) {
   // matriz de confusión
   const r = R.aside, cs = Math.min(S.portrait ? 62 * u : 84 * u, r.w / 2.6), lw = S.portrait ? 40 * u : 50 * u, mx = r.x + lw, my = r.y + 26 * u;
   const cells = [
-    { k: 'tp', v: c.tp, t: 'err' as const, es: 'VP', en: 'TP', i: 0, j: 0, at: 0.3 }, { k: 'fp', v: c.fp, t: 'w' as const, es: 'FP', en: 'FP', i: 0, j: 1, at: 1.0 },
-    { k: 'fn', v: c.fn, t: 'err' as const, es: 'FN', en: 'FN', i: 1, j: 0, at: 1.7 }, { k: 'tn', v: c.tn, t: 'dat' as const, es: 'VN', en: 'TN', i: 1, j: 1, at: 2.4 },
+    // filas = lo real (arriba enfermos, abajo sanos); columnas = lo que marcó el modelo (+ a la izquierda, − a la derecha)
+    { k: 'tp', v: c.tp, t: 'err' as const, es: 'VP', en: 'TP', i: 0, j: 0, at: 0.3 }, { k: 'fn', v: c.fn, t: 'err' as const, es: 'FN', en: 'FN', i: 0, j: 1, at: 1.0 },
+    { k: 'fp', v: c.fp, t: 'w' as const, es: 'FP', en: 'FP', i: 1, j: 0, at: 1.7 }, { k: 'tn', v: c.tn, t: 'dat' as const, es: 'VN', en: 'TN', i: 1, j: 1, at: 2.4 },
   ];
   d.withAlpha(reveal, () => {
     d.text(S.l('otro ejemplo (simulado): 1 000 personas · 100 enfermas (10 %)', 'another example (simulated): 1,000 people · 100 sick (10%)'), r.x, r.y + 2 * u, { size: 11, weight: 600, color: p.mute, w: r.w });
@@ -280,8 +299,12 @@ function drawConf(S: Frame) {
     d.text(S.l('marcado −', 'flagged −'), mx + cs * 1.5, my - 10 * u, { size: 11, weight: 700, color: p.ink2, align: 'center' });
     d.text(S.l('real +', 'real +'), mx - 6 * u, my + cs * 0.5, { size: 11, weight: 700, color: p.ink2, align: 'right', base: 'middle' });
     d.text(S.l('real −', 'real −'), mx - 6 * u, my + cs * 1.5, { size: 11, weight: 700, color: p.ink2, align: 'right', base: 'middle' });
+    // las cuatro casillas, vacías, para que desde «confusion» se lea como tabla
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) d.rect(mx + j * cs, my + i * cs, cs - 3, cs - 3, { stroke: p.line, lw: 1.5 });
     cells.forEach((q) => {
-      const a = fixed && S.is('confusion') ? S.at('confusion', q.at, q.at + 0.6) : 1, tn = tone(S, q.t);
+      // «confusion»: la tabla vacía; «tp-fn»: la fila de los enfermos; «fp-tn»: la de los sanos
+      const row = q.k === 'tp' || q.k === 'fn' ? 'tp-fn' : 'fp-tn', at = q.k === 'tp' || q.k === 'fp' ? 0.12 : 0.5;
+      const a = fixed && !S.on(row) ? 0 : fixed && S.is(row) ? fr(S, row, at, at + 0.12) : 1, tn = tone(S, q.t);
       d.withAlpha(a, () => {
         d.rect(mx + q.j * cs, my + q.i * cs, cs - 3, cs - 3, { fill: tn.soft, stroke: tn.c, lw: 1.5 });
         d.text(String(Math.round(q.v)), mx + q.j * cs + (cs - 3) / 2, my + q.i * cs + (cs - 3) / 2 - 6 * u, { size: S.portrait ? 18 : 22, weight: 800, font: 'mono', color: tn.ink, align: 'center', base: 'middle' });
@@ -292,13 +315,8 @@ function drawConf(S: Frame) {
   // precisión, recall y costo: bajo la matriz (horizontal) o en una columna a su derecha (vertical)
   const col = (x: number, yy: number, l: string, v: string, sub: string, tn: 'sig' | 'err' | 'ink') => { d.text(l, x, yy, { size: 12, weight: 700, color: p.mute }); d.text(v, x, yy + 3 * u, { size: S.portrait ? 22 : 28, weight: 800, font: 'mono', color: tone(S, tn).ink, base: 'top' }); if (sub) d.text(sub, x, yy + (S.portrait ? 30 : 40) * u, { size: 11, font: 'mono', color: p.ink2 }); };
   const colX = S.portrait ? mx + 2 * cs + 16 * u : r.x, rowY = (k: number) => (S.portrait ? my + 4 * u + k * 48 * u : my + 2 * cs + 16 * u);
-  if (S.on('pr')) {
-    const a = S.reveal('pr', 0.3, 0.6);
-    d.withAlpha(a, () => {
-      col(colX, rowY(0), S.l('precisión', 'precision'), S.n(c.precision * 100, 0) + ' %', `${Math.round(c.tp)} / ${Math.round(c.tp + c.fp)}`, 'sig');
-      col(S.portrait ? colX : r.x + r.w / 2, rowY(1), S.l('recall', 'recall'), S.n(c.recall * 100, 0) + ' %', `${Math.round(c.tp)} / ${Math.round(c.tp + c.fn)}`, 'err');
-    });
-  }
+  if (S.on('precision')) d.withAlpha(S.reveal('precision', 0.3, 0.6), () => col(colX, rowY(0), S.l('precisión', 'precision'), S.n(c.precision * 100, 0) + ' %', `${Math.round(c.tp)} / ${Math.round(c.tp + c.fp)}`, 'sig'));
+  if (S.on('recall')) d.withAlpha(S.reveal('recall', 0.3, 0.6), () => col(S.portrait ? colX : r.x + r.w / 2, rowY(1), S.l('recall', 'recall'), S.n(c.recall * 100, 0) + ' %', `${Math.round(c.tp)} / ${Math.round(c.tp + c.fn)}`, 'err'));
   // costos
   if (S.on('cost')) {
     const [cFN, cFP] = COSTS[S.p.costs ?? 'equal'];

@@ -64,11 +64,11 @@ export default defineLesson({
     },
     {
       id: 'wiggle-cost',
-      es: 'Con 175 mil millones de pesos, como GPT-3, serían 175 mil millones de pases extra en cada paso de entrenamiento. Inviable.',
-      en: 'With 175 billion weights, like GPT-3, that would mean 175 billion extra passes at every training step. Not feasible.',
+      es: 'Con ciento setenta y cinco mil millones de pesos, como GPT-3, serían ciento setenta y cinco mil millones de pases extra en cada paso de entrenamiento. Imposible en la práctica.',
+      en: 'With one hundred seventy-five billion weights, like GPT-3, that would mean one hundred seventy-five billion extra passes at every training step. Impossible in practice.',
       tts: {
-        es: 'Con ciento setenta y cinco mil millones de pesos, como Ge pe te tres, serían ciento setenta y cinco mil millones de pases extra en cada paso de entrenamiento. Inviable.',
-        en: 'With one hundred seventy-five billion weights, like G P T three, that would mean one hundred seventy-five billion extra passes at every training step. Not feasible.',
+        es: 'Con ciento setenta y cinco mil millones de pesos, como Ge pe te tres, serían ciento setenta y cinco mil millones de pases extra en cada paso de entrenamiento. Imposible en la práctica.',
+        en: 'With one hundred seventy-five billion weights, like G P T three, that would mean one hundred seventy-five billion extra passes at every training step. Impossible in practice.',
       },
     },
     {
@@ -143,14 +143,20 @@ export default defineLesson({
       en: 'How to read a blame: if it is positive, raising that weight raises the error, so it should go down. If it is negative, it should go up.',
     },
     {
+      id: 'hand-demo',
+      es: 'Probemos con el peso cinco: su culpa es negativa, así que lo subimos un poco, y otra vez. La pérdida baja… y todas las culpas cambian, no solo la suya.',
+      en: 'Let’s try weight five: its blame is negative, so we raise it a little, and again. The loss drops… and all the blames change, not just its own.',
+      pad: 0.5,
+    },
+    {
       id: 'try1',
-      es: 'Tu turno: arrastra un peso, o elígelo y súbelo o bájalo. Mira cómo cambian todas las culpas, no solo la suya, e intenta bajar la pérdida guiándote por sus signos.',
-      en: 'Your turn: drag a weight, or pick one and raise or lower it. Watch how all the blames change, not just its own, and try to lower the loss by following their signs.',
+      es: 'Si quieres, sigue tú: arrastra un peso, o elígelo y súbelo o bájalo, guiándote por el signo de su culpa.',
+      en: 'If you like, carry on yourself: drag a weight, or pick one and raise or lower it, following the sign of its blame.',
       gate: {
         id: 'hand',
         prompt: {
-          es: 'Baja la pérdida a 0.10 o menos moviendo pesos: sube los de culpa negativa y baja los de culpa positiva.',
-          en: 'Bring the loss down to 0.10 or less by moving weights: raise those with negative blame, lower those with positive blame.',
+          es: 'baja la pérdida a 0.10 o menos: sube los pesos de culpa negativa y baja los de culpa positiva.',
+          en: 'bring the loss down to 0.10 or less: raise weights with negative blame, lower those with positive blame.',
         },
       },
       pad: 0.4,
@@ -180,12 +186,18 @@ export default defineLesson({
       pad: 0.3,
     },
     {
+      id: 'train-demo',
+      es: 'Ahora dejemos que la regla lo haga sola: paso tras paso, la pérdida sigue bajando y la predicción se acerca al objetivo.',
+      en: 'Now let the rule do it on its own: step after step, the loss keeps falling and the prediction gets closer to the target.',
+      pad: 0.6,
+    },
+    {
       id: 'try2',
-      es: 'Tu turno: da pasos de entrenamiento con el botón, cambia la tasa de aprendizaje si quieres, y mira bajar la pérdida.',
-      en: 'Your turn: take training steps with the button, change the learning rate if you like, and watch the loss go down.',
+      es: 'Si quieres, da tú más pasos con el botón, o cambia la tasa de aprendizaje y mira qué pasa.',
+      en: 'If you like, take more steps with the button, or change the learning rate and see what happens.',
       gate: {
         id: 'train',
-        prompt: { es: 'Da al menos cinco pasos de entrenamiento.', en: 'Take at least five training steps.' },
+        prompt: { es: 'da al menos cinco pasos de entrenamiento.', en: 'take at least five training steps.' },
       },
       pad: 0.4,
     },
@@ -198,21 +210,16 @@ export default defineLesson({
     },
     {
       id: 'history-a',
-      es: 'La idea tiene historia. En 1970 Linnainmaa, estudiando errores de redondeo, describió cómo recorrer un cálculo hacia atrás. Werbos lo desarrolló en su tesis de 1974 y en 1981 propuso aplicarlo a redes.',
-      en: 'The idea has a history. In 1970 Linnainmaa, studying rounding errors, described how to run a computation backward. Werbos developed it in his 1974 thesis and in 1981 proposed applying it to networks.',
-      tts: {
-        es: 'La idea tiene historia. En mil novecientos setenta Linnainmaa, estudiando errores de redondeo, describió cómo recorrer un cálculo hacia atrás. Werbos lo desarrolló en su tesis de mil novecientos setenta y cuatro y, en mil novecientos ochenta y uno, propuso aplicarlo a redes.',
-        en: 'The idea has a history. In nineteen seventy Linnainmaa, studying rounding errors, described how to run a computation backward. Werbos developed it in his nineteen seventy-four thesis and in nineteen eighty-one proposed applying it to networks.',
-      },
+      es: 'La idea tiene historia: en los años setenta ya se sabía recorrer un cálculo hacia atrás, y a principios de los ochenta se propuso usarlo para entrenar redes.',
+      en: 'The idea has a history: by the nineteen-seventies people knew how to run a computation backward, and in the early eighties it was proposed for training networks.',
       pad: 0.3,
     },
     {
       id: 'history-b',
-      es: 'En 1986, Rumelhart, Hinton y Williams publicaron en Nature la versión que la hizo célebre: las capas ocultas aprenden representaciones internas útiles. También Parker y LeCun hallaron variantes por su cuenta.',
-      en: 'In 1986, Rumelhart, Hinton, and Williams published in Nature the version that made it famous: hidden layers learn useful internal representations. Parker and LeCun also found variants on their own.',
+      es: 'En mil novecientos ochenta y seis, Rumelhart, Hinton y Williams publicaron la versión que la hizo célebre: mostraron que las capas ocultas aprenden solas representaciones útiles.',
+      en: 'In nineteen eighty-six, Rumelhart, Hinton, and Williams published the version that made it famous: they showed that hidden layers learn useful representations on their own.',
       tts: {
-        es: 'En mil novecientos ochenta y seis, Rumelhart, Hinton y Williams publicaron en la revista Néichur la versión que la hizo célebre: las capas ocultas aprenden representaciones internas útiles. También Parker y Le Cun hallaron variantes por su cuenta.',
-        en: 'In nineteen eighty-six, Rumelhart, Hinton, and Williams published in Nature the version that made it famous: hidden layers learn useful internal representations. Parker and Le Cun also found variants on their own.',
+        es: 'En mil novecientos ochenta y seis, Rúmeljart, Hinton y Williams publicaron la versión que la hizo célebre: mostraron que las capas ocultas aprenden solas representaciones útiles.',
       },
       pad: 0.3,
     },

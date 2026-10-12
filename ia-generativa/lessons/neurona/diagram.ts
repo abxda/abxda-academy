@@ -190,7 +190,7 @@ export function drawDiagram(S: Frame, D: Rect, vin: { x1: number; x2: number }) 
     d.circle(O.x, O.y, G.or, { fill: alpha(sg.c, 0.12 + 0.8 * y), stroke: sg.c, lw: 2.5 });
     d.text(String(y), O.x, O.y, { size: fs(S, 22), weight: 800, font: 'mono', color: y ? p.stage : sg.ink, align: 'center', base: 'middle' });
     const verdict = y ? S.l('sospechoso', 'suspicious') : S.l('legítimo', 'legitimate');
-    const vA = S.on('try0') ? 1 : tr(tA, 0.84, 0.94);
+    const vA = S.on('activation-result') ? tr(tau(S, 'activation-result'), 0, 0.15) : 0;   // el resultado del escalón se dice en su propio paso
     if (port) {
       txt(S, S.l('salida y', 'output y'), O.x + G.or + 12 * u, O.y - 11 * u, { size: 13, weight: 700, color: p.mute, base: 'middle' });
       tag(S, verdict, O.x + G.or + 12 * u, O.y + 10 * u, { tone: y ? 'err' : 'dat', align: 'left', a: vA });

@@ -1,245 +1,372 @@
 import { defineLesson } from '../../../../../core/define';
+import type { Lang, Segment } from '../../../../../core/types';
+
+// Pronunciación para la voz sintética. Se aplica sobre el texto de cada segmento: el subtítulo conserva «GPT-3.5-Turbo»,
+// «Llama 3.1» o «KV», y la voz dice «ge pe te tres punto cinco turbo», «Lama tres punto uno» o «ka uve».
+// (Las cifras ya van con letras en la narración.)
+const SAY: Record<Lang, [RegExp, string][]> = {
+  es: [
+    [/GPT-3\.5-Turbo/g, 'ge pe te tres punto cinco turbo'], [/GPT-3/g, 'ge pe te tres'], [/OpenAI/g, 'Open ei ai'], [/Anthropic/g, 'Anzrópic'],
+    [/Llama 3\.1/g, 'Lama tres punto uno'], [/Gemini 1\.5/g, 'Yémini uno punto cinco'], [/\bClaude\b/g, 'Clod'], [/\bstateless\b/g, 'stéitles'],
+    [/system prompt/g, 'sístem prompt'], [/El gran Gatsby/g, 'El gran Gátsbi']
+  ],
+  en: [
+    [/GPT-3\.5-Turbo/g, 'G P T three point five Turbo'], [/GPT-3/g, 'G P T three'], [/OpenAI/g, 'Open A I'],
+    [/Llama 3\.1/g, 'Llama three point one'], [/Gemini 1\.5/g, 'Gemini one point five'],
+  ],
+};
+const say = (s: Segment): Segment => {
+  const tts: Partial<Record<Lang, string>> = {};
+  (['es', 'en'] as Lang[]).forEach((l) => { let t = s[l]; for (const [re, r] of SAY[l]) t = t.replace(re, r); if (t !== s[l]) tts[l] = t; });
+  return Object.keys(tts).length ? { ...s, tts: { ...tts, ...s.tts } } : s;
+};
 
 export default defineLesson({
   id: 'contexto-y-memoria',
 
   objectives: {
     es: [
-      'Explicar por qué un asistente parece recordar tu conversación aunque el modelo no guarde nada entre un turno y el siguiente.',
-      'Calcular cuánto texto se reenvía y se paga en una conversación de n turnos, y por qué ese total crece con el cuadrado.',
-      'Reconocer qué ocurre cuando el historial excede la ventana de contexto y por qué un dato en el medio se aprovecha peor.',
+      'Explicar por qué un chatbot parece recordar tu conversación aunque el modelo no guarde nada: la aplicación le reenvía todo en cada turno.',
+      'Reconocer qué es la ventana de contexto, qué ocupa lugar en ella y qué pasa con lo que ya no cabe.',
+      'Calcular cuántos tokens se procesan al reenviar una conversación, y explicar por qué lo que queda en medio de un contexto largo se aprovecha peor.',
     ],
     en: [
-      'Explain why an assistant seems to remember your conversation even though the model stores nothing from one turn to the next.',
-      'Calculate how much text is resent and paid for in an n-turn conversation, and why that total grows with the square.',
-      'Recognize what happens when the history exceeds the context window and why a fact in the middle is used less well.',
+      'Explain why a chatbot seems to remember your conversation even though the model stores nothing: the app resends everything on every turn.',
+      'Recognize what the context window is, what takes up room in it, and what happens to whatever no longer fits.',
+      'Calculate how many tokens are processed when a conversation is resent, and explain why what sits in the middle of a long context is used less well.',
     ],
   },
 
-  segments: [
+  segments: ([
+    // ── 1 · parece memoria ──
     {
       id: 'hook',
-      es: 'Le dices tu nombre a un chatbot y le pides una idea. La conversación fluye, como con alguien que escucha.',
-      en: 'You tell a chatbot your name and ask it for an idea. The conversation flows, like talking to someone who listens.',
+      es: 'Le escribes a un chatbot: «me llamo Ana y trabajo en logística». Te saluda por tu nombre y platican un rato sobre envíos.',
+      en: 'You write to a chatbot: “my name is Ana and I work in logistics.” It greets you by name, and you chat for a while about shipping.',
+      pad: 0.4,
     },
     {
       id: 'seems',
-      es: 'Y entonces preguntas cómo te llamas, y lo sabe. Parece memoria, como la de una persona. Veamos qué ocurre de verdad.',
-      en: 'Then you ask what your name is, and it knows. It looks like memory, the kind a person has. Let’s see what really happens.',
+      es: 'Luego preguntas: «¿cómo me llamo?». Y responde: «te llamas Ana». Parece que te recuerda, como una persona. ¿De verdad es así?',
+      en: 'Then you ask: “what is my name?” And it answers: “your name is Ana.” It seems to remember you, the way a person would. Is that really so?',
+      pad: 0.4,
+    },
+    // ── 2 · el modelo, con pesos fijos ──
+    {
+      id: 'model',
+      es: 'Empecemos por lo que ya sabes. El modelo recibe un texto, su contexto, y calcula qué token sigue, como en la lección diecinueve. Así escribe, token a token.',
+      en: 'Let’s start with what you already know. The model receives a text, its context, and works out which token comes next, as in lesson nineteen. That is how it writes, token by token.',
       pad: 0.3,
     },
     {
-      id: 'function',
-      es: 'Por dentro, el modelo es una función: entra texto y sale la probabilidad de la siguiente pieza. Sus pesos quedaron fijos al terminar el entrenamiento; nada de lo que escribes los cambia.',
-      en: 'Inside, the model is a function: text goes in, and the probability of the next piece comes out. Its weights froze when training ended; nothing you type changes them.',
-    },
-    {
-      id: 'stateless-q',
-      es: 'Entonces, ¿cómo sabe tu nombre? Porque en cada turno la aplicación manda toda la conversación, desde el primer mensaje, y el modelo la lee otra vez como si fuera nueva.',
-      en: 'So how does it know your name? Because at every turn the app sends the entire conversation, from the first message, and the model reads it again as if it were new.',
-      pad: 0.5,
-    },
-    {
-      id: 'stateless-def',
-      es: 'A eso se le llama no tener estado: cada llamada empieza de cero. El historial vive en la aplicación, que lo guarda y lo reenvía. El modelo no guarda nada.',
-      en: 'That is called being stateless: every call starts from zero. The history lives in the app, which stores it and resends it. The model stores nothing.',
-      note: { es: 'Sin estado: cada llamada empieza de cero; la app reenvía el historial.', en: 'Stateless: every call starts from zero; the app resends the history.' },
+      id: 'frozen',
+      es: 'Sus pesos, los números que aprendió al entrenar, quedaron fijos. Mientras conversas no cambia ninguno: el modelo no aprende de ti.',
+      en: 'Its weights, the numbers it learned in training, are now fixed. While you chat, not one of them changes: the model does not learn from you.',
+      note: { es: 'Pesos fijos: el modelo no aprende mientras conversas.', en: 'Fixed weights: the model does not learn while you chat.' },
       pad: 0.3,
     },
     {
-      id: 'try-state',
-      es: 'Tu turno: envía la pregunta «¿cómo me llamo?» con todo el historial y después sola. Antes de pulsar, adivina qué responderá cada vez.',
-      en: 'Your turn: send the question “what is my name?” with the whole history and then on its own. Before you press, guess what it will answer each time.',
-      gate: {
-        id: 'state',
-        prompt: { es: 'Envía la pregunta de las dos maneras y compara las respuestas.', en: 'Send the question both ways and compare the answers.' },
-      },
+      id: 'puzzle',
+      es: 'Entonces, si dentro del modelo nada cambia, ¿dónde quedó tu nombre? ¿Cómo lo supo tres mensajes después?',
+      en: 'So if nothing changes inside the model, where did your name go? How did it know it three messages later?',
+      pad: 0.4,
+    },
+    // ── 3 · la aplicación reenvía todo ──
+    {
+      id: 'app',
+      es: 'La clave está en una pieza intermedia: la aplicación, la página o app donde escribes. Ella guarda la conversación; el modelo no.',
+      en: 'The key is a piece in between: the application, the web page or app where you type. It keeps the conversation; the model does not.',
+      pad: 0.3,
+    },
+    {
+      id: 'turn1',
+      es: 'En el primer turno, la aplicación envía al modelo tu primer mensaje. El modelo responde, y la aplicación guarda los dos en su lista.',
+      en: 'On the first turn, the app sends your first message to the model. The model replies, and the app saves both on its list.',
       pad: 0.4,
     },
     {
-      id: 'state-after',
-      es: 'Sola, la pregunta no le dice nada. No es que el modelo lo haya olvidado: nunca lo vio. Lo que no está en el contexto no existe para él.',
-      en: 'On its own, the question tells it nothing. The model didn’t forget: it never saw it. What isn’t in the context doesn’t exist for it.',
-      note: { es: 'Lo que no está en el contexto no existe para el modelo.', en: 'What isn’t in the context doesn’t exist for the model.' },
+      id: 'turn2',
+      es: 'En el segundo turno no envía solo tu mensaje nuevo. Envía la conversación entera, desde el principio, con tu mensaje nuevo al final.',
+      en: 'On the second turn, it does not send just your new message. It sends the entire conversation, from the beginning, with your new message at the end.',
+      pad: 0.4,
+    },
+    {
+      id: 'turn3',
+      es: 'Y así en cada turno. Cuando preguntas tu nombre, el modelo vuelve a leer «me llamo Ana» en el primer mensaje. Por eso lo sabe.',
+      en: 'And so on, every turn. When you ask your name, the model reads “my name is Ana” again in the first message. That is how it knows.',
+      pad: 0.4,
+    },
+    {
+      id: 'stateless',
+      es: 'A esto se le llama no tener estado, en inglés stateless: cada llamada al modelo empieza de cero. La memoria de la conversación vive en la aplicación.',
+      en: 'This is called being stateless: every call to the model starts from scratch. The memory of the conversation lives in the app.',
+      note: { es: 'Sin estado: cada llamada empieza de cero; la aplicación reenvía toda la conversación.', en: 'Stateless: every call starts from scratch; the app resends the whole conversation.' },
+      pad: 0.3,
+    },
+    {
+      id: 'demo-send',
+      es: 'Míralo en acción. Con todo el historial, responde «te llamas Ana». Si la aplicación enviara solo la pregunta, el modelo no tendría de dónde sacarlo.',
+      en: 'See it in action. With the whole history, it answers “your name is Ana.” If the app sent only the question, the model would have nowhere to get it from.',
+      pad: 0.6,
+    },
+    {
+      id: 'try-send',
+      es: 'Si quieres, elige tú qué envía la aplicación y mira la respuesta. Las respuestas de esta escena son ilustrativas.',
+      en: 'If you like, choose what the app sends and see the answer. The answers in this scene are illustrative.',
+      gate: { id: 'send', prompt: { es: 'elige qué se envía y mira la respuesta.', en: 'choose what gets sent and see the answer.' } },
+      pad: 0.4,
+    },
+    {
+      id: 'not-exist',
+      es: 'El modelo no olvidó tu nombre: nunca lo tuvo guardado. Lo que no está en el texto que recibe no existe para él.',
+      en: 'The model did not forget your name: it never had it stored. Whatever is not in the text it receives does not exist for it.',
+      note: { es: 'Lo que no está en el contexto no existe para el modelo.', en: 'What is not in the context does not exist for the model.' },
+      pad: 0.4,
+    },
+    // ── 4 · el tren y la ventana ──
+    {
+      id: 'train',
+      es: 'Ahora dibujemos lo que se envía como un tren. Cada vagón es un mensaje, y su largo es su número de tokens, las piezas de texto de la lección veinte.',
+      en: 'Now let’s draw what gets sent as a train. Each car is a message, and its length is its number of tokens, the pieces of text from lesson twenty.',
+      pad: 0.4,
     },
     {
       id: 'window',
-      es: 'Imagina el contexto como un tren, con un vagón por mensaje. El modelo solo ve el tramo que cabe en su ventana, de largo fijo y medido en tokens: la ventana de contexto.',
-      en: 'Picture the context as a train, one wagon per message. The model only sees the stretch that fits in its window, of fixed length and measured in tokens: the context window.',
-      note: { es: 'Ventana de contexto: el máximo de tokens que el modelo lee a la vez.', en: 'Context window: the most tokens the model reads at once.' },
+      es: 'El modelo solo puede leer un tramo de largo fijo, medido en tokens. Ese tramo es su ventana de contexto: lo que cabe ahí es todo lo que ve.',
+      en: 'The model can only read a stretch of fixed length, measured in tokens. That stretch is its context window: whatever fits inside is all it sees.',
+      note: { es: 'Ventana de contexto: el máximo de tokens que el modelo lee de una vez.', en: 'Context window: the most tokens the model reads at once.' },
       pad: 0.4,
     },
     {
-      id: 'contents',
-      es: 'En la ventana caben juntas las instrucciones, el historial, tu pregunta y la respuesta que el modelo va escribiendo, token a token. Todo comparte el mismo presupuesto.',
-      en: 'The window holds the instructions, the history, your question, and the answer the model writes token by token, all together. It all shares one budget.',
+      id: 'ruler',
+      es: 'Aquí la ventana es de cuatrocientos tokens, un tamaño de juguete. La regla de abajo los cuenta: este tren ocupa doscientos treinta.',
+      en: 'Here the window holds four hundred tokens, a toy size. The ruler below counts them: this train takes up two hundred thirty.',
       pad: 0.4,
     },
     {
       id: 'system',
-      es: 'El primer vagón suele ser el prompt del sistema: instrucciones de quien creó la aplicación sobre rol, tono y reglas. Tú no lo ves, pero el modelo lo lee primero, en cada turno.',
-      en: 'The first wagon is usually the system prompt: instructions from whoever built the app about role, tone, and rules. You never see it, but the model reads it first, every turn.',
-      note: { es: 'Prompt del sistema: instrucciones fijas al inicio del contexto.', en: 'System prompt: fixed instructions at the start of the context.' },
+      es: 'Al frente suele ir un vagón que tú no ves: las instrucciones del sistema, en inglés system prompt. Las escribe quien hizo la aplicación: rol, tono y reglas.',
+      en: 'At the front there is usually a car you never see: the system prompt, the instructions written by whoever built the app. Role, tone, and rules.',
+      note: { es: 'Instrucciones del sistema (system prompt): reglas fijas al frente del contexto, que tú no ves.', en: 'System prompt: fixed instructions at the front of the context that you don’t see.' },
+      pad: 0.4,
+    },
+    {
+      id: 'system-every',
+      es: 'Ese vagón viaja en cada turno y ocupa lugar como cualquier mensaje: aquí, sesenta tokens. El tren ya suma doscientos noventa.',
+      en: 'That car rides along on every turn and takes up room like any message: here, sixty tokens. The train now adds up to two hundred ninety.',
       pad: 0.3,
     },
     {
-      id: 'sizes',
-      es: 'Esa ventana ha crecido muchísimo: de quinientos doce tokens en GPT-1 a más de un millón en Gemini 1.5. Cien mil tokens ya son una novela entera.',
-      en: 'That window has grown enormously: from five hundred twelve tokens in GPT-1 to over a million in Gemini 1.5. A hundred thousand tokens is already an entire novel.',
-      tts: {
-        es: 'Esa ventana ha crecido muchísimo: de quinientos doce tokens en ge pe te uno a más de un millón en Yémini uno punto cinco. Cien mil tokens ya son una novela entera.',
-        en: 'That window has grown enormously: from five hundred twelve tokens in G P T one to over a million in Jem-ih-nye one point five. A hundred thousand tokens is already an entire novel.',
-      },
-      pad: 1.2,
+      id: 'answer-space',
+      es: 'La respuesta también ocupa lugar: el modelo la escribe dentro de la misma ventana, token a token. Instrucciones, historial y respuesta comparten el espacio.',
+      en: 'The answer takes up room too: the model writes it inside the same window, token by token. Instructions, history, and answer share the space.',
+      pad: 0.4,
+    },
+    // ── 5 · cuando ya no cabe ──
+    {
+      id: 'fill',
+      es: 'Sigamos conversando. Cada mensaje nuevo engancha otro vagón al final, y el tren llega al borde: cuatrocientos de cuatrocientos.',
+      en: 'Let’s keep chatting. Each new message hooks another car onto the end, and the train reaches the edge: four hundred out of four hundred.',
+      pad: 0.5,
     },
     {
       id: 'overflow',
-      es: '¿Y si no cabe? La aplicación decide: recorta lo más viejo, lo resume o rechaza el mensaje. Si recorta, esos vagones salen de la ventana y dejan de existir para el modelo.',
-      en: 'What if it doesn’t fit? The app decides: it trims the oldest, summarizes it, or rejects the message. If it trims, those wagons leave the window and stop existing for the model.',
-      pad: 0.8,
+      es: '¿Y si llega otro mensaje y ya no cabe? Algunos chats sueltan lo más viejo: lo primero que entró es lo primero que sale. Las instrucciones se quedan.',
+      en: 'What if another message arrives and there is no room? Some chat apps drop the oldest part: first in, first out. The instructions stay.',
+      pad: 0.6,
     },
     {
-      id: 'try-train',
-      es: 'Tu turno: envía mensajes y pega documentos hasta que el primero salga de la ventana. Mira qué responde el modelo cuando le preguntas cómo te llamas.',
-      en: 'Your turn: send messages and paste documents until the first one leaves the window. See what the model answers when you ask it your name.',
-      gate: {
-        id: 'train',
-        prompt: { es: 'Llena la ventana hasta que se salga el mensaje con tu nombre.', en: 'Fill the window until the message with your name falls out.' },
-      },
-      pad: 0.4,
-    },
-    {
-      id: 'train-after',
-      es: 'Fíjate: la aplicación todavía guarda esos mensajes. Con una ventana mayor, los reenviaría y el modelo volvería a verlos. La memoria nunca estuvo en el modelo.',
-      en: 'Notice: the app still stores those messages. With a bigger window it would resend them and the model would see them again. The memory was never in the model.',
-    },
-    {
-      id: 'cost-q',
-      es: 'Hay otra consecuencia. Como se reenvía todo, cada turno procesa más texto que el anterior, y el proveedor cobra por cada token de entrada.',
-      en: 'There is another consequence. Since everything is resent, each turn processes more text than the last, and the provider charges for every input token.',
+      id: 'name-lost',
+      es: 'Y el mensaje nuevo era «¿cómo me llamo?». Pero el vagón con tu nombre ya se desenganchó: el modelo no puede saberlo.',
+      en: 'And the new message was “what is my name?” But the car with your name has already come unhooked: the model cannot know it.',
       pad: 0.5,
     },
     {
-      id: 'cost-sum',
-      es: 'Si cada turno añade ciento cincuenta tokens, veinte turnos no procesan tres mil: procesan casi treinta mil, casi diez veces más. El total crece con el cuadrado de los turnos.',
-      en: 'If each turn adds one hundred fifty tokens, twenty turns don’t process three thousand: they process almost thirty thousand, nearly ten times more. The total grows with the square of the turns.',
-      note: { es: 'El costo de una conversación crece con el cuadrado de sus turnos.', en: 'A conversation’s cost grows with the square of its turns.' },
-      pad: 0.8,
+      id: 'try-more',
+      es: 'Si quieres, envía tú más mensajes y mira qué vagones se sueltan. La aplicación aún los guarda, pero ya no se los envía al modelo.',
+      en: 'If you like, send more messages yourself and watch which cars come loose. The app still keeps them, but no longer sends them to the model.',
+      gate: { id: 'more', prompt: { es: 'envía otro mensaje y mira qué vagón se suelta.', en: 'send another message and watch which car comes loose.' } },
+      pad: 0.4,
+    },
+    // ── 6 · por qué hay un límite, y cuánto creció ──
+    {
+      id: 'why-limit',
+      es: '¿Por qué hay un límite? Recuerda la lección veintidós: cada lugar del texto lleva su lista de posición. GPT-3 aprendió listas para dos mil cuarenta y ocho lugares, y no tiene más.',
+      en: 'Why is there a limit? Remember lesson twenty-two: each place in the text carries its position list. GPT-3 learned lists for two thousand forty-eight places, and has no more.',
+      pad: 0.4,
     },
     {
-      id: 'cost-play',
-      es: 'Mueve los turnos y su tamaño, y mira el costo. Un prompt del sistema largo se paga en cada turno, y una caché del prefijo lo abarata mucho, pero no del todo.',
-      en: 'Move the turns and their size and watch the cost. A long system prompt is paid for on every turn, and prefix caching makes it much cheaper, but not free.',
-      pad: 0.8,
+      id: 'size-gpt3',
+      es: 'Aun así, las ventanas crecieron mucho. En dos mil veinte, la de GPT-3 era de dos mil cuarenta y ocho tokens: unas mil quinientas palabras en inglés.',
+      en: 'Even so, windows have grown a lot. In twenty twenty, GPT-3’s was two thousand forty-eight tokens: about fifteen hundred words of English.',
+      pad: 0.4,
     },
     {
-      id: 'litm-q',
-      es: 'Y que algo quepa en la ventana no garantiza que el modelo lo use bien. En 2023, un estudio escondió la respuesta en distintos lugares de una fila de veinte documentos.',
-      en: 'And fitting in the window doesn’t guarantee the model uses it well. In 2023, a study hid the answer at different places in a row of twenty documents.',
-      tts: {
-        es: 'Y que algo quepa en la ventana no garantiza que el modelo lo use bien. En dos mil veintitrés, un estudio escondió la respuesta en distintos lugares de una fila de veinte documentos.',
-        en: 'And fitting in the window doesn’t guarantee the model uses it well. In twenty twenty-three, a study hid the answer at different places in a row of twenty documents.',
-      },
-      pad: 1.0,
+      id: 'size-100k',
+      es: 'En dos mil veintitrés, Anthropic llevó la de Claude a cien mil tokens, unas setenta y cinco mil palabras. En su anuncio le cupo una novela entera: El gran Gatsby.',
+      en: 'In twenty twenty-three, Anthropic took Claude’s to one hundred thousand tokens, about seventy-five thousand words. In its announcement, a whole novel fit: The Great Gatsby.',
+      pad: 0.6,
     },
     {
-      id: 'litm-u',
-      es: 'El resultado tiene forma de U: acierta más con el dato al principio o al final, y menos en el medio. Con GPT-3.5-Turbo, de casi setenta y seis por ciento a casi cincuenta y cuatro.',
-      en: 'The result is U-shaped: it does better with the fact at the start or at the end, and worse in the middle. With GPT-3.5-Turbo, from nearly seventy-six percent to nearly fifty-four.',
-      tts: {
-        es: 'El resultado tiene forma de U: acierta más con el dato al principio o al final, y menos en el medio. Con ge pe te tres punto cinco turbo, de casi setenta y seis por ciento a casi cincuenta y cuatro.',
-        en: 'The result is U-shaped: it does better with the fact at the start or at the end, and worse in the middle. With G P T three point five Turbo, from nearly seventy-six percent to nearly fifty-four.',
-      },
-      note: { es: 'Perdido en el medio: lo que queda en la mitad del contexto se usa peor.', en: 'Lost in the middle: what sits in the middle of the context is used less well.' },
-      pad: 1.0,
+      id: 'size-1m',
+      es: 'En dos mil veinticuatro, Llama 3.1 llegó a ciento veintiocho mil, y Gemini 1.5 pasó del millón. A esta escala, la ventana de GPT-3 casi no se ve.',
+      en: 'In twenty twenty-four, Llama 3.1 reached one hundred twenty-eight thousand, and Gemini 1.5 passed a million. At this scale, GPT-3’s window is barely visible.',
+      pad: 0.6,
+    },
+    // ── 7 · el costo crece con cada turno ──
+    {
+      id: 'cost-setup',
+      es: 'Pero llenar una ventana grande tiene dos problemas. El primero es el costo. Supón que cada turno agrega cien tokens, entre tu mensaje y la respuesta.',
+      en: 'But filling a big window has two problems. The first is cost. Suppose each turn adds one hundred tokens, counting your message and the answer.',
+      pad: 0.3,
+    },
+    {
+      id: 'cost-bars',
+      es: 'En el turno uno, el modelo procesa cien tokens: la primera barra. En el dos, doscientos: los cien de antes otra vez, más los nuevos. En el tres, trescientos.',
+      en: 'On turn one, the model processes one hundred tokens: the first bar. On turn two, two hundred: the earlier hundred again, plus the new ones. On turn three, three hundred.',
+      pad: 0.5,
+    },
+    {
+      id: 'cost-total',
+      es: 'Tras diez turnos, la conversación tiene mil tokens de texto. Pero el modelo procesó cinco mil quinientos: la suma de todas las barras.',
+      en: 'After ten turns, the conversation holds one thousand tokens of text. But the model processed five thousand five hundred: the sum of all the bars.',
+      pad: 0.5,
+    },
+    {
+      id: 'cost-grow',
+      es: 'Y la diferencia crece rápido. Con veinte turnos son dos mil tokens de texto, pero veintiún mil procesados: más de diez veces.',
+      en: 'And the gap grows fast. With twenty turns, there are two thousand tokens of text, but twenty-one thousand processed: more than ten times as many.',
+      pad: 0.6,
+    },
+    {
+      id: 'cost-pay',
+      es: 'Y como viste en la lección veintiséis, se paga por cada token que entra. Cada turno cuesta más que el anterior, aunque tus mensajes sean igual de cortos.',
+      en: 'And as you saw in lesson twenty-six, you pay for every token that goes in. Each turn costs more than the one before, even if your messages are just as short.',
+      note: { es: 'Cada turno reenvía todo: cada uno cuesta más que el anterior.', en: 'Every turn resends everything: each one costs more than the last.' },
+      pad: 0.3,
+    },
+    // ── 8 · perdido en el medio ──
+    {
+      id: 'litm-setup',
+      es: 'El segundo problema es leer bien. En dos mil veintitrés, un estudio dio a varios modelos una pregunta y veinte documentos. Solo uno tenía la respuesta.',
+      en: 'The second problem is reading well. In twenty twenty-three, a study gave several models a question and twenty documents. Only one held the answer.',
+      pad: 0.4,
+    },
+    {
+      id: 'litm-move',
+      es: 'Luego movieron ese documento: lo pusieron primero, quinto, décimo, decimoquinto y vigésimo. En cada lugar midieron qué porcentaje de preguntas acertaba.',
+      en: 'Then they moved that document: they put it first, fifth, tenth, fifteenth, and twentieth. At each place they measured what percentage of questions it got right.',
+      pad: 0.6,
+    },
+    {
+      id: 'litm-x',
+      es: 'Veámoslo en una gráfica. La línea horizontal es el lugar del documento con la respuesta: el primero a la izquierda, el vigésimo a la derecha.',
+      en: 'Let’s see it on a chart. The horizontal line is the place of the document with the answer: first on the left, twentieth on the right.',
+      pad: 0.3,
+    },
+    {
+      id: 'litm-y',
+      es: 'La línea vertical es el porcentaje de preguntas acertadas: más arriba, más aciertos. Los datos son de GPT-3.5-Turbo, un modelo de OpenAI de esa época.',
+      en: 'The vertical line is the percentage of questions answered correctly: higher up, more correct. The data are for GPT-3.5-Turbo, an OpenAI model from that time.',
+      pad: 0.3,
+    },
+    {
+      id: 'litm-first',
+      es: 'Con la respuesta en el primer documento, acertó el setenta y seis por ciento de las preguntas.',
+      en: 'With the answer in the first document, it got seventy-six percent of the questions right.',
+      pad: 0.5,
+    },
+    {
+      id: 'litm-middle',
+      es: 'Con la respuesta en el décimo, a la mitad de la fila, bajó a cincuenta y cuatro por ciento.',
+      en: 'With the answer in the tenth, halfway down the row, it fell to fifty-four percent.',
+      pad: 0.6,
+    },
+    {
+      id: 'litm-last',
+      es: 'Y con la respuesta en el último, el vigésimo, volvió a subir: sesenta y tres por ciento. El quinto y el decimoquinto también quedan abajo.',
+      en: 'And with the answer in the last one, the twentieth, it rose again: sixty-three percent. The fifth and the fifteenth stay low as well.',
+      pad: 0.6,
+    },
+    {
+      id: 'litm-name',
+      es: 'La curva tiene forma de U: el modelo aprovecha mejor lo que está al principio o al final, y peor lo del medio. Se le llama «perdido en el medio».',
+      en: 'The curve is U-shaped: the model makes better use of what is at the start or the end, and worse of what is in the middle. This is called “lost in the middle.”',
+      note: { es: 'Perdido en el medio: lo que queda a la mitad de un contexto largo se aprovecha peor.', en: 'Lost in the middle: what sits halfway through a long context is used less well.' },
+      pad: 0.4,
     },
     {
       id: 'litm-closed',
-      es: 'Peor aún: con la respuesta en el medio, ese modelo acertó menos que sin recibir ningún documento, que daba cincuenta y seis por ciento. Tenerla a mano no bastó.',
-      en: 'Worse still: with the answer in the middle, that model did worse than with no documents at all, which scored fifty-six percent. Having it at hand wasn’t enough.',
-      pad: 0.6,
-    },
-    {
-      id: 'try-litm',
-      es: 'Tu turno: mueve el documento con la respuesta por la fila y cambia de modelo. Busca dónde falla más cada uno.',
-      en: 'Your turn: slide the document with the answer along the row and switch models. Find where each one fails most.',
-      gate: {
-        id: 'litm',
-        prompt: { es: 'Prueba una posición del medio y una de los extremos.', en: 'Try a position in the middle and one at the edges.' },
-      },
-      pad: 0.4,
-    },
-    {
-      id: 'litm-after',
-      es: 'No todos caen igual, pero en los cuatro el medio rinde menos que el principio. Que algo quepa en la ventana no significa que se aproveche.',
-      en: 'They don’t all fall equally, but in all four the middle does worse than the start. Fitting in the window doesn’t mean being used.',
-    },
-    {
-      id: 'litm-ruler',
-      es: 'Y no es solo de 2023: en 2024, la prueba RULER halló que solo la mitad de los modelos con treinta y dos mil tokens o más rendía bien a esa longitud. Conviene menos contexto, y más relevante.',
-      en: 'And it isn’t just 2023: in 2024, the RULER benchmark found that only half of the models with thirty-two thousand tokens or more did well at that length. Send less context, and more relevant.',
-      tts: {
-        es: 'Y no es solo de dos mil veintitrés: en dos mil veinticuatro, la prueba rúler halló que solo la mitad de los modelos con treinta y dos mil tokens o más rendía bien a esa longitud. Conviene menos contexto, y más relevante.',
-        en: 'And it isn’t just twenty twenty-three: in twenty twenty-four, the ruler benchmark found that only half of the models with thirty-two thousand tokens or more did well at that length. Send less context, and more relevant.',
-      },
-    },
-    {
-      id: 'memory-q',
-      es: 'Entonces, ¿qué son las funciones de memoria de los asistentes? No es el modelo recordando: es texto guardado fuera de él y vuelto a pegar en el contexto.',
-      en: 'So what are the memory features of assistants? It isn’t the model remembering: it is text stored outside it and pasted back into the context.',
-      note: { es: 'Memoria: texto guardado fuera del modelo y reinsertado en el contexto.', en: 'Memory: text stored outside the model and reinserted into the context.' },
+      es: 'Y algo sorprendente: sin ningún documento, solo con lo que aprendió al entrenar, acertaba el cincuenta y seis por ciento. Con la respuesta en el medio, le fue peor.',
+      en: 'And something surprising: with no documents at all, only with what it learned in training, it got fifty-six percent right. With the answer in the middle, it did worse.',
       pad: 0.5,
     },
     {
+      id: 'try-litm',
+      es: 'Si quieres, cambia tú de lugar el documento con la respuesta y mira cuánto acierta en cada uno.',
+      en: 'If you like, move the document with the answer yourself and see how much it gets right at each place.',
+      gate: { id: 'litm', prompt: { es: 'cambia de lugar el documento con la respuesta.', en: 'move the document with the answer.' } },
+      pad: 0.4,
+    },
+    {
+      id: 'litm-advice',
+      es: 'Son modelos de dos mil veintitrés y una sola prueba; cada modelo tiene su propia curva. La lección práctica: lo importante, al principio o al final, y sin relleno.',
+      en: 'These are twenty twenty-three models and a single test; each model has its own curve. The practical lesson: put what matters at the start or the end, and skip the filler.',
+      pad: 0.3,
+    },
+    // ── 9 · las «memorias» de los asistentes ──
+    {
+      id: 'memory-q',
+      es: 'Entonces, ¿qué son las funciones de «memoria» que ofrecen algunos asistentes? No es el modelo recordando: es texto guardado fuera de él, que se vuelve a enviar.',
+      en: 'So what are the “memory” features some assistants offer? It is not the model remembering: it is text stored outside it that gets sent again.',
+      note: { es: 'Memoria de un asistente: texto guardado fuera del modelo y vuelto a enviar en el contexto.', en: 'An assistant’s memory: text stored outside the model and sent again in the context.' },
+      pad: 0.4,
+    },
+    {
       id: 'memory-summary',
-      es: 'Una técnica es el resumen: al acercarse al tope, se resume lo más viejo y el resumen ocupa su lugar. Cabe más conversación, pero se pierden detalles.',
-      en: 'One technique is summarizing: near the cap, the oldest part is summarized and the summary takes its place. More conversation fits, but details are lost.',
+      es: 'Una forma es el resumen: cuando el tren se acerca al borde, los vagones viejos se cambian por uno corto que los resume. Cabe más, pero se pierden detalles.',
+      en: 'One way is a summary: when the train nears the edge, the old cars are swapped for one short car that sums them up. More fits, but details get lost.',
       pad: 0.6,
     },
     {
-      id: 'memory-store',
-      es: 'Otra es el almacén externo: notas y documentos fuera de la ventana, de donde se trae solo lo relevante. Es la idea de MemGPT, inspirada en la jerarquía de memoria de un sistema operativo.',
-      en: 'Another is external storage: notes and documents outside the window, from which only what is relevant is fetched. It is the idea behind MemGPT, inspired by an operating system’s memory hierarchy.',
-      tts: {
-        es: 'Otra es el almacén externo: notas y documentos fuera de la ventana, de donde se trae solo lo relevante. Es la idea de mem ge pe te, inspirada en la jerarquía de memoria de un sistema operativo.',
-        en: 'Another is external storage: notes and documents outside the window, from which only what is relevant is fetched. It is the idea behind Mem G P T, inspired by an operating system’s memory hierarchy.',
-      },
+      id: 'memory-notes',
+      es: 'Otra es guardar notas aparte, como «se llama Ana y trabaja en logística», y engancharlas al tren de cada conversación nueva. Así el modelo vuelve a leerlas.',
+      en: 'Another is to keep notes on the side, like “her name is Ana and she works in logistics,” and hook them onto the train of each new conversation. So the model reads them again.',
       pad: 0.6,
     },
     {
-      id: 'memory-risk',
-      es: 'Cada vía tiene su costo: el resumen pierde detalle, una nota puede quedar equivocada u obsoleta, y lo que se envía o se guarda es información que sale de tu organización.',
-      en: 'Each route has a cost: a summary loses detail, a note can be wrong or outdated, and whatever is sent or stored is information that leaves your organization.',
-      pad: 0.6,
+      id: 'privacy',
+      es: 'Y recuerda: todo lo que va en el tren, documentos y notas incluidos, se envía al proveedor del modelo en cada turno. Piensa qué datos compartes.',
+      en: 'And remember: everything on the train, documents and notes included, is sent to the model’s provider on every turn. Think about what data you share.',
+      pad: 0.4,
     },
     {
       id: 'recap',
-      es: 'En resumen: el modelo no recuerda, lee. En cada turno recibe una ventana con instrucciones, historial y pregunta, y solo eso existe para él.',
-      en: 'In short: the model doesn’t remember, it reads. At every turn it receives a window with instructions, history, and question, and only that exists for it.',
-      note: { es: 'El modelo no recuerda: en cada turno lee su ventana.', en: 'The model doesn’t remember: at every turn it reads its window.' },
+      es: 'En resumen: el modelo no recuerda, lee. En cada turno recibe un tren de tokens que cabe en su ventana, y solo eso existe para él.',
+      en: 'In short: the model does not remember, it reads. On every turn it receives a train of tokens that fits in its window, and only that exists for it.',
       pad: 0.4,
     },
     {
       id: 'bridge',
-      es: 'Pero ¿y si lo que necesita saber es tuyo, como tus contratos o tus políticas, y no cabe? ¿Cómo darle conocimiento propio sin reentrenarlo? Esa es la siguiente lección: RAG.',
-      en: 'But what if what it needs to know is yours, like your contracts or your policies, and doesn’t fit? How do you give it your own knowledge without retraining it? That is the next lesson: RAG.',
+      es: 'Pero ¿y si lo que necesita saber son tus documentos, miles de páginas que no caben? ¿Cómo darle conocimiento propio sin reentrenarlo? Es la siguiente lección: RAG.',
+      en: 'But what if what it needs to know is your documents, thousands of pages that don’t fit? How do you give it your own knowledge without retraining it? That is the next lesson: RAG.',
     },
-  ],
+  ] as Segment[]).map(say),
 
   keyIdeas: {
     es: [
-      'El modelo no tiene estado: cada llamada empieza de cero y la aplicación reenvía el historial completo en cada turno.',
-      'Sus pesos están congelados: no aprende de tu conversación. Lo que parece aprendizaje es texto dentro del contexto.',
-      'La ventana de contexto es el máximo de tokens que lee a la vez; instrucciones, historial, pregunta y respuesta comparten ese presupuesto.',
-      'Reenviar todo hace que el costo crezca con el cuadrado de los turnos, y que algo quepa no significa que se aproveche: el medio rinde peor.',
-      'Las funciones de memoria son texto guardado fuera del modelo (resúmenes, notas, almacenes) que se vuelve a pegar en el contexto.',
+      'El modelo no tiene estado: en cada turno la aplicación le reenvía toda la conversación. Sus pesos no cambian mientras conversas.',
+      'La ventana de contexto es el máximo de tokens que el modelo lee de una vez. Instrucciones del sistema, historial, tu mensaje y la respuesta comparten ese espacio.',
+      'Lo que no está en la ventana no existe para el modelo. Cuando ya no cabe, la aplicación decide: algunos chats sueltan lo más viejo; otros resumen o rechazan el mensaje.',
+      'Reenviar todo hace que cada turno cueste más que el anterior: diez turnos de cien tokens procesan cinco mil quinientos, no mil.',
+      'Que algo quepa no garantiza que se use bien: lo del medio se aprovecha peor. Las funciones de memoria son texto guardado fuera del modelo y vuelto a enviar.',
     ],
     en: [
-      'The model is stateless: every call starts from zero and the app resends the whole history on every turn.',
-      'Its weights are frozen: it does not learn from your conversation. What looks like learning is text inside the context.',
-      'The context window is the most tokens it reads at once; instructions, history, question, and answer share that budget.',
-      'Resending everything makes cost grow with the square of the turns, and fitting does not mean being used: the middle does worse.',
-      'Memory features are text stored outside the model (summaries, notes, stores) that gets pasted back into the context.',
+      'The model is stateless: on every turn the app resends it the whole conversation. Its weights do not change while you chat.',
+      'The context window is the most tokens the model reads at once. The system prompt, the history, your message, and the answer share that space.',
+      'Whatever is not in the window does not exist for the model. When it no longer fits, the app decides: some chats drop the oldest part; others summarize or reject the message.',
+      'Resending everything makes each turn cost more than the last: ten turns of one hundred tokens process five thousand five hundred, not one thousand.',
+      'Fitting does not guarantee being used well: what sits in the middle is used less well. Memory features are text stored outside the model and sent again.',
     ],
   },
 
@@ -249,15 +376,15 @@ export default defineLesson({
       en: 'The chatbot knows me and learns from me as we talk.',
     },
     right: {
-      es: 'En cada turno recibe el historial otra vez, como texto. Sus pesos no cambian: si ese texto no se reenvía o no cabe en la ventana, para el modelo no existe.',
-      en: 'At every turn it receives the history again, as text. Its weights do not change: if that text is not resent or does not fit in the window, it does not exist for the model.',
+      es: 'En cada turno recibe otra vez la conversación, como texto. Sus pesos no cambian: si ese texto no se reenvía o no cabe en la ventana, para el modelo no existe.',
+      en: 'On every turn it receives the conversation again, as text. Its weights do not change: if that text is not resent or does not fit in the window, it does not exist for the model.',
     },
   },
 
   deeper: {
     es: `## Sin estado: lo que realmente se envía
 
-En una API de chat, la llamada del turno $k$ lleva la lista completa de mensajes. El modelo devuelve solo el mensaje nuevo y la aplicación lo agrega a su lista antes del turno siguiente:
+En una API de chat, la llamada de cada turno lleva la lista completa de mensajes; el modelo devuelve solo el mensaje nuevo, y la aplicación lo agrega a su lista antes del turno siguiente:
 
 \`\`\`json
 {
@@ -270,37 +397,40 @@ En una API de chat, la llamada del turno $k$ lleva la lista completa de mensajes
 }
 \`\`\`
 
-La documentación de la API de mensajes de Anthropic lo dice así: «la API de mensajes es sin estado: siempre se envía a la API el historial completo de la conversación» (en el original: «stateless»). Las instrucciones del sistema van en un parámetro aparte. Algunas plataformas guardan el historial en sus servidores y lo reinsertan por ti; el modelo sigue sin estado: solo cambia quién guarda el historial.
+La documentación de Anthropic lo dice así: «la API de mensajes es sin estado: siempre se envía a la API el historial completo de la conversación» (en el original, *stateless*). Las instrucciones del sistema van en un campo aparte, \`system\`. Algunas plataformas guardan el historial en sus servidores y lo reinsertan por ti: el modelo sigue sin estado; solo cambia quién guarda el historial.
 
-La ventana incluye también la respuesta: según esa misma documentación, el contexto comprende «todo el texto al que el modelo puede referirse al generar una respuesta, incluida la propia respuesta». GPT-3 tenía $n_{\\text{ctx}}=2048$ tokens (Brown et al., 2020).
+## Qué cuenta en la ventana
 
-## Pesos congelados, ejemplos en el contexto
+Según esa misma documentación, la ventana es «todo el texto al que el modelo puede referirse al generar una respuesta, incluida la propia respuesta»: las instrucciones del sistema, cada mensaje (con documentos e imágenes), las definiciones de herramientas y lo que el modelo escribe en el turno. Si la entrada sola ya excede la ventana, la API devuelve un error («prompt is too long»); qué hacer entonces lo decide la aplicación. La documentación señala que interfaces de chat como claude.ai pueden manejar la ventana como una cola, «lo primero que entra es lo primero que sale», o resumir lo viejo («compactación»).
 
-El modelo puede seguir un patrón que le muestras dentro del contexto (aprendizaje en contexto): Brown et al. (2020) lo evalúan «sin actualizaciones de gradiente ni ajuste fino». Es temporal: cuando esos ejemplos salen de la ventana, el comportamiento desaparece. Cambiar los pesos exige entrenar (lecciones 4, 8 y 27). El informe técnico de GPT-4 lo resume así: tiene una ventana de contexto limitada y no aprende de la experiencia.
+¿Por qué hay un límite? GPT-1 usó «posiciones aprendidas» en lugar de las ondas del artículo original (lección 22), y GPT-3 conserva esa arquitectura con $n_{\\text{ctx}}=2048$ (Brown et al., 2020): aprendió una lista por lugar y no tiene listas para más. Los modelos actuales codifican la posición de otra forma, pero el largo útil sigue dependiendo de con qué largos se entrenaron, y servir contextos largos cuesta memoria: la caché KV crece con cada token (lección 26). En Llama 3 de 8 mil millones (32 bloques, 8 cabezas de clave-valor de 128 números, 2 bytes por número) son $2\\cdot 32\\cdot 8\\cdot 128\\cdot 2 = 131\\,072$ bytes por token: con 128 000 tokens, casi 17 GB.
 
-## Cuánto cuesta reenviar el historial
+| Modelo | Año | Ventana (tokens) | Fuente |
+|---|---|---|---|
+| GPT-1 | 2018 | 512 | Radford et al. |
+| GPT-2 | 2019 | 1 024 | Radford et al. |
+| GPT-3 | 2020 | 2 048 | Brown et al. |
+| Claude | 2023 | 100 000 (≈ 75 000 palabras) | Anthropic |
+| Llama 3.1 | 2024 | 128 000 | Llama Team |
+| Gemini 1.5 | 2024 | más de 1 millón (hasta 10 millones en sus pruebas) | Gemini Team |
 
-Sea $S$ el prompt del sistema, $m$ los tokens que añade cada turno (mensaje y respuesta) y $u$ el tamaño del mensaje nuevo. El turno $k$ envía
+## Pesos fijos, ejemplos en el contexto
 
-$$T_k = S + (k-1)\\,m + u$$
+El modelo puede seguir un patrón que le muestras en el contexto (aprendizaje en contexto): Brown et al. (2020) lo evalúan «sin actualizaciones de gradiente ni ajuste fino». Es temporal: cuando esos ejemplos salen de la ventana, el comportamiento desaparece. Cambiar los pesos exige entrenar (lecciones 4, 8 y 27). El informe técnico de GPT-4 lo resume: tiene «una ventana de contexto limitada y no aprende de la experiencia».
 
-y en $n$ turnos se procesan
+## Cuánto cuesta reenviar la conversación
 
-$$\\sum_{k=1}^{n} T_k = nS + m\\,\\frac{n(n-1)}{2} + nu .$$
+Sea $s$ el tamaño de las instrucciones del sistema y $m$ los tokens que agrega cada turno (tu mensaje $u$ más la respuesta $a$). En el turno $k$ el modelo procesa $s + k\\,m$ tokens (lee todo lo anterior y escribe lo nuevo); en $n$ turnos,
 
-Con $S=0$, $m=150$, $u=50$ y $n=20$ son $29\\,500$ tokens de entrada; si cada token se procesara una sola vez serían $S+nm = 3\\,000$. El término dominante es $m\\,n^2/2$: el costo crece con el cuadrado de los turnos.
+$$\\sum_{k=1}^{n} (s + k\\,m) = n\\,s + m\\,\\frac{n(n+1)}{2}.$$
 
-Con caché del prefijo (suponiendo que acierta en cada turno), el turno 1 escribe todo y los siguientes leen el prefijo y escriben solo lo nuevo. La documentación de Anthropic fija la lectura en $0.1\\times$ el precio base de entrada (con excepciones por modelo) y la escritura de 5 minutos en $1.25\\times$:
+Con $s=0$ y $m=100$: 5 500 tokens en 10 turnos y 21 000 en 20, frente a 1 000 y 2 000 de texto. El término $m\\,n^2/2$ domina: el total crece con el cuadrado de los turnos. Las instrucciones también se pagan en cada turno: con $s = 2\\,000$, $u = 50$, $a = 150$ y 20 turnos, la entrada suma $\\sum_k \\big(s + (k-1)m + u\\big) = 79\\,000$ tokens, y la mitad son las instrucciones repetidas.
 
-$$C = 1.25\\,T_1 + \\sum_{k=2}^{n}\\left(0.1\\,T_{k-1} + 1.25\\,m\\right)$$
-
-En el ejemplo, $C = 6\\,285$ tokens equivalentes, el 21 % de $29\\,500$. Con $S=2\\,000$, $m=500$, $u=50$ y $n=60$ el total es $1\\,008\\,000$ tokens: a un precio supuesto de 3 USD por millón, unos 3 USD por conversación sin caché y unos 0.41 USD con ella. No se incluyen los tokens de salida (se pagan aparte y crecen de forma lineal).
-
-Además de pagarlo, procesar un contexto de $n$ tokens exige cómputo de atención que crece como $n^2$ (Vaswani et al., 2017, tabla 1), y la caché KV crece de forma lineal con $n$ (lección 26).
+Por eso existe la **caché del prefijo**: el proveedor guarda el trabajo hecho sobre el inicio repetido (la caché KV de la lección 26) y cobra menos por releerlo. En la documentación de Anthropic, leer de la caché cuesta $0.1\\times$ el precio base de entrada (menos en algunos modelos) y escribir en ella, $1.25\\times$ (caché de 5 minutos). Si acierta en cada turno, el ejemplo anterior baja a unos 14 628 tokens equivalentes, el 19 %. La caché cambia lo que pagas, no lo que ocupa la ventana.
 
 ## La posición importa: «Perdido en el medio»
 
-Liu et al. (2023) dieron a cada modelo 20 documentos (unos 3 mil a 4 mil tokens), uno solo con la respuesta, y movieron su posición. Acierto (%), valores exactos de la tabla 6 del apéndice G; las dos últimas columnas son de la tabla 1:
+Liu et al. (2023) dieron a cada modelo 20 documentos (unos 4 000 tokens), uno solo con la respuesta, y cambiaron su lugar. Acierto (%), valores de la tabla 6 (apéndice G); las dos últimas columnas son de la tabla 1:
 
 | Modelo | 1.º | 5.º | 10.º | 15.º | 20.º | Sin documentos | Solo el correcto |
 |---|---|---|---|---|---|---|---|
@@ -309,50 +439,67 @@ Liu et al. (2023) dieron a cada modelo 20 documentos (unos 3 mil a 4 mil tokens)
 | LongChat-13B (16K) | 68.6 | 57.4 | 55.3 | 52.5 | 55.0 | 35.0 | 83.4 |
 | MPT-30B-Instruct | 53.7 | 51.8 | 52.2 | 52.7 | 56.3 | 31.5 | 81.9 |
 
-Son modelos de 2023 y una sola tarea: la forma exacta cambia con el modelo y la prueba, y los autores no encuentran que una ventana mayor, por sí sola, use mejor el contexto. RULER (Hsieh et al., 2024) amplía el hallazgo: entre los modelos que declaraban 32 mil tokens o más, solo la mitad mantenía un rendimiento satisfactorio a 32 mil.
+Son modelos de 2023 y una sola tarea: la forma exacta cambia con el modelo y con la prueba, y los autores no encuentran que una ventana mayor, por sí sola, use mejor el contexto. RULER (Hsieh et al., 2024) amplía el hallazgo: entre los modelos que declaraban 32 000 tokens o más, solo la mitad mantenía un rendimiento satisfactorio a esa longitud. La documentación de Anthropic lo llama *context rot*: al crecer el número de tokens, la exactitud y el recuerdo se degradan.
+
+## Memoria fuera del modelo
+
+Las funciones de «memoria» guardan texto fuera de la ventana y lo vuelven a meter: un resumen que reemplaza los turnos viejos (la compactación de Anthropic), o archivos de notas que el modelo lee y escribe entre conversaciones (la herramienta de memoria de Anthropic; MemGPT, de Packer et al., 2023, se inspira en la jerarquía de memoria de un sistema operativo). Lo guardado puede quedar equivocado u obsoleto, y es información que sale de tu organización.
 
 ## En código
 
 \`\`\`python
 def recortar(mensajes, limite, contar):
-    """Deja el mensaje de sistema y los mensajes más recientes que quepan."""
+    """Deja las instrucciones y los turnos más recientes que quepan: lo primero que entró sale primero."""
     sistema, resto = mensajes[0], mensajes[1:]
     usado, dentro = contar(sistema), []
-    for m in reversed(resto):                    # de lo más nuevo a lo más viejo
+    for m in reversed(resto):                       # de lo más nuevo a lo más viejo
         if usado + contar(m) > limite:
             break
         dentro.append(m)
         usado += contar(m)
     return [sistema] + dentro[::-1]
 
-def entrada_total(turnos, s, m, u):
-    """Tokens de entrada procesados en \`turnos\` turnos: el turno k envía s + (k-1)*m + u."""
-    return sum(s + (k - 1) * m + u for k in range(1, turnos + 1))
+def procesados(turnos, s, m):
+    """Tokens que procesa el modelo: en el turno k, las instrucciones s más k turnos de m tokens."""
+    return sum(s + k * m for k in range(1, turnos + 1))
 
-contar = lambda m: len(m["texto"].split())      # aproximación: una palabra ≈ un token
+def entrada_con_cache(turnos, s, u, a, lectura=0.1, escritura=1.25):
+    """Tokens de entrada equivalentes con caché del prefijo (supuesto: acierta en cada turno)."""
+    m = u + a
+    total = escritura * (s + u)                     # turno 1: se escribe todo
+    for k in range(2, turnos + 1):
+        prefijo = s + (k - 2) * m + u               # lo que se envió en el turno anterior
+        total += lectura * prefijo + escritura * m  # se lee el prefijo y se escribe lo nuevo
+    return total
+
+contar = lambda m: len(m["texto"].split())         # aproximación: una palabra ≈ un token
 historial = [
     {"rol": "sistema",   "texto": "Eres un asistente de logística."},
     {"rol": "usuario",   "texto": "Me llamo Ana y trabajo en logística."},
     {"rol": "asistente", "texto": "Mucho gusto, Ana. ¿En qué te ayudo?"},
-    {"rol": "usuario",   "texto": "Dame una idea para ahorrar en fletes."},
-    {"rol": "asistente", "texto": "Consolida envíos y renegocia rutas."},
+    {"rol": "usuario",   "texto": "Dame una idea para ahorrar en envíos."},
+    {"rol": "asistente", "texto": "Junta pedidos pequeños en un solo camión."},
     {"rol": "usuario",   "texto": "¿Cómo me llamo?"},
 ]
 dentro = recortar(historial, limite=25, contar=contar)
 print([m["rol"] for m in dentro])
 print("¿Sigue el nombre en la ventana?", any("Ana" in m["texto"] for m in dentro))
-print(entrada_total(turnos=20, s=0, m=150, u=50))
+print(procesados(10, s=0, m=100), procesados(20, s=0, m=100))
+sin = sum(2000 + (k - 1) * 200 + 50 for k in range(1, 21))
+con = entrada_con_cache(20, s=2000, u=50, a=150)
+print(sin, round(con), f"{con / sin:.0%}")
 # ['sistema', 'usuario', 'asistente', 'usuario']
 # ¿Sigue el nombre en la ventana? False
-# 29500
+# 5500 21000
+# 79000 14628 19%
 \`\`\`
 
 ## Lo que viene
 
-La caché KV y el costo por token de salida están en la lección 26. En la 31 (RAG) el almacén externo se vuelve un sistema completo: recuperar fragmentos relevantes y pegarlos en la ventana. En la 32 los agentes usan esa misma idea, con memoria en archivos, para trabajos que duran más que una ventana.`,
+En la lección 31 (RAG) el almacén externo se vuelve un sistema completo: buscar los fragmentos relevantes de tus documentos y ponerlos en la ventana. En la 32, los agentes usan esa misma idea, con memoria en archivos, para trabajos que duran más que una ventana.`,
     en: `## Stateless: what is really sent
 
-In a chat API, the call for turn $k$ carries the full list of messages. The model returns only the new message, and the app appends it to its list before the next turn:
+In a chat API, the call for each turn carries the full list of messages; the model returns only the new message, and the app appends it to its list before the next turn:
 
 \`\`\`json
 {
@@ -365,37 +512,40 @@ In a chat API, the call for turn $k$ carries the full list of messages. The mode
 }
 \`\`\`
 
-Anthropic's Messages API documentation puts it this way: “The Messages API is stateless, which means that you always send the full conversational history to the API.” The system instructions go in a separate parameter. Some platforms store the history on their servers and reinsert it for you; the model is still stateless: only who stores the history changes.
+Anthropic's documentation puts it this way: “The Messages API is stateless, which means that you always send the full conversational history to the API.” The system instructions go in a separate field, \`system\`. Some platforms store the history on their servers and reinsert it for you: the model is still stateless; only who stores the history changes.
 
-The window includes the answer too: per that same documentation, the context is “all the text a language model can reference when generating a response, including the response itself.” GPT-3 had $n_{\\text{ctx}}=2048$ tokens (Brown et al., 2020).
+## What counts in the window
 
-## Frozen weights, examples in the context
+Per that same documentation, the window is “all the text a language model can reference when generating a response, including the response itself”: the system prompt, every message (with documents and images), tool definitions, and what the model writes on the turn. If the input alone already exceeds the window, the API returns an error (“prompt is too long”); what to do then is up to the app. The documentation notes that chat interfaces such as claude.ai can manage the window on a rolling “first in, first out” basis, or summarize the old part (“compaction”).
 
-The model can follow a pattern you show it inside the context (in-context learning): Brown et al. (2020) evaluate it “without any gradient updates or fine-tuning.” It is temporary: when those examples leave the window, the behavior disappears. Changing the weights takes training (lessons 4, 8, and 27). The GPT-4 technical report puts it this way: it has a limited context window and does not learn from experience.
+Why is there a limit? GPT-1 used “learned position embeddings” instead of the original paper's waves (lesson 22), and GPT-3 keeps that architecture with $n_{\\text{ctx}}=2048$ (Brown et al., 2020): it learned one list per place and has no lists for more. Current models encode position differently, but the usable length still depends on the lengths they were trained on, and serving long contexts costs memory: the KV cache grows with every token (lesson 26). In Llama 3 8B (32 blocks, 8 key-value heads of 128 numbers, 2 bytes per number) that is $2\\cdot 32\\cdot 8\\cdot 128\\cdot 2 = 131{,}072$ bytes per token: at 128,000 tokens, almost 17 GB.
 
-## What resending the history costs
+| Model | Year | Window (tokens) | Source |
+|---|---|---|---|
+| GPT-1 | 2018 | 512 | Radford et al. |
+| GPT-2 | 2019 | 1,024 | Radford et al. |
+| GPT-3 | 2020 | 2,048 | Brown et al. |
+| Claude | 2023 | 100,000 (≈ 75,000 words) | Anthropic |
+| Llama 3.1 | 2024 | 128,000 | Llama Team |
+| Gemini 1.5 | 2024 | over 1 million (up to 10 million in its tests) | Gemini Team |
 
-Let $S$ be the system prompt, $m$ the tokens each turn adds (message and reply), and $u$ the size of the new message. Turn $k$ sends
+## Fixed weights, examples in the context
 
-$$T_k = S + (k-1)\\,m + u$$
+The model can follow a pattern you show it inside the context (in-context learning): Brown et al. (2020) evaluate it “without any gradient updates or fine-tuning.” It is temporary: when those examples leave the window, the behavior disappears. Changing the weights takes training (lessons 4, 8, and 27). The GPT-4 technical report sums it up: it “has a limited context window, and does not learn from experience.”
 
-and over $n$ turns the model processes
+## What resending the conversation costs
 
-$$\\sum_{k=1}^{n} T_k = nS + m\\,\\frac{n(n-1)}{2} + nu .$$
+Let $s$ be the size of the system prompt and $m$ the tokens each turn adds (your message $u$ plus the answer $a$). On turn $k$ the model processes $s + k\\,m$ tokens (it reads everything before and writes what is new); over $n$ turns,
 
-With $S=0$, $m=150$, $u=50$, and $n=20$ that is $29{,}500$ input tokens; if each token were processed only once it would be $S+nm = 3{,}000$. The dominant term is $m\\,n^2/2$: cost grows with the square of the turns.
+$$\\sum_{k=1}^{n} (s + k\\,m) = n\\,s + m\\,\\frac{n(n+1)}{2}.$$
 
-With prefix caching (assuming it hits on every turn), turn 1 writes everything and the following turns read the prefix and write only what is new. Anthropic's documentation sets reads at $0.1\\times$ the base input price (with per-model exceptions) and 5-minute writes at $1.25\\times$:
+With $s=0$ and $m=100$: 5,500 tokens in 10 turns and 21,000 in 20, against 1,000 and 2,000 of text. The $m\\,n^2/2$ term dominates: the total grows with the square of the turns. The instructions are paid for on every turn too: with $s = 2{,}000$, $u = 50$, $a = 150$, and 20 turns, the input adds up to $\\sum_k \\big(s + (k-1)m + u\\big) = 79{,}000$ tokens, and half of them are the repeated instructions.
 
-$$C = 1.25\\,T_1 + \\sum_{k=2}^{n}\\left(0.1\\,T_{k-1} + 1.25\\,m\\right)$$
-
-In the example, $C = 6{,}285$ equivalent tokens, 21% of $29{,}500$. With $S=2{,}000$, $m=500$, $u=50$, and $n=60$ the total is $1{,}008{,}000$ tokens: at an assumed price of USD 3 per million, about USD 3 per conversation without caching and about USD 0.41 with it. Output tokens are not included (they are billed separately and grow linearly).
-
-Besides paying for it, processing a context of $n$ tokens takes attention compute that grows like $n^2$ (Vaswani et al., 2017, table 1), and the KV cache grows linearly with $n$ (lesson 26).
+That is why **prefix caching** exists: the provider keeps the work already done on the repeated beginning (the KV cache from lesson 26) and charges less to reread it. In Anthropic's documentation, reading from the cache costs $0.1\\times$ the base input price (less on some models) and writing to it costs $1.25\\times$ (5-minute cache). If it hits on every turn, the previous example drops to about 14,628 equivalent tokens, 19%. Caching changes what you pay, not how much of the window is used.
 
 ## Position matters: “Lost in the Middle”
 
-Liu et al. (2023) gave each model 20 documents (about 3 to 4 thousand tokens), only one containing the answer, and moved its position. Accuracy (%), exact values from table 6 in appendix G; the last two columns come from table 1:
+Liu et al. (2023) gave each model 20 documents (about 4,000 tokens), only one with the answer, and changed its place. Accuracy (%), values from table 6 (appendix G); the last two columns come from table 1:
 
 | Model | 1st | 5th | 10th | 15th | 20th | No documents | Only the right one |
 |---|---|---|---|---|---|---|---|
@@ -404,139 +554,156 @@ Liu et al. (2023) gave each model 20 documents (about 3 to 4 thousand tokens), o
 | LongChat-13B (16K) | 68.6 | 57.4 | 55.3 | 52.5 | 55.0 | 35.0 | 83.4 |
 | MPT-30B-Instruct | 53.7 | 51.8 | 52.2 | 52.7 | 56.3 | 31.5 | 81.9 |
 
-These are 2023 models and a single task: the exact shape changes with the model and the test, and the authors find that a larger window, by itself, does not use the context better. RULER (Hsieh et al., 2024) extends the finding: among models claiming 32 thousand tokens or more, only half kept satisfactory performance at 32 thousand.
+These are 2023 models and a single task: the exact shape changes with the model and the test, and the authors find that a larger window, by itself, does not use the context better. RULER (Hsieh et al., 2024) extends the finding: among models claiming 32,000 tokens or more, only half kept satisfactory performance at that length. Anthropic's documentation calls it *context rot*: as the number of tokens grows, accuracy and recall degrade.
+
+## Memory outside the model
+
+“Memory” features keep text outside the window and put it back in: a summary that replaces the old turns (Anthropic's compaction), or note files the model reads and writes across conversations (Anthropic's memory tool; MemGPT, by Packer et al., 2023, draws on an operating system's memory hierarchy). What is stored can become wrong or outdated, and it is information that leaves your organization.
 
 ## In code
 
 \`\`\`python
 def trim(messages, limit, count):
-    """Keep the system message and the most recent messages that fit."""
+    """Keep the instructions and the most recent turns that fit: first in, first out."""
     system, rest = messages[0], messages[1:]
     used, inside = count(system), []
-    for m in reversed(rest):                     # newest to oldest
+    for m in reversed(rest):                        # newest to oldest
         if used + count(m) > limit:
             break
         inside.append(m)
         used += count(m)
     return [system] + inside[::-1]
 
-def total_input(turns, s, m, u):
-    """Input tokens processed over \`turns\` turns: turn k sends s + (k-1)*m + u."""
-    return sum(s + (k - 1) * m + u for k in range(1, turns + 1))
+def processed(turns, s, m):
+    """Tokens the model processes: on turn k, the instructions s plus k turns of m tokens."""
+    return sum(s + k * m for k in range(1, turns + 1))
 
-count = lambda m: len(m["text"].split())        # approximation: one word ≈ one token
+def input_with_cache(turns, s, u, a, read=0.1, write=1.25):
+    """Equivalent input tokens with prefix caching (assumed: it hits on every turn)."""
+    m = u + a
+    total = write * (s + u)                         # turn 1: everything is written
+    for k in range(2, turns + 1):
+        prefix = s + (k - 2) * m + u                # what was sent on the previous turn
+        total += read * prefix + write * m          # read the prefix, write what is new
+    return total
+
+count = lambda m: len(m["text"].split())           # approximation: one word ≈ one token
 history = [
     {"role": "system",    "text": "You are a logistics assistant."},
     {"role": "user",      "text": "My name is Ana and I work in logistics."},
     {"role": "assistant", "text": "Nice to meet you, Ana. How can I help?"},
-    {"role": "user",      "text": "Give me one idea to save on freight."},
-    {"role": "assistant", "text": "Consolidate shipments and renegotiate routes."},
+    {"role": "user",      "text": "Give me an idea to save on shipping."},
+    {"role": "assistant", "text": "Combine small orders into one truck."},
     {"role": "user",      "text": "What is my name?"},
 ]
 inside = trim(history, limit=25, count=count)
 print([m["role"] for m in inside])
 print("Is the name still in the window?", any("Ana" in m["text"] for m in inside))
-print(total_input(turns=20, s=0, m=150, u=50))
+print(processed(10, s=0, m=100), processed(20, s=0, m=100))
+without = sum(2000 + (k - 1) * 200 + 50 for k in range(1, 21))
+cached = input_with_cache(20, s=2000, u=50, a=150)
+print(without, round(cached), f"{cached / without:.0%}")
 # ['system', 'user', 'assistant', 'user']
 # Is the name still in the window? False
-# 29500
+# 5500 21000
+# 79000 14628 19%
 \`\`\`
 
 ## What comes next
 
-The KV cache and the cost per output token are in lesson 26. In lesson 31 (RAG) the external store becomes a full system: retrieve relevant fragments and paste them into the window. In lesson 32, agents use that same idea, with memory in files, for jobs that last longer than one window.`,
+In lesson 31 (RAG) the external store becomes a full system: find the relevant fragments of your documents and put them in the window. In lesson 32, agents use that same idea, with memory in files, for jobs that last longer than one window.`,
   },
 
   lens: {
     es: [
-      'Lo que no está en el contexto no existe para el modelo: si necesita una política, un contrato o un dato de cliente, hay que ponérselo en la ventana en cada consulta. Pregunta qué se envía exactamente en cada llamada.',
-      'El costo crece con cada turno porque se reenvía el historial. Pide el costo por conversación, no por mensaje; limita su longitud o resúmela; y pregunta si hay caché del prefijo y cuánto descuenta.',
-      'La ventana anunciada no es la ventana útil: prueba con tus propios documentos y con el dato clave en distintas posiciones. Más contexto puede rendir peor, y casi siempre cuesta más.',
-      'Privacidad: todo lo que se pega se envía al proveedor, y las funciones de memoria guardan notas sobre personas o la empresa. Revisa retención, si se usa para entrenar y cómo ver, borrar o desactivar esa memoria.',
+      'Lo que no está en el contexto no existe para el modelo: si necesita una política, un contrato o un dato de cliente, hay que ponérselo en la ventana en cada consulta. Pregunta qué se envía exactamente en cada llamada: instrucciones, historial y documentos.',
+      'El costo crece con cada turno porque se reenvía todo, incluidas las instrucciones del sistema. Mide el costo por conversación, no por mensaje; acorta o resume las conversaciones largas, y pregunta si hay caché del prefijo y cuánto descuenta.',
+      'La ventana anunciada no es la ventana útil: prueba con tus documentos y con el dato clave en distintos lugares. Pon lo importante al principio o al final, y no rellenes: más contexto puede rendir peor y casi siempre cuesta más.',
+      'Privacidad: todo lo que se pega se envía al proveedor en cada turno, y las funciones de memoria guardan notas sobre personas. Revisa cuánto tiempo se conserva, si se usa para entrenar y cómo ver, borrar o apagar esa memoria.',
     ],
     en: [
-      'What isn’t in the context doesn’t exist for the model: if it needs a policy, a contract, or a customer fact, it has to be put in the window on every query. Ask what exactly is sent on each call.',
-      'Cost grows with every turn because the history is resent. Ask for the cost per conversation, not per message; limit its length or summarize it; and ask whether prefix caching exists and how much it discounts.',
-      'The advertised window is not the useful window: test with your own documents and with the key fact in different positions. More context can perform worse, and almost always costs more.',
-      'Privacy: everything pasted is sent to the provider, and memory features store notes about people or the company. Check retention, whether it is used for training, and how to view, delete, or turn off that memory.',
+      'What is not in the context does not exist for the model: if it needs a policy, a contract, or a customer fact, it has to be put in the window on every query. Ask what exactly is sent on each call: instructions, history, and documents.',
+      'Cost grows with every turn because everything is resent, system prompt included. Measure cost per conversation, not per message; shorten or summarize long conversations, and ask whether prefix caching exists and how much it discounts.',
+      'The advertised window is not the useful window: test with your own documents and with the key fact in different places. Put what matters at the start or the end, and skip the filler: more context can perform worse and almost always costs more.',
+      'Privacy: everything pasted is sent to the provider on every turn, and memory features store notes about people. Check how long it is kept, whether it is used for training, and how to view, delete, or turn off that memory.',
     ],
   },
 
   quiz: [
     {
       kind: 'concept',
-      q: { es: 'Un chatbot responde «Te llamas Ana» tres turnos después de que se lo dijiste, aunque el modelo no guarda nada entre llamadas. ¿Por qué puede hacerlo?', en: 'A chatbot answers “Your name is Ana” three turns after you told it, even though the model stores nothing between calls. Why can it do that?' },
+      q: { es: 'Un chatbot responde «te llamas Ana» tres turnos después de que se lo dijiste, aunque el modelo no guarda nada entre llamadas. ¿Por qué puede hacerlo?', en: 'A chatbot answers “your name is Ana” three turns after you told it, even though the model stores nothing between calls. Why can it do that?' },
       options: [
         { es: 'Porque el modelo ajusta sus pesos con cada mensaje que recibe.', en: 'Because the model adjusts its weights with every message it receives.' },
         { es: 'Porque guarda tu nombre en una memoria interna entre una llamada y otra.', en: 'Because it keeps your name in an internal memory between calls.' },
-        { es: 'Porque la aplicación reenvía el historial completo y el nombre viaja dentro del texto.', en: 'Because the app resends the whole history and the name travels inside the text.' },
-        { es: 'Porque los modelos recientes memorizan a cada usuario durante el entrenamiento.', en: 'Because recent models memorize each user during training.' },
+        { es: 'Porque la aplicación le reenvía toda la conversación, y el nombre viaja dentro del texto.', en: 'Because the app resends it the whole conversation, and the name travels inside the text.' },
+        { es: 'Porque los modelos memorizan a cada persona durante el entrenamiento.', en: 'Because models memorize each person during training.' },
       ],
       answer: 2,
-      why: { es: 'El modelo no tiene estado: en cada turno recibe todo el historial como texto, y el nombre está en el primer mensaje. Sus pesos no cambian durante la conversación.', en: 'The model is stateless: at every turn it receives the whole history as text, and the name is in the first message. Its weights do not change during the conversation.' },
+      why: { es: 'El modelo no tiene estado: en cada turno recibe toda la conversación como texto, y el nombre está en el primer mensaje. Sus pesos no cambian mientras conversas.', en: 'The model is stateless: on every turn it receives the whole conversation as text, and the name is in the first message. Its weights do not change while you chat.' },
     },
     {
       kind: 'concept',
-      q: { es: 'En un contexto largo con muchos documentos, ¿dónde suele aprovechar mejor un modelo el dato que contiene la respuesta?', en: 'In a long context with many documents, where does a model tend to make the best use of the fact that holds the answer?' },
+      q: { es: 'En un contexto largo con muchos documentos, ¿dónde suele aprovechar mejor un modelo el documento que tiene la respuesta?', en: 'In a long context with many documents, where does a model tend to make the best use of the document that holds the answer?' },
       options: [
         { es: 'En cualquier lugar por igual, porque lee todo el contexto a la vez.', en: 'Anywhere equally, because it reads the whole context at once.' },
-        { es: 'Al principio o al final del contexto, y peor en el medio.', en: 'At the start or the end of the context, and worse in the middle.' },
-        { es: 'Solo en el prompt del sistema.', en: 'Only in the system prompt.' },
         { es: 'En el medio, porque ahí está la mayor parte del texto.', en: 'In the middle, because that is where most of the text is.' },
+        { es: 'Al principio o al final, y peor en el medio.', en: 'At the start or the end, and worse in the middle.' },
+        { es: 'Solo dentro de las instrucciones del sistema.', en: 'Only inside the system prompt.' },
       ],
-      answer: 1,
-      why: { es: 'Liu et al. (2023) midieron una curva en forma de U: el acierto es mayor con la información al principio o al final y cae cuando está en el medio.', en: 'Liu et al. (2023) measured a U-shaped curve: accuracy is higher with the information at the start or the end and drops when it is in the middle.' },
+      answer: 2,
+      why: { es: 'Liu et al. (2023) midieron una curva en forma de U: con GPT-3.5-Turbo, 76 % con la respuesta en el primer documento, 54 % en el décimo y 63 % en el vigésimo. En el medio le fue peor que sin documentos (56 %).', en: 'Liu et al. (2023) measured a U-shaped curve: with GPT-3.5-Turbo, 76% with the answer in the first document, 54% in the tenth, and 63% in the twentieth. In the middle it did worse than with no documents (56%).' },
     },
     {
       kind: 'calc',
-      q: { es: 'En cada turno el modelo recibe todo lo anterior más el mensaje nuevo: 100 tokens en el primer turno, 200 en el segundo, 300 en el tercero, y así. ¿Cuántos tokens de entrada se procesan en total en 10 turnos?', en: 'At every turn the model receives everything before plus the new message: 100 tokens on the first turn, 200 on the second, 300 on the third, and so on. How many input tokens are processed in total over 10 turns?' },
+      q: { es: 'Cada turno de una conversación agrega 200 tokens, y en cada turno el modelo procesa todo lo anterior otra vez: 200 en el primero, 400 en el segundo, y así. ¿Cuántos tokens procesa en total en 5 turnos?', en: 'Each turn of a conversation adds 200 tokens, and on every turn the model processes everything before it again: 200 on the first, 400 on the second, and so on. How many tokens does it process in total over 5 turns?' },
       options: [
         { es: '1 000', en: '1,000' },
+        { es: '2 000', en: '2,000' },
         { es: '5 000', en: '5,000' },
-        { es: '5 500', en: '5,500' },
-        { es: '10 000', en: '10,000' },
+        { es: '3 000', en: '3,000' },
       ],
-      answer: 2,
-      why: { es: 'La suma es 100 × (1 + 2 + … + 10) = 100 × 55 = 5 500. Si cada token se procesara una sola vez serían solo 1 000: reenviar el historial multiplica el costo por 5.5.', en: 'The sum is 100 × (1 + 2 + … + 10) = 100 × 55 = 5,500. If each token were processed only once it would be just 1,000: resending the history multiplies the cost by 5.5.' },
+      answer: 3,
+      why: { es: '200 + 400 + 600 + 800 + 1 000 = 3 000. El texto de la conversación son solo 1 000 tokens (5 × 200): reenviarlo todo en cada turno triplica lo que se procesa, y la diferencia crece con más turnos.', en: '200 + 400 + 600 + 800 + 1,000 = 3,000. The conversation text is only 1,000 tokens (5 × 200): resending it all on every turn triples what is processed, and the gap grows with more turns.' },
     },
     {
       kind: 'apply',
-      q: { es: 'Tu equipo diseña un asistente interno con un prompt del sistema de 3 000 tokens y conversaciones de unos 30 turnos. ¿Qué conviene preguntar al proveedor antes de presupuestar?', en: 'Your team is designing an internal assistant with a 3,000-token system prompt and conversations of about 30 turns. What should you ask the provider before budgeting?' },
+      q: { es: 'Tu equipo pega un contrato largo al inicio de un chat y conversa sobre él durante horas. Al final, el asistente responde como si no conociera una cláusula clave. ¿Qué es lo más razonable?', en: 'Your team pastes a long contract at the start of a chat and discusses it for hours. In the end, the assistant answers as if it did not know a key clause. What is the most reasonable response?' },
       options: [
-        { es: 'Si ofrece caché del prefijo y cuánto cuesta leer de ella, porque el prompt y el historial se reenvían en cada turno.', en: 'Whether it offers prefix caching and how much reading from it costs, because the prompt and history are resent on every turn.' },
-        { es: 'Cuántas GPU usa el modelo para responder.', en: 'How many GPUs the model uses to answer.' },
-        { es: 'Si el modelo recuerda al usuario entre conversaciones sin guardar nada.', en: 'Whether the model remembers the user between conversations without storing anything.' },
-        { es: 'Cuántos parámetros tiene el modelo.', en: 'How many parameters the model has.' },
+        { es: 'Suponer que el modelo «olvidó» porque aprendió cosas nuevas durante la conversación, y reentrenarlo.', en: 'Assume the model “forgot” because it learned new things during the conversation, and retrain it.' },
+        { es: 'Suponer que el contrato salió de la ventana o quedó perdido en el medio: volver a poner la cláusula cerca de la pregunta, o empezar una conversación nueva.', en: 'Assume the contract left the window or got lost in the middle: put the clause back near the question, or start a new conversation.' },
+        { es: 'Pegar el contrato varias veces más en la misma conversación, para que lo recuerde mejor.', en: 'Paste the contract several more times into the same conversation so it remembers it better.' },
+        { es: 'Concluir que el modelo nunca puede leer contratos.', en: 'Conclude that the model can never read contracts.' },
       ],
-      answer: 0,
-      why: { es: 'Con 3 000 tokens de sistema y 30 turnos, buena parte de lo que pagas es texto repetido. La caché del prefijo lo abarata; el número de GPU o de parámetros no cambia tu factura por token.', en: 'With 3,000 system tokens and 30 turns, a large share of what you pay for is repeated text. Prefix caching makes it cheaper; the number of GPUs or parameters does not change your per-token bill.' },
+      answer: 1,
+      why: { es: 'Sus pesos no cambian al conversar. Si el historial creció, el contrato pudo soltarse de la ventana, o quedar lejos de la pregunta, en el medio, donde se aprovecha peor. Pegarlo muchas veces llena la ventana y encarece cada turno.', en: 'Its weights do not change while you chat. If the history grew, the contract may have dropped out of the window, or sit far from the question, in the middle, where it is used less well. Pasting it many times fills the window and makes every turn more expensive.' },
     },
   ],
 
-  glossary: ['token', 'language-model', 'autoregression', 'inference', 'weight', 'transformer', 'prefill', 'kv-cache', 'context-window', 'stateless', 'system-prompt', 'lost-in-the-middle'],
+  glossary: ['token', 'language-model', 'autoregression', 'weight', 'inference', 'transformer', 'positional-encoding', 'kv-cache', 'context-window', 'stateless', 'system-prompt', 'lost-in-the-middle'],
 
   terms: [
-    { id: 'context-window', term: { es: 'Ventana de contexto', en: 'Context window' }, def: { es: 'Número máximo de tokens que el modelo puede leer a la vez, contando las instrucciones, el historial, la pregunta y la respuesta que va generando.', en: 'The maximum number of tokens the model can read at once, counting the instructions, the history, the question, and the answer it is generating.' } },
-    { id: 'stateless', term: { es: 'Sin estado', en: 'Stateless' }, def: { es: 'Que cada llamada al modelo empieza de cero y no recuerda las anteriores. La memoria de una conversación vive en la aplicación, que reenvía el historial en cada turno.', en: 'Each call to the model starts from zero and does not remember earlier ones. A conversation’s memory lives in the app, which resends the history on every turn.' } },
-    { id: 'system-prompt', term: { es: 'Prompt del sistema', en: 'System prompt' }, def: { es: 'Instrucciones fijas que quien construye la aplicación coloca al inicio del contexto (rol, tono, reglas). La persona usuaria no las ve, pero cuentan en cada turno.', en: 'Fixed instructions that whoever builds the app places at the start of the context (role, tone, rules). The user does not see them, but they count on every turn.' } },
-    { id: 'lost-in-the-middle', term: { es: 'Perdido en el medio', en: 'Lost in the middle' }, def: { es: 'Efecto medido en varios modelos: aprovechan mejor la información al principio o al final de un contexto largo que la que queda en el medio.', en: 'An effect measured in several models: they make better use of information at the start or end of a long context than of what sits in the middle.' } },
+    { id: 'context-window', term: { es: 'Ventana de contexto', en: 'Context window' }, def: { es: 'Número máximo de tokens que el modelo puede leer de una vez. Cuentan las instrucciones del sistema, la conversación, los documentos y la respuesta que va escribiendo. Lo que no cabe no existe para el modelo.', en: 'The maximum number of tokens the model can read at once. The system prompt, the conversation, documents, and the answer it is writing all count. Whatever does not fit does not exist for the model.' } },
+    { id: 'stateless', term: { es: 'Sin estado (stateless)', en: 'Stateless' }, def: { es: 'Que cada llamada al modelo empieza de cero y no recuerda las anteriores. La memoria de una conversación vive en la aplicación, que reenvía todo el historial en cada turno.', en: 'Each call to the model starts from scratch and does not remember earlier ones. A conversation’s memory lives in the app, which resends the whole history on every turn.' } },
+    { id: 'system-prompt', term: { es: 'Instrucciones del sistema (system prompt)', en: 'System prompt' }, def: { es: 'Instrucciones fijas que quien construye la aplicación pone al frente del contexto: rol, tono y reglas. Quien conversa no las ve, pero viajan y ocupan lugar en cada turno.', en: 'Fixed instructions that whoever builds the app places at the front of the context: role, tone, and rules. The person chatting does not see them, but they ride along and take up room on every turn.' } },
+    { id: 'lost-in-the-middle', term: { es: 'Perdido en el medio', en: 'Lost in the middle' }, def: { es: 'Efecto medido en varios modelos: aprovechan mejor la información al principio o al final de un contexto largo que la que queda a la mitad.', en: 'An effect measured in several models: they make better use of information at the start or end of a long context than of what sits in the middle.' } },
   ],
 
   sources: [
-    { title: 'Lost in the Middle: How Language Models Use Long Contexts', authors: 'Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., Liang, P.', year: 2023, url: 'https://arxiv.org/abs/2307.03172' },
-    { title: 'RULER: What’s the Real Context Size of Your Long-Context Language Models?', authors: 'Hsieh, C.-P., Sun, S., Kriman, S., Acharya, S., Rekesh, D., Jia, F., Zhang, Y., Ginsburg, B.', year: 2024, url: 'https://arxiv.org/abs/2404.06654' },
-    { title: 'Language Models are Few-Shot Learners', authors: 'Brown, T. B. et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
-    { title: 'GPT-4 Technical Report', authors: 'OpenAI', year: 2023, url: 'https://arxiv.org/abs/2303.08774' },
-    { title: 'Improving Language Understanding by Generative Pre-Training', authors: 'Radford, A., Narasimhan, K., Salimans, T., Sutskever, I.', year: 2018, url: 'https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf' },
-    { title: 'Language Models are Unsupervised Multitask Learners', authors: 'Radford, A. et al.', year: 2019, url: 'https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf' },
-    { title: 'The Llama 3 Herd of Models', authors: 'Llama Team, AI @ Meta', year: 2024, url: 'https://arxiv.org/abs/2407.21783' },
-    { title: 'Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context', authors: 'Gemini Team, Google', year: 2024, url: 'https://arxiv.org/abs/2403.05530' },
+    { title: 'Lost in the Middle: How Language Models Use Long Contexts (tablas 1 y 6)', authors: 'Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., Liang, P.', year: 2023, url: 'https://arxiv.org/abs/2307.03172' },
+    { title: 'Language Models are Few-Shot Learners (ventana de 2 048 tokens)', authors: 'Brown, T. B. et al.', year: 2020, url: 'https://arxiv.org/abs/2005.14165' },
+    { title: 'Improving Language Understanding by Generative Pre-Training (posiciones aprendidas; secuencias de 512 tokens)', authors: 'Radford, A., Narasimhan, K., Salimans, T., Sutskever, I.', year: 2018, url: 'https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf' },
+    { title: 'Language Models are Unsupervised Multitask Learners (contexto de 1 024 tokens)', authors: 'Radford, A. et al.', year: 2019, url: 'https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf' },
     { title: 'Introducing 100K Context Windows', authors: 'Anthropic', year: 2023, url: 'https://www.anthropic.com/news/100k-context-windows' },
+    { title: 'The Llama 3 Herd of Models (ventana de hasta 128K; tabla 3)', authors: 'Llama Team, AI @ Meta', year: 2024, url: 'https://arxiv.org/abs/2407.21783' },
+    { title: 'Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context', authors: 'Gemini Team, Google', year: 2024, url: 'https://arxiv.org/abs/2403.05530' },
+    { title: 'Using the Messages API (documentación de la API de Claude: «stateless»)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages' },
     { title: 'Context windows (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/context-windows' },
     { title: 'Prompt caching (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/prompt-caching' },
-    { title: 'Using the Messages API (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/working-with-messages' },
+    { title: 'Compaction overview (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/build-with-claude/compaction' },
     { title: 'Memory tool (documentación de la API de Claude)', authors: 'Anthropic', year: 2026, url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool' },
+    { title: 'GPT-4 Technical Report', authors: 'OpenAI', year: 2023, url: 'https://arxiv.org/abs/2303.08774' },
+    { title: 'RULER: What’s the Real Context Size of Your Long-Context Language Models?', authors: 'Hsieh, C.-P., Sun, S., Kriman, S., Acharya, S., Rekesh, D., Jia, F., Zhang, Y., Ginsburg, B.', year: 2024, url: 'https://arxiv.org/abs/2404.06654' },
     { title: 'MemGPT: Towards LLMs as Operating Systems', authors: 'Packer, C. et al.', year: 2023, url: 'https://arxiv.org/abs/2310.08560' },
-    { title: 'Attention Is All You Need', authors: 'Vaswani, A. et al.', year: 2017, url: 'https://arxiv.org/abs/1706.03762' },
   ],
 });

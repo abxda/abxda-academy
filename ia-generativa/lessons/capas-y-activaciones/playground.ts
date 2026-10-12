@@ -226,8 +226,13 @@ function drawAside(S: Frame, r: Rect, p: Panel, gate: Gate | null, a: number) {
       if (ok) lines.push({ t: S.l('Separado.', 'Separated.'), c: dt.ink, w: 700 });
       else if (p.steps >= 700) lines.push({ t: S.l(`Se estancó en ${pct(S, p.acc)}: prueba otra activación, más neuronas o «Reiniciar».`, `Stuck at ${pct(S, p.acc)}: try another activation, more neurons, or “Reset”.`), c: er.ink, w: 600 });
     }
+    // si el pie no cabe en su columna (teléfono pequeño): letra más chica y, si aún no cabe, sin la línea de parámetros
+    const blockH = (ls: typeof lines, z: number) => ls.reduce((h, ln) => h + Math.max(d.wrap(ln.t, st.w, { size: z, weight: ln.w ?? 500 }).length * 1.3 * z * u, 18 * u) + 3 * u, 0);
+    let fz = fs(S, 13), shown = lines;
+    if (blockH(shown, fz) > st.h - 4 * u) fz = fs(S, 12);
+    if (blockH(shown, fz) > st.h - 4 * u && shown.length > 2) shown = shown.filter((_, i) => i !== 1);
     let y = st.y + 10 * u;
-    for (const ln of lines) { const o = d.text(ln.t, st.x, y, { size: fs(S, 13), weight: ln.w ?? 500, color: ln.c, base: 'middle', w: st.w }); y += Math.max(o.h, 18 * u) + 3 * u; if (y > st.y + st.h + 30 * u) break; }
+    for (const ln of shown) { const o = d.text(ln.t, st.x, y, { size: fz, weight: ln.w ?? 500, color: ln.c, base: 'middle', w: st.w }); y += Math.max(o.h, 18 * u) + 3 * u; if (y > st.y + st.h + 30 * u) break; }
   });
 }
 

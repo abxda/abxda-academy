@@ -94,6 +94,8 @@ export const RACE_DEFAULT = { n: 48, hw: 'gtx580' as Hardware['id'] };
 function currentRace(S: Frame): { n: number; hw: Hardware['id']; t: number; user: boolean } {
   const r = S.st.race as RaceState | undefined;
   if (r) return { n: r.n, hw: r.hw, t: r.t, user: true };
+  // «race-demo»: dos carreras guiadas por el tiempo, una con matriz pequeña (8) y otra con una grande (96)
+  if (S.is('race-demo')) { const D = Math.max(1, S.end('race-demo') - S.start('race-demo')), t = S.since('race-demo'), small = t < 0.45 * D; return { n: small ? 8 : 96, hw: RACE_DEFAULT.hw, t: small ? t - 0.3 : t - 0.45 * D - 0.3, user: false }; }
   return { n: S.p.n ?? RACE_DEFAULT.n, hw: (S.p.hw ?? RACE_DEFAULT.hw) as Hardware['id'], t: S.since('race-try') - 0.3, user: false };
 }
 
@@ -180,7 +182,7 @@ export function drawRace(S: Frame) {
     badge(S, lab, B.x + B.w - 2 * u, by, { tone: 'dat', align: 'right', size: 13 });
   });
   // la nota va siempre (no solo antes de tocar): es lo que distingue este conteo de un cronómetro
-  d.withAlpha(fa(S, 'race-try', 0.3, 0.45) * 0.95, () => d.text(S.l('conteo ideal de pasos, no un cronómetro', 'ideal step count, not a stopwatch'), B.x + B.w / 2, B.y + B.h - 34 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'middle' }));
+  d.withAlpha(Math.max(fa(S, 'race-demo', 0.1, 0.25), fa(S, 'race-try', 0.3, 0.45)) * 0.95, () => d.text(S.l('conteo ideal de pasos, no un cronómetro', 'ideal step count, not a stopwatch'), B.x + B.w / 2, B.y + B.h - 34 * u, { size: 12, weight: 600, color: p.mute, align: 'center', base: 'middle' }));
   void lerp; void mark;
 }
 

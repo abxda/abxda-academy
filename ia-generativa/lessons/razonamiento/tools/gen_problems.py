@@ -13,6 +13,10 @@ La dificultad es el número de operaciones encadenadas (cada una depende de la a
 con 32 muestras cada uno, y los primeros problemas de los niveles «tres» y «siete» también llevan 32 muestras.
 
 Uso:  python3 gen_problems.py > problems.json
+
+Nota (2026-10-12): la lección solo usa los problemas «tren-es» y «tren-en» de data.ts (32 intentos cada uno). Los otros
+seis problemas de data.ts (f01, f02, m01, m02, d01, d02) vienen de un problems2.json que no está en el repositorio y
+no corresponden a los niveles que genera este guion; la escena no los usa.
 """
 import json, random
 

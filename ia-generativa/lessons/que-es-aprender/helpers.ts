@@ -36,17 +36,33 @@ export function mark(S: Frame, x: number, y: number, cls: Cls, o: { r?: number; 
 }
 
 /** Ejes de la gráfica de correos: enlaces (x) y % de mayúsculas (y). */
-export function axes(S: Frame, plot: Plot, a = 1) {
-  const { d, pal: p } = S, r = plot.r, u = S.u;
-  d.withAlpha(a, () => {
+export function axes(S: Frame, plot: Plot, a = 1, o: { ax?: number; ay?: number; hx?: number; hy?: number; data?: number } = {}) {
+  const { d, pal: p } = S, r = plot.r, u = S.u, sg = tone(S, 'sig');
+  const ax = (o.ax ?? 1) * a, ay = (o.ay ?? 1) * a;
+  if (ax > 0.01) d.withAlpha(ax, () => {
     d.line(r.x, r.y + r.h, r.x + r.w, r.y + r.h, p.lineStrong, 1.5);
-    d.line(r.x, r.y, r.x, r.y + r.h, p.lineStrong, 1.5);
     [0, 2, 4, 6, 8, 10].forEach((v) => { d.line(plot.X(v), r.y + r.h, plot.X(v), r.y + r.h + 4 * u, p.lineStrong, 1.5); d.text(String(v), plot.X(v), r.y + r.h + 7 * u, { size: fz(S, 11), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
-    [0, 10, 20, 30, 40].forEach((v) => { d.line(r.x - 4 * u, plot.Y(v), r.x, plot.Y(v), p.lineStrong, 1.5); d.text(String(v), r.x - 7 * u, plot.Y(v), { size: fz(S, 11), font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
     d.text(S.l('enlaces', 'links'), r.x + r.w, r.y + r.h + 24 * u, { size: fz(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'top' });
-    d.text(S.l('% de mayúsculas', '% capital letters'), plot.outer.x + 2, r.y - 6 * u, { size: fz(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
-    d.text(S.l('datos ilustrativos', 'illustrative data'), r.x + r.w, r.y - 6 * u, { size: fz(S, 12), weight: 600, italic: true, color: p.mute, align: 'right', base: 'bottom' });
   });
+  if (ay > 0.01) d.withAlpha(ay, () => {
+    d.line(r.x, r.y, r.x, r.y + r.h, p.lineStrong, 1.5);
+    [0, 10, 20, 30, 40].forEach((v) => { d.line(r.x - 4 * u, plot.Y(v), r.x, plot.Y(v), p.lineStrong, 1.5); d.text(String(v), r.x - 7 * u, plot.Y(v), { size: fz(S, 11), font: 'mono', color: p.mute, align: 'right', base: 'middle' }); });
+    d.text(S.l('% de mayúsculas', '% capital letters'), plot.outer.x + 2, r.y - 6 * u, { size: fz(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
+  });
+  const da = (o.data ?? Math.min(ax, ay)) * a;
+  if (da > 0.01) d.text(S.l('datos ilustrativos', 'illustrative data'), r.x + r.w, r.y - 6 * u, { size: fz(S, 12), weight: 600, italic: true, color: p.mute, align: 'right', base: 'bottom', a: da });
+  // flechas «más»: hacia la derecha, más enlaces; hacia arriba, más mayúsculas
+  const hx = (o.hx ?? 0) * a, hy = (o.hy ?? 0) * a;
+  if (hx > 0.01) {
+    const y = r.y + r.h - 14 * u, x0 = r.x + r.w * 0.52, x1 = r.x + r.w - 10 * u;
+    d.arrow(x0, y, x1, y, sg.c, 2.5, 9 * u, hx);
+    d.text(S.l('más enlaces', 'more links'), x0, y - 6 * u, { size: fz(S, 12), weight: 800, color: sg.ink, base: 'bottom', halo: p.stage, a: hx });
+  }
+  if (hy > 0.01) {
+    const x = r.x + r.w - 14 * u, y0 = r.y + r.h * 0.7, y1 = r.y + r.h * 0.3;
+    d.arrow(x, y0, x, y1, sg.c, 2.5, 9 * u, hy);
+    d.text(S.l('más mayúsculas', 'more capitals'), x - 8 * u, (y0 + y1) / 2, { size: fz(S, 12), weight: 800, color: sg.ink, align: 'right', base: 'middle', halo: p.stage, a: hy });
+  }
 }
 
 /** Recorta un polígono con el semiplano f(x, y) ≥ 0 (f afín). */
@@ -125,21 +141,31 @@ export function lock(S: Frame, x: number, y: number, cell: number, a = 1) {
 }
 
 /** La ecuación del modelo, con ajuste de línea. `reveal` da la opacidad de cada término (peso de enlaces, peso de mayúsculas, número fijo). Devuelve la altura usada. */
-export function equation(S: Frame, x: number, y: number, w: number, o: { a?: number; vals?: Model; reveal?: [number, number, number] } = {}) {
+export function equation(S: Frame, x: number, y: number, w: number, o: { a?: number; vals?: Model; reveal?: [number, number, number]; blanks?: boolean; hot?: [number, number, number] } = {}) {
   const { d, pal: p } = S, size = fz(S, 14), wt = tone(S, 'w'), sg = tone(S, 'sig'), k = kk(S);
   type Tk = [string, string, number];
   const rv = o.reveal ?? [1, 1, 1];
-  const f = (v: number | undefined, nm: string) => (v === undefined ? nm : num(S, v, 2));
+  const f = (v: number | undefined, nm: string) => (o.blanks ? '▢' : v === undefined ? nm : num(S, v, 2));
   const groups: Tk[][] = [
     [[S.l('puntaje', 'score'), p.ink, rv[0]], [' = ', p.ink2, rv[0]], [f(o.vals?.w1, 'w₁'), wt.ink, rv[0]], [' · ', p.ink2, rv[0]], [S.l('enlaces', 'links'), sg.ink, rv[0]]],
     [[' + ', p.ink2, rv[1]], [f(o.vals?.w2, 'w₂'), wt.ink, rv[1]], [' · ', p.ink2, rv[1]], [S.l('mayúsculas', 'capitals'), sg.ink, rv[1]]],
-    [[o.vals && o.vals.b < 0 ? ' − ' : ' + ', p.ink2, rv[2]], [o.vals ? num(S, Math.abs(o.vals.b), 2) : 'b', wt.ink, rv[2]]],
+    [[o.vals && o.vals.b < 0 ? ' − ' : ' + ', p.ink2, rv[2]], [o.blanks ? '▢' : o.vals ? num(S, Math.abs(o.vals.b), 2) : 'b', wt.ink, rv[2]]],
   ];
   const wid = (g: Tk[]) => g.reduce((s, [t]) => s + d.measure(t, { size, weight: 700, font: 'mono' }), 0);
   const lines: Tk[][] = [];
   for (const g of groups) { const last = lines[lines.length - 1]; if (last && wid(last) + wid(g) <= w) last.push(...g); else lines.push([...g]); }
   const lh = 21 * k;
-  d.withAlpha(o.a ?? 1, () => lines.forEach((ln, i) => { let cx = x; ln.forEach(([t, c, a]) => { if (a > 0.01) d.text(t, cx, y + i * lh, { size, weight: 700, font: 'mono', color: c, base: 'top', a }); cx += d.measure(t, { size, weight: 700, font: 'mono' }); }); }));
+  // realce de un número (peso de enlaces, peso de mayúsculas, número fijo): recuadro detrás del término
+  const hot = o.hot ?? [0, 0, 0], slot = [groups[0][2][0], groups[1][1][0], groups[2][1][0]];
+  d.withAlpha(o.a ?? 1, () => lines.forEach((ln, i) => {
+    let cx = x;
+    ln.forEach(([t, c, a]) => {
+      const tw = d.measure(t, { size, weight: 700, font: 'mono' }), hi = slot.indexOf(t);
+      if (hi >= 0 && hot[hi] > 0.01 && a > 0.01) d.rect(cx - 3 * k, y + i * lh - 2 * k, tw + 6 * k, lh, { fill: alpha(wt.c, 0.22 * hot[hi]), stroke: wt.c, lw: 1.5, r: 3, a: hot[hi] });
+      if (a > 0.01) d.text(t, cx, y + i * lh, { size, weight: 700, font: 'mono', color: c, base: 'top', a });
+      cx += tw;
+    });
+  }));
   return lines.length * lh;
 }
 
@@ -163,7 +189,7 @@ export function legend(S: Frame, x: number, y: number, w: number, o: { fresh?: b
 }
 
 /** Barras agrupadas: para cada fila (tu regla / la máquina) una barra con los vistos y otra con los nuevos. `range` (fracciones) pinta los nuevos como un rango. */
-export interface BarRow { name: string; tone: Tone; seen: number; fresh: number; freshOn?: number; range?: [number, number] }
+export interface BarRow { name: string; tone: Tone; seen: number; fresh: number; freshOn?: number; range?: [number, number]; /** realce (0..1) de la barra de vistos y de la de nuevos */ hl?: [number, number] }
 export function groupBars(S: Frame, r: Rect, rows: BarRow[], o: { seenLabel: string; freshLabel: string }) {
   const { d, pal: p } = S, k = kk(S), size = fz(S, 12), anyRange = rows.some((q) => q.range), vw = (anyRange ? 62 : 40) * k, lw = Math.min(70 * k, r.w * 0.28);
   const step = (S.portrait && rows.length > 1 ? 16 : 18) * k;   // en vertical, con dos filas, las barras se compactan para que quepa la leyenda
@@ -176,6 +202,8 @@ export function groupBars(S: Frame, r: Rect, rows: BarRow[], o: { seenLabel: str
       const bx = r.x + lw, bw = r.w - lw - vw, bh = 12 * k;
       d.text(nm, r.x + lw - 6 * k, y + bh / 2, { size, weight: 600, color: p.ink2, align: 'right', base: 'middle' });
       d.rect(bx, y, bw, bh, { fill: p.surface2 });
+      const h = row.hl?.[j] ?? 0;
+      if (h > 0.01) d.rect(r.x - 4 * k, y - 4 * k, r.w + 4 * k, bh + 8 * k, { stroke: p.ink, lw: 2, r: 3, a: h });
       d.withAlpha(on, () => {
         if (j === 0) d.rect(bx, y, bw * v, bh, { fill: t.c });
         else if (row.range) {

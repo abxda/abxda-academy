@@ -1,5 +1,6 @@
 // Escena: Lo que una neurona no puede (XOR). El plano de las cuatro esquinas, el mapa de todas las rectas posibles,
-// la línea de tiempo del primer invierno y la red 2-2-1 con pesos reales que resuelve XOR.
+// la línea de tiempo del primer invierno y la red 2-2-1 con pesos reales que resuelve XOR. La escena hace sola las
+// demostraciones (prueba rectas, recorre las cuatro entradas) con S.drive; los «tu turno» son opcionales.
 import {
   Plot, alpha, badge, box, clamp, drawNet, ease, hash, inset, lerp, link, neu, regions, tone, type Frame, type Rect, type SceneFactory,
 } from '../../../../../theme/kit';
@@ -23,30 +24,41 @@ function score(fn: Fn, ang: number, c: number): number {
 interface St { last?: { a: number; c: number }; attempts: number; best: number; dots: { a: number; c: number }[]; tried: Record<string, boolean>; chg: number; lastInp?: string }
 const st0 = (): St => ({ attempts: 0, best: 0, dots: [], tried: {}, chg: -10 });
 const stOf = (S: Frame): St => (S.st.s ??= st0());
+/** Fracción 0..1 del segmento k. */
+const tau = (S: Frame, k: string) => clamp((S.t - S.start(k)) / Math.max(0.5, S.end(k) - S.start(k)));
 
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'angle', kind: 'slider', label: { es: 'Ángulo de la recta', en: 'Line angle' }, min: 0, max: 180, step: 1, value: 30, from: 'try1', to: 'diagonals', fmt: (v) => `${v}°` },
-    { id: 'shift', kind: 'slider', label: { es: 'Desplazamiento', en: 'Shift' }, min: -1, max: 1.5, step: 0.05, value: 0.4, from: 'try1', to: 'diagonals', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
-    { id: 'inp', kind: 'choice', label: { es: 'Entrada (x, y)', en: 'Input (x, y)' }, value: '00', from: 'try2', to: 'space', options: INPUTS.map((v) => ({ value: v, label: { es: `(${v[0]}, ${v[1]})`, en: `(${v[0]}, ${v[1]})` } })) },
+    { id: 'angle', kind: 'slider', label: { es: 'Ángulo de la recta', en: 'Line angle' }, min: 0, max: 180, step: 1, value: 30, from: 'xor-demo', to: 'proof', fmt: (v) => `${v}°` },
+    { id: 'shift', kind: 'slider', label: { es: 'Desplazamiento', en: 'Shift' }, min: -1, max: 1.5, step: 0.05, value: 0.4, from: 'xor-demo', to: 'proof', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+    { id: 'inp', kind: 'choice', label: { es: 'Entrada (x, y)', en: 'Input (x, y)' }, value: '00', from: 'route-demo', to: 'space', options: INPUTS.map((v) => ({ value: v, label: { es: `(${v[0]}, ${v[1]})`, en: `(${v[0]}, ${v[1]})` } })) },
   ],
 
   init(S) { S.st.s = st0(); },
 
   update(S) {
     const st = stOf(S);
-    if (S.between('try1', 'proof')) {
+    // demostración: la recta gira de 30° a 165° mientras su desplazamiento busca el mejor lugar (el contador llega a 3, nunca a 4)
+    if (S.between('xor-demo', 'proof')) {
+      const q = clamp((tau(S, 'xor-demo') - 0.08) / 0.84), ang = S.on('try1') ? 135 : Math.round(lerp(30, 165, q));
+      const shifts = Array.from({ length: 51 }, (_, i) => -1 + i * 0.05);
+      const best = shifts.reduce((b, c) => (score('xor', ang, c) > score('xor', ang, b) ? c : b), 0.4);
+      S.drive('angle', ang); S.drive('shift', Math.round(best * 20) / 20);
+    }
+    // con cada entrada, la señal recorre la red: 00, 01, 10, 11
+    if (S.between('route-demo', 'space')) S.drive('inp', S.on('try2') ? '01' : INPUTS[Math.min(3, Math.floor(tau(S, 'route-demo') * 4))]);
+    if (S.between('try1', 'proof') && (S.touched.has('angle') || S.touched.has('shift'))) {
       const a = S.p.angle ?? 30, c = S.p.shift ?? 0.4;
       if (!st.last) st.last = { a, c };
       if (Math.abs(a - st.last.a) >= 6 || Math.abs(c - st.last.c) >= 0.1) {
         st.attempts++; st.best = Math.max(st.best, score('xor', a, c)); st.dots.push({ a, c }); st.last = { a, c };
       }
-      if (st.attempts >= 8) S.complete('tries');
+      if (st.attempts >= 6) S.complete('tries');
     }
-    if (S.between('try2', 'space')) {
+    if (S.between('route-demo', 'space')) {
       const inp = S.p.inp ?? '00';
-      if (!st.tried[inp]) { st.tried[inp] = true; st.chg = S.clock; }
-      else if (st.lastInp !== inp) st.chg = S.clock;
+      if (st.lastInp !== inp) st.chg = S.clock;
+      if (S.touched.has('inp')) st.tried[inp] = true;
       st.lastInp = inp;
       if (INPUTS.every((k) => st.tried[k])) S.complete('corners');
     }
@@ -109,8 +121,8 @@ function drawPlane(S: Frame) {
   if (S.between('recall', 'xor-def')) {
     const isOr = !S.on('and'), tgt = isOr ? 0.5 / SQ2 : 1.5 / SQ2;
     const t = S.at(isOr ? (S.on('or') ? 'or' : 'recall') : 'and', 0.3, 1.5, 'io');
-    lineA(lerp(isOr ? 100 : 45, 45, t), lerp(isOr ? -0.4 : 0.35, tgt, t)); region = isOr && !S.on('or') ? 0.6 : 1;
-  } else if (S.between('try1', 'proof')) { lineA(S.p.angle ?? 30, S.p.shift ?? 0.4); region = 1; }
+    lineA(lerp(isOr ? 100 : 45, 45, t), lerp(isOr ? -0.4 : 0.35, tgt, t)); region = isOr && !S.on('or') ? 0.6 * (1 - S.at('logic-intro', 0, 0.6)) : 1;
+  } else if (S.between('xor-demo', 'proof')) { lineA(S.p.angle ?? 30, S.p.shift ?? 0.4); region = 1; }
   else if (S.is('fix')) { /* dos rectas, más abajo */ }
 
   if (nline && region > 0.01) {
@@ -135,7 +147,13 @@ function drawPlane(S: Frame) {
   // puntos con su clase: círculo = 0, cruz = 1 (la forma acompaña al color)
   PTS.forEach(([x, y], i) => {
     const k = S.reveal('hook', 0.3 + i * 0.12, 0.45);
-    if (k > 0) plot.datum(x, y, FN[fn](x, y) as 0 | 1, { r: 7 * k, a: showPoints });
+    // antes de «or» las esquinas todavía no tienen respuesta: puntos neutros
+    if (k > 0) { if (S.on('or')) plot.datum(x, y, FN[fn](x, y) as 0 | 1, { r: 7 * k, a: showPoints }); else plot.dot(x, y, 6 * k, 'ink'); }
+  });
+  // «logic-intro»: las cuatro combinaciones, rotuladas en su esquina
+  if (S.between('logic-intro', 'or')) PTS.forEach(([x, y], i) => {
+    const a = S.at('logic-intro', 0.3 * (S.end('logic-intro') - S.start('logic-intro')) + i * 0.35, 0.3 * (S.end('logic-intro') - S.start('logic-intro')) + i * 0.35 + 0.5);
+    badge(S, `(${x}, ${y})`, plot.X(x) + (x ? -1 : 1) * 30 * u, plot.Y(y) + (y ? -1 : 1) * 22 * u, { size: 13, a });
   });
   // ¿y la función? (en hook todavía sin clases)
   if (S.between('hook', 'recall')) PTS.forEach(([x, y]) => d.text('?', plot.X(x) + 14 * u, plot.Y(y) - 10 * u, { size: 13, weight: 700, color: p.mute, halo: p.stage, a: showPoints * (0.5 + 0.5 * Math.sin(S.clock * 3) ** 2) }));
@@ -148,18 +166,19 @@ function drawPlane(S: Frame) {
   }
 
   // tabla de verdad
-  if (S.on('or') && !S.between('try1', 'proof')) tableTruth(S, R.aside, fn, 56 * u);
+  if (S.on('or') && !S.between('xor-demo', 'proof')) tableTruth(S, R.aside, fn, 56 * u);
 
   // jugador: marcador de aciertos
-  if (S.between('try1', 'proof')) {
+  if (S.between('xor-demo', 'proof')) {
     const st = stOf(S), cur = score('xor', S.p.angle ?? 30, S.p.shift ?? 0.4), r = R.aside;
-    const items: [string, string, string][] = [[S.l('aciertos ahora', 'right now'), `${cur} / 4`, cur === 4 ? tone(S, 'dat').ink : p.ink], [S.l('mejor intento', 'best attempt'), `${st.best} / 4`, tone(S, 'w').ink], [S.l('intentos', 'attempts'), String(st.attempts), p.ink2]];
+    const all: [string, string, string][] = [[S.l('aciertos ahora', 'right now'), `${cur} / 4`, cur === 4 ? tone(S, 'dat').ink : p.ink], [S.l('tu mejor intento', 'your best attempt'), `${st.best} / 4`, tone(S, 'w').ink], [S.l('tus intentos', 'your attempts'), String(st.attempts), p.ink2]];
+    const items = st.attempts > 0 ? all : all.slice(0, 1);   // en la demostración solo cuenta lo que se ve ahora
     items.forEach(([l, v, c], i) => {
       const x = S.portrait ? r.x + (i * r.w) / 3 : r.x, y = S.portrait ? r.y + 6 * u : r.y + 4 * u + i * 62 * u;
       d.text(l, x, y, { size: 12, weight: 700, color: p.mute });
       d.text(v, x, y + 8 * u, { size: S.portrait ? 24 : 32, weight: 800, font: 'mono', color: c, base: 'top' });
     });
-    d.text(S.l('(el lado «uno» se elige solo)', '(the “one” side picks itself)'), r.x, r.y + (S.portrait ? 54 * u : 196 * u), { size: 11, color: p.mute, w: r.w });
+    d.text(S.l('(el lado «uno» se elige solo)', '(the “one” side picks itself)'), r.x, r.y + (S.portrait ? 54 * u : 196 * u), { size: 12, color: p.mute, w: r.w });
   }
 }
 
@@ -274,10 +293,14 @@ function drawTime(S: Frame) {
 // ═════════ la red 2-2-1 ═════════
 function drawNetwork(S: Frame) {
   const { d, pal: p } = S, u = S.u, R = regions(S, S.portrait ? 0.62 : 0.66);
-  const isCompute = S.is('compute'), isTry = S.is('try2'), isLimit = S.is('limit'), after = S.on('compute');
+  const isCompute = S.is('compute') || S.is('compute-out'), isTry = S.is('try2') || S.is('route-demo'), isLimit = S.is('limit'), after = S.on('compute');
   const reveal = S.is('hidden') ? 1 + 2 * S.at('hidden', 0.2, 2.6, 'io') : 3;
   let inp: [number, number] | null = null, sigma = 0;
-  if (isCompute) { const k = Math.min(3, Math.floor(S.since('compute') / 1.4)); inp = [PTS[k][0], PTS[k][1]]; sigma = clamp((S.since('compute') % 1.4) / 0.9, 0, 1) * 2; }
+  if (isCompute) {
+    // «compute»: la señal llega a las neuronas ocultas, una entrada tras otra; «compute-out»: llega hasta la salida
+    const seg = S.is('compute') ? 'compute' : 'compute-out', f = clamp((tau(S, seg) - 0.12) / 0.8) * 4, k = Math.min(3, Math.floor(f));
+    inp = [PTS[k][0], PTS[k][1]]; sigma = clamp((f - k) / 0.6, 0, 1) * (seg === 'compute' ? 1 : 2);
+  }
   if (isTry || S.on('space')) { const q = S.p.inp ?? '00'; inp = [+q[0], +q[1]]; sigma = isTry ? clamp((S.clock - stOf(S).chg) / 0.5, 0, 1) * 2 : 2; }
   const acts: number[][] | undefined = inp ? ((): number[][] => {
     const h1 = NET.h1(inp[0], inp[1]), h2 = NET.h2(inp[0], inp[1]);
@@ -309,7 +332,9 @@ function drawNetwork(S: Frame) {
 
 function calcTable(S: Frame, r: Rect, inp: [number, number] | null, sigma: number) {
   const { d, pal: p } = S, u = S.u, rh = 28 * u, w = Math.min(r.w, 230 * u);
-  const k = S.is('compute') ? clamp(S.since('compute') / 1.4, 0, 4) : 4;
+  // en «compute» se llenan las columnas OR y AND fila por fila; en «compute-out», la columna de salida
+  const k = S.is('compute') ? clamp((tau(S, 'compute') - 0.12) / 0.8, 0, 1) * 4 : 4;
+  const kOut = S.is('compute') ? 0 : S.is('compute-out') ? clamp((tau(S, 'compute-out') - 0.12) / 0.8, 0, 1) * 4 : 4;
   d.rect(r.x, r.y, w, rh, { fill: p.surface2 });
   ['x', 'y', 'OR', 'AND', S.l('sale', 'out')].forEach((h, i) => d.text(h, r.x + (i + 0.5) * (w / 5), r.y + rh / 2, { size: 12, weight: 700, color: p.ink2, align: 'center', base: 'middle' }));
   PTS.forEach(([x, y], i) => {
@@ -318,7 +343,8 @@ function calcTable(S: Frame, r: Rect, inp: [number, number] | null, sigma: numbe
     const hot = inp && inp[0] === x && inp[1] === y;
     d.line(r.x, yy, r.x + w, yy, p.line, 1);
     if (hot) d.rect(r.x, yy, w, rh, { fill: tone(S, 'sig').soft });
-    [x, y, h1, h2, o].forEach((v, c) => { const show = c < 2 || vis > (c === 4 ? 0.9 : 0.5) || !S.is('compute'); d.text(show ? String(v) : '·', r.x + (c + 0.5) * (w / 5), yy + rh / 2, { size: 14, font: 'mono', weight: c === 4 ? 800 : 600, color: c === 4 && show ? tone(S, o ? 'err' : 'dat').ink : p.ink, align: 'center', base: 'middle' }); });
+    const visOut = clamp(kOut - i);
+    [x, y, h1, h2, o].forEach((v, c) => { const show = c < 2 || (c === 4 ? visOut > 0.9 : vis > 0.5); d.text(show ? String(v) : '·', r.x + (c + 0.5) * (w / 5), yy + rh / 2, { size: 14, font: 'mono', weight: c === 4 ? 800 : 600, color: c === 4 && show ? tone(S, o ? 'err' : 'dat').ink : p.ink, align: 'center', base: 'middle' }); });
   });
   void sigma;
 }

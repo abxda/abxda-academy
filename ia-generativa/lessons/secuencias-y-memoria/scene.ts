@@ -1,6 +1,7 @@
 // Escena: Secuencias y memoria. La frase «Las flores que compré en el mercado están marchitas», una RNN diminuta (números reales
 // de model.ts) desenrollada sobre ella, el empujón que se apaga, el efecto del tamaño de los pesos (escala logarítmica) y una celda
-// LSTM de juguete con tres compuertas. Tres turnos: predecir cuánto llega, subir g y ver lo que cuesta, y mover las compuertas.
+// LSTM de juguete con tres compuertas. Las demostraciones las hace la escena (el recorrido de g y el ajuste de las compuertas con
+// S.drive); tres «tu turno» opcionales: predecir cuánto llega, subir g y ver lo que cuesta, y mover las compuertas.
 import { lerp, type Frame, type SceneFactory } from '../../../../../theme/kit';
 import { CUES, G_DEFAULT, G_MAX, G_MIN, GATES_DEFAULT, KEY, T, curveFor, lstmRun, lstmSteps, sentenceRun, verdictOf } from './model';
 import { drawHook, drawRnnLane, drawSequences, bandRnn, type RnnView } from './act-rnn';
@@ -18,16 +19,24 @@ const scene: SceneFactory = () => ({
     { id: 'guess', kind: 'choice', label: { es: 'Tu predicción', en: 'Your prediction' }, value: 'x', from: 'predict', to: 'wiggle',
       options: [{ value: 'all', label: { es: 'Casi todo', en: 'Almost all' } }, { value: 'half', label: { es: 'Cerca de la mitad', en: 'About half' } }, { value: 'none', label: { es: 'Casi nada', en: 'Almost nothing' } }] },
     { id: 'g', kind: 'slider', label: { es: 'Tamaño de los pesos recurrentes g', en: 'Size of the recurrent weights g' }, min: G_MIN, max: G_MAX, step: 0.05, value: G_DEFAULT, from: 'try-g', to: 'lstm-idea', fmt: fmt2 },
-    { id: 'f', kind: 'slider', label: { es: 'Compuerta de olvido f', en: 'Forget gate f' }, min: 0, max: 1, step: 0.01, value: GATES_DEFAULT.f, from: 'try-gates', to: 'success', fmt: fmt2 },
-    { id: 'i', kind: 'slider', label: { es: 'Compuerta de entrada i (palabras sin importancia)', en: 'Input gate i (unimportant words)' }, min: 0, max: 1, step: 0.01, value: GATES_DEFAULT.i, from: 'try-gates', to: 'success', fmt: fmt2 },
-    { id: 'o', kind: 'slider', label: { es: 'Compuerta de salida o', en: 'Output gate o' }, min: 0, max: 1, step: 0.01, value: GATES_DEFAULT.o, from: 'try-gates', to: 'success', fmt: fmt2 },
+    { id: 'f', kind: 'slider', label: { es: 'Compuerta de olvido f', en: 'Forget gate f' }, min: 0, max: 1, step: 0.01, value: GATES_DEFAULT.f, from: 'gates-demo', to: 'success', fmt: fmt2 },
+    { id: 'i', kind: 'slider', label: { es: 'Compuerta de entrada i (palabras sin importancia)', en: 'Input gate i (unimportant words)' }, min: 0, max: 1, step: 0.01, value: GATES_DEFAULT.i, from: 'gates-demo', to: 'success', fmt: fmt2 },
+    { id: 'o', kind: 'slider', label: { es: 'Compuerta de salida o', en: 'Output gate o' }, min: 0, max: 1, step: 0.01, value: GATES_DEFAULT.o, from: 'gates-demo', to: 'success', fmt: fmt2 },
   ],
 
   // Estado interactivo: avanza siempre. render() solo dibuja.
   update(S) {
-    if (S.between('predict', 'wiggle') && S.p.guess && S.p.guess !== 'x') S.complete('guess');
-    if (S.between('try-g', 'lstm-idea') && curveFor(gq(Number(S.p.g ?? G_DEFAULT))).typ[GOAL_N] >= GOAL_V) S.complete('g');
-    if (S.between('try-gates', 'success') && lstmRun(gatesOf(S)).verdict === 'ok') S.complete('gates');
+    // demostración: olvido → 0.97, entrada → 0.10 y salida → 1, una compuerta tras otra (mientras nadie las toque)
+    if (S.between('gates-demo', 'success')) {
+      const D = Math.max(1, S.end('gates-demo') - S.start('gates-demo')), t = S.on('try-gates') ? 1 : S.since('gates-demo') / D;
+      const k = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+      S.drive('f', Math.round(lerp(GATES_DEFAULT.f, 0.97, k(0.08, 0.3)) * 100) / 100);
+      S.drive('i', Math.round(lerp(GATES_DEFAULT.i, 0.1, k(0.38, 0.6)) * 100) / 100);
+      S.drive('o', Math.round(lerp(GATES_DEFAULT.o, 1, k(0.68, 0.88)) * 100) / 100);
+    }
+    if (S.between('predict', 'wiggle') && S.touched.has('guess') && S.p.guess && S.p.guess !== 'x') S.complete('guess');
+    if (S.between('try-g', 'lstm-idea') && S.touched.has('g') && curveFor(gq(Number(S.p.g ?? G_DEFAULT))).typ[GOAL_N] >= GOAL_V) S.complete('g');
+    if (S.between('try-gates', 'success') && ['f', 'i', 'o'].some((k) => S.touched.has(k)) && lstmRun(gatesOf(S)).verdict === 'ok') S.complete('gates');
   },
 
   render(S) {
@@ -52,7 +61,8 @@ const scene: SceneFactory = () => ({
     if (lA > 0) {
       const { v, shown, run } = lstmView(S);
       drawLstm(S, L, v);
-      bandLstm(S, L, last(S, ['lstm-idea', 'gate-forget', 'gate-input', 'gate-output', 'gate-learn', 'gradient', 'try-gates']), lA, shown, run);
+      const lid = last(S, ['lstm-idea', 'gate-forget', 'gate-input', 'gate-output', 'gate-learn', 'gradient', 'gates-demo', 'try-gates']);
+      bandLstm(S, L, lid === 'gates-demo' ? 'try-gates' : lid, lA, shown, run);
     }
     // ───── 6 · éxito y límites
     drawSeq2Seq(S, win(S, 'success', 'limit-short', 0.7, 0.6));
@@ -106,15 +116,15 @@ function lstmView(S: Frame) {
   else if (S.between('gate-input', 'gate-output')) { const i = lerp(1, 0.1, S.at('gate-input', 0.9, 2.6)); is = ones(i); shownI = i; }
   else if (S.between('gate-output', 'gate-learn')) { is = ones(0.1); shownI = 0.1; o = S.at('gate-output', 0.9, 2.6); }
   else if (S.between('gate-learn', 'gradient')) { fs = F_LEARN; is = I_LEARN; shownF = 0.97; shownI = 0.1; }
-  else if (S.between('gradient', 'try-gates')) { fs = ones(0.97); is = ones(0.1); shownF = 0.97; shownI = 0.1; }
-  else if (S.on('try-gates')) { const gt = gatesOf(S); fs = ones(gt.f); is = ones(gt.i); o = gt.o; shownF = gt.f; shownI = gt.i; }
+  else if (S.between('gradient', 'gates-demo')) { fs = ones(0.97); is = ones(0.1); shownF = 0.97; shownI = 0.1; }
+  else if (S.on('gates-demo')) { const gt = gatesOf(S); fs = ones(gt.f); is = ones(gt.i); o = gt.o; shownF = gt.f; shownI = gt.i; }
   void ib;
   const { c, read } = lstmSteps(fs, is, o), ref = Math.tanh(Math.tanh(CUES[KEY - 1])), verdict = verdictOf(read / ref);
   const fvals = fs.slice(), ivals = is.map((v, i) => (i === KEY - 1 ? 1 : v));
-  const blameF = S.between('gradient', 'try-gates') ? 0.97 : S.on('try-gates') ? gatesOf(S).f : 0.97;
+  const blameF = S.between('gradient', 'gates-demo') ? 0.97 : S.on('gates-demo') ? gatesOf(S).f : 0.97;
   const blameVals = Array.from({ length: n }, (_, i) => Math.pow(blameF, T - 1 - i));
   const showBlame = S.on('gradient');
-  const run = lstmRun(S.on('try-gates') ? gatesOf(S) : { f: shownF, i: shownI, o });
+  const run = lstmRun(S.on('gates-demo') ? gatesOf(S) : { f: shownF, i: shownI, o });
   const v: LstmView = {
     a: win(S, 'lstm-idea', 'success', 0.7, 0.6), tokA: new Array(8).fill(1), beltA: S.reveal('lstm-idea', 0.2, 0.6), barsA: S.reveal('lstm-idea', 0.6, 0.6),
     valveA: { f: S.on('gate-forget') ? S.reveal('gate-forget', 0.2, 0.5) : 0, i: S.on('gate-input') ? S.reveal('gate-input', 0.2, 0.5) : 0, o: S.on('gate-output') ? S.reveal('gate-output', 0.2, 0.5) : 0 },

@@ -13,19 +13,6 @@ export const LAB = Uint8Array.from(D.lab, (c) => +c);
 export const SHOW: number[] = D.show;                      // 8 imágenes reservadas de 8 dígitos distintos
 export const img = (i: number) => IMGS.subarray(i * 64, i * 64 + 64);
 
-// ── tinta total: un solo número por imagen (la distribución de la primera parte) ──
-export const INK = Float64Array.from({ length: N_ALL }, (_, i) => { let s = 0; for (let j = 0; j < 64; j++) s += IMGS[i * 64 + j]; return s; });
-export const INK_MU = INK.reduce((a, b) => a + b, 0) / N_ALL;
-export const INK_SD = Math.sqrt(INK.reduce((a, b) => a + (b - INK_MU) ** 2, 0) / N_ALL);   // desviación poblacional (la del máximo de verosimilitud)
-export const INK_LO = 11, INK_HI = 28;                                     // histograma de barras de ancho 1
-export const INK_HIST = (() => { const h = new Array(INK_HI - INK_LO).fill(0); for (const v of INK) { const b = Math.floor(v) - INK_LO; if (b >= 0 && b < h.length) h[b]++; } return h as number[]; })();
-/** Puntuación de una campana N(μ, σ): promedio del logaritmo de la densidad que le da a los 1797 datos (exacto, en forma cerrada). */
-export const inkScore = (mu: number, sd: number) => -Math.log(sd) - 0.5 * Math.log(2 * Math.PI) - (INK_SD ** 2 + (INK_MU - mu) ** 2) / (2 * sd * sd);
-export const INK_BEST = inkScore(INK_MU, INK_SD);
-export const normPdf = (x: number, mu: number, sd: number) => Math.exp(-0.5 * ((x - mu) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
-/** Algunas imágenes con su tinta, para el primer vistazo (una por dígito distinto, de las reservadas, y su valor). */
-export const INK_PICKS = SHOW.slice(0, 6);
-
 // ── redes ──
 const H: number = D.H;
 interface Net { e1w: Float64Array; e1b: Float64Array; mw: Float64Array; mb: Float64Array; lw?: Float64Array; lb?: Float64Array; d1w: Float64Array; d1b: Float64Array; d2w: Float64Array; d2b: Float64Array }
@@ -106,7 +93,7 @@ export function drawVAE(n: number, seed: number): Draws {
 }
 export const digitFreq = (digits: ArrayLike<number>) => { const h = new Array(10).fill(0); for (let i = 0; i < digits.length; i++) h[digits[i]]++; return h as number[]; };
 
-// ── distancias al dato de entrenamiento más cercano (memoizadas: se calculan una vez) ──
+// ── dato de entrenamiento más cercano (para comprobar que lo generado no es copia) ──
 export function nearest(x: ArrayLike<number>): { i: number; d: number } {
   let bi = 0, bd = Infinity;
   for (let i = 0; i < NTR; i++) {
@@ -122,23 +109,7 @@ export function drawIndependent(n: number, seed: number): Float32Array[] {
   for (let k = 0; k < n; k++) { const g = new Float32Array(64); for (let j = 0; j < 64; j++) g[j] = IMGS[Math.floor(r() * NTR) * 64 + j]; out.push(g); }
   return out;
 }
-export function drawNoise(n: number, seed: number): Float32Array[] {
-  const r = rng(seed), out: Float32Array[] = [];
-  for (let k = 0; k < n; k++) { const g = new Float32Array(64); for (let j = 0; j < 64; j++) g[j] = r(); out.push(g); }
-  return out;
-}
-let _dist: { real: number[]; indep: number[]; noise: number[]; vae: number[]; ex: { real: Float32Array; indep: Float32Array; noise: Float32Array } } | null = null;
-export function distances() {
-  if (_dist) return _dist;
-  const N = 150, dist = (xs: ArrayLike<number>[]) => xs.map((x) => nearest(x).d);
-  const real = Array.from({ length: N }, (_, k) => img(NTR + (k % (N_ALL - NTR))));
-  const indep = drawIndependent(N, 41), noise = drawNoise(N, 42), vae = drawVAE(N, 43).img;
-  _dist = { real: dist(real), indep: dist(indep), noise: dist(noise), vae: dist(vae), ex: { real: img(SHOW[0]), indep: indep[1], noise: noise[1] } };
-  return _dist;
-}
 export const mean = (a: ArrayLike<number>) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i]; return s / a.length; };
-/** Fracción de píxeles «bien definidos» (casi blancos o casi negros): una medida de nitidez. */
-export const crisp = (x: ArrayLike<number>) => { let c = 0; for (let j = 0; j < 64; j++) if (x[j] < 0.15 || x[j] > 0.85) c++; return c / 64; };
 
 // ── entrenamiento registrado ──
 export const SNAP = { ep: D.snap.ep as number[], rec: D.snap.rec.map((r: number[]) => Float32Array.from(r)) };

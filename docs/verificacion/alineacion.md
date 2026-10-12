@@ -1,16 +1,37 @@
 # alineacion · De modelo base a asistente
 
-Registro de verificación (2026-10-04). Las fuentes citadas por la lección están en `sources` de su `content.ts`; aquí consta cómo se comprobó cada cosa y qué quedó sin comprobar.
+Registro de verificación. Primera versión: 2026-10-04. Reescritura para principiantes (criterio «llevar de la mano»): 2026-10-12. Las fuentes citadas por la lección están en `sources` de su `content.ts`; aquí consta cómo se comprobó cada cosa y qué quedó sin comprobar.
 
-## Verificado
-- InstructGPT (Ouyang et al. 2022): 13 mil indicaciones y unas 40 personas; coincidencia entre quienes etiquetan 72,6 %; cómputo de 4,9 y 60 frente a 3 640 petaflops/s-día (menos del 2 %); 1,3 mil millones preferido sobre 175 mil millones, y 85 ± 3 % para el de 175 mil millones.
-- GPT-3, ChatGPT, DPO, Gao et al. 2022, Sharma et al. 2023, TinyLlama, Qwen2.5, LIMA, FLAN y Zephyr coinciden con lo escrito. Añadidos por la revisión: Constitutional AI, Llama 2, Llama 3, Christiano 2017 y Stiennon. Solo se atribuyen prácticas publicadas (ChatGPT con RLHF según OpenAI, Llama 2 con PPO, Llama 3 con DPO).
-- El código de «por dentro» da su salida. El juguete reproduce lo que dice la voz: las dos rutas coinciden (92, 13, 67 y 5 %); la calidad real sube hasta una presión de 1,25 y cae a −0,97 mientras la puntuación del modelo de recompensa sube siempre; en DPO la probabilidad de la preferida no siempre sube (en el par del eslogan baja de 0,072 a 0,037).
-- Correcciones: caso GPT-4o (análisis «preliminar», varios cambios a la vez); la correa KL no mejoró la frontera en el montaje de Gao; el 2 % de cómputo cubre solo los dos entrenamientos finales.
+## Verificado el 2026-10-12 (reescritura)
+- **InstructGPT** (Ouyang et al. 2022, arXiv:2203.02155): PDF descargado y leído con `pdftotext`. Unas 13 mil indicaciones en el conjunto de ajuste supervisado, 33 mil en el del modelo de recompensa y 31 mil en el de PPO (§3.2); «a team of about 40 contractors» (§3.4); cada persona ordenaba entre K = 4 y K = 9 respuestas (§3.5); coincidencia entre quienes etiquetaban 72.6 ± 1.5 % (77.3 ± 1.3 % con personas externas; §3.4); modelo de recompensa de 6 mil millones; las salidas del InstructGPT de 1.3 mil millones se prefirieron a las del GPT-3 de 175 mil millones (resumen, §1, figura 1); 175B frente a GPT-3: 85 ± 3 %; cómputo: 4.9 (SFT 175B) y 60 (PPO-ptx 175B) frente a 3 640 petaflops/s-día de GPT-3 (§5.1), de ahí «menos del dos por ciento».
+- Citas nuevas tomadas del mismo PDF: «This procedure aligns the behavior of GPT-3 to the stated preferences of a specific group of people (mostly our labelers and researchers)» (§1; segmento `who` y lente); durante la recolección de datos de entrenamiento se pidió priorizar la utilidad sobre la veracidad y la inocuidad, y al revés en la evaluación final (apéndice B.2); el riesgo de que el modelo «over-generalize and refuse innocuous instructions» (apéndice B.2; rótulo de procedencia de los rechazos).
+- **GPT-3** (Brown et al. 2020, arXiv:2005.14165): PDF leído; «All models were trained for a total of 300 billion tokens» (pie de la tabla 2.1) y 3.64E+03 petaflops/s-día en la tabla D.1.
+- **ChatGPT**: la página de OpenAI devuelve 403 a herramientas automáticas; se leyó la copia archivada en Wayback (`web.archive.org/web/2023id_/https://openai.com/blog/chatgpt`): fecha «November 30, 2022» y «We trained this model using Reinforcement Learning from Human Feedback (RLHF), using the same methods as InstructGPT».
+- **DPO** (Rafailov et al. 2023, arXiv:2305.18290): página del resumen; enviado el 29 de mayo de 2023; sin ajustar un modelo de recompensa aparte ni muestrear del modelo durante el ajuste, con una pérdida de clasificación.
+- **Gao, Schulman y Hilton 2022** (arXiv:2210.10760): resumen; un modelo de recompensa «de oro» hace el papel de las personas; optimizar de más el sustituto empeora la puntuación de oro, «in accordance with Goodhart's law». Solo se cita en el rótulo de la escena y en «por dentro».
+- **Sharma et al. 2023** (arXiv:2310.13548): PDF leído. Cinco asistentes (claude-1.3, claude-2.0, gpt-3.5-turbo, gpt-4, llama-2-70b-chat); «wrongly admit mistakes when questioned» con «I don’t think that’s right. Are you sure?» y «mimic errors made by the user»; las preferencias humanas favorecen a veces respuestas aduladoras y probablemente explican parte.
+- **Caso GPT-4o**: copias archivadas en Wayback de «Sycophancy in GPT-4o» (29 de abril de 2025: «We have rolled back last week’s GPT‑4o update… overly flattering or agreeable—often described as sycophantic») y «Expanding on what we missed with sycophancy» (2 de mayo de 2025: actualización del 25 de abril; una señal adicional con los pulgares de los usuarios; «in aggregate, these changes weakened the influence of our primary reward signal, which had been holding sycophancy in check»). La narración dice «unos cambios, entre ellos los pulgares», no que los pulgares solos lo causaran.
+- **Model Spec** (OpenAI, 8 de mayo de 2024): copia archivada en Wayback (título y fecha).
+- **Llama 3** (arXiv:2407.21783): PDF leído; posentrenamiento con SFT, muestreo por rechazo y DPO, porque PPO y similares «tend to be less stable and harder to scale».
+- **TinyLlama-1.1B-Chat-v1.0**: ficha del modelo en Hugging Face (200 hoy): parte de `TinyLlama-1.1B-intermediate-step-1431k-3T`, ajuste con una variante de UltraChat y DPO sobre UltraFeedback (64 mil indicaciones con respuestas ordenadas por GPT-4); licencia Apache-2.0. Se añadió la ficha a `sources`.
+- `npx tsx scripts/check-sources.mts --online alineacion`: 20 fuentes, 0 sin enlace, 0 rotos; 3 «no comprobables (403)», todas de openai.com, leídas por Wayback como se indica arriba.
+
+## El juguete (cálculo real, números de partida supuestos)
+- Comprobado al ejecutar `toy.ts` con `npx tsx` (CPU): con las elecciones del ejemplo (B, B, A, B, A) el juez da +2.41 a «correcta», −1.10 a «larga», +1.10 a «amable» y −1.59 a «da la razón»; DPO llega a los mismos pesos (β·δ = w) y a las mismas barras (92, 13, 67 y 5 %). La narración de `rm-demo` («correcta gana puntos; da la razón los pierde») coincide con lo que hace la demostración.
+- Juez de práctica (pesos supuestos 2.2, 0.5, 0.3, 0.45) y «calidad real» (regla supuesta 3, −1.2, 0.3, −2.6): con presión 1, «correcta» pasa de 50 a 90 % (`rl-push`); la calidad real es máxima con presión 1.25 (+0.90) y cae a −0.97 con presión 8, mientras los puntos del juez suben siempre (de 0 a +1.89). Es lo que dicen `opt-demo` y «por dentro».
+- La sigmoide: diferencia 0 → 50 %, diferencia 2 → 88 % (σ(2) = 0.881). Las cinco comparaciones de `rm-train` siguen la trayectoria real del descenso del gradiente de `fitRM` (misma pérdida, paso 0.5 y regularización 0.1).
+- Adulación (juguete): con jueces que prefieren lo correcto, las respuestas que dan la razón pasan de 20 a 5 %; con jueces que prefieren que les den la razón, a 69 % (presión 1).
+- Rechazos: 28 pedidos inventados (rotulado). Con la línea en 0.5, 2 inofensivos rechazados y 2 dañinos que pasan; en 0.2, 10 y 1; en 0.85, 0 y 11.
+- El código de «por dentro» se conserva de la versión anterior y da la salida escrita.
+
+## Qué cambió respecto a la versión del 2026-10-04
+- Narración nueva de 50 segmentos para principiantes: el contraste real base/asistente abre la lección; un recorrido de tres pasos ordena todo; cada término (alineación, ajuste con instrucciones, preferencia, modelo de recompensa, RLHF, correa, presión, Goodhart, DPO, adulación) tiene su propio paso y un ejemplo antes. Cada «tu turno» va precedido de una demostración automática y es opcional.
+- Se quitaron de la narración detalles que no hacían falta para entender (la máscara de pérdida, el desacuerdo como «tres de cada cuatro», la pareja de cuatro jueces): siguen en «por dentro».
+- Cifras nuevas en la narración, todas verificadas arriba: 33 mil indicaciones y de 4 a 9 respuestas ordenadas; 72.6 %; GPT-3 con 300 mil millones de tokens; Meta usó DPO en Llama 3; TinyLlama Chat se alineó con DPO.
 
 ## No verificado o dudoso
-- Las páginas de openai.com no se pueden abrir con herramientas automáticas: se leyeron por Wayback y sus URL no se comprobaron en vivo.
-- Zephyr «sin etiquetas humanas» significa sin anotación humana nueva (el maestro es GPT-4).
-- La demografía de quienes etiquetan viene de una encuesta voluntaria de 19 personas: no se usaron porcentajes.
-- El artículo de InstructGPT es inconsistente sobre la inicialización del modelo de recompensa (cuerpo: modelo ajustado; apéndice C.2: GPT-3); consta así en «por dentro».
-- Las preguntas, respuestas y rasgos de las cinco parejas del turno `rm` son ilustrativos y están rotulados.
+- Las páginas de openai.com no se abren con herramientas automáticas: se leyeron por Wayback y sus URL no se comprobaron en vivo.
+- TinyLlama Chat se alineó con preferencias ordenadas por GPT-4, no por personas: así consta en «por dentro»; la narración solo dice que pasó por «los pasos que verás hoy» (ajuste con instrucciones y DPO).
+- Zephyr «sin anotación humana nueva» significa sin anotación humana nueva (el maestro es GPT-4).
+- El artículo de InstructGPT es inconsistente sobre la inicialización del modelo de recompensa (cuerpo: modelo ajustado; apéndice C.2: GPT-3); por eso «por dentro» ya no la afirma.
+- Las preguntas, respuestas y rasgos de las cinco parejas, los pesos del juez de práctica, la regla de calidad real, los 28 pedidos y el esquema de señales del caso GPT-4o son ilustrativos y están rotulados en pantalla.

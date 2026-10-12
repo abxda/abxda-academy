@@ -1,0 +1,66 @@
+name: "Comentario de revisión (un paso de una lección)"
+description: "Algo no se entendió, se ve mal o suena mal en un paso concreto. Se abre solo desde el botón «Comentar este paso» del modo revisión."
+title: "[lección · paso] "
+labels: ["revisión"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por revisar. **No hay respuestas tontas:** si algo no se entendió, eso es justo lo que necesitamos saber.
+        Los primeros campos ya vienen llenos desde el curso; solo cuenta qué pasó.
+  - type: input
+    id: leccion
+    attributes:
+      label: Lección
+      description: Viene llena desde el curso.
+    validations:
+      required: true
+  - type: input
+    id: paso
+    attributes:
+      label: Paso
+      description: Viene lleno desde el curso (número de paso e identificador).
+  - type: dropdown
+    id: idioma
+    attributes:
+      label: Idioma
+      options: ["Español", "Inglés"]
+    validations:
+      required: true
+  - type: dropdown
+    id: dispositivo
+    attributes:
+      label: ¿Dónde lo viste?
+      options: ["Computadora", "Teléfono", "Tableta"]
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: ¿Qué pasó? (elige lo más parecido)
+      options:
+        - "No lo entendí / me perdí"
+        - "Va demasiado rápido"
+        - "Una cifra o un dato parece incorrecto"
+        - "Algo en pantalla se ve encimado, cortado o ilegible"
+        - "La voz se oye mal o pronuncia mal una palabra"
+        - "La voz no coincide con lo que se ve"
+        - "La traducción no suena natural"
+        - "Otra cosa"
+    validations:
+      required: true
+  - type: textarea
+    id: comentario
+    attributes:
+      label: Cuéntalo con tus palabras
+      description: "¿Qué esperabas entender y qué entendiste? Si puedes, pega una captura de pantalla aquí (arrástrala o pégala)."
+    validations:
+      required: true
+  - type: textarea
+    id: sugerencia
+    attributes:
+      label: ¿Qué te habría ayudado? (opcional)
+      description: "Un ejemplo, ir más despacio, otra palabra, un dibujo… Cualquier idea sirve."
+  - type: textarea
+    id: texto
+    attributes:
+      label: Lo que decía la voz en ese paso
+      description: Viene lleno desde el curso; no hace falta tocarlo.

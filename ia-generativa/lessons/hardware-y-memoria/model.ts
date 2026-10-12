@@ -1,198 +1,150 @@
-// Matemática pura de la lección «GPUs, memoria y cuantización». Sin dibujo, sin DOM, determinista.
+// Números y cuentas de la lección «GPUs, memoria y cuantización». Sin dibujo ni DOM: determinista y puro.
 //
-// ── De dónde sale cada número ─────────────────────────────────────────────────────────────────────
-// 1) Bytes por parámetro: FP32 = 4, FP16 / BF16 = 2, INT8 = 1, INT4 = 0,5. Formatos (signo, exponente, mantisa): FP32 (1, 8, 23),
-//    FP16 (1, 5, 10), BF16 (1, 8, 7) — Kalamkar et al. (2019), tabla 1. Memoria de los pesos = N · bytes por parámetro.
-//    1 GB = 10⁹ bytes (como en las fichas de los fabricantes para el ancho de banda; las capacidades de VRAM de las fichas son en
-//    realidad GiB: una «12 GB» muestra 12 288 MiB en nvidia-smi. La diferencia, 7 %, no cambia ninguna conclusión de la lección).
-// 2) Entrenar con Adam en precisión mixta: 2 (pesos fp16) + 2 (gradientes fp16) + 12 (copia maestra fp32 + momento + varianza) =
-//    16 bytes por parámetro — Rajbhandari et al. (2020, ZeRO), §3.1; Micikevicius et al. (2018). Medido en una RTX 3060: measure-memory.py.
-// 3) Activaciones por capa de un transformer en 16 bits: s·b·h·(34 + 5·a·s/h) bytes (Korthikanti et al., 2022, ec. 1). El término
-//    5·a·s/h es la atención (matriz s × s); con atención de memoria lineal (FlashAttention) solo queda 34·s·b·h. Si se recalcula
-//    todo, se guarda solo la entrada de cada capa: 2·s·b·h (§5). s = longitud de secuencia, b = tamaño de lote, h = dimensión.
-// 4) Modelos Llama 3 (Llama Team, 2024, tabla 3): 8B (32 capas, h = 4096), 70B (80, 8192), 405B (126, 16384).
-// 5) Paralelismo: GPUs = TP · PP · DP (Llama 3.1 405B: 8 · 16 · 128 = 16 384; tabla 4). Burbuja del pipeline = (PP − 1) / M con M
-//    micro-lotes (Narayanan et al., 2021; Llama Team, 2024, §3.3.2, sin entrelazado).
-// 6) Hardware: fichas oficiales de NVIDIA (H100 SXM, A100 80 GB SXM, H200), AMD (MI300X) y GeForce RTX 3060 (12 GB GDDR6, 192 bits,
-//    15 Gbps por pin = 360 GB/s). Los valores se verificaron en las páginas de producto (ver `sources` en content.ts).
-// 7) Cuantización: build-data.py (redondeo simétrico, una escala por matriz o por grupo de 32), sobre pesos reales de Pythia-1.4B.
-import { FULL_ERR, LOSS, PATCH, SAMPLE, ZERO_FRAC } from './real-data';
+// ── De dónde sale cada número ─────────────────────────────────────────────────────────────────────────────
+// 1) Bytes por parámetro: FP32 = 4, FP16 = 2, INT8 = 1, INT4 = ½. Memoria de los pesos = parámetros × bytes por parámetro.
+//    1 GB = 10⁹ bytes (como dicen las fichas de los fabricantes; «12 GB» de VRAM son en realidad 12 GiB: la diferencia,
+//    del 7 %, no cambia ninguna conclusión de la lección y se explica en «por dentro»).
+// 2) Entrenar con Adam en precisión mixta: 2 (pesos FP16) + 2 (gradientes FP16) + 4 (copia FP32) + 4 + 4 (los dos promedios de
+//    Adam en FP32) = 16 bytes por parámetro: Rajbhandari et al. (2020, ZeRO), §3.1; Micikevicius et al. (2018).
+//    Medido en una GeForce RTX 3060 (measure-memory.py, 2026-10-04): 16.05 bytes por parámetro con precisión mixta.
+// 3) Hardware: H100 SXM, 80 GB HBM3, 3.35 TB/s, 16 896 núcleos FP32, 1 979 TFLOPS FP16 «con dispersión» (989 sin ella): ficha y
+//    blog técnico de NVIDIA. RTX 3060: 12 GB GDDR6 con bus de 192 bits (ficha de NVIDIA); su ancho de banda se MIDIÓ: 333 GB/s
+//    al copiar 1 GiB (measure-memory.py). Servidor de 8 H100 (como los de Meta para Llama 3: Llama Team, 2024, §3.3.1).
+// 4) Llama 3.1: 8, 70 y 405 mil millones de parámetros (Llama Team, 2024, tabla 3; tamaños nominales). 405B entrenado con hasta
+//    16 384 H100 = 8 (tensor) × 16 (tubería) × 128 (datos): tabla 4. En BF16 no cabe en un servidor de 8 H100: §6.1.
+// 5) Cuantización: build-data.py (redondeo simétrico al más cercano, una escala por cada grupo de 32 pesos) sobre pesos reales de
+//    Pythia-1.4B; la pérdida del modelo entero se midió sobre WikiText-2 (real-data.ts).
+import { LOSS, PATCH, SAMPLE, ZERO_FRAC } from './real-data';
 
 export const GB = 1e9;
 
-// ── precisiones ─────────────────────────────────────────────────────────────────────────────────
-export interface Prec { id: 'fp32' | 'fp16' | 'int8' | 'int4'; bits: number; es: string; en: string }
-export const PRECS: Prec[] = [
-  { id: 'fp32', bits: 32, es: 'FP32', en: 'FP32' },
-  { id: 'fp16', bits: 16, es: 'FP16 / BF16', en: 'FP16 / BF16' },
-  { id: 'int8', bits: 8, es: 'INT8', en: 'INT8' },
-  { id: 'int4', bits: 4, es: 'INT4', en: 'INT4' },
+// ── formatos de número ───────────────────────────────────────────────────────────────────────────────
+export type FmtId = 'fp32' | 'fp16' | 'int8' | 'int4';
+export interface Fmt { id: FmtId; name: string; bytes: number }
+export const FMTS: Fmt[] = [
+  { id: 'fp32', name: 'FP32', bytes: 4 },
+  { id: 'fp16', name: 'FP16', bytes: 2 },
+  { id: 'int8', name: 'INT8', bytes: 1 },
+  { id: 'int4', name: 'INT4', bytes: 0.5 },
 ];
-export const precBits = (id: string) => PRECS.find((p) => p.id === id)?.bits ?? 16;
-export const weightsGB = (N: number, bits: number) => (N * bits) / 8 / GB;
+export const fmtOf = (id: string): Fmt => FMTS.find((f) => f.id === id) ?? FMTS[1];
+export const weightsGB = (params: number, bytes: number) => (params * bytes) / GB;
 
-// ── GPUs (fichas oficiales; ver nota 6) ───────────────────────────────────────────────────────────
-export interface Gpu { id: string; name: string; mem: number; bw: number; kind: string; units?: number }
+// ── modelos de la calculadora (tamaños nominales) ─────────────────────────────────────────────────────────
+export interface ModelSize { id: string; params: number; es: string; en: string; who: string }
+export const MODELS: ModelSize[] = [
+  { id: '1.4', params: 1.4e9, es: '1.4 mil M', en: '1.4B', who: 'Pythia' },
+  { id: '8', params: 8e9, es: '8 mil M', en: '8B', who: 'Llama 3.1 8B' },
+  { id: '70', params: 70e9, es: '70 mil M', en: '70B', who: 'Llama 3.1 70B' },
+  { id: '405', params: 405e9, es: '405 mil M', en: '405B', who: 'Llama 3.1 405B' },
+];
+export const modelOf = (id: string): ModelSize => MODELS.find((m) => m.id === id) ?? MODELS[2];
+
+// ── GPUs ─────────────────────────────────────────────────────────────────────────────────────────────────
+export interface Gpu { id: string; es: string; en: string; sub: { es: string; en: string }; mem: number }
 export const GPUS: Gpu[] = [
-  { id: 'rtx3060', name: 'RTX 3060', mem: 12, bw: 360, kind: 'GDDR6' },
-  { id: 'a100', name: 'A100', mem: 80, bw: 2039, kind: 'HBM2e' },
-  { id: 'h100', name: 'H100', mem: 80, bw: 3350, kind: 'HBM3' },
-  { id: 'h200', name: 'H200', mem: 141, bw: 4800, kind: 'HBM3e' },
-  { id: 'mi300x', name: 'MI300X', mem: 192, bw: 5300, kind: 'HBM3' },
-  { id: 'dgx8', name: '8 × H100', mem: 640, bw: 3350, kind: 'NVLink', units: 8 },
+  { id: 'rtx', es: 'RTX 3060', en: 'RTX 3060', sub: { es: 'para videojuegos', en: 'gaming card' }, mem: 12 },
+  { id: 'h100', es: 'H100', en: 'H100', sub: { es: 'centro de datos', en: 'data center' }, mem: 80 },
+  { id: 'srv', es: '8 × H100', en: '8 × H100', sub: { es: 'un servidor', en: 'one server' }, mem: 640 },
 ];
-/** Margen reservado para la caché de atención, las activaciones y el entorno de ejecución (SUPUESTO de la lección). */
-export const MARGIN = 0.2;
-export type Fit = 'ok' | 'tight' | 'no';
-export const fitOf = (gb: number, mem: number): Fit => (gb <= mem * (1 - MARGIN) ? 'ok' : gb <= mem ? 'tight' : 'no');
-export const cardsNeeded = (gb: number, mem: number) => Math.max(1, Math.ceil(gb / (mem * (1 - MARGIN))));
+export const H100 = { mem: 80, bwGBs: 3350, cores: 16896, tflopsDense: 989 };
+/** Ancho de banda MEDIDO en una RTX 3060 (copiar 1 GiB; measure-memory.py). Se redondea a «unos 330» en la voz. */
+export const RTX_BW_MEASURED = 333;
+/** Operaciones que la H100 podría hacer mientras lee un parámetro de 2 bytes: 989 TFLOPS ÷ 3.35 TB/s × 2 ≈ 590. */
+export const OPS_PER_PARAM = Math.round(((H100.tflopsDense * 1e12) / (H100.bwGBs * 1e9)) * 2);
 
-/** Pico de cálculo H100 SXM (FP16 tensor, denso) y su ancho de banda: la «razón de la máquina». */
-export const H100 = { tflops: 989, bw: 3350 };
-/** Operaciones que la H100 puede hacer por cada byte que lee: 989 TFLOPS / 3,35 TB/s ≈ 295. */
-export const OPS_PER_BYTE = (H100.tflops * 1e12) / (H100.bw * 1e9);
-
-// ── entrenar: bytes por parámetro ───────────────────────────────────────────────────────────────
-export interface TrainPart { id: 'w' | 'g' | 'master' | 'm' | 'v'; bytes: number; tone: 'w' | 'err' | 'dat'; es: string; en: string; hatch: number }
+// ── entrenar: bytes por parámetro ────────────────────────────────────────────────────────────────────────
+export interface TrainPart { id: 'w' | 'g' | 'm1' | 'm2' | 'master'; bytes: number; tone: 'w' | 'err' | 'dat'; dither: boolean; es: string; en: string; seg: string }
 export const TRAIN_PARTS: TrainPart[] = [
-  { id: 'w', bytes: 2, tone: 'w', es: 'Pesos (FP16)', en: 'Weights (FP16)', hatch: 1 },
-  { id: 'g', bytes: 2, tone: 'err', es: 'Gradientes (FP16)', en: 'Gradients (FP16)', hatch: 1 },
-  { id: 'master', bytes: 4, tone: 'w', es: 'Copia de pesos (FP32)', en: 'Weight copy (FP32)', hatch: 0.55 },
-  { id: 'm', bytes: 4, tone: 'dat', es: 'Momento de Adam (FP32)', en: 'Adam momentum (FP32)', hatch: 1 },
-  { id: 'v', bytes: 4, tone: 'dat', es: 'Varianza de Adam (FP32)', en: 'Adam variance (FP32)', hatch: 0.55 },
+  { id: 'w', bytes: 2, tone: 'w', dither: false, es: 'parámetro (FP16)', en: 'parameter (FP16)', seg: 'train-grad' },
+  { id: 'g', bytes: 2, tone: 'err', dither: false, es: 'gradiente (FP16)', en: 'gradient (FP16)', seg: 'train-grad' },
+  { id: 'm1', bytes: 4, tone: 'dat', dither: false, es: 'Adam: promedio de la pendiente', en: 'Adam: average slope', seg: 'train-adam' },
+  { id: 'm2', bytes: 4, tone: 'dat', dither: true, es: 'Adam: promedio del tamaño', en: 'Adam: average size', seg: 'train-adam' },
+  { id: 'master', bytes: 4, tone: 'w', dither: true, es: 'copia del parámetro (FP32)', en: 'parameter copy (FP32)', seg: 'train-master' },
 ];
-export const TRAIN_BYTES = TRAIN_PARTS.reduce((a, p) => a + p.bytes, 0); // 16
-export const trainGB = (N: number) => (N * TRAIN_BYTES) / GB;
+export const TRAIN_BYTES = TRAIN_PARTS.reduce((a, p) => a + p.bytes, 0);   // 16
+export const TRAIN_MEASURED = 16.05;                                        // precisión mixta, Pythia-160M, RTX 3060
 
-export interface LlamaCfg { name: string; N: number; L: number; h: number }
-export const LLAMA: Record<string, LlamaCfg> = {
-  '8B': { name: '8B', N: 8e9, L: 32, h: 4096 },
-  '70B': { name: '70B', N: 70e9, L: 80, h: 8192 },
-  '405B': { name: '405B', N: 405e9, L: 126, h: 16384 },
-};
-/** Memoria de activaciones (bytes) de un transformer en 16 bits con `tokens` = s·b por paso (nota 3). */
-export const actBytes = (c: LlamaCfg, tokens: number, recompute: boolean) => (recompute ? 2 : 34) * c.h * c.L * tokens;
+// ── el parámetro de ejemplo: PATCH[0][2] de la muestra real (capa 14, atención) ──────────────────────────────
+export const EX = (() => {
+  const w = PATCH[0][2];                                   // 0.02405 (redondeado a 5 decimales al guardar la muestra)
+  const f16 = f16Value(w);                                 // el valor FP16 real: 0.0240478515625
+  const top = Math.max(...PATCH[0].map((v) => Math.abs(v)));  // escala del grupo (la fila 0 de la muestra, 32 pesos)
+  const L8 = Math.round(f16 / (top / 127)), L4 = Math.round(f16 / (top / 7));   // 68 y 4
+  return { f16, L8, L4, q8: L8 * (top / 127), q4: L4 * (top / 7), top };
+})();
 
-// ── paralelismo (el turno 2) ────────────────────────────────────────────────────────────────────
-export const SPLIT = { N: 70e9, layers: 80, gpuMem: 80, reserve: 0.25, micro: 32, maxTP: 8 };
-export interface SplitOut { gpus: number; perGpu: number; budget: number; fits: boolean; bubble: number; tpOk: boolean; statesGB: number }
-export function splitOf(tp: number, pp: number, dp: number): SplitOut {
-  const statesGB = trainGB(SPLIT.N), perGpu = statesGB / (tp * pp), budget = SPLIT.gpuMem * (1 - SPLIT.reserve);
-  return { gpus: tp * pp * dp, perGpu, budget, fits: perGpu <= budget, bubble: (pp - 1) / SPLIT.micro, tpOk: tp <= SPLIT.maxTP, statesGB };
+/** Valor representable en FP16 (IEEE 754, binario16) más cercano a x (valores normales, suficiente para pesos ~10⁻²). */
+export function f16Value(x: number): number {
+  if (x === 0) return 0;
+  const a = Math.abs(x), e = Math.floor(Math.log2(a)), step = 2 ** (e - 10);
+  return Math.sign(x) * Math.round(a / step) * step;
 }
 
-// ── bits reales de un número (para la escena de «bytes») ───────────────────────────────────────
+// ── cuantización de la muestra de 32 × 32 (la misma regla de build-data.py, esquema «grupo») ────────────────────
+/** Bits del deslizador: 16 = el original, sin cuantizar. No hay 7 bits: no se midió. */
+export const BITS = [2, 3, 4, 5, 6, 8, 16];
+export const bitsOf = (v: number | undefined) => BITS[Math.max(0, Math.min(BITS.length - 1, Math.round(v ?? BITS.length - 1)))];
+export const bitsIndex = (b: number) => Math.max(0, BITS.indexOf(b));
+export const P = SAMPLE.patch;                                // 32
+export const W0: number[] = PATCH.flat();
+
+export interface QuantOut { q: number[]; zero: number }
+const qcache = new Map<number, QuantOut>();
+/** Cuantiza la muestra: cada fila de 32 pesos es un grupo con su propia regla (escala = su máximo ÷ qmax). */
+export function quantPatch(bits: number): QuantOut {
+  const hit = qcache.get(bits); if (hit) return hit;
+  if (bits >= 16) { const o = { q: W0.slice(), zero: 0 }; qcache.set(bits, o); return o; }
+  const qmax = 2 ** (bits - 1) - 1, q: number[] = [];
+  let zeros = 0;
+  for (let r = 0; r < P; r++) {
+    const row = PATCH[r], s = Math.max(...row.map((v) => Math.abs(v))) / qmax;
+    for (let c = 0; c < P; c++) { const L = Math.max(-qmax, Math.min(qmax, Math.round(row[c] / s))); q.push(L * s); if (L === 0) zeros++; }
+  }
+  const o = { q, zero: zeros / (P * P) }; qcache.set(bits, o); return o;
+}
+/** Marcas de la regla de un grupo: −qmax…+qmax multiplicadas por la escala. */
+export const rulerMarks = (bits: number, top: number): number[] => {
+  const qmax = 2 ** (bits - 1) - 1, s = top / qmax, out: number[] = [];
+  for (let k = -qmax; k <= qmax; k++) out.push(k * s);
+  return out;
+};
+/** Pérdida medida del modelo entero (nats por token, WikiText-2) con las 96 matrices cuantizadas por grupos de 32. */
+export const lossOf = (bits: number): number => (bits >= 16 ? LOSS.fp16 : (LOSS.group[String(bits)] ?? LOSS.fp16));
+/** Fracción de pesos de la matriz entera que quedan en cero (medido en build-data.py). */
+export const zeroOf = (bits: number): number => (bits >= 16 ? 0 : ZERO_FRAC.group[String(bits)] ?? 0);
+
+// ── imagen ilustrativa para «menos tonos» (generada por fórmula; no es una foto) ─────────────────────────────
+export const IW = 30, IH = 20;
+/** Sol, dos colinas y un árbol, con degradados suaves. Tono de 0 (claro) a 1 (oscuro). */
+export function picture(i: number, j: number): number {
+  const x = (i + 0.5) / IW, y = (j + 0.5) / IH;
+  let v = 0.15 + 0.45 * y;                                                     // cielo: más claro arriba
+  const ds = Math.hypot(x - 0.72, (y - 0.3) * 1.5);
+  v -= 0.15 * Math.exp(-((ds / 0.25) ** 2));                                   // resplandor
+  if (ds < 0.11) v = 0.02;                                                     // sol
+  const h1 = 0.62 + 0.07 * Math.sin(5 * x + 1), h2 = 0.8 + 0.07 * Math.sin(4 * x + 3);
+  if (y > h1) v = 0.55 + 0.35 * (y - h1);                                      // colina lejana
+  if (y > h2) v = 0.78 + 0.3 * (y - h2);                                       // colina cercana
+  if (Math.abs(x - 0.2) < 0.018 && y > 0.5 && y < h2 + 0.02) v = 0.95;          // tronco
+  if (Math.hypot(x - 0.2, (y - 0.46) * 1.3) < 0.085) v = 0.88;                 // copa
+  return Math.max(0, Math.min(1, v));
+}
+export const posterize = (v: number, levels: number) => Math.round(v * (levels - 1)) / (levels - 1);
+
+// ── bits reales de un número (para la vista de bytes) ─────────────────────────────────────────────────────
+/** Los 32 bits de x en FP32 (IEEE 754, binario32). */
 export const f32bits = (x: number): string => {
   const b = new DataView(new ArrayBuffer(4)); b.setFloat32(0, x);
   return b.getUint32(0).toString(2).padStart(32, '0');
 };
-export const bf16bits = (x: number): string => {
-  const b = new DataView(new ArrayBuffer(4)); b.setFloat32(0, x);
-  const u = b.getUint32(0), r = ((u + 0x7fff + ((u >>> 16) & 1)) >>> 0) >>> 16;   // redondeo al más cercano (par)
-  return r.toString(2).padStart(16, '0');
-};
-/** IEEE 754 binario16 con redondeo al más cercano (solo valores normales, suficiente para pesos de magnitud ~10⁻²). */
+/** Los 16 bits de x en FP16 (IEEE 754, binario16), redondeado al más cercano (solo valores normales). */
 export const f16bits = (x: number): string => {
   const s = x < 0 ? 1 : 0, a = Math.abs(x);
   if (a === 0) return String(s) + '0'.repeat(15);
-  let e = Math.floor(Math.log2(a)); let m = a / 2 ** e - 1;
-  let mant = Math.round(m * 1024);
+  let e = Math.floor(Math.log2(a)), mant = Math.round((a / 2 ** e - 1) * 1024);
   if (mant === 1024) { mant = 0; e += 1; }
-  const exp = e + 15;
-  return String(s) + exp.toString(2).padStart(5, '0') + mant.toString(2).padStart(10, '0');
+  return String(s) + (e + 15).toString(2).padStart(5, '0') + mant.toString(2).padStart(10, '0');
 };
+/** Un entero en complemento a dos con `bits` bits. */
 export const intBits = (q: number, bits: number): string => ((q + (1 << bits)) & ((1 << bits) - 1)).toString(2).padStart(bits, '0');
-
-/** El peso de mayor magnitud de la muestra (para mostrar sus bits). */
-export const BIG = (() => {
-  let best = { v: 0, r: 0, c: 0 };
-  PATCH.forEach((row, r) => row.forEach((v, c) => { if (Math.abs(v) > Math.abs(best.v)) best = { v, r, c }; }));
-  return best;
-})();
-
-// ── cuantización de la muestra (la misma regla de build-data.py) ─────────────────────────────────
-/** Los pesos originales de la muestra, 32×32 en orden de fila. */
-export const PATCH_F32 = (() => { const P = SAMPLE.patch, a = new Float32Array(P * P); PATCH.forEach((row, r) => row.forEach((v, c) => (a[r * P + c] = v))); return a; })();
-export type Scheme = 'tensor' | 'group';
-export interface QuantOut {
-  q: Float32Array;            // pesos ya cuantizados (des-cuantizados), 32×32 en orden de fila
-  lev: Int16Array;            // nivel entero de cada peso
-  err: number;                // error relativo en la muestra: ||w − w'|| / ||w||
-  zero: number;               // fracción de pesos de la muestra que se redondean a cero
-  scaleMax: Float32Array;     // máximo que fija la escala de cada peso (para normalizar el histograma)
-  qmax: number;
-  hist: Float32Array;         // histograma de w / escala máxima en [−1, 1] (NB bins)
-  used: number;               // niveles distintos ocupados por al menos el 1 % de la muestra
-  usedPct: number;
-}
-export const NB = 41;
-const cache = new Map<string, QuantOut>();
-export function quantOf(bits: number, scheme: Scheme): QuantOut {
-  const key = `${bits}|${scheme}`, hit = cache.get(key);
-  if (hit) return hit;
-  const P = SAMPLE.patch, n = P * P, qmax = 2 ** (bits - 1) - 1;
-  const w = new Float32Array(n); PATCH.forEach((row, r) => row.forEach((v, c) => (w[r * P + c] = v)));
-  const q = new Float32Array(n), lev = new Int16Array(n), sm = new Float32Array(n), hist = new Float32Array(NB);
-  let num = 0, den = 0, zeros = 0;
-  for (let r = 0; r < P; r++) {
-    // esquema «grupo»: cada fila de la muestra son 32 pesos = un grupo (el tamaño de grupo de build-data.py)
-    let rowMax = 0; for (let c = 0; c < P; c++) rowMax = Math.max(rowMax, Math.abs(w[r * P + c]));
-    const top = scheme === 'tensor' ? SAMPLE.absmax : Math.max(rowMax, 1e-12), s = top / qmax;
-    for (let c = 0; c < P; c++) {
-      const i = r * P + c, L = Math.max(-qmax, Math.min(qmax, Math.round(w[i] / s)));
-      lev[i] = L; q[i] = L * s; sm[i] = top; num += (w[i] - q[i]) ** 2; den += w[i] ** 2; if (L === 0) zeros++;
-      const x = w[i] / top, b = Math.min(NB - 1, Math.max(0, Math.floor(((x + 1) / 2) * NB))); hist[b]++;
-    }
-  }
-  const counts = new Map<number, number>(); lev.forEach((l) => counts.set(l, (counts.get(l) ?? 0) + 1));
-  let used = 0; counts.forEach((c) => { if (c >= 0.01 * n) used++; });
-  const out: QuantOut = { q, lev, err: Math.sqrt(num / den), zero: zeros / n, scaleMax: sm, qmax, hist, used, usedPct: used / (2 * qmax + 1) };
-  cache.set(key, out);
-  return out;
-}
-/** Valores de la tabla medida (offline) para toda la matriz y para todo el modelo. */
-export const fullErr = (bits: number, scheme: Scheme) => FULL_ERR[scheme][String(bits)];
-export const fullZero = (bits: number, scheme: Scheme) => ZERO_FRAC[scheme][String(bits)];
-export const modelLoss = (bits: number, scheme: Scheme): number | null => (bits >= 16 ? LOSS.fp16 : (LOSS[scheme][String(bits)] ?? null));
-export const BITS_LIST = [2, 3, 4, 5, 6, 8];
-/** Bits efectivos por peso: la escala fp16 de cada grupo de 32 añade 16/32 = 0,5 bit (como el bloque Q4_0 de llama.cpp: 18 bytes por 32 pesos). */
-export const effBits = (bits: number, scheme: Scheme) => bits + (scheme === 'group' ? 16 / SAMPLE.group : 0);
-
-// ── mediciones propias (measure-memory.py, RTX 3060 de 12 GB, 2026-10-04) ───────────────────────────
-export const MEASURED = {
-  fp32: { afterStep: 16.19 },          // bytes por parámetro tras el primer paso de AdamW (fp32 completo)
-  mixed: { afterStep: 16.05 },         // precisión mixta con copia maestra fp32
-  copyGBps: 333,                       // copiar 1 GiB: 333 GB/s de los 360 de la ficha
-  matvec: { ms: 1.57, GBps: 341, tflops: 0.34 },
-  matmulTflops: 27.7,                  // el mismo chip con 4096 vectores a la vez
-  actRatio: 0.949,                     // activaciones medidas / (34·s·b·h·L)
-};
-
-// ── formato de números (mismos locales que Frame.n: es-MX → punto decimal; en-US) ─────────────────────
-type Lang = 'es' | 'en';
-const loc = (lang: Lang) => (lang === 'es' ? 'es-MX' : 'en-US');
-export const nf = (x: number, digits: number, lang: Lang) => x.toLocaleString(loc(lang), { minimumFractionDigits: digits, maximumFractionDigits: digits });
-/** Cifras con 3 cifras significativas aproximadas. */
-export function sig(x: number, lang: Lang): string {
-  const ax = Math.abs(x), d = ax >= 100 ? 0 : ax >= 10 ? 1 : 2;
-  const s = nf(x, d, lang), sep = (1.5).toLocaleString(loc(lang)).replace(/\d/g, '')[0];
-  return d > 0 && s.includes(sep) ? s.replace(new RegExp(`\\${sep}?0+$`), '') : s;
-}
-/** Conteos de parámetros: «13 mil M» / «13B». */
-export function count(x: number, lang: Lang): string {
-  if (x < 1e6) return nf(Math.round(x), 0, lang);
-  if (lang === 'es') {
-    if (x < 1e9) return `${sig(x / 1e6, lang)} M`;
-    if (x < 1e12) return `${sig(x / 1e9, lang)} mil M`;
-    const v = sig(x / 1e12, lang); return `${v} ${v === '1' ? 'billón' : 'billones'}`;
-  }
-  if (x < 1e9) return `${sig(x / 1e6, lang)}M`;
-  if (x < 1e12) return `${sig(x / 1e9, lang)}B`;
-  return `${sig(x / 1e12, lang)}T`;
-}
-export function gbText(gb: number, lang: Lang): string {
-  if (gb >= 1000) return `${nf(gb / 1000, gb >= 10000 ? 0 : 1, lang)} TB`;
-  return `${sig(gb, lang)} GB`;
-}
-export const bwText = (gbps: number, lang: Lang) => (gbps >= 1000 ? `${nf(gbps / 1000, 2, lang)} TB/s` : `${nf(gbps, 0, lang)} GB/s`);
-export const ms = (x: number, lang: Lang) => `${sig(x, lang)} ms`;

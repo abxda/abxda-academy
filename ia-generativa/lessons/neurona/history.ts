@@ -119,6 +119,12 @@ export function drawLimits(S: Frame, D: Rect) {
   });
 }
 
+/** Alto de un bloque de texto envuelto (mismas reglas que `txt`), sin dibujarlo. */
+function textH(S: Frame, s: string, w: number, size: number, weight: number, lh = 1.3) {
+  const px = fs(S, size);
+  return S.d.wrap(s, w, { size: px, weight }).length * lh * px * S.u;
+}
+
 export function drawReal(S: Frame, D: Rect) {
   const { d, pal: p } = S, u = S.u, port = S.portrait;
   const cards: { v: string; l: string; src: string; t: 'w' | 'sig' | 'lat' }[] = [
@@ -132,11 +138,16 @@ export function drawReal(S: Frame, D: Rect) {
     const tR = tau(S, 'real'), a = i === 0 ? S.reveal('real', 0.2, 0.6) : tr(tR, i === 1 ? 0.08 : 0.5, i === 1 ? 0.2 : 0.62), t = tone(S, c.t);
     d.withAlpha(a, () => {
       d.rect(r.x, r.y, r.w, r.h, { fill: alpha(t.c, 0.07), stroke: t.c, lw: 1.5, r: 10 * u });
-      const maxW = r.w - 24 * u;
+      const maxW = r.w - 24 * u, top = r.y + (port ? 12 : 20) * u, srcTop = r.y + r.h - 10 * u - fs(S, 12) * u * 1.3 - 8 * u;
       let size = 40; while (size > 18 && d.measure(c.v, { size: fs(S, size), weight: 800, font: 'mono' }) > maxW) size -= 1;
-      d.text(c.v, r.x + 14 * u, r.y + (port ? 12 : 20) * u, { size: fs(S, size), weight: 800, font: 'mono', color: t.ink, base: 'top' });
-      const vy = r.y + (port ? 12 : 20) * u + fs(S, size) * u * 1.25;
-      txt(S, c.l, r.x + 14 * u, vy + 8 * u, { size: 15, weight: 600, color: p.ink, base: 'top', w: r.w - 28 * u });
+      // en tarjetas bajas (teléfono pequeño) el texto se achica para no pisar la fuente
+      let ls = 15;
+      const fits = () => top + fs(S, size) * u * 1.25 + 8 * u + textH(S, c.l, r.w - 28 * u, ls, 600) <= srcTop;
+      while (!fits() && ls > 12) ls -= 1;
+      while (!fits() && size > 22) size -= 2;
+      d.text(c.v, r.x + 14 * u, top, { size: fs(S, size), weight: 800, font: 'mono', color: t.ink, base: 'top' });
+      const vy = top + fs(S, size) * u * 1.25;
+      txt(S, c.l, r.x + 14 * u, vy + 8 * u, { size: ls, weight: 600, color: p.ink, base: 'top', w: r.w - 28 * u });
       txt(S, c.src, r.x + 14 * u, r.y + r.h - 10 * u, { size: 12, color: p.mute, base: 'bottom' });
     });
   });
@@ -167,16 +178,24 @@ export function drawHype(S: Frame, D: Rect) {
     tag(S, S.l('Lo que se demostró', 'What was demonstrated'), B.x + pad, B.y + 22 * u, { tone: 'dat', align: 'left', size: 12 });
     const q = S.l('Tras 50 ensayos, un IBM 704 aprendió a distinguir tarjetas marcadas a la izquierda de las marcadas a la derecha.', 'After 50 trials, an IBM 704 learned to tell cards marked on the left from cards marked on the right.');
     txt(S, 'Cornell Chronicle · 2019', B.x + pad, B.y + 46 * u, { size: 12, weight: 600, color: p.mute, base: 'top', w: B.w - 2 * pad });
-    txt(S, q, B.x + pad, B.y + 74 * u, { size: qs, weight: 600, color: p.ink, base: 'top', w: B.w - 2 * pad, lh: 1.35 });
-    // dos tarjetas: marca a la izquierda y a la derecha
-    const cw = Math.min(58 * u, B.w * 0.17), ch = cw * 0.64, cy = B.y + B.h - ch - (port ? 12 : 28) * u, cx0 = B.x + B.w / 2 - cw - 16 * u;
+    // dos tarjetas: marca a la izquierda y a la derecha; la cita se achica si no cabe encima de ellas (teléfono pequeño)
+    const cw = Math.min(58 * u, B.w * 0.17), ch = cw * 0.64, cx0 = B.x + B.w / 2 - cw - 16 * u;
+    let bs = qs, cy = B.y + B.h - ch - (port ? 12 : 28) * u;
+    const qb = (z: number) => B.y + 74 * u + textH(S, q, B.w - 2 * pad, z, 600, 1.35), lblH = fs(S, 12) * u * 1.3;
+    while (bs > 12 && qb(bs) > cy - 16 * u - lblH) bs -= 1;
+    // si ni así caben los rótulos «izquierda/derecha», se omiten (las tarjetas ya muestran la marca) y las tarjetas no pisan la cita
+    const labels = qb(bs) <= cy - 10 * u - lblH;
+    if (!labels) cy = Math.max(cy, qb(bs) + 8 * u);
+    txt(S, q, B.x + pad, B.y + 74 * u, { size: bs, weight: 600, color: p.ink, base: 'top', w: B.w - 2 * pad, lh: 1.35 });
     [0, 1].forEach((k) => {
       const x = cx0 + k * (cw + 32 * u);
       d.rect(x, cy, cw, ch, { fill: p.surface, stroke: p.lineStrong, lw: 1.5, r: 3 });
       d.rect(k === 0 ? x + 5 * u : x + cw - 5 * u - 12 * u, cy + ch / 2 - 6 * u, 12 * u, 12 * u, { fill: dt.c });
     });
-    txt(S, S.l('izquierda', 'left'), cx0 + cw / 2, cy - 6 * u, { size: 12, color: p.mute, align: 'center', base: 'bottom' });
-    txt(S, S.l('derecha', 'right'), cx0 + cw + 32 * u + cw / 2, cy - 6 * u, { size: 12, color: p.mute, align: 'center', base: 'bottom' });
+    if (labels) {
+      txt(S, S.l('izquierda', 'left'), cx0 + cw / 2, cy - 6 * u, { size: 12, color: p.mute, align: 'center', base: 'bottom' });
+      txt(S, S.l('derecha', 'right'), cx0 + cw + 32 * u + cw / 2, cy - 6 * u, { size: 12, color: p.mute, align: 'center', base: 'bottom' });
+    }
   });
 }
 

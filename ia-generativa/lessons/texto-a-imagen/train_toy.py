@@ -1,6 +1,6 @@
 """Un modelo de TEXTO A IMAGEN diminuto, entrenado de verdad, para la lección 18. Se ejecuta una sola vez, offline:
 
-    ~/venvs/tts/bin/python train_toy.py            # escribe model.ts (≈ 15 min en CPU)
+    ~/venvs/tts/bin/python train_toy.py            # escribe model.ts (≈ 5 min en CPU con 8 hilos)
 
 La escena corre en el navegador (nn.ts) el mismo cálculo con estos pesos: no hay nada simulado. Piezas:
   1. Mundo de juguete: imágenes de 12×12 píxeles con cinco colores (los cinco tonos del curso), un fondo y UNA forma
@@ -20,7 +20,7 @@ lección usan esos mismos pesos cuantizados.
 """
 import base64, json, math, sys, time
 import numpy as np, torch, torch.nn as nn, torch.nn.functional as F
-torch.set_num_threads(16)
+torch.set_num_threads(8)
 
 # ───────────────────────── 1. el mundo ─────────────────────────
 N = 12

@@ -9,7 +9,8 @@ export const lerpRect = (a: Rect, b: Rect, t: number): Rect => ({ x: lerp(a.x, b
 /** Reparto del lateral: en horizontal, arriba un cuadrado para la baraja y debajo la lectura; en vertical, a la izquierda la baraja y a la derecha la lectura. */
 export function asideSplit(S: Frame, aside: Rect): { deck: Rect; info: Rect } {
   const g = 10 * S.u;
-  if (S.portrait) { const s = Math.min(aside.h, aside.w * 0.4); return { deck: { x: aside.x, y: aside.y, w: s, h: s }, info: { x: aside.x + s + g, y: aside.y, w: aside.w - s - g, h: aside.h } }; }
+  // en vertical, y también en un escenario muy apaisado y bajo (teléfono en horizontal), la baraja va a la izquierda de la lectura
+  if (S.portrait || S.W / S.H > 2.6) { const s = Math.min(aside.h, aside.w * 0.4); return { deck: { x: aside.x, y: aside.y, w: s, h: s }, info: { x: aside.x + s + g, y: aside.y, w: aside.w - s - g, h: aside.h } }; }
   const s = Math.min(aside.w, aside.h * 0.5);
   return { deck: { x: aside.x, y: aside.y, w: s, h: s }, info: { x: aside.x, y: aside.y + s + g, w: aside.w, h: aside.h - s - g } };
 }

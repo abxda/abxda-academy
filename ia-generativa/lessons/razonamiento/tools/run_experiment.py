@@ -5,7 +5,7 @@ Modelo: Qwen3.5-4B (Qwen, febrero de 2026; licencia Apache-2.0), con pesos en fp
 en una RTX 3060 de 12 GB compartida. Se eligió un modelo pequeño a propósito: cabe en la GPU y el efecto del pensamiento se ve mejor.
 
 Protocolo (presupuesto forzado, como el «budget forcing» de s1, Muennighoff et al. 2025):
-  1. Para cada problema se muestrean K cadenas de pensamiento completas (hasta BMAX tokens) con T = 0,7, top-p 0,95, top-k 20.
+  1. Para cada problema se muestrean K cadenas de pensamiento completas (hasta BMAX tokens) con T = 0.7, top-p 0.95, top-k 20.
   2. Para cada presupuesto B de la lista: si la cadena terminó sola en L <= B tokens, se usa su respuesta natural;
      si no, se corta el pensamiento en los primeros B tokens, se cierra con una frase fija + </think> y se pide la respuesta.
   3. B = 0 es «responder de inmediato»: bloque de pensamiento vacío, tal como la plantilla del modelo en modo sin pensar.

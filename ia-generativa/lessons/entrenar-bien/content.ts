@@ -9,13 +9,13 @@ export default defineLesson({
 
   objectives: {
     es: [
-      'Explicar por qué se entrena con lotes al azar en lugar de usar todos los ejemplos, y calcular cuántos pasos tiene una época.',
-      'Distinguir qué aporta cada optimizador (SGD, momento, Adam) y por qué cada uno pide su propia tasa de aprendizaje.',
+      'Explicar qué es un lote y por qué se entrena con lotes al azar en lugar de usar todos los ejemplos, y calcular cuántos pasos tiene una época.',
+      'Distinguir qué hace cada optimizador (SGD, momento y Adam) y por qué cada uno necesita su propia tasa de aprendizaje.',
       'Predecir qué hacen el calentamiento y el decaimiento de la tasa, y reconocer qué ajustes son hiperparámetros.',
     ],
     en: [
-      'Explain why we train on random batches instead of using every example, and compute how many steps an epoch has.',
-      'Tell what each optimizer (SGD, momentum, Adam) contributes and why each one wants its own learning rate.',
+      'Explain what a batch is and why we train on random batches instead of using every example, and compute how many steps an epoch has.',
+      'Tell what each optimizer (SGD, momentum, and Adam) does and why each one needs its own learning rate.',
       'Predict what warmup and decay of the rate do, and recognize which settings are hyperparameters.',
     ],
   },
@@ -23,234 +23,331 @@ export default defineLesson({
   segments: [
     {
       id: 'hook',
-      es: 'Hasta ahora corregimos los pesos con un solo ejemplo. Un modelo real aprende de millones. ¿Cuántos ejemplos hay que mirar antes de dar cada paso?',
-      en: 'So far we have corrected the weights using a single example. A real model learns from millions. How many examples should we look at before taking each step?',
+      es: 'En la lección ocho corregimos los pesos con un solo ejemplo. Un modelo real aprende de millones. ¿Cuántos ejemplos conviene mirar antes de dar cada paso?',
+      en: 'In lesson eight we corrected the weights using a single example. A real model learns from millions. How many examples should it look at before each step?',
+    },
+    {
+      id: 'deck',
+      es: 'Para verlo usaremos un conjunto pequeño: doscientos cincuenta y seis ejemplos. Cada casilla de esta cuadrícula es uno de ellos.',
+      en: 'To see it we will use a small set: two hundred fifty-six examples. Each square in this grid is one of them.',
     },
     {
       id: 'toy',
-      es: 'Para verlo usaremos un modelo de juguete: dos pesos y doscientos cincuenta y seis ejemplos. Cada ejemplo prefiere unos pesos distintos, y lo marcamos con un punto.',
-      en: 'To see it we will use a toy model: two weights and two hundred fifty-six examples. Each example prefers different weights, and we mark that preference with a dot.',
+      es: 'El modelo es de juguete: solo tiene dos pesos. Como en la lección cuatro, lo dibujamos en un plano: el primer peso a lo ancho y el segundo a lo alto.',
+      en: 'The model is a toy: it has only two weights. As in lesson four, we draw it on a plane: the first weight runs across and the second runs up.',
+    },
+    {
+      id: 'map',
+      es: 'Cada pareja de pesos tiene su error. Lo vemos desde arriba, como un mapa de montaña: cada línea une puntos con el mismo error, y más color es más error.',
+      en: 'Each pair of weights has its own error. We see it from above, like a mountain map: each line joins points with the same error, and more color means more error.',
+    },
+    {
+      id: 'dots',
+      es: 'Cada ejemplo, por sí solo, preferiría unos pesos distintos. Marcamos esa preferencia con un punto: uno por casilla, doscientos cincuenta y seis en total.',
+      en: 'Each example, on its own, would prefer different weights. We mark that preference with a dot: one per square, two hundred fifty-six in all.',
+      pad: 0.3,
     },
     {
       id: 'average',
-      es: 'El error total es el promedio de los errores de todos los ejemplos. Su mínimo, el fondo del valle, queda justo en el centro de la nube de puntos.',
-      en: 'The total error is the average of the errors of all the examples. Its minimum, the bottom of the valley, sits right at the center of the cloud of dots.',
+      es: 'El error total es el promedio de los errores de todos los ejemplos. Por eso el fondo del valle, el mínimo, cae justo en el centro de la nube.',
+      en: 'The total error is the average of the errors of all the examples. That is why the bottom of the valley, the minimum, sits right at the center of the cloud.',
+      pad: 0.3,
     },
     {
       id: 'full',
-      es: 'Con todos los ejemplos, el descenso del gradiente de la lección cuatro calcula la pendiente del error promedio. Es exacto, pero cada paso cuesta mirar los doscientos cincuenta y seis.',
-      en: 'With every example, the gradient descent from lesson four computes the slope of the average error. It is exact, but each step costs a look at all two hundred fifty-six.',
+      es: 'Partimos de unos pesos cualquiera. Con los doscientos cincuenta y seis ejemplos, el descenso del gradiente de la lección cuatro da esta flecha, que apunta justo cuesta abajo.',
+      en: 'We start from some arbitrary weights. Using all two hundred fifty-six examples, the gradient descent from lesson four gives this arrow, which points straight downhill.',
       pad: 0.3,
     },
     {
-      id: 'sample',
-      es: 'Con millones de ejemplos eso sería lentísimo. ¿Hace falta tanta precisión? Basta una muestra: unos pocos ejemplos al azar, un lote, y la pendiente calculada solo con ellos.',
-      en: 'With millions of examples that would be painfully slow. Is that much precision needed? A sample is enough: a few examples picked at random, a batch, and the slope computed from just those.',
-      note: { es: 'Lote: pocos ejemplos al azar con los que se estima la pendiente.', en: 'Batch: a few random examples used to estimate the slope.' },
+      id: 'full-cost',
+      es: 'Damos un paso, y otro. El camino llega al fondo, pero cada paso exige revisar los doscientos cincuenta y seis ejemplos. Con millones, sería lentísimo.',
+      en: 'We take a step, and another. The path reaches the bottom, but every step means going through all two hundred fifty-six examples. With millions, it would be painfully slow.',
+      pad: 0.4,
+    },
+    {
+      id: 'batch',
+      es: 'La salida es tomar una muestra: unos pocos ejemplos al azar, por ejemplo ocho de los doscientos cincuenta y seis. A esa muestra se le llama lote.',
+      en: 'The way out is to take a sample: a few examples picked at random, say eight of the two hundred fifty-six. That sample is called a batch.',
+      note: { es: 'Lote: unos pocos ejemplos al azar con los que se calcula cada paso.', en: 'Batch: a few random examples used to compute each step.' },
+      pad: 0.3,
+    },
+    {
+      id: 'batch-arrow',
+      es: 'Con esos ocho calculamos la pendiente. La flecha del lote sale parecida a la de todos, pero algo desviada: ocho ejemplos no representan del todo a los demás.',
+      en: 'From those eight we compute the slope. The batch’s arrow comes out close to the one from all examples, but a little off: eight examples do not fully represent the rest.',
+      pad: 0.3,
     },
     {
       id: 'noisy',
-      es: 'Cada lote opina algo distinto, así que su flecha sale algo desviada. Con otros lotes, las flechas se reparten alrededor de la verdadera y, en promedio, la aciertan.',
-      en: 'Each batch has a slightly different opinion, so its arrow points a little off. With other batches, the arrows scatter around the true one and, on average, they get it right.',
-      note: { es: 'Un lote da una pendiente con ruido, pero bien orientada en promedio.', en: 'A batch gives a noisy slope, but one that points the right way on average.' },
-      pad: 0.3,
+      es: 'Otro lote de ocho da otra flecha. Con muchos lotes, las flechas se reparten alrededor de la de todos y, en promedio, la aciertan.',
+      en: 'Another batch of eight gives another arrow. With many batches, the arrows scatter around the one from all examples and, on average, they get it right.',
+      note: { es: 'Un lote da una flecha con ruido, pero bien orientada en promedio.', en: 'A batch gives a noisy arrow, but one that points the right way on average.' },
+      pad: 0.4,
     },
     {
       id: 'bigger',
-      es: 'Un lote mayor cierra el abanico, pero despacio: a grandes rasgos, reducir el ruido a la mitad exige un lote cuatro veces más grande.',
-      en: 'A bigger batch tightens the fan, but slowly: roughly speaking, cutting the noise in half takes a batch four times as large.',
-      pad: 0.3,
+      es: 'Un lote más grande desvía menos la flecha. Con lotes de dos ejemplos, el desvío medio es de un veinte por ciento; con lotes de ocho, de un diez por ciento.',
+      en: 'A bigger batch bends the arrow less. With batches of two examples, the arrow is off by about twenty percent on average; with batches of eight, by about ten percent.',
+      pad: 0.4,
+    },
+    {
+      id: 'bigger-rule',
+      es: 'O sea, reducir el desvío a la mitad pidió un lote cuatro veces mayor. Con lotes de treinta y dos baja a un cuatro por ciento; con ciento veintiocho, a menos de dos.',
+      en: 'In other words, halving the error took a batch four times as large. With batches of thirty-two it drops to about four percent; with one hundred twenty-eight, to under two.',
+      pad: 0.4,
     },
     {
       id: 'sgd',
-      es: 'Entrenar con lotes se llama descenso del gradiente estocástico, o SGD. «Estocástico» significa que interviene el azar, y aun así el camino llega al fondo.',
-      en: 'Training with batches is called stochastic gradient descent, or SGD. “Stochastic” means chance is involved, and the path still reaches the bottom.',
+      es: 'Bajar así, con un lote nuevo al azar en cada paso, se llama descenso del gradiente estocástico, o SGD. «Estocástico» quiere decir que interviene el azar.',
+      en: 'Going downhill like this, with a new random batch at each step, is called stochastic gradient descent, or SGD. “Stochastic” means that chance is involved.',
       tts: {
-        es: 'Entrenar con lotes se llama descenso del gradiente estocástico, o ese ge de. «Estocástico» significa que interviene el azar, y aun así el camino llega al fondo.',
-        en: 'Training with batches is called stochastic gradient descent, or S G D. “Stochastic” means chance is involved, and the path still reaches the bottom.',
+        es: 'Bajar así, con un lote nuevo al azar en cada paso, se llama descenso del gradiente estocástico, o ese ge de. «Estocástico» quiere decir que interviene el azar.',
+        en: 'Going downhill like this, with a new random batch at each step, is called stochastic gradient descent, or S G D. “Stochastic” means that chance is involved.',
       },
-      note: { es: 'SGD: cada paso usa el gradiente de un lote al azar. Una época recorre todos los ejemplos.', en: 'SGD: each step uses the gradient of a random batch. An epoch covers all the examples.' },
+      note: { es: 'SGD: cada paso usa la pendiente de un lote al azar.', en: 'SGD: each step uses the slope of a random batch.' },
       pad: 0.3,
+    },
+    {
+      id: 'sgd-path',
+      es: 'El camino tiembla, porque cada flecha está algo desviada. Pero cada paso cuesta solo ocho ejemplos, y aun así el camino se acerca al fondo.',
+      en: 'The path wobbles, because every arrow is a little off. But each step costs only eight examples, and the path still gets close to the bottom.',
+      pad: 0.4,
     },
     {
       id: 'epoch',
-      es: 'Los ejemplos se barajan y se recorren por lotes, sin repetir. Un recorrido completo es una época: con lotes de ocho ejemplos, una época son treinta y dos pasos.',
-      en: 'The examples are shuffled and visited in batches, with no repeats. One full pass is an epoch: with batches of eight examples, one epoch is thirty-two steps.',
-      pad: 0.3,
+      es: 'Los ejemplos se barajan y se usan por turnos, sin repetir: las casillas rellenas ya se usaron. Cuando se acaban, se completó una época.',
+      en: 'The examples are shuffled and used in turns, with no repeats: the filled squares have already been used. When they run out, one epoch is complete.',
+      note: { es: 'Época: un recorrido completo por todos los ejemplos.', en: 'Epoch: one full pass over all the examples.' },
+      pad: 0.4,
+    },
+    {
+      id: 'epoch-count',
+      es: '¿Cuántos pasos tiene una época? Doscientos cincuenta y seis ejemplos entre lotes de ocho: treinta y dos pasos. Luego se baraja otra vez y empieza la segunda época.',
+      en: 'How many steps are in an epoch? Two hundred fifty-six examples in batches of eight: thirty-two steps. Then everything is shuffled again and the second epoch begins.',
+      pad: 0.5,
     },
     {
       id: 'cheap',
-      es: 'Con el mismo trabajo, mil veinticuatro ejemplos vistos, el lote completo da cuatro pasos y el lote de ocho da ciento veintiocho. Algo peor orientados, pero mucho más baratos.',
-      en: 'For the same work, one thousand twenty-four examples seen, the full batch takes four steps and the batch of eight takes one hundred twenty-eight. Each is aimed a bit worse, but far cheaper.',
+      es: 'Comparemos con el mismo trabajo: mil veinticuatro ejemplos revisados, o sea, cuatro épocas. Con lotes de doscientos cincuenta y seis, eso alcanza para solo cuatro pasos.',
+      en: 'Let us compare with the same amount of work: one thousand twenty-four examples, that is, four epochs. With batches of two hundred fifty-six, that buys only four steps.',
+      pad: 0.4,
+    },
+    {
+      id: 'cheap-8',
+      es: 'Con lotes de ocho, el mismo trabajo alcanza para ciento veintiocho pasos. Cada uno va peor orientado, pero juntos llegan mucho más cerca del fondo.',
+      en: 'With batches of eight, the same work buys one hundred twenty-eight steps. Each one is aimed worse, but together they get much closer to the bottom.',
+      pad: 0.5,
+    },
+    {
+      id: 'batch-demo',
+      es: 'Probemos tres tamaños con ese mismo trabajo de cuatro épocas: lotes de doscientos cincuenta y seis, de ocho y de uno. Mira dónde termina cada camino.',
+      en: 'Let us try three sizes with that same work of four epochs: batches of two hundred fifty-six, of eight, and of one. Watch where each path ends.',
+      pad: 1.2,
+    },
+    {
+      id: 'batch-read',
+      es: 'Error tras cuatro épocas: con lote de doscientos cincuenta y seis, uno punto treinta y tres; con lote de uno, que tiembla mucho, cero punto veintisiete; con lote de ocho, cero punto cero uno.',
+      en: 'Error after four epochs: with a batch of two hundred fifty-six, one point three three; with a batch of one, which wobbles a lot, zero point two seven; with a batch of eight, zero point zero one.',
       pad: 0.4,
     },
     {
       id: 'try1',
-      es: 'Tu turno: elige el tamaño del lote y pulsa Entrenar. Todos tienen el mismo presupuesto, cuatro épocas. Busca el que deje el menor error.',
-      en: 'Your turn: pick the batch size and press Train. Every size gets the same budget, four epochs. Look for the one that leaves the smallest error.',
+      es: 'Si quieres, mueve tú el tamaño del lote y pulsa Entrenar. Cada intento usa el mismo trabajo: cuatro épocas.',
+      en: 'If you like, move the batch size yourself and press Train. Every run gets the same work: four epochs.',
       gate: {
         id: 'batch',
-        prompt: {
-          es: 'Prueba al menos tres tamaños de lote y encuentra uno que termine con error menor que 0.05.',
-          en: 'Try at least three batch sizes and find one that ends with an error below 0.05.',
-        },
+        prompt: { es: 'elige un tamaño de lote y pulsa Entrenar.', en: 'pick a batch size and press Train.' },
       },
       pad: 0.4,
     },
     {
       id: 'tradeoff',
-      es: 'Mira el patrón. Con lotes enormes das pocos pasos; con lotes de uno, muchos, pero muy ruidosos. Lo mejor queda en medio, y se mueve con la tasa y el presupuesto.',
-      en: 'Look at the pattern. With huge batches you take few steps; with batches of one, many, but very noisy. The best sits in the middle, and it moves with the rate and the budget.',
+      es: 'Con muchos intentos sale este patrón. Lotes enormes: pocos pasos. Lotes de uno: pasos muy ruidosos. Lo mejor queda en medio; aquí, cerca de treinta y dos.',
+      en: 'With many runs, this pattern appears. Huge batches: few steps. Batches of one: very noisy steps. The best sits in the middle; here, around thirty-two.',
       note: { es: 'Lote grande: pocos pasos limpios. Lote chico: muchos pasos ruidosos. Lo mejor suele estar en medio.', en: 'Big batch: few clean steps. Small batch: many noisy steps. The best is usually in between.' },
-      pad: 0.4,
+      pad: 0.5,
     },
     {
       id: 'real-batch',
-      es: 'A escala real los lotes son enormes y se miden en tokens. GPT-3 terminó con lotes de tres millones doscientos mil tokens, y empezó con unos treinta y dos mil.',
-      en: 'At real scale batches are enormous and are measured in tokens. GPT-3 ended with batches of three point two million tokens, and started with about thirty-two thousand.',
+      es: 'A escala real los lotes son enormes. GPT-3 los medía en tokens, que son trozos de texto: empezó con lotes más chicos y los agrandó hasta tres millones doscientos mil tokens.',
+      en: 'At real scale, batches are huge. GPT-3 measured them in tokens, which are chunks of text: it started with smaller batches and grew them to three point two million tokens.',
       tts: {
-        es: 'A escala real los lotes son enormes y se miden en tokens. Ge pe te tres terminó con lotes de tres millones doscientos mil tokens, y empezó con unos treinta y dos mil.',
-        en: 'At real scale batches are enormous and are measured in tokens. G P T three ended with batches of three point two million tokens, and started with about thirty-two thousand.',
+        es: 'A escala real los lotes son enormes. Ge pe te tres los medía en tokens, que son trozos de texto: empezó con lotes más chicos y los agrandó hasta tres millones doscientos mil tokens.',
+        en: 'At real scale, batches are huge. G P T three measured them in tokens, which are chunks of text: it started with smaller batches and grew them to three point two million tokens.',
       },
-      pad: 0.3,
+      pad: 0.5,
     },
     {
       id: 'canyon',
-      es: 'Pasemos a la forma del paisaje. Este valle es un cañón: muy empinado a los lados y casi plano a lo largo. Cada dirección pide un paso distinto.',
-      en: 'Now the shape of the landscape. This valley is a canyon: very steep on the sides and almost flat along the bottom. Each direction wants a different step.',
+      es: 'Ahora cambiemos la forma del valle. Este es un cañón: muy empinado de pared a pared, y casi plano a lo largo del fondo.',
+      en: 'Now let us change the shape of the valley. This one is a canyon: very steep from wall to wall, and almost flat along the bottom.',
+      pad: 0.4,
+    },
+    {
+      id: 'canyon-why',
+      es: 'Las paredes son unas cincuenta veces más empinadas que el fondo. Eso complica el tamaño del paso: cada dirección pide uno distinto.',
+      en: 'The walls are about fifty times steeper than the bottom. That makes the step size tricky: each direction wants a different one.',
+      pad: 0.4,
+    },
+    {
+      id: 'optimizer',
+      es: 'La regla que convierte la pendiente en un paso se llama optimizador. La más simple es la de la lección cuatro: el paso es la tasa por la pendiente. Eso es SGD.',
+      en: 'The rule that turns the slope into a step is called the optimizer. The simplest is the one from lesson four: the step is the rate times the slope. That is SGD.',
+      tts: {
+        es: 'La regla que convierte la pendiente en un paso se llama optimizador. La más simple es la de la lección cuatro: el paso es la tasa por la pendiente. Eso es ese ge de.',
+        en: 'The rule that turns the slope into a step is called the optimizer. The simplest is the one from lesson four: the step is the rate times the slope. That is S G D.',
+      },
+      note: { es: 'Optimizador: la regla que convierte la pendiente en un paso.', en: 'Optimizer: the rule that turns the slope into a step.' },
       pad: 0.3,
     },
     {
       id: 'sgd-big',
-      es: 'La regla que convierte el gradiente en un paso es el optimizador. SGD, el más simple, rebota de pared a pared con un paso grande, y con uno mayor diverge.',
-      en: 'The rule that turns the gradient into a step is the optimizer. SGD, the simplest, bounces from wall to wall with a large step, and with a larger one it diverges.',
+      es: 'Con una tasa grande, cero punto cero ocho, SGD rebota de pared a pared. Con una apenas mayor, cero punto once, diverge: sale disparado del valle.',
+      en: 'With a large rate, zero point zero eight, SGD bounces from wall to wall. With a slightly larger one, zero point one one, it diverges: it shoots out of the valley.',
       tts: {
-        es: 'La regla que convierte el gradiente en un paso es el optimizador. Ese ge de, el más simple, rebota de pared a pared con un paso grande, y con uno mayor diverge.',
-        en: 'The rule that turns the gradient into a step is the optimizer. S G D, the simplest, bounces from wall to wall with a large step, and with a larger one it diverges.',
+        es: 'Con una tasa grande, cero punto cero ocho, ese ge de rebota de pared a pared. Con una apenas mayor, cero punto once, diverge: sale disparado del valle.',
+        en: 'With a large rate, zero point zero eight, S G D bounces from wall to wall. With a slightly larger one, zero point one one, it diverges: it shoots out of the valley.',
+      },
+      pad: 0.6,
+    },
+    {
+      id: 'sgd-small',
+      es: 'Con una tasa pequeña, cero punto cero dos, ya no rebota, pero avanza muy despacio por el fondo, donde casi no hay pendiente.',
+      en: 'With a small rate, zero point zero two, it no longer bounces, but it crawls along the bottom, where there is hardly any slope.',
+      pad: 0.5,
+    },
+    {
+      id: 'momentum',
+      es: 'El momento le da inercia al paso, como a una pelota que rueda: cada paso conserva nueve décimas de la velocidad que traía.',
+      en: 'Momentum gives the step inertia, like a rolling ball: each step keeps nine tenths of the velocity it already had.',
+      note: { es: 'Momento: el paso conserva parte de su velocidad, como una pelota que rueda.', en: 'Momentum: the step keeps part of its velocity, like a rolling ball.' },
+      pad: 0.4,
+    },
+    {
+      id: 'momentum-why',
+      es: 'Así, los empujones de una pared y de la otra se cancelan, y el avance a lo largo del fondo se acumula. Mira cómo el momento se adelanta a SGD.',
+      en: 'That way, the pushes from one wall and the other cancel out, and the progress along the bottom adds up. Watch momentum pull ahead of SGD.',
+      tts: {
+        es: 'Así, los empujones de una pared y de la otra se cancelan, y el avance a lo largo del fondo se acumula. Mira cómo el momento se adelanta a ese ge de.',
+        en: 'That way, the pushes from one wall and the other cancel out, and the progress along the bottom adds up. Watch momentum pull ahead of S G D.',
       },
       pad: 0.5,
     },
     {
-      id: 'sgd-small',
-      es: 'Con un paso pequeño no rebota, pero casi no avanza por el fondo, donde la pendiente es plana. La pared fija el límite de la tasa; el fondo, la velocidad.',
-      en: 'With a small step it does not bounce, but it barely moves along the bottom, where the slope is flat. The wall sets the limit on the rate; the bottom sets the speed.',
-      pad: 0.4,
-    },
-    {
-      id: 'momentum',
-      es: 'El momento añade inercia: cada paso recuerda a los anteriores. Las sacudidas laterales se cancelan entre sí y el avance a lo largo del fondo se acumula.',
-      en: 'Momentum adds inertia: each step remembers the previous ones. The sideways jolts cancel each other out and the progress along the bottom builds up.',
-      note: { es: 'Momento: el paso recuerda a los anteriores, como una pelota que rueda.', en: 'Momentum: the step remembers earlier ones, like a rolling ball.' },
-      pad: 0.4,
-    },
-    {
       id: 'momentum-cost',
-      es: 'Como una pelota que rueda, gana velocidad en terreno parejo. El precio es que se pasa de largo y oscila un rato antes de asentarse.',
-      en: 'Like a rolling ball, it gains speed on even ground. The price is that it overshoots and swings back and forth for a while before settling.',
-      pad: 0.4,
+      es: 'El precio: como una pelota, se pasa de largo y va y viene un rato alrededor del fondo.',
+      en: 'The price: like a ball, it overshoots and swings back and forth around the bottom for a while.',
+      pad: 0.6,
     },
     {
       id: 'adam-idea',
-      es: 'Adam va más lejos: cada peso recibe su propio tamaño de paso. Divide el avance entre el tamaño habitual de su gradiente, y así el peso de pendiente suave no se queda atrás.',
-      en: 'Adam goes further: every weight gets its own step size. It divides the progress by the usual size of its gradient, so the weight on a gentle slope does not fall behind.',
-      pad: 0.4,
+      es: 'Adam da un paso más: cada peso recibe su propio tamaño de paso. Si su pendiente suele ser grande, da pasos cortos; si suele ser pequeña, pasos más largos.',
+      en: 'Adam goes one step further: each weight gets its own step size. If its slope is usually large, it takes short steps; if it is usually small, longer ones.',
+      pad: 0.5,
     },
     {
       id: 'adam-how',
-      es: 'Para eso guarda dos promedios móviles por peso: el del gradiente, que hace de momento, y el de su cuadrado, que mide cuánto suele variar.',
-      en: 'To do that it keeps two moving averages per weight: one of the gradient, which acts as momentum, and one of its square, which tracks how much it usually varies.',
+      es: 'Para eso guarda, por cada peso, dos promedios: el de su pendiente, que hace de momento, y el de su tamaño. El paso divide el primero entre el segundo.',
+      en: 'To do that it keeps two averages for each weight: one of its slope, which acts as momentum, and one of its size. The step divides the first by the second.',
       note: { es: 'Adam: momento más un tamaño de paso propio para cada peso.', en: 'Adam: momentum plus a step size of its own for each weight.' },
-      pad: 0.3,
+      pad: 0.4,
     },
     {
       id: 'adam-honest',
-      es: 'No es magia. Ayuda sobre todo cuando los pesos viven en escalas muy distintas, y con tasa constante suele seguir rebotando alrededor del fondo.',
-      en: 'It is not magic. It helps most when weights live on very different scales, and with a constant rate it tends to keep bouncing around the bottom.',
+      es: 'No es magia: con una tasa fija, Adam también sigue temblando cerca del fondo. Y, como los otros dos, necesita que alguien elija su tasa.',
+      en: 'It is not magic: with a fixed rate, Adam also keeps jittering near the bottom. And, like the other two, it needs someone to choose its rate.',
+      pad: 0.5,
+    },
+    {
+      id: 'race-demo',
+      es: 'Comparemos a los tres, cada uno con su tasa ya ajustada. Salen del mismo punto, y contamos cuántos pasos tarda cada uno en llegar al fondo.',
+      en: 'Let us compare the three, each with its rate already tuned. They start from the same point, and we count how many steps each one takes to reach the bottom.',
+      pad: 1.2,
+    },
+    {
+      id: 'race-read',
+      es: 'SGD tardó setenta y un pasos; el momento, treinta; Adam, veinte. Y cada uno usó una tasa distinta: no se comparan con la misma.',
+      en: 'SGD took seventy-one steps; momentum, thirty; Adam, twenty. And each one used a different rate: you cannot compare them at the same one.',
+      tts: {
+        es: 'Ese ge de tardó setenta y un pasos; el momento, treinta; Adam, veinte. Y cada uno usó una tasa distinta: no se comparan con la misma.',
+        en: 'S G D took seventy-one steps; momentum, thirty; Adam, twenty. And each one used a different rate: you cannot compare them at the same one.',
+      },
       pad: 0.4,
     },
     {
       id: 'try2',
-      es: 'Tu turno: apuesta cuál llegará primero. Luego entrena con cada optimizador y ajusta su tasa hasta que llegue al fondo en ciento veinte pasos o menos.',
-      en: 'Your turn: bet on which one will arrive first. Then train with each optimizer and tune its rate until it reaches the bottom in one hundred twenty steps or fewer.',
+      es: 'Si quieres, elige tú un optimizador, mueve su tasa y pulsa Entrenar. Verás si llega antes, si rebota o si sale disparado.',
+      en: 'If you like, pick an optimizer yourself, move its rate, and press Train. You will see whether it arrives sooner, bounces, or shoots off.',
       gate: {
         id: 'race',
-        prompt: {
-          es: 'Haz que SGD, momento y Adam lleguen al fondo (error menor que 0.05) en 120 pasos o menos. Cada uno pide su propia tasa.',
-          en: 'Get SGD, momentum, and Adam to the bottom (error below 0.05) in 120 steps or fewer. Each one wants its own rate.',
-        },
+        prompt: { es: 'elige un optimizador y una tasa, y pulsa Entrenar.', en: 'pick an optimizer and a rate, and press Train.' },
       },
       pad: 0.4,
     },
     {
-      id: 'race-result',
-      es: 'Mira los números. Con la tasa bien ajustada, momento y Adam suelen llegar antes que SGD, pero cada uno pide su propia tasa: no se comparan a igual valor.',
-      en: 'Look at the numbers. With the rate well tuned, momentum and Adam usually arrive before SGD, but each wants its own rate: you cannot compare them at the same value.',
-      tts: {
-        es: 'Mira los números. Con la tasa bien ajustada, momento y Adam suelen llegar antes que ese ge de, pero cada uno pide su propia tasa: no se comparan a igual valor.',
-        en: 'Look at the numbers. With the rate well tuned, momentum and Adam usually arrive before S G D, but each wants its own rate: you cannot compare them at the same value.',
-      },
-      pad: 0.4,
-    },
-    {
-      id: 'schedule',
-      es: 'Falta una pieza: la tasa no tiene que ser constante. Al principio conviene avanzar fuerte, y al final dar pasos pequeños para asentarse en el fondo.',
-      en: 'One piece is missing: the rate does not have to be constant. At first it pays to move fast, and at the end to take small steps so the path settles at the bottom.',
-      pad: 0.5,
+      id: 'decay',
+      es: 'Falta una pieza: la tasa no tiene por qué ser fija. Si al final la bajamos poco a poco, el temblor se calma y el camino se asienta. Eso es el decaimiento.',
+      en: 'One piece is missing: the rate does not have to stay fixed. If we lower it gradually toward the end, the jitter calms down and the path settles. That is decay.',
+      pad: 0.6,
     },
     {
       id: 'warm-problem',
-      es: 'Al comenzar puede pasar lo contrario. Con los pesos recién iniciados el terreno puede ser muy empinado, y una tasa alta lanza el modelo lejos antes de que aprenda.',
-      en: 'At the start the opposite can happen. With freshly initialized weights the terrain can be very steep, and a high rate throws the model far away before it has learned anything.',
+      es: 'Al principio puede pasar lo contrario. Si los pesos arrancan en una zona muy empinada, una tasa alta da un salto enorme y el modelo sale disparado.',
+      en: 'At the start, the opposite can happen. If the weights begin in a very steep area, a high rate makes a huge jump and the model shoots off.',
       pad: 0.5,
     },
     {
       id: 'warmup',
-      es: 'El calentamiento sube la tasa poco a poco durante los primeros pasos. Subir y luego bajar es la receta típica de los modelos grandes.',
-      en: 'Warmup raises the rate gradually over the first steps. Up and then down is the typical recipe for large models.',
-      note: { es: 'Calendario: tasa pequeña al inicio (calentamiento) y menor al final (decaimiento).', en: 'Schedule: a small rate at the start (warmup) and a smaller one at the end (decay).' },
+      es: 'El calentamiento empieza con una tasa pequeña y la sube poco a poco durante los primeros pasos. Así el primer salto no lo lanza lejos.',
+      en: 'Warmup starts with a small rate and raises it gradually over the first steps. That way the first jump does not throw the model far away.',
+      note: { es: 'Calendario: la tasa sube al inicio (calentamiento) y baja al final (decaimiento).', en: 'Schedule: the rate rises at the start (warmup) and falls at the end (decay).' },
       pad: 0.5,
     },
     {
+      id: 'sched-demo',
+      es: 'Mira la misma tasa alta dos veces. Sin calendario, explota en el segundo paso. Con calentamiento y decaimiento, baja con calma y se asienta en el fondo.',
+      en: 'Watch the same high rate twice. With no schedule, it blows up on the second step. With warmup and decay, it comes down calmly and settles at the bottom.',
+      pad: 1.2,
+    },
+    {
       id: 'try3',
-      es: 'Tu turno: el entrenamiento arranca con una tasa alta. Activa el calentamiento y el decaimiento hasta que no explote y termine con un error bajo.',
-      en: 'Your turn: training starts with a high rate. Switch on warmup and decay until it does not blow up and ends with a low error.',
+      es: 'Si quieres, elige tú el calendario y pulsa Entrenar. Prueba solo el calentamiento: ya no explota, pero ¿se asienta?',
+      en: 'If you like, choose the schedule yourself and press Train. Try warmup alone: it no longer blows up, but does it settle?',
       gate: {
         id: 'sched',
-        prompt: {
-          es: 'Logra un entrenamiento que no diverja y termine con error menor que 0.05.',
-          en: 'Get a run that does not diverge and ends with an error below 0.05.',
-        },
+        prompt: { es: 'elige un calendario y pulsa Entrenar.', en: 'choose a schedule and press Train.' },
       },
       pad: 0.4,
     },
     {
       id: 'hyper',
-      es: 'Tamaño del lote, tasa, optimizador, épocas, calendario: nadie los aprende con gradientes. Los elige una persona, y se llaman hiperparámetros.',
-      en: 'Batch size, rate, optimizer, epochs, schedule: none of them is learned with gradients. A person chooses them, and they are called hyperparameters.',
+      es: 'Tamaño del lote, tasa, optimizador, número de épocas y calendario: ninguno se aprende con gradientes. Los elige una persona, y se llaman hiperparámetros.',
+      en: 'Batch size, rate, optimizer, number of epochs, and schedule: none of them is learned with gradients. A person chooses them, and they are called hyperparameters.',
       note: { es: 'Hiperparámetros: los elige una persona; los pesos, en cambio, se aprenden.', en: 'Hyperparameters: a person chooses them; the weights, in contrast, are learned.' },
-      pad: 0.4,
+      pad: 0.5,
     },
     {
       id: 'search',
-      es: 'Elegirlos es oficio y cuesta caro, porque cada prueba es un entrenamiento entero. Se prueban combinaciones con corridas cortas, a menudo al azar mejor que en cuadrícula, y se registra todo.',
-      en: 'Choosing them is a craft, and it is expensive, because every trial is a whole training run. Combinations are tried on short runs, often at random rather than on a grid, and everything is logged.',
-      pad: 0.4,
+      es: 'Elegirlos cuesta caro, porque cada prueba es un entrenamiento completo. Aquí, probar seis tasas para Adam costó seis entrenamientos.',
+      en: 'Choosing them is expensive, because every trial is a full training run. Here, trying six rates for Adam cost six training runs.',
+      pad: 0.6,
     },
     {
       id: 'real',
-      es: 'En un modelo real todo se combina. GPT-3 usó Adam, calentamiento durante trescientos setenta y cinco millones de tokens y decaimiento coseno, y del conjunto de rastreo web no llegó a ver ni una época.',
-      en: 'In a real model everything is combined. GPT-3 used Adam, a warmup over three hundred seventy-five million tokens, and cosine decay, and it never completed even one epoch of its web-crawl data.',
+      es: 'GPT-3 combinó todo: usó Adam, un calentamiento en sus primeros trescientos setenta y cinco millones de tokens y luego un decaimiento coseno, que baja la tasa en curva suave.',
+      en: 'GPT-3 combined it all: it used Adam, a warmup over its first three hundred seventy-five million tokens, and then cosine decay, which lowers the rate along a smooth curve.',
       tts: {
-        es: 'En un modelo real todo se combina. Ge pe te tres usó Adam, calentamiento durante trescientos setenta y cinco millones de tokens y decaimiento coseno, y del conjunto de rastreo web no llegó a ver ni una época.',
-        en: 'In a real model everything is combined. G P T three used Adam, a warmup over three hundred seventy-five million tokens, and cosine decay, and it never completed even one epoch of its web-crawl data.',
+        es: 'Ge pe te tres combinó todo: usó Adam, un calentamiento en sus primeros trescientos setenta y cinco millones de tokens y luego un decaimiento coseno, que baja la tasa en curva suave.',
+        en: 'G P T three combined it all: it used Adam, a warmup over its first three hundred seventy-five million tokens, and then cosine decay, which lowers the rate along a smooth curve.',
       },
-      pad: 0.4,
+      pad: 0.5,
     },
     {
       id: 'recap',
-      es: 'En resumen: el lote abarata cada paso, el optimizador convierte el gradiente en un paso y el calendario ajusta la tasa. Son decisiones de quien entrena, no algo que la red aprenda.',
-      en: 'In short: the batch makes each step cheaper, the optimizer turns the gradient into a step, and the schedule adjusts the rate. They are decisions made by whoever trains, not something the network learns.',
-      pad: 0.4,
+      es: 'En resumen: el lote abarata cada paso, el optimizador convierte la pendiente en un paso y el calendario ajusta la tasa con el tiempo. Todo eso lo decide quien entrena.',
+      en: 'In short: the batch makes each step cheaper, the optimizer turns the slope into a step, and the schedule adjusts the rate over time. All of that is decided by whoever trains.',
+      pad: 0.5,
     },
     {
       id: 'bridge',
@@ -261,17 +358,17 @@ export default defineLesson({
 
   keyIdeas: {
     es: [
-      'Con muchos ejemplos no se calcula la pendiente con todos: se estima con un lote al azar. Es ruidosa, pero en promedio apunta bien. Eso es el descenso del gradiente estocástico (SGD).',
-      'Una época es un recorrido completo por los datos. Con N ejemplos y lotes de B, tiene N/B pasos. El lote reparte un presupuesto de ejemplos entre muchos pasos baratos y pocos pasos limpios.',
-      'El optimizador convierte el gradiente en un paso. SGD lo usa tal cual; el momento suma inercia; Adam además da a cada peso su propio tamaño de paso. Cada uno pide su propia tasa.',
-      'La tasa puede cambiar durante el entrenamiento: un calentamiento al inicio evita saltos que lancen el modelo lejos, y un decaimiento al final permite asentarse en el fondo.',
+      'Con muchos ejemplos no se calcula la pendiente con todos: se estima con un lote al azar (en la lección, 8 de 256). Su flecha sale algo desviada, pero en promedio apunta bien. Eso es el descenso del gradiente estocástico (SGD).',
+      'Una época es un recorrido completo por los datos: con N ejemplos y lotes de B, tiene N/B pasos (256 / 8 = 32). Con el mismo trabajo, un lote chico da muchos pasos baratos y ruidosos, y uno grande, pocos pasos exactos; lo mejor suele quedar en medio.',
+      'El optimizador convierte la pendiente en un paso. SGD la usa tal cual; el momento suma inercia; Adam además da a cada peso su propio tamaño de paso. Cada uno pide su propia tasa.',
+      'La tasa puede cambiar durante el entrenamiento: un calentamiento al inicio evita el salto que lanza el modelo lejos, y un decaimiento al final calma el temblor para que se asiente en el fondo.',
       'Tamaño del lote, tasa, optimizador y calendario son hiperparámetros: los elige una persona, no se aprenden con gradientes, y probarlos cuesta entrenamientos completos.',
     ],
     en: [
-      'With many examples the slope is not computed from all of them: it is estimated from a random batch. It is noisy, but on average it points the right way. That is stochastic gradient descent (SGD).',
-      'An epoch is one full pass over the data. With N examples and batches of B, it has N/B steps. The batch splits a budget of examples between many cheap steps and a few clean ones.',
-      'The optimizer turns the gradient into a step. SGD uses it as is; momentum adds inertia; Adam also gives each weight its own step size. Each one wants its own rate.',
-      'The rate can change during training: a warmup at the start avoids jumps that throw the model far away, and a decay at the end lets it settle at the bottom.',
+      'With many examples the slope is not computed from all of them: it is estimated from a random batch (in the lesson, 8 of 256). Its arrow is a little off, but on average it points the right way. That is stochastic gradient descent (SGD).',
+      'An epoch is one full pass over the data: with N examples and batches of B, it has N/B steps (256 / 8 = 32). For the same work, a small batch gives many cheap, noisy steps and a large one gives a few exact steps; the best is usually in between.',
+      'The optimizer turns the slope into a step. SGD uses it as is; momentum adds inertia; Adam also gives each weight its own step size. Each one wants its own rate.',
+      'The rate can change during training: a warmup at the start avoids the jump that throws the model far away, and a decay at the end calms the jitter so it settles at the bottom.',
       'Batch size, rate, optimizer, and schedule are hyperparameters: a person chooses them, they are not learned with gradients, and trying them costs whole training runs.',
     ],
   },
@@ -294,7 +391,7 @@ Con $N$ ejemplos y un error por ejemplo $\\ell_i(\\mathbf{w})$, el error total e
 
 $$\\mathbf{g}_B=\\frac1B\\sum_{i\\in\\mathcal{B}}\\nabla\\ell_i(\\mathbf{w}),\\qquad \\mathbb{E}[\\mathbf{g}_B]=\\nabla L(\\mathbf{w})$$
 
-Es un estimador sin sesgo. Su varianza es $\\frac{N-B}{N-1}\\,\\frac{\\sigma^2}{B}$, con $\\sigma^2$ la varianza del gradiente de un ejemplo: el error cae como $1/\\sqrt{B}$, mientras que el costo del paso crece como $B$. Por eso, para reducir el ruido a la mitad hace falta un lote unas cuatro veces mayor. Una época tiene $\\lceil N/B\\rceil$ pasos y tras $t$ pasos se han visto $tB$ ejemplos. La idea de actualizar con ruido viene de Robbins y Monro (1951).
+Es un estimador sin sesgo. Su varianza es $\\frac{N-B}{N-1}\\,\\frac{\\sigma^2}{B}$, con $\\sigma^2$ la varianza del gradiente de un ejemplo: el error cae como $1/\\sqrt{B}$, mientras que el costo del paso crece como $B$. Por eso, para reducir el ruido a la mitad hace falta un lote unas cuatro veces mayor. En la lección, el desvío medio de la flecha (medido con 24 lotes de cada tamaño) fue de 20 %, 10 %, 4 % y 1.7 % con lotes de 2, 8, 32 y 128: cae algo más rápido que $1/\\sqrt{B}$ porque el factor $\\frac{N-B}{N-1}$ pesa cuando el lote es una parte grande de los 256 ejemplos. Una época tiene $\\lceil N/B\\rceil$ pasos y tras $t$ pasos se han visto $tB$ ejemplos. La idea de actualizar con ruido viene de Robbins y Monro (1951).
 
 Cerca de un mínimo con curvatura $h$, el ruido del gradiente (varianza $s^2=\\sigma^2/B$) deja un suelo de error: $\\mathbb{E}[L]\\approx \\eta\\,s^2/4$ cuando $\\eta h\\ll 1$. Es proporcional a $\\eta/B$: bajar la tasa o subir el lote lo baja. Por eso el decaimiento de la tasa ayuda a asentarse.
 
@@ -318,7 +415,7 @@ $$\\eta_t=\\eta_{\\max}\\min\\!\\Big(1,\\frac{t+1}{T_w}\\Big)\\quad\\text{(calen
 
 $$\\eta_t=\\eta_{\\min}+\\tfrac12(\\eta_{\\max}-\\eta_{\\min})\\Big(1+\\cos\\pi\\,\\frac{t-T_w}{T-T_w}\\Big)\\quad\\text{(decaimiento coseno, de Loshchilov y Hutter, 2017)}$$
 
-Dos recetas reales: el transformer original (Vaswani et al., 2017) usó Adam con $\\beta_2=0.98$ y calentó durante 4000 pasos; GPT-3 (Brown et al., 2020) usó Adam con $\\beta_2=0.95$, calentamiento lineal durante los primeros 375 millones de tokens y decaimiento coseno hasta el 10 % del valor máximo a lo largo de 260 mil millones de tokens. Al aumentar el lote, Goyal et al. (2017) proponen multiplicar la tasa por el mismo factor y calentar: con esa regla entrenaron ResNet-50 con lotes de 8192 imágenes en 256 GPU, en una hora, sin pérdida de exactitud.
+Dos recetas reales: el transformer original (Vaswani et al., 2017) usó Adam con $\\beta_2=0.98$ y calentó durante 4000 pasos; GPT-3 (Brown et al., 2020) usó Adam con $\\beta_2=0.95$, calentamiento lineal durante los primeros 375 millones de tokens y decaimiento coseno hasta el 10 % del valor máximo a lo largo de 260 mil millones de tokens. Además, su lote creció de 32 mil tokens hasta el valor final (3.2 millones en el modelo de 175 mil millones de parámetros) durante los primeros 4 a 12 mil millones de tokens, según el tamaño del modelo, y de su texto del rastreo web vio solo 0.44 épocas (tabla 2.2). Al aumentar el lote, Goyal et al. (2017) proponen multiplicar la tasa por el mismo factor y calentar: con esa regla entrenaron ResNet-50 con lotes de 8192 imágenes en 256 GPU, en una hora, sin pérdida de exactitud.
 
 ## Hiperparámetros
 
@@ -379,7 +476,7 @@ With $N$ examples and a per-example error $\\ell_i(\\mathbf{w})$, the total erro
 
 $$\\mathbf{g}_B=\\frac1B\\sum_{i\\in\\mathcal{B}}\\nabla\\ell_i(\\mathbf{w}),\\qquad \\mathbb{E}[\\mathbf{g}_B]=\\nabla L(\\mathbf{w})$$
 
-It is an unbiased estimator. Its variance is $\\frac{N-B}{N-1}\\,\\frac{\\sigma^2}{B}$, where $\\sigma^2$ is the variance of one example’s gradient: the error falls as $1/\\sqrt{B}$, while the cost of the step grows as $B$. That is why cutting the noise in half takes a batch about four times larger. An epoch has $\\lceil N/B\\rceil$ steps, and after $t$ steps $tB$ examples have been seen. The idea of updating with noise goes back to Robbins and Monro (1951).
+It is an unbiased estimator. Its variance is $\\frac{N-B}{N-1}\\,\\frac{\\sigma^2}{B}$, where $\\sigma^2$ is the variance of one example’s gradient: the error falls as $1/\\sqrt{B}$, while the cost of the step grows as $B$. That is why cutting the noise in half takes a batch about four times larger. In the lesson, the arrow’s average error (measured over 24 batches of each size) was 20 %, 10 %, 4 %, and 1.7 % for batches of 2, 8, 32, and 128: it falls a bit faster than $1/\\sqrt{B}$ because the factor $\\frac{N-B}{N-1}$ matters when the batch is a large share of the 256 examples. An epoch has $\\lceil N/B\\rceil$ steps, and after $t$ steps $tB$ examples have been seen. The idea of updating with noise goes back to Robbins and Monro (1951).
 
 Near a minimum with curvature $h$, gradient noise (variance $s^2=\\sigma^2/B$) leaves an error floor: $\\mathbb{E}[L]\\approx \\eta\\,s^2/4$ when $\\eta h\\ll 1$. It is proportional to $\\eta/B$: lowering the rate or raising the batch lowers it. That is why decaying the rate helps the path settle.
 
@@ -403,7 +500,7 @@ $$\\eta_t=\\eta_{\\max}\\min\\!\\Big(1,\\frac{t+1}{T_w}\\Big)\\quad\\text{(linea
 
 $$\\eta_t=\\eta_{\\min}+\\tfrac12(\\eta_{\\max}-\\eta_{\\min})\\Big(1+\\cos\\pi\\,\\frac{t-T_w}{T-T_w}\\Big)\\quad\\text{(cosine decay, from Loshchilov and Hutter, 2017)}$$
 
-Two real recipes: the original transformer (Vaswani et al., 2017) used Adam with $\\beta_2=0.98$ and warmed up for 4000 steps; GPT-3 (Brown et al., 2020) used Adam with $\\beta_2=0.95$, a linear warmup over the first 375 million tokens, and cosine decay down to 10 % of the peak value over 260 billion tokens. When the batch grows, Goyal et al. (2017) propose multiplying the rate by the same factor and warming up: with that rule they trained ResNet-50 with batches of 8192 images on 256 GPUs, in one hour, with no loss of accuracy.
+Two real recipes: the original transformer (Vaswani et al., 2017) used Adam with $\\beta_2=0.98$ and warmed up for 4000 steps; GPT-3 (Brown et al., 2020) used Adam with $\\beta_2=0.95$, a linear warmup over the first 375 million tokens, and cosine decay down to 10 % of the peak value over 260 billion tokens. Its batch also grew from 32 thousand tokens to the final value (3.2 million for the 175-billion-parameter model) over the first 4 to 12 billion tokens, depending on model size, and it saw only 0.44 epochs of its web-crawl text (Table 2.2). When the batch grows, Goyal et al. (2017) propose multiplying the rate by the same factor and warming up: with that rule they trained ResNet-50 with batches of 8192 images on 256 GPUs, in one hour, with no loss of accuracy.
 
 ## Hyperparameters
 
@@ -483,15 +580,15 @@ Lowering the training error is not enough: you have to measure with data the mod
         en: 'Why is it useful to train with batches instead of using every example at each step?',
       },
       options: [
-        { es: 'Porque el gradiente de un lote es exacto y el de todos los ejemplos no.', en: 'Because the gradient of a batch is exact and the gradient from all the examples is not.' },
-        { es: 'Porque es una estimación barata y con ruido que, en promedio, apunta como el gradiente completo.', en: 'Because it is a cheap, noisy estimate that, on average, points like the full gradient.' },
+        { es: 'Porque la pendiente de un lote es exacta y la de todos los ejemplos no.', en: 'Because a batch’s slope is exact and the slope from all the examples is not.' },
+        { es: 'Porque es una estimación barata y con ruido que, en promedio, apunta como la flecha calculada con todos los ejemplos.', en: 'Because it is a cheap, noisy estimate that, on average, points like the arrow computed from all the examples.' },
         { es: 'Porque así el modelo ve menos datos y nunca se equivoca con los nuevos.', en: 'Because the model sees less data and never gets new data wrong.' },
         { es: 'Porque con lotes ya no hace falta una tasa de aprendizaje.', en: 'Because with batches a learning rate is no longer needed.' },
       ],
       answer: 1,
       why: {
-        es: 'El gradiente de un lote es un estimador sin sesgo del gradiente completo: ruidoso, pero barato. Con el mismo trabajo da muchos más pasos. La tasa de aprendizaje sigue haciendo falta.',
-        en: 'The gradient of a batch is an unbiased estimator of the full gradient: noisy, but cheap. For the same work it takes many more steps. The learning rate is still needed.',
+        es: 'La pendiente de un lote es una estimación sin sesgo de la de todos los ejemplos: ruidosa, pero barata. Con el mismo trabajo da muchos más pasos (en la lección, 128 pasos con lotes de 8 frente a 4 con lotes de 256). La tasa de aprendizaje sigue haciendo falta.',
+        en: 'A batch’s slope is an unbiased estimate of the slope from all the examples: noisy, but cheap. For the same work it takes many more steps (in the lesson, 128 steps with batches of 8 versus 4 with batches of 256). The learning rate is still needed.',
       },
     },
     {
@@ -519,15 +616,15 @@ Lowering the training error is not enough: you have to measure with data the mod
         en: 'What does Adam do besides carrying a momentum term?',
       },
       options: [
-        { es: 'Ajusta el tamaño de paso de cada peso según lo grande que suele ser su gradiente.', en: 'It adjusts each weight’s step size according to how large its gradient usually is.' },
+        { es: 'Ajusta el tamaño de paso de cada peso según lo grande que suele ser su pendiente.', en: 'It adjusts each weight’s step size according to how large its slope usually is.' },
         { es: 'Calcula siempre el gradiente exacto con todos los ejemplos.', en: 'It always computes the exact gradient from all the examples.' },
         { es: 'Elimina la necesidad de elegir una tasa de aprendizaje.', en: 'It removes the need to choose a learning rate.' },
         { es: 'Solo funciona con lotes de un ejemplo.', en: 'It only works with batches of one example.' },
       ],
       answer: 0,
       why: {
-        es: 'Adam divide el avance de cada peso entre la raíz de un promedio móvil de su gradiente al cuadrado. Sigue necesitando una tasa de aprendizaje (con una constante, termina rebotando) y funciona con lotes de cualquier tamaño.',
-        en: 'Adam divides each weight’s progress by the root of a moving average of its squared gradient. It still needs a learning rate (with a constant one it ends up bouncing) and works with batches of any size.',
+        es: 'Adam divide el avance de cada peso entre el tamaño habitual de su pendiente (la raíz de un promedio móvil de su cuadrado). Sigue necesitando una tasa de aprendizaje (con una fija, sigue temblando cerca del fondo) y funciona con lotes de cualquier tamaño.',
+        en: 'Adam divides each weight’s progress by the usual size of its slope (the root of a moving average of its square). It still needs a learning rate (with a fixed one it keeps jittering near the bottom) and works with batches of any size.',
       },
     },
     {

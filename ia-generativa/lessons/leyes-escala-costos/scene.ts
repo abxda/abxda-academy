@@ -1,63 +1,98 @@
-// Escena: Leyes de escala y costos. Seis actos que se funden uno en otro:
-//  1 · la curva (ley de potencia, log-log)  2 · C ≈ 6·N·D  3 · la calculadora real (FLOPs → días → costo)
-//  4 · el reparto de un presupuesto fijo (Chinchilla)  5 · ¿habilidades emergentes?  6 · qué decides tú.
-// Tres turnos: la calculadora, buscar el balance Chinchilla y cambiar la métrica de una «habilidad emergente».
-import { regions, type Frame, type SceneFactory } from '../../../../../theme/kit';
-import { count, nf, sci } from './model';
-import { drawAct1 } from './act1';
-import { drawAct2 } from './act2';
-import { drawAct3, updateCalc } from './act3';
-import { drawAct4, updateBudget } from './act4';
-import { drawAct5, updateMetric } from './act5';
-import { drawAct6 } from './act6';
+// Escena: Leyes de escala y costos. Siete vistas que se funden una en otra:
+//  1 · escalar: las tres perillas (N, D, C), una por segmento        2 · la curva de Kaplan: escala normal → logarítmica → recta
+//  3 · cuántas operaciones: un FLOP, 2N de ida, 4N de regreso, 6·N·D  4 · presupuesto fijo: el rectángulo N × D, Gopher y Chinchilla
+//  5 · de operaciones a horas, días y dinero (la calculadora)        6 · ¿habilidades emergentes? (ilustrativo, Schaeffer et al.)
+//  7 · qué decides tú y el puente a la memoria.
+// La escena hace sola cada demostración (cambia la escala, recorre modelos) moviendo sus controles con S.drive; los dos
+// «tu turno» son opcionales y solo cuentan lo que hizo la persona (S.touched). Las animaciones van por fracciones de cada segmento.
+import type { Frame, SceneFactory } from '../../../../../theme/kit';
+import { MODEL_ORDER, type ModelId } from './data';
+import { fr } from './ui';
+import { drawKnobs, drawQuestions } from './v-intro';
+import { drawCurve } from './v-curve';
+import { drawFlops } from './v-flops';
+import { drawBudget } from './v-budget';
+import { drawCalc } from './v-calc';
+import { drawClose, drawEmerge } from './v-emerge';
 
-/** Índice del acto vigente según el segmento en curso. */
-const act = (S: Frame) => (S.on('from-scratch') ? 5 : S.on('emergent') ? 4 : S.on('budget-intro') ? 3 : S.on('mfu') ? 2 : S.on('flops') ? 1 : 0);
-
-const gpuFmt = (v: number, l: 'es' | 'en') => nf(Math.round(2 ** v), 0, l);
+interface St { lgx: number; lgy: number; lastScale?: string; flips: number; lastModel?: string; modelFlash: number }
+const fresh = (): St => ({ lgx: 0, lgy: 0, flips: 0, modelFlash: -9 });
+const stOf = (S: Frame): St => (S.st as unknown as { q?: St }).q ?? ((S.st as unknown as { q: St }).q = fresh());
 
 const scene: SceneFactory = () => ({
   controls: [
-    // ── turno 1: la calculadora ──
-    { id: 'logN', kind: 'slider', label: { es: 'Parámetros N', en: 'Parameters N' }, min: 8, max: 12.3, step: 0.01, value: 9.845, fmt: (v, l) => count(10 ** v, l), from: 'try-calc', to: 'budget-intro' },
-    { id: 'logD', kind: 'slider', label: { es: 'Tokens de entrenamiento D', en: 'Training tokens D' }, min: 9, max: 13.7, step: 0.01, value: 11.146, fmt: (v, l) => count(10 ** v, l), from: 'try-calc', to: 'budget-intro' },
-    { id: 'logG', kind: 'slider', label: { es: 'GPUs (supuesto)', en: 'GPUs (assumption)' }, min: 3, max: 15.6, step: 0.25, value: 8, fmt: (v, l) => gpuFmt(v, l), from: 'try-calc', to: 'budget-intro' },
-    { id: 'peak', kind: 'slider', label: { es: 'Pico por GPU, teraFLOPS (supuesto)', en: 'Peak per GPU, teraFLOPS (assumption)' }, min: 100, max: 2000, step: 10, value: 989, fmt: (v, l) => nf(v, 0, l), from: 'try-calc', to: 'budget-intro' },
-    { id: 'mfu', kind: 'slider', label: { es: 'MFU (supuesto)', en: 'MFU (assumption)' }, min: 5, max: 65, step: 1, value: 40, fmt: (v, l) => `${nf(v, 0, l)} %`, from: 'try-calc', to: 'budget-intro' },
-    { id: 'price', kind: 'slider', label: { es: 'Precio por GPU-hora (supuesto)', en: 'Price per GPU-hour (assumption)' }, min: 0.5, max: 8, step: 0.1, value: 2, fmt: (v, l) => (l === 'es' ? `US$ ${nf(v, 2, l)}` : `$${nf(v, 2, l)}`), from: 'try-calc', to: 'budget-intro' },
-    // ── turno 2: el balance con un presupuesto fijo ──
-    { id: 'n2', kind: 'slider', label: { es: 'Tamaño del modelo N', en: 'Model size N' }, min: 9, max: 12, step: 0.01, value: 11, fmt: (v, l) => count(10 ** v, l), from: 'try-budget', to: 'both-grow' },
-    { id: 'c2', kind: 'slider', label: { es: 'Presupuesto de cómputo C, FLOPs (supuesto)', en: 'Compute budget C, FLOPs (assumption)' }, min: 22, max: 24.6, step: 0.02, value: 23.76, fmt: (v, l) => sci(10 ** v, l, 1), from: 'try-budget', to: 'both-grow' },
-    // ── turno 3: la métrica ──
-    { id: 'metric', kind: 'choice', label: { es: 'Métrica', en: 'Metric' }, options: [{ value: 'exact', label: { es: 'Todo o nada', en: 'All or nothing' } }, { value: 'partial', label: { es: 'Puntaje parcial', en: 'Partial score' } }], value: 'exact', from: 'try-metric', to: 'verdict' },
-    { id: 'kk', kind: 'slider', label: { es: 'Longitud de la respuesta (tokens)', en: 'Answer length (tokens)' }, min: 1, max: 12, step: 1, value: 10, fmt: (v, l) => nf(v, 0, l), from: 'try-metric', to: 'verdict' },
+    // (una «choice» y no un interruptor: la interfaz refleja lo que mueve S.drive en sliders y choices, no en toggles)
+    {
+      id: 'logscale', kind: 'choice', label: { es: 'Escala de la gráfica', en: 'Chart scale' }, value: 'lin', from: 'log-x', to: 'predict',
+      options: [{ value: 'lin', label: { es: 'Normal', en: 'Ordinary' } }, { value: 'log', label: { es: 'Logarítmica', en: 'Logarithmic' } }],
+    },
+    {
+      id: 'model', kind: 'choice', label: { es: 'Modelo', en: 'Model' }, value: 'llama', from: 'calc-demo', to: 'emergent',
+      options: [
+        { value: 'pythia', label: { es: 'Pythia', en: 'Pythia' } },
+        { value: 'gpt3', label: { es: 'GPT-3', en: 'GPT-3' } },
+        { value: 'chinchilla', label: { es: 'Chinchilla', en: 'Chinchilla' } },
+        { value: 'llama', label: { es: 'Llama 3.1', en: 'Llama 3.1' } },
+      ],
+    },
   ],
 
-  // Estado interactivo: avanza siempre, aunque el escenario no se vea. render() solo dibuja.
+  init(S) { (S.st as unknown as { q: St }).q = fresh(); },
+
   update(S) {
-    if (updateCalc(S)) S.complete('calc');        // turno 1: N, D de GPT-3 y luego el doble de GPU
-    if (updateBudget(S)) S.complete('budget');    // turno 2: el tamaño con menor pérdida para el presupuesto
-    if (updateMetric(S)) S.complete('metric');    // turno 3: puntaje parcial o respuesta corta
+    const q = stOf(S), dt = Math.min(S.dt || 0.016, 0.1);
+    // ── escala de la gráfica: por tiempo en la demostración; si la persona tocó el interruptor, lo sigue
+    if (S.between('kaplan', 'flop')) {
+      const timeX = fr(S, 'log-x', 0.2, 0.75, 'io'), timeY = fr(S, 'log-y', 0.12, 0.65, 'io');
+      if (S.between('log-x', 'predict')) S.drive('logscale', fr(S, 'log-x', 0.2, 0.21, 'lin') > 0 ? 'log' : 'lin');
+      const touched = S.touched.has('logscale'), cur = String(S.p.logscale ?? 'lin');
+      if (!touched) { q.lgx = timeX; q.lgy = timeY; q.lastScale = cur; }
+      else {
+        const target = S.on('predict') ? 1 : cur === 'log' ? 1 : 0, kE = 1 - Math.exp(-dt * 5);
+        q.lgx += (target - q.lgx) * kE;
+        if (Math.abs(q.lgx - target) < 0.4) q.lgy += (target - q.lgy) * kE;
+        if (cur !== q.lastScale) { q.flips++; q.lastScale = cur; }
+        if (q.flips >= 1 && S.between('try-scale', 'predict')) S.complete('scale');
+      }
+    }
+    // ── la calculadora: la demostración recorre Chinchilla, GPT-3 y Pythia; luego la persona elige si quiere
+    if (S.between('calc-demo', 'emergent')) {
+      if (!S.touched.has('model')) {
+        const f = fr(S, 'calc-demo', 0, 1, 'lin');
+        const want: ModelId = S.on('try-calc') ? 'pythia' : f < 0.2 ? 'llama' : f < 0.47 ? 'chinchilla' : f < 0.72 ? 'gpt3' : 'pythia';
+        S.drive('model', want);
+      }
+      const m = String(S.p.model ?? 'llama');
+      if (m !== q.lastModel) {
+        if (q.lastModel !== undefined) q.modelFlash = S.clock;
+        if (q.lastModel !== undefined && S.touched.has('model') && S.between('try-calc', 'emergent')) S.complete('calc');
+        q.lastModel = m;
+      }
+    }
+    S.st.lgx = q.lgx; S.st.lgy = q.lgy; S.st.flash = q.modelFlash;
+    S.st.model = S.between('calc-demo', 'emergent') && MODEL_ORDER.includes(S.p.model) ? S.p.model : 'llama';
   },
 
   render(S) {
     const d = S.d;
-    // cada acto se funde con el siguiente (como en la lección de referencia)
-    const t2 = S.at('flops', 0, 0.9), t3 = S.at('mfu', 0, 0.9), t4 = S.at('budget-intro', 0, 0.9), t5 = S.at('emergent', 0, 0.9), t6 = S.at('from-scratch', 0, 0.9);
-    const R = regions(S, 0.68);
-    const a1 = 1 - t2, a2 = t2 * (1 - t3), a3 = t3 * (1 - t4), a4 = t4 * (1 - t5), a5 = t5 * (1 - t6);
-    if (a1 > 0.005) d.withAlpha(a1, () => drawAct1(S, R));
-    if (a2 > 0.005) d.withAlpha(a2, () => drawAct2(S, R));
-    if (a3 > 0.005) d.withAlpha(a3, () => drawAct3(S));
-    if (a4 > 0.005) d.withAlpha(a4, () => drawAct4(S));
-    if (a5 > 0.005) d.withAlpha(a5, () => drawAct5(S));
-    if (t6 > 0.005) d.withAlpha(t6, () => drawAct6(S));
-    // fuente de cada acto, en una línea al pie
-    const src = S.l(
-      ['Kaplan et al., 2020 · WebText2', 'Kaplan · Hoffmann · Brown · Llama 3 (2020–24)', 'Supuestos ilustrativos · MFU: PaLM, Llama 3', 'Hoffmann 2022 · constantes: Besiroglu 2024', 'Wei 2022 · Schaeffer 2023 · modelo sintético', 'Llama 3 (2024) · supuestos ilustrativos'][act(S)],
-      ['Kaplan et al., 2020 · WebText2', 'Kaplan · Hoffmann · Brown · Llama 3 (2020–24)', 'Illustrative assumptions · MFU: PaLM, Llama 3', 'Hoffmann 2022 · constants: Besiroglu 2024', 'Wei 2022 · Schaeffer 2023 · synthetic model', 'Llama 3 (2024) · illustrative assumptions'][act(S)],
-    );
-    if (!S.on('bridge')) d.text(src, 14 * S.u, S.H - 3 * S.u, { size: Math.max(11, 12.2 / S.u), weight: 600, color: S.pal.mute, base: 'bottom', a: 0.9 });
+    const out = (k: string) => 1 - S.at(k, 0, 0.5);
+    const inn = (k: string) => S.at(k, 0.15, 0.75);
+    // vista 1 y tarjetas laterales (se apagan al llegar a «flop»)
+    const aK = out('flop');
+    if (aK > 0.01) d.withAlpha(aK, () => { drawQuestions(S); drawKnobs(S, { N: S.between('kaplan', 'law') ? 1 : 0 }); });
+    const views: [string, string | null, (S: Frame) => void][] = [
+      ['kaplan', 'flop', drawCurve],
+      ['flop', 'budget', drawFlops],
+      ['budget', 'gpu-speed', drawBudget],
+      ['gpu-speed', 'emergent', drawCalc],
+      ['emergent', 'lens-scratch', drawEmerge],
+      ['lens-scratch', null, drawClose],
+    ];
+    for (const [from, to, fn] of views) {
+      if (!S.on(from)) continue;
+      const a = (from === 'kaplan' ? 1 : inn(from)) * (to ? out(to) : 1);
+      if (a > 0.01) d.withAlpha(a, () => fn(S));
+    }
   },
 });
 

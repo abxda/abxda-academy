@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Guía para revisar el curso
+    url: https://github.com/abxda/abxda-academy/blob/main/REVISION.md
+    about: Paso a paso para revisar las lecciones y dejar comentarios.

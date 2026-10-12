@@ -23,69 +23,127 @@ export default defineLesson({
       en: 'An email arrives and, in a second, you know whether it is spam. Now try explaining to a computer how you know.',
     },
     {
-      id: 'measure',
-      es: 'Midamos dos cosas de cada correo: cuántos enlaces trae y qué parte de su texto está en mayúsculas.',
-      en: 'Let’s measure two things in each email: how many links it has and what share of its text is in capital letters.',
+      id: 'measure-links',
+      es: 'Empecemos por medir. Primero contamos sus enlaces, las direcciones web que trae: este correo tiene cuatro.',
+      en: 'Let’s start by measuring. First we count its links, the web addresses it contains: this email has four.',
     },
     {
-      id: 'plane',
-      es: 'Con esos dos números, cada correo es un punto en un plano: enlaces a lo ancho, mayúsculas a lo alto.',
-      en: 'With those two numbers, each email becomes a point on a plane: links across, capital letters up.',
+      id: 'measure-caps',
+      es: 'Después miramos sus letras: de cada cien, unas veintidós están en mayúsculas. Es decir, veintidós por ciento.',
+      en: 'Then we look at its letters: out of every hundred, about twenty-two are capitals. That is, twenty-two percent.',
+    },
+    {
+      id: 'features',
+      es: 'Esas dos medidas son todo lo que la computadora verá del correo: ni el texto ni el remitente, solo dos números. A estas medidas se les llama características.',
+      en: 'Those two measures are all the computer will see of the email: not the text, not the sender, just two numbers. Measures like these are called features.',
+      note: { es: 'Característica: una medida que resume cada caso con un número.', en: 'Feature: a measure that sums up each case with a number.' },
+    },
+    {
+      id: 'axis-x',
+      es: 'Para ver muchos correos a la vez, dibujamos un plano. La línea horizontal cuenta los enlaces: cero a la izquierda, diez a la derecha.',
+      en: 'To see many emails at once, we draw a plane. The horizontal line counts links: zero on the left, ten on the right.',
+    },
+    {
+      id: 'axis-y',
+      es: 'La línea vertical mide las mayúsculas: abajo, casi ninguna; arriba, cuarenta de cada cien letras. Cuanto más arriba, más grita el correo.',
+      en: 'The vertical line measures capitals: at the bottom, almost none; at the top, forty out of every hundred letters. The higher up, the louder the email.',
+    },
+    {
+      id: 'place-x',
+      es: 'Ubiquemos nuestro correo. Tiene cuatro enlaces: avanzamos sobre la línea horizontal hasta el cuatro.',
+      en: 'Let’s place our email. It has four links: we move along the horizontal line to four.',
+    },
+    {
+      id: 'place-y',
+      es: 'Y tiene veintidós por ciento de mayúsculas: desde ahí subimos hasta la altura del veintidós. En ese cruce queda su punto.',
+      en: 'And it has twenty-two percent capitals: from there we go up to the height of twenty-two. Where the two meet is its point.',
+      pad: 0.3,
+    },
+    {
+      id: 'point-means',
+      es: 'Así, un correo entero se vuelve un solo punto. Su lugar lo dice todo: más a la derecha, más enlaces; más arriba, más mayúsculas.',
+      en: 'So a whole email becomes a single point. Its place says it all: further right, more links; higher up, more capitals.',
     },
     {
       id: 'labeled',
-      es: 'Alguien revisó treinta correos y anotó la respuesta de cada uno: círculo si es normal, cruz si es spam. Son datos de entrenamiento, inventados para ilustrar.',
-      en: 'Someone checked thirty emails and noted each answer: circle if legitimate, cross if spam. These are training data, made up for illustration.',
+      es: 'Hacemos lo mismo con treinta correos que alguien ya revisó a mano: círculo si era normal, cruz si era spam. Son datos de entrenamiento, inventados para ilustrar.',
+      en: 'We do the same with thirty emails someone already checked by hand: circle if legitimate, cross if spam. These are training data, made up for illustration.',
       note: { es: 'Datos de entrenamiento: ejemplos con su respuesta.', en: 'Training data: examples with their answer.' },
     },
     {
-      id: 'rule-intro',
-      es: 'Así lo haría un programador: una regla con umbrales. Si trae muchos enlaces, o demasiadas mayúsculas, se marca como spam.',
-      en: 'Here is how a programmer would do it: a rule with thresholds. Too many links, or too many capital letters, and it is marked as spam.',
+      id: 'pattern',
+      es: 'Mira dónde cae cada tipo: los normales se juntan abajo a la izquierda, con pocos enlaces y pocas mayúsculas; el spam tiende hacia la derecha o hacia arriba.',
+      en: 'Look where each kind lands: legitimate emails cluster at the bottom left, with few links and few capitals; spam leans to the right or toward the top.',
+    },
+    {
+      id: 'rule-links',
+      es: 'Así lo haría un programador: escribiendo una regla. Primera parte: si un correo trae siete enlaces o más, es spam. Es todo lo que queda a la derecha de esta línea.',
+      en: 'Here is how a programmer would do it: by writing a rule. Part one: if an email has seven links or more, it is spam. That is everything to the right of this line.',
+    },
+    {
+      id: 'rule-caps',
+      es: 'Segunda parte: también es spam si tiene veintiocho por ciento de mayúsculas o más, todo lo que queda por encima. Lo sombreado es lo que la regla llama spam.',
+      en: 'Part two: it is also spam if it has twenty-eight percent capitals or more, everything above this line. The shaded area is what the rule calls spam.',
+    },
+    {
+      id: 'rule-count',
+      es: 'Ahora la comparamos con las respuestas anotadas. Cada correo que la regla clasifica mal queda marcado con un anillo, y el contador dice cuántos de los treinta acierta.',
+      en: 'Now we compare it with the labeled answers. Each email the rule gets wrong is marked with a ring, and the counter shows how many of the thirty it gets right.',
+    },
+    {
+      id: 'rule-demo',
+      es: 'Mira qué pasa si bajamos el umbral de mayúsculas: atrapa más spam y el contador sube. Si lo bajamos demasiado, empieza a marcar correos normales y vuelve a bajar.',
+      en: 'Watch what happens as we lower the capitals threshold: it catches more spam and the counter rises. Lower it too far and it starts flagging legitimate emails, and the counter drops.',
+      pad: 0.4,
     },
     {
       id: 'try-rule',
-      es: 'Tu turno: mueve los dos umbrales con los deslizadores de abajo y busca la regla que clasifique bien más de esos treinta correos.',
-      en: 'Your turn: move the two thresholds with the sliders below and find the rule that classifies the most of those thirty emails correctly.',
+      es: 'Con siete enlaces y diecisiete por ciento, la regla acierta veintiocho de treinta. Si quieres, prueba otros valores con los deslizadores de abajo.',
+      en: 'With seven links and seventeen percent, the rule gets twenty-eight of thirty right. If you like, try other values with the sliders below.',
       gate: {
         id: 'rule',
-        prompt: { es: 'Mueve los umbrales hasta acertar 24 de 30 o más.', en: 'Move the thresholds until you get 24 of 30 or more right.' },
+        prompt: { es: 'mueve los umbrales y mira cómo cambia el contador.', en: 'move the thresholds and watch the counter change.' },
       },
       pad: 0.4,
     },
     {
       id: 'errors',
-      es: 'Sea cual sea tu regla, quedan errores, marcados con un anillo: en el centro las dos clases se mezclan.',
-      en: 'Whatever your rule, some errors remain, marked with a ring: in the middle the two classes mix.',
+      es: 'Aun así, ninguna regla de este tipo acierta los treinta: en el centro, correos normales y spam se mezclan.',
+      en: 'Even so, no rule of this kind gets all thirty: in the middle, legitimate emails and spam mix.',
     },
     {
       id: 'unseen',
-      es: 'Pero tu regla se ajustó mirando esos treinta. Ahora queda fija, como cualquier programa, y recibe sesenta correos nuevos que nunca vio.',
-      en: 'But your rule was tuned on those thirty. Now it stays fixed, like any program, and gets sixty new emails it has never seen.',
+      es: 'Pero esa regla se ajustó mirando estos treinta correos. Ahora la dejamos fija y le damos sesenta correos nuevos, que nunca vio.',
+      en: 'But that rule was tuned by looking at these thirty emails. Now we freeze it and give it sixty new emails it has never seen.',
       pad: 0.6,
     },
     {
-      id: 'fragile',
-      es: 'Lo que cuenta es acertar con lo nuevo: a eso se le llama generalizar. Compara tus dos cifras: cuanto más afinas la regla con los treinta, más suele bajar la segunda.',
-      en: 'What counts is getting new cases right: that is called generalizing. Compare your two figures: the more you tune the rule to the thirty, the more the second one tends to drop.',
+      id: 'two-figures',
+      es: 'Ahora tenemos dos cifras. Arriba, cuántos acierta de los treinta que vio. Abajo, cuántos acierta de los sesenta nuevos. Las dos en porcentaje, para poder compararlas.',
+      en: 'Now we have two figures. On top, how many of the thirty it saw it gets right. Below, how many of the sixty new ones. Both as percentages, so we can compare them.',
+      pad: 0.3,
+    },
+    {
+      id: 'generalize',
+      es: 'La que importa es la de abajo: acertar con correos nuevos, que es para lo que existe la regla. A eso se le llama generalizar.',
+      en: 'The one that matters is the bottom one: getting new emails right, which is what the rule is for. That is called generalizing.',
       note: { es: 'Generalizar: acertar con casos que nunca vio.', en: 'Generalizing: getting right cases it has never seen.' },
     },
     {
-      id: 'best-rule',
-      es: 'Con estos deslizadores hay trescientas sesenta reglas posibles. Las mejores aciertan veintiocho de treinta; con los sesenta nuevos, esas mismas aciertan entre cuarenta y siete y cincuenta y dos.',
-      en: 'These sliders allow three hundred sixty possible rules. The best ones get twenty-eight of thirty; on the sixty new emails, those same rules get between forty-seven and fifty-two.',
-      pad: 0.4,
+      id: 'tune-trap',
+      es: 'Y casi siempre la de abajo es menor. Con los correos vistos, la regla luce mejor de lo que es, porque se afinó justo para ellos.',
+      en: 'And the bottom one is almost always lower. On the emails it saw, the rule looks better than it is, because it was tuned for exactly them.',
     },
     {
       id: 'programming',
-      es: 'Lo que hiciste se llama programar: tú escribes las reglas, la computadora las aplica a los datos y entrega respuestas.',
-      en: 'What you just did is called programming: you write the rules, the computer applies them to the data and returns answers.',
+      es: 'Lo que hicimos se llama programar: una persona escribe las reglas, la computadora las aplica a los datos y entrega respuestas.',
+      en: 'What we just did is called programming: a person writes the rules, the computer applies them to the data and returns answers.',
       note: { es: 'Programar: reglas + datos → respuestas.', en: 'Programming: rules + data → answers.' },
     },
     {
       id: 'hand-cost',
-      es: 'El límite: tú debes conocer la regla. Con dos medidas se intenta; con mil por correo, o con una foto, ya no es realista.',
-      en: 'The limit: you must know the rule. With two measures you can try; with a thousand per email, or with a photo, it is no longer realistic.',
+      es: 'El límite: alguien debe conocer la regla. Con dos medidas se puede intentar; con mil por correo, o con una foto, ya no es realista.',
+      en: 'The limit: someone has to know the rule. With two measures you can try; with a thousand per email, or with a photo, it is no longer realistic.',
       pad: 0.4,
     },
     {
@@ -106,64 +164,107 @@ export default defineLesson({
     },
     {
       id: 'learn-setup',
-      es: 'Volvamos a los treinta correos, ahora desde la máquina. No le damos ninguna regla: solo estos ejemplos, cada uno con su respuesta.',
-      en: 'Back to the thirty emails, now from the machine’s side. No rule this time: only these examples, each with its answer.',
+      es: 'Volvamos a los treinta correos, ahora del lado de la máquina. Ve lo mismo que viste tú: las dos características de cada correo y su respuesta. Lo que no recibe es una regla.',
+      en: 'Back to the thirty emails, now from the machine’s side. It sees what you saw: each email’s two features and its answer. What it does not get is a rule.',
     },
     {
-      id: 'model-form',
-      es: 'Sí le damos una forma de regla: una suma ponderada. Cada medida lleva un peso, que dice cuánto cuenta, y se suma un número fijo. Eso es un modelo.',
-      en: 'We do give it a form of rule: a weighted sum. Each measure gets a weight, which says how much it counts, and a fixed number is added. That is a model.',
+      id: 'model-idea',
+      es: 'Lo que sí recibe es una forma de regla con huecos para números: un puntaje que suma las dos medidas, cada una multiplicada por un número.',
+      en: 'What it does get is a form of rule with blanks for numbers: a score that adds up the two measures, each multiplied by a number.',
+    },
+    {
+      id: 'weights',
+      es: 'Esos multiplicadores se llaman pesos. Un peso grande dice: esta medida cuenta mucho. Un peso cercano a cero dice: casi no importa.',
+      en: 'Those multipliers are called weights. A large weight says: this measure counts a lot. A weight near zero says: it barely matters.',
+    },
+    {
+      id: 'bias',
+      es: 'Al final se suma un número fijo, que sube o baja todos los puntajes por igual. Esa forma, con sus tres números por llenar, es un modelo.',
+      en: 'At the end, a fixed number is added, which raises or lowers every score equally. That form, with its three numbers still to fill in, is a model.',
       note: { es: 'Modelo: una forma de regla con números ajustables.', en: 'Model: a form of rule with adjustable numbers.' },
     },
     {
-      id: 'model-sign',
-      es: 'Si el puntaje sale positivo, el modelo dice spam; si sale negativo, dice normal. La frontera entre ambos es una recta.',
-      en: 'If the score comes out positive, the model says spam; if negative, legitimate. The boundary between the two is a straight line.',
+      id: 'score-example',
+      es: 'Probemos con números sencillos: peso uno para los enlaces, un medio para las mayúsculas y menos doce de número fijo. Nuestro correo da cuatro, más once punto dos, menos doce.',
+      en: 'Let’s try simple numbers: weight one for links, one half for capitals, and minus twelve as the fixed number. Our email gives four, plus eleven point two, minus twelve.',
+      pad: 0.3,
+    },
+    {
+      id: 'sign',
+      es: 'El resultado es tres punto dos, un número positivo. La regla del modelo es el signo: puntaje positivo, spam; negativo, normal. Este correo sale spam.',
+      en: 'The result is three point two, a positive number. The model’s rule is the sign: positive score, spam; negative, legitimate. This email comes out as spam.',
+    },
+    {
+      id: 'boundary',
+      es: 'Si hacemos esa cuenta en cada punto del plano, el lado positivo y el negativo quedan separados por una recta: justo donde el puntaje vale cero.',
+      en: 'If we do that calculation at every point on the plane, the positive side and the negative side are split by a straight line: exactly where the score equals zero.',
+      pad: 0.3,
     },
     {
       id: 'params',
-      es: 'Tres números mueven esa recta: los dos pesos y el número fijo. Son los parámetros del modelo: ahí guarda todo lo que sabe.',
-      en: 'Three numbers move that line: the two weights and the fixed one. They are the model’s parameters: everything it knows is stored there.',
+      es: 'Cambiar esos tres números mueve la recta: los pesos la inclinan y el número fijo la desplaza. Son los parámetros del modelo: ahí guarda todo lo que sabe.',
+      en: 'Changing those three numbers moves the line: the weights tilt it and the fixed number shifts it. They are the model’s parameters: everything it knows is stored there.',
       note: { es: 'Parámetros: los números donde el modelo guarda lo aprendido.', en: 'Parameters: the numbers where the model stores what it learned.' },
     },
     {
       id: 'training',
-      es: 'Entrenar es buscar esos números: se empieza con unos cualquiera, se mide cuánto se equivoca el modelo y se ajustan poco a poco para equivocarse menos.',
-      en: 'Training is the search for those numbers: start with arbitrary ones, measure how wrong the model is, and nudge them bit by bit to be less wrong.',
+      es: 'Entrenar es buscar los mejores tres números. Se empieza con unos cualquiera, que se equivocan mucho: esta recta deja la mitad de los correos del lado equivocado.',
+      en: 'Training is the search for the best three numbers. You start with arbitrary ones, which get a lot wrong: this line leaves half the emails on the wrong side.',
       note: { es: 'Entrenar: ajustar los parámetros con ejemplos.', en: 'Training: adjusting the parameters with examples.' },
+    },
+    {
+      id: 'training-loop',
+      es: 'Luego se mide cuánto se equivoca, se corrigen un poco los tres números y se repite, trescientas veces. Mira cómo la recta se acomoda sola.',
+      en: 'Then you measure how wrong it is, correct the three numbers a little, and repeat, three hundred times. Watch the line settle into place on its own.',
       pad: 0.5,
     },
     {
       id: 'train-result',
-      es: 'Nadie escribió esta regla: la máquina la encontró en los ejemplos. Con solo dos medidas, una persona paciente puede igualarla. Compáralas con los correos vistos y con los nuevos.',
-      en: 'Nobody wrote this rule: the machine found it in the examples. With only two measures, a patient person can match it. Compare both on the seen and the new emails.',
+      es: 'Nadie escribió esta regla: la máquina la encontró en los ejemplos, con las mismas dos características. Abajo la comparamos con la regla escrita a mano, en vistos y en nuevos.',
+      en: 'Nobody wrote this rule: the machine found it in the examples, using the same two features. Below we compare it with the handwritten rule, on seen and new emails.',
+      pad: 0.4,
+    },
+    {
+      id: 'train-compare',
+      es: 'Aciertan parecido: con solo dos medidas, una persona paciente puede igualar a la máquina. La ventaja de aprender aparece cuando hay muchas medidas.',
+      en: 'They do about the same: with only two measures, a patient person can match the machine. The advantage of learning shows up when there are many measures.',
+    },
+    {
+      id: 'data-demo',
+      es: '¿Importa con cuántos ejemplos aprende? Mira: si solo le damos seis, acierta los seis que vio, pero la recta cambia mucho y falla más con los nuevos.',
+      en: 'Does it matter how many examples it learns from? Watch: with only six, it gets all six it saw right, but the line swings a lot and does worse on the new ones.',
       pad: 0.4,
     },
     {
       id: 'try-data',
-      es: 'Tu turno: con el deslizador de abajo, cambia con cuántos ejemplos aprende la máquina. Baja a pocos, vuelve a subir y compara con los nuevos.',
-      en: 'Your turn: with the slider below, change how many examples the machine learns from. Go down to a few, back up, and compare on the new emails.',
+      es: 'Con los treinta vuelve a estabilizarse. Si quieres, mueve tú el deslizador de ejemplos y compara con los correos nuevos.',
+      en: 'With all thirty it steadies again. If you like, move the examples slider yourself and compare on the new emails.',
       gate: {
         id: 'data',
-        prompt: { es: 'Baja a 8 ejemplos o menos y vuelve a subir a 26 o más.', en: 'Go down to 8 examples or fewer, then back up to 26 or more.' },
+        prompt: { es: 'baja a 8 ejemplos o menos y vuelve a subir a 26 o más.', en: 'go down to 8 examples or fewer, then back up to 26 or more.' },
       },
       pad: 0.4,
     },
     {
       id: 'more-data',
-      es: 'Con muy pocos ejemplos acierta todos los que vio y aun así falla más con los nuevos; la recta cambia mucho. Con más, las dos cifras se acercan.',
-      en: 'With very few examples it gets every one it saw right and still does worse on the new ones; the line swings a lot. With more, the two figures move closer.',
+      es: 'Con pocos ejemplos, acertar todos los vistos no garantiza nada. Con más ejemplos, las dos cifras, vistos y nuevos, se acercan.',
+      en: 'With few examples, getting every seen one right guarantees nothing. With more examples, the two figures, seen and new, move closer.',
       pad: 0.4,
     },
     {
       id: 'use-arrive',
-      es: 'Terminado el entrenamiento, los tres números quedan fijos. Llega un correo nuevo, con pocos enlaces pero muchas mayúsculas.',
-      en: 'Training is over and the three numbers are frozen. A new email arrives, with few links but lots of capital letters.',
+      es: 'Terminado el entrenamiento, los tres números quedan fijos. Llega un correo nuevo, que el modelo nunca vio.',
+      en: 'Training is over and the three numbers are frozen. A new email arrives that the model has never seen.',
+    },
+    {
+      id: 'use-measure',
+      es: 'Primero se mide igual que los treinta del entrenamiento, con las mismas dos características: es lo único que el modelo sabe leer. Tiene dos enlaces y veinticuatro por ciento.',
+      en: 'First it is measured just like the thirty training emails, with the same two features: they are all the model can read. It has two links and twenty-four percent.',
     },
     {
       id: 'use-compute',
-      es: 'Usarlo es solo aritmética: multiplica, suma y mira el signo. Es instantáneo y no aprende nada nuevo. A esto se le llama inferencia.',
-      en: 'Using it is just arithmetic: multiply, add, and look at the sign. It is instant and learns nothing new. This is called inference.',
+      es: 'Usarlo es solo aritmética: cada medida por su peso, se suma el número fijo y se mira el signo. Es instantáneo y no aprende nada nuevo. A esto se le llama inferencia.',
+      en: 'Using it is just arithmetic: each measure times its weight, add the fixed number, look at the sign. It is instant and learns nothing new. This is called inference.',
       note: { es: 'Inferencia: usar el modelo ya entrenado, con parámetros fijos.', en: 'Inference: using the trained model, with frozen parameters.' },
     },
     {
@@ -174,11 +275,11 @@ export default defineLesson({
     },
     {
       id: 'try-use',
-      es: 'Tu turno: toca el plano para poner un correo nuevo y mira qué responde el modelo, sin reentrenar. También sirve el botón.',
-      en: 'Your turn: tap the plane to place a new email and see what the model answers, with no retraining. The button works too.',
+      es: 'Aquí van tres correos nuevos más, y el modelo responde al instante, sin reentrenar. Si quieres, toca el plano para poner los tuyos.',
+      en: 'Here are three more new emails, and the model answers instantly, with no retraining. If you like, tap the plane to place your own.',
       gate: {
         id: 'probe',
-        prompt: { es: 'Coloca tres correos nuevos y mira cada respuesta.', en: 'Place three new emails and look at each answer.' },
+        prompt: { es: 'toca el plano (o usa el botón) para poner correos nuevos.', en: 'tap the plane (or use the button) to place new emails.' },
       },
       pad: 0.4,
     },
@@ -256,13 +357,13 @@ Los parámetros son $\\theta = (w_1, w_2, b)$ y la frontera $w_1 x_1 + w_2 x_2 +
 
 $$L(\\theta) = -\\frac{1}{n}\\sum_{i=1}^{n}\\Big[\\,y_i \\ln p_i + (1-y_i)\\ln(1-p_i)\\,\\Big]$$
 
-Cada paso mueve los parámetros en contra del gradiente, $\\theta \\leftarrow \\theta - \\eta\\,\\nabla L(\\theta)$ (lección 4). En la escena: $\\eta = 0{,}5$, 300 pasos y los 30 ejemplos, con las medidas estandarizadas, $(x_1 - 3{,}5)/2{,}5$ y $(x_2 - 14)/8$, y un punto de partida arbitrario. El resultado, en las unidades originales, es $w_1 \\approx 0{,}69$, $w_2 \\approx 0{,}53$ y $b \\approx -9{,}63$. La exactitud es aciertos entre total: 27 de 30 con los ejemplos y 52 de 60 con los nuevos. Los datos son sintéticos, inventados para ilustrar; no son correos reales.
+Cada paso mueve los parámetros en contra del gradiente, $\\theta \\leftarrow \\theta - \\eta\\,\\nabla L(\\theta)$ (lección 4). En la escena: $\\eta = 0.5$, 300 pasos y los 30 ejemplos, con las medidas estandarizadas, $(x_1 - 3.5)/2.5$ y $(x_2 - 14)/8$, y un punto de partida arbitrario. El resultado, en las unidades originales, es $w_1 \\approx 0.69$, $w_2 \\approx 0.53$ y $b \\approx -9.63$. La exactitud es aciertos entre total: 27 de 30 con los ejemplos y 52 de 60 con los nuevos. Los datos son sintéticos, inventados para ilustrar; no son correos reales.
 
 La regla a mano de la lección, «spam si $x_1 \\ge a$ o $x_2 \\ge b$», tampoco es gratuita: también tiene parámetros, los dos umbrales. Aprender es dejar que los datos los fijen en lugar de ajustarlos a ojo.
 
 ## Por qué la cifra con los ejemplos engaña
 
-La exactitud medida con los mismos ejemplos que sirvieron para ajustar es, en promedio, optimista. En la lección, la mejor de las $10 \\times 36 = 360$ reglas que permiten los deslizadores acierta 28 de los 30 ejemplos ($\\approx 93\\,\\%$); hay seis empatadas y, con los 60 correos nuevos, esas seis aciertan entre 47 y 52 ($\\approx 78\\,\\%$ a $87\\,\\%$). Entre las 84 reglas que aciertan 24 o más de los 30, 58 bajan con los nuevos, 16 suben y 10 quedan igual; el cambio medio es de $-3{,}2$ puntos porcentuales. Es una tendencia, no una ley: con solo 60 correos nuevos cada cifra es ruidosa, y una regla afinada con cuidado puede aguantar («enlaces $\\ge 5$ o mayúsculas $\\ge 17\\,\\%$» acierta 27 de 30 y 54 de 60). Cuantas más opciones se prueban sobre los mismos datos, más se ajusta uno al azar de esos datos.
+La exactitud medida con los mismos ejemplos que sirvieron para ajustar es, en promedio, optimista. En la lección, la mejor de las $10 \\times 36 = 360$ reglas que permiten los deslizadores acierta 28 de los 30 ejemplos ($\\approx 93\\,\\%$); hay seis empatadas y, con los 60 correos nuevos, esas seis aciertan entre 47 y 52 ($\\approx 78\\,\\%$ a $87\\,\\%$). Entre las 84 reglas que aciertan 24 o más de los 30, 58 bajan con los nuevos, 16 suben y 10 quedan igual; el cambio medio es de $-3.2$ puntos porcentuales. Es una tendencia, no una ley: con solo 60 correos nuevos cada cifra es ruidosa, y una regla afinada con cuidado puede aguantar («enlaces $\\ge 5$ o mayúsculas $\\ge 17\\,\\%$» acierta 27 de 30 y 54 de 60). Cuantas más opciones se prueban sobre los mismos datos, más se ajusta uno al azar de esos datos.
 
 Con pocos ejemplos pasa algo parecido. Con 4 ejemplos, el modelo acierta los 4 que vio y 48 de los 60 nuevos ($80\\,\\%$); con los 30, acierta 27 de 30 ($90\\,\\%$) y 52 de 60 ($87\\,\\%$): las dos cifras se acercan. Separar entrenamiento, validación y prueba, y medir bien, es el tema de la lección 10.
 

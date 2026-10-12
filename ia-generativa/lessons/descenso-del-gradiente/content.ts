@@ -5,163 +5,296 @@ export default defineLesson({
 
   objectives: {
     es: [
-      'Explicar cómo una máquina encuentra los pesos que minimizan el error sin ver la curva completa.',
-      'Predecir qué le pasa al entrenamiento con una tasa de aprendizaje muy pequeña o muy grande.',
-      'Reconocer el gradiente como la dirección cuesta arriba del error, y por qué se avanza en sentido contrario.',
+      'Explicar qué es la pendiente de la curva de error en un punto (su derivada) y qué indica su signo.',
+      'Calcular un paso del descenso del gradiente con la regla peso nuevo = peso actual − tasa × pendiente.',
+      'Predecir el efecto de una tasa de aprendizaje muy pequeña o muy grande, y reconocer el gradiente como la lista de pendientes, una por peso.',
     ],
     en: [
-      'Explain how a machine finds the weights that minimize error without seeing the whole curve.',
-      'Predict what happens to training with a very small or very large learning rate.',
-      'Recognize the gradient as the uphill direction of the error, and why we step the opposite way.',
+      'Explain what the slope of the error curve at a point is (its derivative) and what its sign tells you.',
+      'Compute one step of gradient descent with the rule new weight = current weight − rate × slope.',
+      'Predict the effect of a very small or very large learning rate, and recognize the gradient as the list of slopes, one per weight.',
     ],
   },
 
   segments: [
+    // ── la curva de error, pieza por pieza ──
     {
       id: 'hook',
-      es: 'Ya tenemos un modelo con un número que ajustar, el peso, y una forma de medir su error. La pregunta es cómo encontrar el peso que deja el error lo más pequeño posible.',
-      en: 'We now have a model with one number to adjust, the weight, and a way to measure its error. The question is how to find the weight that makes the error as small as possible.',
-      note: { es: 'Objetivo: el peso que minimiza el error.', en: 'Goal: the weight that minimizes the error.' },
+      es: 'Ya tenemos un modelo con un número por ajustar, el peso, y una forma de medir cuánto se equivoca. Falta lo central: ¿cómo encontrar el peso que se equivoca menos?',
+      en: 'We now have a model with one number to adjust, the weight, and a way to measure how wrong it is. The key part is still missing: how do we find the weight that is least wrong?',
     },
     {
-      id: 'fog',
-      es: 'El problema es que no puedes ver la curva completa. Solo sabes cuánto error hay justo donde estás, como bajar una montaña envuelto en niebla.',
-      en: 'The catch is that you cannot see the whole curve. You only know how much error there is right where you stand, like walking down a mountain wrapped in fog.',
+      id: 'axis-x',
+      es: 'Para verlo, dibujamos un plano. La línea horizontal es el peso: cada posición es un valor distinto, de menos dos a ocho.',
+      en: 'To see it, we draw a plane. The horizontal line is the weight: each position is a different value, from minus two to eight.',
     },
     {
-      id: 'question',
-      es: 'Con ese único dato, ¿hacia dónde conviene mover el peso: a la izquierda o a la derecha?',
-      en: 'With just that, which way should you move the weight: left or right?',
+      id: 'axis-y',
+      es: 'La línea vertical es el error que comete el modelo con ese peso, la pérdida de la lección anterior. Abajo, poco error; arriba, mucho.',
+      en: 'The vertical line is the error the model makes with that weight, the loss from the last lesson. Low means little error; high means a lot.',
     },
     {
-      id: 'slope',
-      es: 'Hay que tantear el terreno. La pendiente lo dice: aquí la curva baja hacia la derecha, así que el error baja si movemos el peso a la derecha.',
-      en: 'You have to feel the ground. The slope tells you: here the curve goes down to the right, so the error falls if we move the weight to the right.',
-      note: { es: 'Pendiente: cuánto cambia el error al mover el peso.', en: 'Slope: how much the error changes when the weight moves.' },
-    },
-    {
-      id: 'gradient',
-      es: 'Esa pendiente es la derivada. Cuando hay muchos pesos, se reúnen en un vector, el gradiente, que apunta hacia donde el error más sube.',
-      en: 'That slope is the derivative. With many weights, they are gathered into a vector, the gradient, which points to where the error rises fastest.',
-      note: { es: 'Gradiente: la dirección en que el error más sube.', en: 'Gradient: the direction in which the error rises fastest.' },
-    },
-    {
-      id: 'step',
-      es: 'Así que damos un paso en sentido contrario. Su tamaño es la pendiente multiplicada por un número pequeño: la tasa de aprendizaje.',
-      en: 'So we step the opposite way. The size of the step is the slope times a small number: the learning rate.',
-      note: { es: 'Regla: w ← w − η · pendiente.', en: 'Rule: w ← w − η · slope.' },
-    },
-    {
-      id: 'repeat',
-      es: 'Repetimos: tantear, avanzar, tantear. En cada paso el error baja y la pendiente se aplana, hasta que casi desaparece. Llegamos al fondo.',
-      en: 'We repeat: feel, step, feel. With every step the error drops and the slope flattens, until it almost disappears. We have reached the bottom.',
-      note: { es: 'Repetir: el error baja y la pendiente se aplana.', en: 'Repeat: the error drops and the slope flattens.' },
-      pad: 0.5,
-    },
-    {
-      id: 'map',
-      es: 'Ahora mira lo que el algoritmo nunca vio: la curva entera. Solo tanteó, paso a paso, y aun así llegó.',
-      en: 'Now look at what the algorithm never saw: the whole curve. It only felt its way along, step by step, and still arrived.',
-      pad: 0.4,
-    },
-    {
-      id: 'try1',
-      es: 'Tu turno: da pasos con el botón y observa cómo cambian el error y la pendiente.',
-      en: 'Your turn: take steps with the button and watch how the error and the slope change.',
-      gate: {
-        id: 'steps',
-        prompt: { es: 'Pulsa «Dar un paso» al menos cuatro veces.', en: 'Press “Take a step” at least four times.' },
-      },
-      pad: 0.4,
-    },
-    {
-      id: 'lr-intro',
-      es: 'Falta decidir cuánto avanzar en cada paso, y eso lo controla la tasa de aprendizaje. Veamos tres casos.',
-      en: 'What is left is deciding how far to move at each step, and that is controlled by the learning rate. Let’s look at three cases.',
-      note: { es: 'Tasa de aprendizaje η: el tamaño del paso.', en: 'Learning rate η: the size of the step.' },
-    },
-    {
-      id: 'lr-small',
-      es: 'Con una tasa muy pequeña no te pasas, pero tardas una eternidad: pasos diminutos y todavía lejos del fondo.',
-      en: 'With a very small learning rate you do not overshoot, but it takes forever: tiny steps, still far from the bottom.',
+      id: 'curve',
+      es: 'Calculamos el error de varios pesos y marcamos cada uno con un punto: con menos uno, nueve; con cero, cinco punto cinco. Unidos, forman una curva.',
+      en: 'We compute the error for several weights and mark each one with a point: minus one gives nine; zero gives five point five. Joined up, they form a curve.',
       pad: 0.3,
     },
     {
-      id: 'lr-big',
-      es: 'Con una tasa demasiado grande te pasas de largo: saltas de un lado a otro y, si exageras, el error sube en lugar de bajar.',
-      en: 'With a rate that is too big you overshoot: you bounce from side to side and, if you overdo it, the error goes up instead of down.',
+      id: 'goal',
+      es: 'Tiene forma de valle. Su punto más bajo es el mejor peso: aquí, tres, con error uno. Es lo que queremos encontrar.',
+      en: 'It is shaped like a valley. Its lowest point is the best weight: here, three, with an error of one. That is what we want to find.',
+      note: { es: 'Curva de error: el error de cada peso. Su fondo es el mejor peso.', en: 'Error curve: the error for each weight. Its bottom is the best weight.' },
+    },
+    {
+      id: 'start',
+      es: 'Empecemos con un peso cualquiera: menos uno. Lo ubicamos en la línea horizontal y subimos hasta la curva: ahí, el error es nueve.',
+      en: 'Let’s start with an arbitrary weight: minus one. We find it on the horizontal line and go up to the curve: there, the error is nine.',
+      pad: 0.3,
+    },
+    // ── la pendiente, desde cero ──
+    {
+      id: 'slope-what',
+      es: '¿Hacia dónde mover el peso para que el error baje? Lo dice la pendiente de la curva: qué tan inclinada está justo en ese punto, y hacia qué lado.',
+      en: 'Which way should we move the weight so the error drops? The slope of the curve tells us: how steep it is right at that point, and which way it tilts.',
+    },
+    {
+      id: 'slope-nudge',
+      es: 'Para medirla, movemos el peso un poquito: una décima a la derecha, a menos cero punto nueve. El error baja de nueve a unos ocho punto seis.',
+      en: 'To measure it, we move the weight a tiny bit: one tenth to the right, to minus zero point nine. The error drops from nine to about eight point six.',
+      pad: 0.3,
+    },
+    {
+      id: 'slope-value',
+      es: 'Bajó casi cuatro décimas, unas cuatro veces lo que movimos el peso. Esa proporción es la pendiente: aquí vale menos cuatro. El signo menos dice que el error baja.',
+      en: 'It dropped almost four tenths, about four times as much as we moved the weight. That ratio is the slope: here it is minus four. The minus sign says the error goes down.',
+      note: { es: 'Pendiente: cuánto cambia el error por cada pequeño movimiento del peso.', en: 'Slope: how much the error changes for each tiny move of the weight.' },
+    },
+    {
+      id: 'slope-tangent',
+      es: 'Visto muy de cerca, ese pedazo de curva parece recto. La recta que toca la curva en el punto se llama tangente: por cada paso a la derecha, baja cuatro.',
+      en: 'Seen up close, that bit of curve looks straight. The line that touches the curve at that point is called the tangent: for each step to the right, it drops four.',
+      pad: 0.3,
+    },
+    {
+      id: 'slope-sign',
+      es: 'Del otro lado del valle, en el peso seis, la tangente sube: tres por cada paso a la derecha. Ahí la pendiente es más tres, positiva: cuesta arriba.',
+      en: 'On the other side of the valley, at weight six, the tangent rises: three for each step to the right. There the slope is plus three, positive: uphill.',
+      pad: 0.3,
+    },
+    {
+      id: 'slope-zero',
+      es: 'Y en el fondo, en el tres, la tangente queda plana: pendiente cero. En resumen: negativa, baja hacia la derecha; positiva, sube; cero, es el fondo.',
+      en: 'And at the bottom, at three, the tangent lies flat: slope zero. In short: negative, it goes down to the right; positive, it goes up; zero, it is the bottom.',
+      note: { es: 'Pendiente negativa: baja hacia la derecha. Positiva: sube. Cero: el fondo.', en: 'Negative slope: down to the right. Positive: up. Zero: the bottom.' },
+      pad: 0.3,
+    },
+    {
+      id: 'derivative',
+      es: 'En matemáticas, la pendiente en un punto se llama derivada. No hay más misterio: es cuánto cambia el error por cada pequeño movimiento del peso.',
+      en: 'In mathematics, the slope at a point is called the derivative. There is no more mystery to it: it is how much the error changes for each tiny move of the weight.',
+      note: { es: 'Derivada: el nombre matemático de la pendiente en un punto.', en: 'Derivative: the mathematical name for the slope at a point.' },
+    },
+    // ── la regla, símbolo por símbolo ──
+    {
+      id: 'rule-dir',
+      es: 'Con eso basta para decidir. Pendiente negativa: el error baja hacia la derecha, así que avanzamos. Positiva: retrocedemos. Siempre en contra de la pendiente.',
+      en: 'That is enough to decide. Negative slope: the error goes down to the right, so we move forward. Positive: we move back. Always against the slope.',
+      pad: 0.3,
+    },
+    {
+      id: 'rule-words',
+      es: 'Escrito como regla: el peso nuevo es igual al peso actual, menos un número pequeño multiplicado por la pendiente.',
+      en: 'Written as a rule: the new weight equals the current weight, minus a small number multiplied by the slope.',
+      note: { es: 'Regla: peso nuevo = peso actual − η × pendiente.', en: 'Rule: new weight = current weight − η × slope.' },
+    },
+    {
+      id: 'rule-eta',
+      es: 'Ese número pequeño se llama tasa de aprendizaje y se escribe con la letra griega eta. Decide el tamaño del paso. Por ahora vale un medio.',
+      en: 'That small number is called the learning rate, and it is written with the Greek letter eta. It sets the size of the step. For now it is one half.',
+    },
+    {
+      id: 'rule-minus',
+      es: '¿Y el signo menos? Restar una pendiente negativa es sumar: el peso avanza. Restar una positiva lo hace retroceder. En los dos casos, cuesta abajo.',
+      en: 'And the minus sign? Subtracting a negative slope means adding: the weight moves forward. Subtracting a positive one moves it back. Either way, downhill.',
+      pad: 0.3,
+    },
+    // ── en la niebla, paso a paso ──
+    {
+      id: 'fog',
+      es: 'Ahora, la trampa: la máquina no ve esta curva. Para dibujarla tendría que calcular el error con cada peso posible, y con millones de pesos eso es imposible.',
+      en: 'Now the catch: the machine cannot see this curve. To draw it, it would have to compute the error for every possible weight, and with millions of weights that is impossible.',
+    },
+    {
+      id: 'fog-local',
+      es: 'Solo sabe dos cosas: el error donde está y la pendiente ahí mismo, como quien baja un cerro con niebla tanteando el piso con el pie. Para la regla, basta.',
+      en: 'It knows only two things: the error where it stands and the slope right there, like walking down a hill in fog, feeling the ground with your foot. For the rule, that is enough.',
+    },
+    {
+      id: 'first-step',
+      es: 'Hagamos la cuenta: menos uno, menos un medio por menos cuatro. Eso da menos uno más dos: el peso nuevo es uno, y el error baja de nueve a tres.',
+      en: 'Let’s do the math: minus one, minus one half times minus four. That gives minus one plus two: the new weight is one, and the error drops from nine to three.',
+      pad: 0.3,
+    },
+    {
+      id: 'second-step',
+      es: 'En uno, la pendiente es menos dos, más suave. Por eso el paso es más corto, de uno: el peso llega a dos y el error, a uno punto cinco.',
+      en: 'At one, the slope is minus two, gentler. So the step is shorter, just one: the weight reaches two and the error, one point five.',
+      pad: 0.3,
+    },
+    {
+      id: 'repeat',
+      es: 'Y otra vez: medir la pendiente, dar el paso. Como la pendiente se aplana al acercarse al fondo, los pasos se acortan solos. El error sigue bajando.',
+      en: 'And again: measure the slope, take the step. Because the slope flattens near the bottom, the steps get shorter on their own. The error keeps dropping.',
       pad: 0.5,
     },
     {
+      id: 'bottom',
+      es: 'Cerca del fondo la pendiente es casi cero, y el paso también: el peso casi no se mueve. El error quedó en uno, el mínimo.',
+      en: 'Near the bottom the slope is almost zero, and so is the step: the weight barely moves. The error has settled at one, the minimum.',
+    },
+    {
+      id: 'map',
+      es: 'Quitemos la niebla. La máquina nunca vio la curva: solo midió la pendiente donde estaba, paso a paso, y aun así llegó al fondo.',
+      en: 'Let’s lift the fog. The machine never saw the curve: it only measured the slope where it was, step by step, and still reached the bottom.',
+      pad: 0.3,
+    },
+    {
+      id: 'name',
+      es: 'Este método se llama descenso del gradiente: bajar paso a paso, siempre en contra de la pendiente. Enseguida veremos de dónde sale la palabra gradiente.',
+      en: 'This method is called gradient descent: going down step by step, always against the slope. In a moment we will see where the word gradient comes from.',
+    },
+    {
+      id: 'try1',
+      es: 'Si quieres, vuelve a empezar desde menos uno y da tú los pasos con el botón. Fíjate cómo cada paso es más corto que el anterior.',
+      en: 'If you like, start again from minus one and take the steps yourself with the button. Notice how each step is shorter than the one before.',
+      gate: {
+        id: 'steps',
+        prompt: { es: 'pulsa «Dar un paso» tres veces y mira cómo se acortan los pasos.', en: 'press “Take a step” three times and watch the steps get shorter.' },
+      },
+      pad: 0.4,
+    },
+    // ── la tasa de aprendizaje ──
+    {
+      id: 'lr-intro',
+      es: 'Falta una decisión: el valor de la tasa, el tamaño del paso. Con un medio funcionó bien. Veamos qué pasa con otros valores, de muy pequeño a muy grande.',
+      en: 'One decision is left: the value of the rate, the size of the step. One half worked well. Let’s see what happens with other values, from very small to very large.',
+    },
+    {
+      id: 'lr-small',
+      es: 'Con una tasa muy pequeña, cinco centésimas, los pasos son diminutos: tras doce pasos, sigue lejos del fondo. No se pasa, pero tarda muchísimo.',
+      en: 'With a very small rate, zero point zero five, the steps are tiny: after twelve steps it is still far from the bottom. It never overshoots, but it takes forever.',
+      pad: 0.4,
+    },
+    {
+      id: 'lr-osc',
+      es: 'Con una tasa grande, uno punto siete, se pasa de largo: cae del otro lado del valle y rebota de un lado a otro, aunque poco a poco se acerca.',
+      en: 'With a large rate, one point seven, it overshoots: it lands on the other side of the valley and bounces back and forth, though it slowly gets closer.',
+      pad: 0.4,
+    },
+    {
+      id: 'lr-diverge',
+      es: 'Y si es demasiado grande, aquí más de dos, cada salto cae más arriba que el anterior: el error crece en lugar de bajar. A eso se le llama divergir.',
+      en: 'And if it is far too large, here more than two, each jump lands higher than the last: the error grows instead of shrinking. This is called diverging.',
+      pad: 0.4,
+    },
+    {
       id: 'lr-good',
-      es: 'En el punto medio, la tasa baja rápido sin saltar de más. Encontrarla es parte del oficio de entrenar.',
-      en: 'In the middle, the rate drops fast without overshooting. Finding it is part of the craft of training.',
-      note: { es: 'Muy pequeña: lenta. Muy grande: oscila o diverge.', en: 'Too small: slow. Too big: it oscillates or diverges.' },
+      es: 'Entre esos extremos, una tasa como cero punto ocho llega en pocos pasos y sin rebotar. Encontrar una buena tasa es parte del oficio de entrenar.',
+      en: 'Between those extremes, a rate like zero point eight gets there in a few steps, without bouncing. Finding a good rate is part of the craft of training.',
+      note: { es: 'Tasa muy pequeña: lenta. Muy grande: rebota o diverge.', en: 'Rate too small: slow. Too large: it bounces or diverges.' },
       pad: 0.3,
     },
     {
       id: 'try2',
-      es: 'Tu turno: mueve la tasa de aprendizaje y pulsa Correr. Busca una que llegue al fondo en pocos pasos, sin oscilar.',
-      en: 'Your turn: move the learning rate and press Run. Look for one that reaches the bottom in a few steps, without oscillating.',
+      es: 'Si quieres, mueve tú la tasa con el deslizador: cada vez que la cambies, la bolita vuelve a bajar desde menos uno. Busca una que llegue sin rebotar.',
+      en: 'If you like, move the rate yourself with the slider: each time you change it, the ball starts again from minus one. Look for one that gets there without bouncing.',
       gate: {
         id: 'lr',
-        prompt: { es: 'Encuentra una tasa que llegue al fondo en diez pasos o menos, sin oscilar.', en: 'Find a rate that reaches the bottom in ten steps or fewer, without oscillating.' },
+        prompt: { es: 'busca una tasa que llegue al fondo en diez pasos o menos, sin rebotar.', en: 'find a rate that reaches the bottom in ten steps or fewer, without bouncing.' },
       },
       pad: 0.4,
     },
+    // ── muchos pesos: el gradiente ──
     {
-      id: 'land2d',
-      es: 'Un modelo real no tiene un peso, sino muchos. Con dos, el error es un paisaje que vemos desde arriba con curvas de nivel, como en un mapa topográfico.',
-      en: 'A real model has not one weight but many. With two, the error is a landscape we see from above with contour lines, like a topographic map.',
-      note: { es: 'Con varios pesos, el error es un paisaje.', en: 'With several weights, the error is a landscape.' },
+      id: 'two-weights',
+      es: 'Un modelo real tiene muchos pesos. Con solo dos, cada pareja de valores tiene su propio error, y juntos ya no forman una curva, sino un paisaje.',
+      en: 'A real model has many weights. With just two, every pair of values has its own error, and together they no longer form a curve, but a landscape.',
+    },
+    {
+      id: 'contours',
+      es: 'Lo vemos desde arriba, como un mapa de montaña: cada línea une los puntos con el mismo error, y más color es más error. El fondo del valle está en el centro.',
+      en: 'We see it from above, like a hiking map: each line joins points with the same error, and more color means more error. The bottom of the valley is in the middle.',
+      pad: 0.3,
+    },
+    {
+      id: 'two-slopes',
+      es: 'En cada punto hay ahora dos pendientes: una si mueves solo el primer peso y otra si mueves solo el segundo. Cada flecha señala hacia dónde sube el error.',
+      en: 'At each point there are now two slopes: one if you move only the first weight, another if you move only the second. Each arrow points to where the error rises.',
+      pad: 0.3,
+    },
+    {
+      id: 'gradient',
+      es: 'La lista de esas pendientes, una por peso, se llama gradiente. Juntas forman esta flecha, que apunta hacia donde el error sube más rápido.',
+      en: 'The list of those slopes, one per weight, is called the gradient. Together they form this arrow, which points to where the error rises fastest.',
+      note: { es: 'Gradiente: la lista de pendientes, una por peso. Apunta cuesta arriba.', en: 'Gradient: the list of slopes, one per weight. It points uphill.' },
+      pad: 0.3,
     },
     {
       id: 'path2d',
-      es: 'El gradiente apunta cuesta arriba, perpendicular a esas curvas. Avanzamos en sentido contrario y, como este valle es alargado, el camino baja en zigzag hacia el centro.',
-      en: 'The gradient points uphill, perpendicular to those lines. We step the opposite way and, because this valley is elongated, the path zigzags down toward the center.',
+      es: 'Para bajar, se va al revés de la flecha, con la misma regla para cada peso. Como este valle es alargado, el camino baja en zigzag hasta el fondo.',
+      en: 'To go down, you go against the arrow, with the same rule for each weight. Because this valley is long and narrow, the path zigzags down to the bottom.',
       pad: 0.6,
     },
     {
       id: 'scale',
-      es: 'Con miles de millones de pesos pasa lo mismo: en cada paso se calcula la pendiente de cada peso y todos se ajustan a la vez. GPT-3 tiene ciento setenta y cinco mil millones.',
-      en: 'With billions of weights the same thing happens: at each step the slope of every weight is computed and all of them are adjusted at once. GPT-3 has one hundred seventy-five billion.',
-      tts: { es: 'Con miles de millones de pesos pasa lo mismo: en cada paso se calcula la pendiente de cada peso y todos se ajustan a la vez. Ge pe te tres tiene ciento setenta y cinco mil millones.', en: 'With billions of weights the same thing happens: at each step the slope of every weight is computed and all of them are adjusted at once. G P T three has one hundred seventy-five billion.' },
+      es: 'Con miles de millones de pesos es igual: el gradiente trae una pendiente por peso, y en cada paso todos se ajustan a la vez. GPT-3 tiene ciento setenta y cinco mil millones.',
+      en: 'With billions of weights it is the same: the gradient holds one slope per weight, and at each step all of them are adjusted at once. GPT-3 has one hundred seventy-five billion.',
+      tts: {
+        es: 'Con miles de millones de pesos es igual: el gradiente trae una pendiente por peso, y en cada paso todos se ajustan a la vez. Ge pe te tres tiene ciento setenta y cinco mil millones.',
+        en: 'With billions of weights it is the same: the gradient holds one slope per weight, and at each step all of them are adjusted at once. G P T three has one hundred seventy-five billion.',
+      },
       pad: 0.4,
     },
+    // ── honestidad: varios valles ──
     {
       id: 'rugged',
-      es: 'Una advertencia honesta: el paisaje real es irregular, con valles, mesetas y puntos de silla. Dónde empiezas y cuánto avanzas importan, y por eso entrenar es un oficio.',
-      en: 'An honest warning: real landscapes are rugged, with valleys, plateaus, and saddle points. Where you start and how far you step both matter, which is why training is a craft.',
+      es: 'Una advertencia honesta: el paisaje real es irregular, con varios valles. Pongamos dos bolitas en puntos de partida distintos, con la misma regla y la misma tasa.',
+      en: 'An honest warning: real landscapes are irregular, with several valleys. Let’s put two balls at different starting points, with the same rule and the same rate.',
+    },
+    {
+      id: 'valleys',
+      es: 'Cada una baja al valle más cercano, y no son igual de profundos. Nada garantiza llegar al mejor: dónde empiezas importa, y por eso entrenar es un oficio.',
+      en: 'Each one goes down into the nearest valley, and they are not equally deep. Nothing guarantees reaching the best one: where you start matters, which is why training is a craft.',
       note: { es: 'Dónde empiezas importa: puede haber varios valles.', en: 'Where you start matters: there can be several valleys.' },
-      pad: 0.6,
+      pad: 0.5,
     },
     {
       id: 'recap',
-      es: 'En resumen: medir el error, tantear la pendiente, avanzar en sentido contrario y repetir. Con ese bucle y sus variantes se entrena desde una recta hasta un chatbot.',
-      en: 'In short: measure the error, feel the slope, step the opposite way, and repeat. With that loop, and its variants, models are trained from a straight line to a chatbot.',
-      note: { es: 'El bucle: medir, tantear, avanzar, repetir.', en: 'The loop: measure, feel, step, repeat.' },
+      es: 'En resumen: medir el error, calcular la pendiente, dar un paso en contra y repetir. Con ese bucle y sus variantes se entrena desde una recta hasta un chatbot.',
+      en: 'In short: measure the error, compute the slope, take a step against it, and repeat. With that loop, and its variants, models are trained from a straight line to a chatbot.',
+      pad: 0.3,
     },
     {
       id: 'bridge',
-      es: 'Para llegar más lejos necesitamos un modelo más rico que una recta. Será el siguiente protagonista: la neurona artificial.',
-      en: 'To go further we need a model richer than a straight line. It will be the next protagonist: the artificial neuron.',
+      es: 'Pero una recta solo sabe dibujar rectas. Para llegar más lejos hace falta un modelo más rico: la neurona artificial, protagonista de la siguiente lección.',
+      en: 'But a straight line can only draw straight lines. To go further we need a richer model: the artificial neuron, the star of the next lesson.',
     },
   ],
 
   keyIdeas: {
     es: [
-      'Entrenar un modelo es buscar los pesos que minimizan una función de error.',
-      'El gradiente es la pendiente del error respecto a cada peso. Apunta cuesta arriba, así que se avanza en sentido contrario.',
-      'La tasa de aprendizaje fija el tamaño del paso: demasiado pequeña es lenta; demasiado grande oscila o diverge.',
-      'Nadie ve el paisaje completo: el algoritmo solo conoce la pendiente local y llega al fondo tanteando.',
-      'El mismo bucle, con variantes como Adam, sirve desde una recta hasta modelos con cientos de miles de millones de pesos.',
+      'Entrenar es buscar el peso que deja el error más bajo. La máquina no ve la curva completa: solo conoce el error y la pendiente donde está.',
+      'La pendiente, o derivada, dice cuánto cambia el error al mover un poco el peso. Negativa: baja hacia la derecha. Positiva: sube. Cero: es el fondo.',
+      'La regla es peso nuevo = peso actual − η × pendiente. El signo menos lleva cuesta abajo desde cualquier lado, y los pasos se acortan solos al aplanarse la pendiente.',
+      'La tasa de aprendizaje η fija el tamaño del paso: muy pequeña es lenta; muy grande rebota o diverge.',
+      'Con muchos pesos, el gradiente es la lista de pendientes, una por peso. El mismo bucle, con variantes como Adam, entrena modelos de cientos de miles de millones de pesos, sin garantía de llegar al mejor valle.',
     ],
     en: [
-      'Training a model means searching for the weights that minimize an error function.',
-      'The gradient is the slope of the error with respect to each weight. It points uphill, so we step the opposite way.',
-      'The learning rate sets the size of the step: too small is slow; too large oscillates or diverges.',
-      'No one sees the whole landscape: the algorithm only knows the local slope and reaches the bottom by feeling its way.',
-      'The same loop, with variants such as Adam, works from a straight line to models with hundreds of billions of weights.',
+      'Training means searching for the weight that leaves the error lowest. The machine cannot see the whole curve: it only knows the error and the slope where it stands.',
+      'The slope, or derivative, says how much the error changes when the weight moves a little. Negative: it goes down to the right. Positive: it goes up. Zero: it is the bottom.',
+      'The rule is new weight = current weight − η × slope. The minus sign leads downhill from either side, and the steps shorten on their own as the slope flattens.',
+      'The learning rate η sets the size of the step: too small is slow; too large bounces or diverges.',
+      'With many weights, the gradient is the list of slopes, one per weight. The same loop, with variants such as Adam, trains models with hundreds of billions of weights, with no guarantee of reaching the best valley.',
     ],
   },
 
@@ -177,13 +310,31 @@ export default defineLesson({
   },
 
   deeper: {
-    es: `## La regla de actualización
+    es: `## La pendiente y la derivada
 
-Dado un error $L(\\mathbf{w})$ y un vector de pesos $\\mathbf{w}$, el descenso del gradiente repite
+Para medir la pendiente de una curva $L(w)$ en un punto se mueve el peso una cantidad pequeña $\\varepsilon$ y se divide el cambio del error entre ese movimiento:
 
-$$\\mathbf{w}_{t+1} = \\mathbf{w}_t - \\eta\\,\\nabla L(\\mathbf{w}_t)$$
+$$\\frac{L(w+\\varepsilon)-L(w)}{\\varepsilon}$$
 
-donde $\\nabla L$ es el vector de derivadas parciales $\\partial L/\\partial w_i$ y $\\eta>0$ es la tasa de aprendizaje. El gradiente apunta cuesta arriba porque, entre todas las direcciones de longitud 1, es la que más hace crecer a $L$; por eso se resta (Goodfellow et al., 2016, §4.3).
+La **derivada** $L'(w)$ es el valor al que se acerca ese cociente cuando $\\varepsilon$ se hace cada vez más pequeño. Por eso $L(w+\\varepsilon)\\approx L(w)+\\varepsilon\\,L'(w)$: la derivada dice por cuánto hay que multiplicar un cambio pequeño del peso para obtener el cambio del error, y es la pendiente de la recta tangente en ese punto (Goodfellow et al., 2016, §4.3).
+
+En la lección, $L(w)=\\tfrac12(w-3)^2+1$, así que $L'(w)=w-3$. En $w=-1$, con $\\varepsilon=0.1$ el error pasa de 9 a 8.605 y el cociente es $-0.395/0.1=-3.95$; con $\\varepsilon=0.01$, $-3.995$; en el límite, $-4$. En esta curva el cociente vale exactamente $(w-3)+\\varepsilon/2$. En el peso 6 la derivada es $+3$ y en el 3, el fondo, es $0$.
+
+Ojo con el nombre: en la lección 3, el peso $w$ era la pendiente de la *recta del modelo*. Aquí la pendiente es otra: la de la *curva del error* respecto al peso. Y en la práctica no se tantea con un $\\varepsilon$: la derivada se calcula con fórmulas exactas y, en una red profunda, con la retropropagación (lección 8).
+
+## La regla de actualización
+
+Con un peso, el descenso del gradiente repite
+
+$$w_{t+1} = w_t - \\eta\\,L'(w_t)$$
+
+donde $\\eta>0$ es la tasa de aprendizaje. Como $L(w-\\varepsilon\\,\\text{signo}(L'(w)))$ es menor que $L(w)$ si $\\varepsilon$ es suficientemente pequeño, moverse en pasos pequeños con el signo contrario al de la derivada hace bajar el error (Goodfellow et al., 2016, §4.3). En la lección, con $\\eta=0.5$: $-1 \\to 1 \\to 2 \\to 2.5 \\to 2.75 \\to \\dots$ La distancia al fondo se reduce a la mitad en cada paso y los pasos (2, 1, 0.5, 0.25, …) se acortan solos porque la pendiente se aplana.
+
+Con muchos pesos, $\\mathbf{w}=(w_1,\\dots,w_n)$, cada **derivada parcial** $\\partial L/\\partial w_i$ mide cómo cambia el error cuando solo aumenta $w_i$, y el **gradiente** es el vector que las contiene todas:
+
+$$\\nabla L(\\mathbf{w}) = \\Big(\\frac{\\partial L}{\\partial w_1},\\dots,\\frac{\\partial L}{\\partial w_n}\\Big),\\qquad \\mathbf{w}_{t+1} = \\mathbf{w}_t - \\eta\\,\\nabla L(\\mathbf{w}_t)$$
+
+El gradiente apunta cuesta arriba porque, entre todas las direcciones de longitud 1, es la que más hace crecer a $L$; por eso se resta (Goodfellow et al., 2016, §4.3).
 
 El método se atribuye a Cauchy, que lo expuso en la sesión del 18 de octubre de 1847 de la Academia de Ciencias de París para resolver sistemas de ecuaciones: cambiaba el sistema por una sola ecuación, la suma de los cuadrados igualada a cero, y hacía bajar esa función paso a paso. El tamaño del paso lo fijaba resolviendo una ecuación de una variable o tomando un valor «suficientemente pequeño» (Cauchy, 1847; Lemaréchal, 2012).
 
@@ -199,7 +350,7 @@ $$w_{t+1}-w^* = (1-\\eta h)\\,(w_t-w^*)$$
 - si $\\eta h=2$, rebota entre dos puntos a la misma distancia del fondo, sin acercarse;
 - si $\\eta h>2$, la distancia crece en cada paso: diverge.
 
-Es el análisis clásico de LeCun et al. (1998, §5.1): la tasa óptima de una variable es $1/h$, y se diverge si la tasa pasa del doble de la óptima. En la lección $h=1$. Con $\\eta=0.5$ cada paso reduce a la mitad la distancia al fondo; con $\\eta=1$ llegaría de un salto; con $\\eta>2$ se aleja. Las cuatro tasas de la escena (0.06, 0.7, 1.7 y 2.08) son un caso lento, uno bueno, uno que oscila y uno que diverge.
+Es el análisis clásico de LeCun et al. (1998, §5.1): la tasa óptima de una variable es $1/h$, y se diverge si la tasa pasa del doble de la óptima. En la lección $h=1$. Las cuatro tasas de la escena son un caso lento (0.05: tras 12 pasos sigue a 2.16 del fondo, que estaba a 4), uno que oscila (1.7: cruza el fondo en cada paso, pero se acerca), uno que diverge (2.05: cada salto cae más lejos y el error pasa de 9 a 12.82 en 4 pasos) y uno bueno (0.8: a 0.03 del fondo en 3 pasos). El turno interactivo pide llegar a menos de 0.08 del fondo en diez pasos o menos sin cruzarlo: lo cumplen las tasas de 0.33 a 1.
 
 Una tasa muy pequeña no es del todo inocua en una red real: además de lenta, puede dejar el entrenamiento atascado con un error alto, un efecto que no ocurriría con una función convexa y que se entiende poco (Goodfellow et al., 2016, §11.4.1).
 
@@ -207,38 +358,56 @@ Una tasa muy pequeña no es del todo inocua en una red real: además de lenta, p
 
 En varias dimensiones la curvatura es la matriz hessiana $H$. En una cuadrática, $\\mathbf{w}_{t+1}-\\mathbf{w}^*=(I-\\eta H)(\\mathbf{w}_t-\\mathbf{w}^*)$: en cada dirección propia la distancia se multiplica por $1-\\eta\\lambda_i$. Para converger hace falta $\\eta<2/\\lambda_{\\max}(H)$ (LeCun et al., 1998), pero el avance en la dirección más plana depende de $\\lambda_{\\min}$. Con el número de condición $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$ grande, el error cae despacio y el camino zigzaguea, como en la figura. Con la mejor tasa fija ($\\eta = 2/(\\lambda_{\\max}+\\lambda_{\\min})$) la distancia al fondo se reduce por un factor $(\\kappa-1)/(\\kappa+1)$ por paso (Goh, 2017).
 
-En la figura, $\\lambda_{\\min}=1$ y $\\lambda_{\\max}=7$ ($\\kappa=7$), y $\\eta=0.2$: en la dirección plana la distancia se multiplica por $0.8$ en cada paso, y en la empinada por $-0.4$ (cambia de lado: el zigzag). La mejor tasa fija sería $0.25$, con factor $0.75$.
+En la figura, $\\lambda_{\\min}=1$ y $\\lambda_{\\max}=7$ ($\\kappa=7$), y $\\eta=0.2$: en la dirección plana la distancia se multiplica por $0.8$ en cada paso, y en la empinada por $-0.4$ (cambia de lado: el zigzag). La mejor tasa fija sería $0.25$, con factor $0.75$. En el punto de partida, $(-1, 0)$, las dos pendientes son $-6.24$ y $7.80$: el gradiente $(-6.24,\\ 7.80)$ apunta arriba a la izquierda, cuesta arriba, y el camino sale hacia abajo a la derecha.
 
 ## Paisajes reales
 
-Las curvas de la lección son de juguete: $L(w)=\\tfrac12(w-2.4)^2+0.2$, el cuenco de dos pesos con curvaturas 1 y 7, y $R(w)=0.08w^4-0.6w^2+0.25w+2$, con dos valles de errores mínimos 0.38 y 1.35. El error de una red real no es convexo: tiene mínimos locales, mesetas y puntos de silla (gradiente cero, pero baja en una dirección y sube en otra). En redes grandes se sospecha hoy que la mayoría de los mínimos locales tienen un error cercano al mejor y que las mesetas y los puntos de silla estorban más que los malos mínimos (Goodfellow et al., 2016, §8.2; Dauphin et al., 2014). El punto de partida importa: puede decidir si el entrenamiento converge, a qué costo y con qué capacidad de generalizar (Goodfellow et al., 2016, §8.4), y cambiar solo la semilla aleatoria puede dar resultados muy distintos, como al ajustar BERT (Dodge et al., 2020).
+Las curvas de la lección son de juguete: $L(w)=\\tfrac12(w-3)^2+1$, el cuenco de dos pesos con curvaturas 1 y 7, y $R(w)=0.08w^4-0.6w^2+0.25w+2$, con dos valles de errores mínimos 0.38 y 1.35. El error de una red real no es convexo: tiene mínimos locales, mesetas y puntos de silla (gradiente cero, pero baja en una dirección y sube en otra). En redes grandes se sospecha hoy que la mayoría de los mínimos locales tienen un error cercano al mejor y que las mesetas y los puntos de silla estorban más que los malos mínimos (Goodfellow et al., 2016, §8.2; Dauphin et al., 2014). El punto de partida importa: puede decidir si el entrenamiento converge, a qué costo y con qué capacidad de generalizar (Goodfellow et al., 2016, §8.4), y cambiar solo la semilla aleatoria puede dar resultados muy distintos, como al ajustar BERT (Dodge et al., 2020).
 
 ## En código
 
 \`\`\`python
-def descenso(grad, w0, eta, pasos):
+def descenso(pendiente, w0, eta, pasos):
     w = w0
     historial = [w]
     for _ in range(pasos):
-        w = w - eta * grad(w)
+        w = w - eta * pendiente(w)   # peso nuevo = peso actual − tasa × pendiente
         historial.append(w)
     return historial
 
-# error L(w) = 0.5 * (w - 2.4)**2 + 0.2  ->  gradiente: w - 2.4
-print(descenso(lambda w: w - 2.4, w0=-0.6, eta=0.5, pasos=5))
-# [-0.6, 0.9, 1.65, 2.025, 2.2125, 2.30625]
+# error L(w) = 0.5 * (w - 3)**2 + 1  ->  pendiente (derivada): w - 3
+print(descenso(lambda w: w - 3, w0=-1.0, eta=0.5, pasos=5))
+# [-1.0, 1.0, 2.0, 2.5, 2.75, 2.875]
 \`\`\`
 
 ## Lo que viene
 
 En modelos reales el gradiente se calcula sobre un subconjunto de los datos (descenso del gradiente estocástico; Bottou et al., 2018) y se usan optimizadores como Adam (Kingma y Ba, 2015); ambos aparecen en la lección 9. Así se entrenó GPT-3 (175 mil millones de pesos): con Adam, lotes de hasta 3.2 millones de tokens y, en el modelo grande, una tasa de aprendizaje de $6\\times 10^{-5}$ con calentamiento y caída gradual (Brown et al., 2020, tabla 2.1 y apéndice B). El cálculo eficiente de $\\nabla L$ en redes profundas es la retropropagación (lección 8).`,
-    en: `## The update rule
+    en: `## The slope and the derivative
 
-Given an error $L(\\mathbf{w})$ and a weight vector $\\mathbf{w}$, gradient descent repeats
+To measure the slope of a curve $L(w)$ at a point, you move the weight by a small amount $\\varepsilon$ and divide the change in the error by that move:
 
-$$\\mathbf{w}_{t+1} = \\mathbf{w}_t - \\eta\\,\\nabla L(\\mathbf{w}_t)$$
+$$\\frac{L(w+\\varepsilon)-L(w)}{\\varepsilon}$$
 
-where $\\nabla L$ is the vector of partial derivatives $\\partial L/\\partial w_i$ and $\\eta>0$ is the learning rate. The gradient points uphill because, among all directions of length 1, it is the one that makes $L$ grow fastest; that is why we subtract it (Goodfellow et al., 2016, §4.3).
+The **derivative** $L'(w)$ is the value that ratio approaches as $\\varepsilon$ gets smaller and smaller. That is why $L(w+\\varepsilon)\\approx L(w)+\\varepsilon\\,L'(w)$: the derivative says how to scale a small change in the weight to get the change in the error, and it is the slope of the tangent line at that point (Goodfellow et al., 2016, §4.3).
+
+In the lesson, $L(w)=\\tfrac12(w-3)^2+1$, so $L'(w)=w-3$. At $w=-1$, with $\\varepsilon=0.1$ the error goes from 9 to 8.605 and the ratio is $-0.395/0.1=-3.95$; with $\\varepsilon=0.01$, $-3.995$; in the limit, $-4$. On this curve the ratio is exactly $(w-3)+\\varepsilon/2$. At weight 6 the derivative is $+3$, and at 3, the bottom, it is $0$.
+
+A word on names: in lesson 3, the weight $w$ was the slope of the *model’s line*. Here the slope is a different one: that of the *error curve* with respect to the weight. And in practice nobody probes with an $\\varepsilon$: the derivative is computed with exact formulas and, in a deep network, with backpropagation (lesson 8).
+
+## The update rule
+
+With one weight, gradient descent repeats
+
+$$w_{t+1} = w_t - \\eta\\,L'(w_t)$$
+
+where $\\eta>0$ is the learning rate. Since $L(w-\\varepsilon\\,\\text{sign}(L'(w)))$ is less than $L(w)$ for small enough $\\varepsilon$, moving in small steps with the opposite sign of the derivative brings the error down (Goodfellow et al., 2016, §4.3). In the lesson, with $\\eta=0.5$: $-1 \\to 1 \\to 2 \\to 2.5 \\to 2.75 \\to \\dots$ The distance to the bottom halves at every step, and the steps (2, 1, 0.5, 0.25, …) shorten on their own because the slope flattens.
+
+With many weights, $\\mathbf{w}=(w_1,\\dots,w_n)$, each **partial derivative** $\\partial L/\\partial w_i$ measures how the error changes when only $w_i$ increases, and the **gradient** is the vector that contains them all:
+
+$$\\nabla L(\\mathbf{w}) = \\Big(\\frac{\\partial L}{\\partial w_1},\\dots,\\frac{\\partial L}{\\partial w_n}\\Big),\\qquad \\mathbf{w}_{t+1} = \\mathbf{w}_t - \\eta\\,\\nabla L(\\mathbf{w}_t)$$
+
+The gradient points uphill because, among all directions of length 1, it is the one that makes $L$ grow fastest; that is why we subtract it (Goodfellow et al., 2016, §4.3).
 
 The method is credited to Cauchy, who presented it at the 18 October 1847 session of the Paris Academy of Sciences to solve systems of equations: he replaced the system with a single equation, the sum of the squares set to zero, and made that function go down step by step. He set the step size by solving an equation in one variable or by taking a “sufficiently small” value (Cauchy, 1847; Lemaréchal, 2012).
 
@@ -254,7 +423,7 @@ $$w_{t+1}-w^* = (1-\\eta h)\\,(w_t-w^*)$$
 - if $\\eta h=2$, it bounces between two points at the same distance from the bottom, without getting closer;
 - if $\\eta h>2$, the distance grows at every step: it diverges.
 
-This is the classic analysis of LeCun et al. (1998, §5.1): the optimal one-variable rate is $1/h$, and it diverges if the rate exceeds twice the optimal one. In the lesson $h=1$. With $\\eta=0.5$ each step halves the distance to the bottom; with $\\eta=1$ it would arrive in one jump; with $\\eta>2$ it moves away. The four rates in the scene (0.06, 0.7, 1.7, and 2.08) are a slow case, a good one, one that oscillates, and one that diverges.
+This is the classic analysis of LeCun et al. (1998, §5.1): the optimal one-variable rate is $1/h$, and it diverges if the rate exceeds twice the optimal one. In the lesson $h=1$. The four rates in the scene are a slow case (0.05: after 12 steps it is still 2.16 from the bottom, which was 4 away), one that oscillates (1.7: it crosses the bottom at every step but gets closer), one that diverges (2.05: each jump lands farther away and the error goes from 9 to 12.82 in 4 steps), and a good one (0.8: within 0.03 of the bottom in 3 steps). The interactive turn asks you to get within 0.08 of the bottom in ten steps or fewer without crossing it: rates from 0.33 to 1 do it.
 
 A very small rate is not entirely harmless in a real network: besides being slow, it can leave training stuck at a high error, an effect that would not happen with a convex function and that is poorly understood (Goodfellow et al., 2016, §11.4.1).
 
@@ -262,26 +431,26 @@ A very small rate is not entirely harmless in a real network: besides being slow
 
 In several dimensions the curvature is the Hessian matrix $H$. For a quadratic, $\\mathbf{w}_{t+1}-\\mathbf{w}^*=(I-\\eta H)(\\mathbf{w}_t-\\mathbf{w}^*)$: along each eigendirection the distance is multiplied by $1-\\eta\\lambda_i$. Convergence needs $\\eta<2/\\lambda_{\\max}(H)$ (LeCun et al., 1998), but progress along the flattest direction depends on $\\lambda_{\\min}$. With a large condition number $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$, the error falls slowly and the path zigzags, as in the figure. With the best fixed rate ($\\eta = 2/(\\lambda_{\\max}+\\lambda_{\\min})$) the distance to the bottom shrinks by a factor of $(\\kappa-1)/(\\kappa+1)$ per step (Goh, 2017).
 
-In the figure, $\\lambda_{\\min}=1$ and $\\lambda_{\\max}=7$ ($\\kappa=7$), and $\\eta=0.2$: along the flat direction the distance is multiplied by $0.8$ at every step, and along the steep one by $-0.4$ (it switches sides: the zigzag). The best fixed rate would be $0.25$, with factor $0.75$.
+In the figure, $\\lambda_{\\min}=1$ and $\\lambda_{\\max}=7$ ($\\kappa=7$), and $\\eta=0.2$: along the flat direction the distance is multiplied by $0.8$ at every step, and along the steep one by $-0.4$ (it switches sides: the zigzag). The best fixed rate would be $0.25$, with factor $0.75$. At the starting point, $(-1, 0)$, the two slopes are $-6.24$ and $7.80$: the gradient $(-6.24,\\ 7.80)$ points up and to the left, uphill, and the path heads down and to the right.
 
 ## Real landscapes
 
-The curves in the lesson are toys: $L(w)=\\tfrac12(w-2.4)^2+0.2$, the two-weight bowl with curvatures 1 and 7, and $R(w)=0.08w^4-0.6w^2+0.25w+2$, with two valleys whose minimum errors are 0.38 and 1.35. The error of a real network is not convex: it has local minima, plateaus, and saddle points (zero gradient, but it goes down in one direction and up in another). In large networks it is now suspected that most local minima have an error close to the best one, and that plateaus and saddle points get in the way more than bad minima do (Goodfellow et al., 2016, §8.2; Dauphin et al., 2014). The starting point matters: it can decide whether training converges, at what cost, and with what ability to generalize (Goodfellow et al., 2016, §8.4), and changing only the random seed can give very different results, as when fine-tuning BERT (Dodge et al., 2020).
+The curves in the lesson are toys: $L(w)=\\tfrac12(w-3)^2+1$, the two-weight bowl with curvatures 1 and 7, and $R(w)=0.08w^4-0.6w^2+0.25w+2$, with two valleys whose minimum errors are 0.38 and 1.35. The error of a real network is not convex: it has local minima, plateaus, and saddle points (zero gradient, but it goes down in one direction and up in another). In large networks it is now suspected that most local minima have an error close to the best one, and that plateaus and saddle points get in the way more than bad minima do (Goodfellow et al., 2016, §8.2; Dauphin et al., 2014). The starting point matters: it can decide whether training converges, at what cost, and with what ability to generalize (Goodfellow et al., 2016, §8.4), and changing only the random seed can give very different results, as when fine-tuning BERT (Dodge et al., 2020).
 
 ## In code
 
 \`\`\`python
-def descent(grad, w0, eta, steps):
+def descent(slope, w0, eta, steps):
     w = w0
     history = [w]
     for _ in range(steps):
-        w = w - eta * grad(w)
+        w = w - eta * slope(w)   # new weight = current weight − rate × slope
         history.append(w)
     return history
 
-# error L(w) = 0.5 * (w - 2.4)**2 + 0.2  ->  gradient: w - 2.4
-print(descent(lambda w: w - 2.4, w0=-0.6, eta=0.5, steps=5))
-# [-0.6, 0.9, 1.65, 2.025, 2.2125, 2.30625]
+# error L(w) = 0.5 * (w - 3)**2 + 1  ->  slope (derivative): w - 3
+print(descent(lambda w: w - 3, w0=-1.0, eta=0.5, steps=5))
+# [-1.0, 1.0, 2.0, 2.5, 2.75, 2.875]
 \`\`\`
 
 ## What comes next
@@ -307,27 +476,27 @@ In real models the gradient is computed on a subset of the data (stochastic grad
   quiz: [
     {
       kind: 'concept',
-      q: { es: '¿Qué indica el gradiente del error respecto a los pesos?', en: 'What does the gradient of the error with respect to the weights indicate?' },
+      q: { es: 'En el peso actual, la pendiente del error es negativa. ¿Qué hace el descenso del gradiente con el peso?', en: 'At the current weight, the slope of the error is negative. What does gradient descent do with the weight?' },
       options: [
-        { es: 'La dirección en la que el error más crece.', en: 'The direction in which the error grows fastest.' },
-        { es: 'La dirección en la que el error más disminuye.', en: 'The direction in which the error decreases fastest.' },
-        { es: 'El valor actual del error.', en: 'The current value of the error.' },
-        { es: 'La cantidad de pesos del modelo.', en: 'The number of weights in the model.' },
+        { es: 'Lo baja, porque la pendiente es negativa.', en: 'It lowers it, because the slope is negative.' },
+        { es: 'Lo deja igual hasta que la pendiente sea cero.', en: 'It leaves it alone until the slope is zero.' },
+        { es: 'Lo sube: el error baja hacia la derecha.', en: 'It raises it: the error goes down to the right.' },
+        { es: 'Depende solo de la tasa de aprendizaje.', en: 'It depends only on the learning rate.' },
       ],
-      answer: 0,
-      why: { es: 'El gradiente apunta cuesta arriba. Por eso el descenso del gradiente avanza en el sentido contrario, restando.', en: 'The gradient points uphill. That is why gradient descent moves the opposite way, by subtracting.' },
+      answer: 2,
+      why: { es: 'Pendiente negativa significa que el error baja al mover el peso hacia la derecha. La regla resta η × pendiente; restar un número negativo es sumar, así que el peso sube.', en: 'A negative slope means the error goes down when the weight moves to the right. The rule subtracts η × slope; subtracting a negative number means adding, so the weight goes up.' },
     },
     {
       kind: 'concept',
-      q: { es: 'Con una tasa de aprendizaje demasiado grande, ¿qué puede ocurrir?', en: 'With a learning rate that is too large, what can happen?' },
+      q: { es: 'En un modelo con muchos pesos, ¿qué es el gradiente?', en: 'In a model with many weights, what is the gradient?' },
       options: [
-        { es: 'El modelo olvida los datos de entrenamiento.', en: 'The model forgets the training data.' },
-        { es: 'El entrenamiento llega siempre más rápido al fondo.', en: 'Training always reaches the bottom faster.' },
-        { es: 'El error puede oscilar o incluso subir en cada paso.', en: 'The error can oscillate or even rise at every step.' },
-        { es: 'Los pesos dejan de cambiar.', en: 'The weights stop changing.' },
+        { es: 'La lista de las pendientes del error, una por peso; apunta hacia donde el error más sube.', en: 'The list of the slopes of the error, one per weight; it points to where the error rises fastest.' },
+        { es: 'El valor actual del error.', en: 'The current value of the error.' },
+        { es: 'El tamaño del paso que da cada peso.', en: 'The size of the step each weight takes.' },
+        { es: 'La cantidad de pesos del modelo.', en: 'The number of weights in the model.' },
       ],
-      answer: 2,
-      why: { es: 'Si el paso se pasa del fondo, cae al otro lado y puede quedar más arriba que antes. Con el paso suficientemente grande, cada salto empeora el error.', en: 'If the step overshoots the bottom, it lands on the other side and can end up higher than before. With a large enough step, every jump makes the error worse.' },
+      answer: 0,
+      why: { es: 'El gradiente reúne una pendiente (una derivada parcial) por cada peso. Apunta cuesta arriba; por eso el descenso del gradiente avanza en sentido contrario, restando.', en: 'The gradient gathers one slope (a partial derivative) for each weight. It points uphill; that is why gradient descent moves the opposite way, by subtracting.' },
     },
     {
       kind: 'calc',
@@ -339,7 +508,7 @@ In real models the gradient is computed on a subset of the data (stochastic grad
         { es: '1.9', en: '1.9' },
       ],
       answer: 1,
-      why: { es: 'Nuevo peso = 2 − 0.1 × 4 = 1.6. La pendiente es positiva (el error sube hacia la derecha), así que el peso baja.', en: 'New weight = 2 − 0.1 × 4 = 1.6. The slope is positive (the error rises to the right), so the weight goes down.' },
+      why: { es: 'Peso nuevo = 2 − 0.1 × 4 = 1.6. La pendiente es positiva (el error sube hacia la derecha), así que el peso retrocede. Sumar en lugar de restar daría 2.4.', en: 'New weight = 2 − 0.1 × 4 = 1.6. The slope is positive (the error rises to the right), so the weight moves back. Adding instead of subtracting would give 2.4.' },
     },
     {
       kind: 'apply',
@@ -351,17 +520,17 @@ In real models the gradient is computed on a subset of the data (stochastic grad
         { es: 'La tasa de aprendizaje es demasiado alta.', en: 'The learning rate is too high.' },
       ],
       answer: 3,
-      why: { es: 'La oscilación es el síntoma clásico de pasos demasiado grandes. Más cómputo no la arregla; bajar la tasa de aprendizaje, sí.', en: 'Oscillation is the classic symptom of steps that are too large. More compute does not fix it; lowering the learning rate does.' },
+      why: { es: 'Rebotar de un lado a otro es el síntoma clásico de pasos demasiado grandes. Más cómputo no lo arregla; bajar la tasa de aprendizaje, sí.', en: 'Bouncing back and forth is the classic symptom of steps that are too large. More compute does not fix it; lowering the learning rate does.' },
     },
   ],
 
-  glossary: ['gradient', 'learning-rate', 'derivative', 'gradient-descent', 'weight', 'loss'],
+  glossary: ['gradient-descent', 'gradient', 'derivative', 'learning-rate', 'weight', 'loss', 'model', 'parameter'],
 
   terms: [
-    { id: 'gradient-descent', term: { es: 'Descenso del gradiente', en: 'Gradient descent' }, def: { es: 'Método que ajusta los pesos en pasos pequeños, siempre en sentido contrario al gradiente del error, hasta llegar a un mínimo.', en: 'A method that adjusts the weights in small steps, always opposite to the gradient of the error, until it reaches a minimum.' } },
-    { id: 'gradient', term: { es: 'Gradiente', en: 'Gradient' }, def: { es: 'Vector con la pendiente del error respecto a cada peso. Apunta hacia donde el error más crece.', en: 'A vector with the slope of the error with respect to each weight. It points where the error grows fastest.' } },
-    { id: 'derivative', term: { es: 'Derivada', en: 'Derivative' }, def: { es: 'La pendiente de una curva en un punto: cuánto cambia una cantidad al mover otra un poco.', en: 'The slope of a curve at a point: how much one quantity changes when another moves a little.' } },
-    { id: 'learning-rate', term: { es: 'Tasa de aprendizaje', en: 'Learning rate' }, def: { es: 'Número pequeño (η) que multiplica el gradiente y fija el tamaño de cada paso. Demasiado grande oscila; demasiado pequeño tarda una eternidad.', en: 'A small number (η) that multiplies the gradient and sets the size of each step. Too large and it oscillates; too small and it takes forever.' } },
+    { id: 'gradient-descent', term: { es: 'Descenso del gradiente', en: 'Gradient descent' }, def: { es: 'Método que ajusta los pesos paso a paso, siempre en contra de la pendiente del error (el gradiente), hasta llegar a un fondo.', en: 'A method that adjusts the weights step by step, always against the slope of the error (the gradient), until it reaches a bottom.' } },
+    { id: 'gradient', term: { es: 'Gradiente', en: 'Gradient' }, def: { es: 'La lista de las pendientes del error, una por cada peso. Vista como flecha, apunta hacia donde el error sube más rápido.', en: 'The list of the slopes of the error, one for each weight. Seen as an arrow, it points to where the error rises fastest.' } },
+    { id: 'derivative', term: { es: 'Derivada', en: 'Derivative' }, def: { es: 'El nombre matemático de la pendiente de una curva en un punto: cuánto cambia una cantidad por cada pequeño cambio de otra.', en: 'The mathematical name for the slope of a curve at a point: how much one quantity changes for each small change in another.' } },
+    { id: 'learning-rate', term: { es: 'Tasa de aprendizaje', en: 'Learning rate' }, def: { es: 'Número (η) que multiplica la pendiente y fija el tamaño de cada paso. Muy pequeño es lento; muy grande rebota o diverge.', en: 'A number (η) that multiplies the slope and sets the size of each step. Too small is slow; too large bounces or diverges.' } },
   ],
 
   sources: [
@@ -369,7 +538,7 @@ In real models the gradient is computed on a subset of the data (stochastic grad
     { title: 'Cauchy and the gradient method (Documenta Mathematica, Extra Volume ISMP, pp. 251–254)', authors: 'Lemaréchal, C.', year: 2012, url: 'https://doi.org/10.4171/DMS/6/27' },
     { title: 'Efficient BackProp (Neural Networks: Tricks of the Trade, LNCS 1524, pp. 9–50; §5.1: convergencia del descenso del gradiente)', authors: 'LeCun, Y., Bottou, L., Orr, G. B., Müller, K.-R.', year: 1998, url: 'http://yann.lecun.com/exdb/publis/pdf/lecun-98b.pdf' },
     { title: 'Why Momentum Really Works (Distill 2(4); mejor tasa fija y factor (κ−1)/(κ+1) en una cuadrática)', authors: 'Goh, G.', year: 2017, url: 'https://distill.pub/2017/momentum/' },
-    { title: 'Deep Learning, capítulo 4: Numerical Computation (§4.3, gradiente y tasa de aprendizaje)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/numerical.html' },
+    { title: 'Deep Learning, capítulo 4: Numerical Computation (§4.3: la derivada como pendiente, el gradiente y el descenso del gradiente)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/numerical.html' },
     { title: 'Deep Learning, capítulo 8: Optimization for Training Deep Models (§8.2: mínimos locales, mesetas y puntos de silla; §8.4: inicialización)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/optimization.html' },
     { title: 'Deep Learning, capítulo 11: Practical Methodology (§11.4.1: la tasa de aprendizaje)', authors: 'Goodfellow, I., Bengio, Y., Courville, A.', year: 2016, url: 'https://www.deeplearningbook.org/contents/guidelines.html' },
     { title: 'Identifying and attacking the saddle point problem in high-dimensional non-convex optimization', authors: 'Dauphin, Y., Pascanu, R., Gulcehre, C., Cho, K., Ganguli, S., Bengio, Y.', year: 2014, url: 'https://arxiv.org/abs/1406.2572' },

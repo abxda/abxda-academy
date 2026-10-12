@@ -78,15 +78,21 @@ export function drawBias(S: Frame) {
       });
       // extremos del eje (fuera de la zona de etiquetas para que no se pisen)
       d.withAlpha(S.reveal('bias-axis', 0.6, 0.8), () => {
-        d.text(S.l('← más cerca de lo masculino', '← closer to the male words'), ax0, A.y + A.h - 6 * u, { size: fs(S, 12), weight: 800, color: p.ink2, base: 'bottom' });
-        d.text(S.l('más cerca de lo femenino →', 'closer to the female words →'), ax1, A.y + A.h - 6 * u, { size: fs(S, 12), weight: 800, color: p.ink2, align: 'right', base: 'bottom' });
+        // si las dos frases no caben en una línea (teléfono pequeño), se usan las cortas
+        let lm = S.l('← más cerca de lo masculino', '← closer to the male words'), lf = S.l('más cerca de lo femenino →', 'closer to the female words →');
+        const m = (t: string) => d.measure(t, { size: fs(S, 12), weight: 800 });
+        if (m(lm) + m(lf) + 16 * u > ax1 - ax0) { lm = S.l('← masculino', '← male'); lf = S.l('femenino →', 'female →'); }
+        d.text(lm, ax0, A.y + A.h - 6 * u, { size: fs(S, 12), weight: 800, color: p.ink2, base: 'bottom' });
+        d.text(lf, ax1, A.y + A.h - 6 * u, { size: fs(S, 12), weight: 800, color: p.ink2, align: 'right', base: 'bottom' });
       });
       // resultado del experimento de quitar la dirección
       if (S.on('bias-fix')) {
         d.withAlpha(S.reveal('bias-fix', 2.4, 0.8), () => d.text(S.l('sin la dirección de género, todas quedan en cero en este eje', 'with the gender direction removed, all sit at zero on this axis'), A.x + A.w / 2, axY - 34 * u, { size: fs(S, 13), weight: 800, color: p.ink, align: 'center', base: 'middle', w: A.w - 20 * u, halo: p.stage, haloW: 4 }));
         const rv = S.reveal('bias-fix', 3.6, 0.9), db = MEAS.bias.debias, W2 = Math.min(A.w, 420 * u), y = A.y + A.h - 86 * u;
         d.withAlpha(rv, () => {
-          const bx = A.x + A.w / 2 - W2 / 2 + 100 * u, bw = W2 - 100 * u - 56 * u;
+          // columna de etiquetas tan ancha como la etiqueta más larga (con letra mínima, «direction removed» no cabe en 100 u)
+          const lw = Math.max(100 * u, ...[S.l('antes', 'before'), S.l('sin la dirección', 'direction removed')].map((t) => d.measure(t, { size: fs(S, 11), weight: 700 }) + 10 * u));
+          const bx = A.x + A.w / 2 - W2 / 2 + lw, bw = W2 - lw - 56 * u;
           d.rect(A.x + A.w / 2 - W2 / 2 - 6 * u, y - 24 * u, W2 + 12 * u, 66 * u, { fill: p.stage, stroke: p.line, lw: 1, r: 3 });
           d.text(S.l('adivinar el lado de cada profesión', 'guessing each profession’s side'), A.x + A.w / 2, y - 16 * u, { size: fs(S, 11), weight: 800, color: p.ink, align: 'center', base: 'middle' });
           [[S.l('antes', 'before'), db.before], [S.l('sin la dirección', 'direction removed'), db.after]].forEach(([lab, v], k) => {
@@ -109,9 +115,12 @@ export function drawBias(S: Frame) {
         { t: 'Caliskan, Bryson, Narayanan · 2017', s: S.l('GloVe entrenado con texto de la web: asociaciones humanas del test de asociación implícita.', 'GloVe trained on web text: the human associations of the implicit association test.') },
         { t: S.l('Esta lección', 'This lesson'), s: S.l(`El puntaje de género coincide con «she» − «he» de GloVe completo: correlación ${num(S, MEAS.bias.spearman_vs_he_she, 2)} (Spearman, ${MEAS.bias.n_professions} profesiones).`, `The gender score matches “she” − “he” in the full GloVe: correlation ${num(S, MEAS.bias.spearman_vs_he_she, 2)} (Spearman, ${MEAS.bias.n_professions} professions).`) },
       ];
-      const ch = Math.min((narrow ? 78 : 92) * u, (A.h - 16 * u) / 3 - 8 * u), cw = Math.min(A.w, 640 * u), x = A.x + (A.w - cw) / 2, y0 = A.y + Math.max(0, (A.h - 3 * (ch + 8 * u)) / 2);
+      // cada tarjeta mide lo que su texto (en pantallas angostas el texto ocupa más líneas)
+      const ch = Math.min((narrow ? 78 : 92) * u, (A.h - 16 * u) / 3 - 8 * u), cw = Math.min(A.w, 640 * u), x = A.x + (A.w - cw) / 2;
+      const hs = cards.map((c) => Math.max(ch, 18 * u + fs(S, 13) * u * 1.35 + d.wrap(c.s, cw - 24 * u, { size: fs(S, 12), weight: 600 }).length * fs(S, 12) * u * 1.3));
+      const tot = hs.reduce((q, h) => q + h + 8 * u, 0), y0 = A.y + Math.max(0, (A.h - tot) / 2);
       cards.forEach((c, k) => {
-        const ra = S.reveal('bias-source', 0.3 + k * 1.6, 0.7), y = y0 + k * (ch + 8 * u);
+        const ra = S.reveal('bias-source', 0.3 + k * 1.6, 0.7), y = y0 + hs.slice(0, k).reduce((q, h) => q + h + 8 * u, 0), ch = hs[k];
         d.withAlpha(ra, () => {
           d.rect(x, y, cw, ch, { fill: p.surface, stroke: k < 2 ? lt.c : dt.c, lw: 1.5, r: 4 });
           d.text(c.t, x + 12 * u, y + 8 * u, { size: fs(S, 13), weight: 800, color: k < 2 ? lt.ink : dt.ink, base: 'top' });

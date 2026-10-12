@@ -20,6 +20,8 @@ import numpy as np
 from sentence_transformers import SentenceTransformer, CrossEncoder
 import sentence_transformers, torch
 
+torch.set_num_threads(4)          # CPU, pocos hilos (la GPU puede estar ocupada)
+
 HERE = pathlib.Path(__file__).resolve().parent
 APP = HERE.parents[5]            # …/app
 raw = subprocess.run(['npx', 'tsx', str(HERE / 'export-corpus.mts')], cwd=APP, capture_output=True, text=True, check=True).stdout

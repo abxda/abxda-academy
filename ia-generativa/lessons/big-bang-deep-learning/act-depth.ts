@@ -189,18 +189,18 @@ function formulaBox(S: Frame, cx: number, cy: number, parts: [string, 'ink' | 'm
 // ═════════ tu turno: profundidad y atajos ═════════
 export interface SkipState { shown: number; seen: { plain: boolean; res: boolean } }
 export function skipUpdate(S: Frame) {
-  if (!S.between('skip-try', 'degradation')) return;
+  if (!S.between('skip-demo', 'degradation')) return;
   const st = (S.st.skip ??= { shown: 20, seen: { plain: false, res: false } } as SkipState) as SkipState;
   const target = clamp(Math.round(S.p.depth ?? 20), 1, D_MAX), res = S.p.mode === 'res';
   st.shown += (target - st.shown) * (1 - Math.exp(-S.dt * 9));
   if (Math.abs(target - st.shown) < 0.05) st.shown = target;
-  if (target >= 30) { if (res) st.seen.res = true; else st.seen.plain = true; }
+  if (target >= 30 && (S.touched.has('mode') || S.touched.has('depth'))) { if (res) st.seen.res = true; else st.seen.plain = true; }
   if (st.seen.plain && st.seen.res) S.complete('skip');
 }
 export function drawSkipTry(S: Frame) {
   const B = strip(S, 2), st = S.st.skip as SkipState | undefined;
   const D = clamp(Math.round(st?.shown ?? S.p.depth ?? 20), 1, D_MAX), res = S.p.mode === 'res';
-  const a = fa(S, 'skip-try', 0.02, 0.15);
+  const a = Math.max(fa(S, 'skip-demo', 0.02, 0.15), S.on('skip-try') ? 1 : 0);
   S.d.withAlpha(a, () => gradView(S, B, { D, res, sweep: 1, ghost: true, head: res ? S.l('con atajos (y = x + F(x))', 'with shortcuts (y = x + F(x))') : S.l('red simple (sin atajos)', 'plain network (no shortcuts)') }));
 }
 

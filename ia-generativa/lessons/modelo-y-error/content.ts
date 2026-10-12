@@ -2,232 +2,312 @@ import { defineLesson } from '../../../../../core/define';
 
 // Lección 3 · Un modelo y su error.
 // Datos de la escena: diez estudiantes ficticios (horas de estudio → calificación), ilustrativos; ver helpers.ts.
+// Cada cifra que dicen la voz, la escena, «por dentro», la lente y el quiz la comprueba build-data.ts.
 export default defineLesson({
   id: 'modelo-y-error',
 
   objectives: {
     es: [
-      'Calcular la predicción y el error de un modelo lineal para un punto.',
-      'Explicar por qué el error se eleva al cuadrado y qué consecuencias tiene: los errores grandes dominan y los atípicos pesan.',
-      'Reconocer que aprender es elegir los parámetros que minimizan la pérdida, y calcular el MSE de unos pocos puntos.',
+      'Leer una recta por sus dos parámetros, el peso (cuánto sube por cada unidad de la entrada) y el sesgo (su altura cuando la entrada vale cero), y calcular con ellos una predicción.',
+      'Calcular el error de un punto y explicar por qué se eleva al cuadrado antes de promediar: los signos dejan de cancelarse y los errores grandes pesan más.',
+      'Calcular la pérdida (MSE) de unos pocos puntos y reconocer que aprender es elegir los parámetros que la dejan lo más baja posible.',
     ],
     en: [
-      'Calculate the prediction and the error of a linear model for a single point.',
-      'Explain why the error is squared and what follows from it: big errors dominate and outliers pull hard.',
-      'Recognize that learning means choosing the parameters that minimize the loss, and compute the MSE of a few points.',
+      'Read a straight line through its two parameters, the weight (how much it rises per unit of input) and the bias (its height when the input is zero), and use them to compute a prediction.',
+      'Calculate the error of a point and explain why it is squared before averaging: signs stop canceling and big errors weigh more.',
+      'Calculate the loss (MSE) of a few points and recognize that learning means choosing the parameters that make it as low as possible.',
     ],
   },
 
   segments: [
+    // ── los datos y el plano ──
     {
       id: 'hook',
-      es: 'Ya sabemos que los datos son números y que un modelo es una regla con números ajustables. Construyamos el más simple con un caso: diez estudiantes, las horas que estudió cada uno y la calificación que sacó.',
-      en: 'We know that data are numbers and that a model is a rule with adjustable numbers. Let’s build the simplest one with a single case: ten students, the hours each studied, and the grade each got.',
+      es: 'Ya sabes que un modelo es una regla con números ajustables. Construyamos el más sencillo con un caso inventado: diez estudiantes, las horas que estudió cada uno y la calificación que sacó.',
+      en: 'You already know a model is a rule with adjustable numbers. Let’s build the simplest one with a made-up case: ten students, the hours each one studied, and the grade each one got.',
     },
     {
-      id: 'pattern',
-      es: 'A simple vista hay un patrón: quien estudia más suele sacar más. Queremos que una máquina lo capture y, dadas unas horas de estudio, prediga la calificación.',
-      en: 'At a glance there is a pattern: those who study more tend to score higher. We want a machine to capture it and, given some hours of study, predict the grade.',
+      id: 'axis-x',
+      es: 'Para verlos todos a la vez dibujamos un plano, como en la primera lección. La línea horizontal mide las horas de estudio: cero a la izquierda, diez a la derecha.',
+      en: 'To see them all at once we draw a plane, as in the first lesson. The horizontal line measures hours of study: zero on the left, ten on the right.',
     },
     {
-      id: 'regression',
-      es: 'Cuando lo que se predice es un número, como una calificación o un precio, y no una categoría como «spam», el problema se llama regresión. Es la tarea más sencilla para estudiar cómo aprende un modelo.',
-      en: 'When what we predict is a number, such as a grade or a price, rather than a category like “spam”, the problem is called regression. It is the simplest task for studying how a model learns.',
-      note: { es: 'Regresión: predecir un número a partir de datos.', en: 'Regression: predicting a number from data.' },
+      id: 'axis-y',
+      es: 'La línea vertical mide la calificación: cero abajo y cien arriba. Cuanto más alto queda un punto, mejor fue la nota.',
+      en: 'The vertical line measures the grade: zero at the bottom and a hundred at the top. The higher a point sits, the better the grade.',
     },
     {
-      id: 'line',
-      es: 'El modelo más simple es una recta. Trazamos una cualquiera: para cada cantidad de horas nos da una calificación, que es su predicción.',
-      en: 'The simplest model is a straight line. We draw any one: for every number of hours it gives a grade, and that grade is its prediction.',
-    },
-    {
-      id: 'formula',
-      es: 'Su fórmula es corta: la predicción es w por x, más b, la suma ponderada de la primera lección con una sola entrada. La entrada x son las horas; w y b son dos números que deciden qué recta es.',
-      en: 'Its formula is short: the prediction is w times x, plus b, the weighted sum from the first lesson with a single input. The input x is the hours; w and b are two numbers that decide which line it is.',
-      tts: { es: 'Su fórmula es corta: la predicción es doble ve por equis, más be, la suma ponderada de la primera lección con una sola entrada. La entrada equis son las horas; doble ve y be son dos números que deciden qué recta es.' },
-    },
-    {
-      id: 'weight',
-      es: 'El peso w es la pendiente: cuántos puntos suma la predicción por cada hora extra de estudio. Mientras mayor es w, más empinada es la recta.',
-      en: 'The weight w is the slope: how many points the prediction gains for each extra hour of study. The larger w is, the steeper the line.',
-      tts: { es: 'El peso doble ve es la pendiente: cuántos puntos suma la predicción por cada hora extra de estudio. Mientras mayor es doble ve, más empinada es la recta.' },
-      note: { es: 'Peso w: la pendiente, puntos por cada hora.', en: 'Weight w: the slope, points per hour.' },
-    },
-    {
-      id: 'bias',
-      es: 'El sesgo b es el número fijo que se suma al final: la altura de la recta cuando x vale cero, lo que el modelo predice para quien no estudió nada. Cambiarlo sube o baja la recta entera.',
-      en: 'The bias b is the fixed number added at the end: the height of the line when x is zero, what the model predicts for someone who never studied. Changing it moves the whole line up or down.',
-      tts: { es: 'El sesgo be es el número fijo que se suma al final: la altura de la recta cuando equis vale cero, lo que el modelo predice para quien no estudió nada. Cambiarlo sube o baja la recta entera.' },
-      note: { es: 'Sesgo b: la altura de la recta en x = 0.', en: 'Bias b: the height of the line at x = 0.' },
-    },
-    {
-      id: 'prediction',
-      es: 'Con w igual a dos y b igual a cuarenta y cinco, quien estudia siete horas recibe esta predicción: dos por siete, más cuarenta y cinco, igual a cincuenta y nueve.',
-      en: 'With w equal to two and b equal to forty-five, someone who studies seven hours gets this prediction: two times seven, plus forty-five, equals fifty-nine.',
-      tts: { es: 'Con doble ve igual a dos y be igual a cuarenta y cinco, quien estudia siete horas recibe esta predicción: dos por siete, más cuarenta y cinco, igual a cincuenta y nueve.' },
-      note: { es: 'Predicción: lo que el modelo responde para una entrada.', en: 'Prediction: what the model answers for an input.' },
-    },
-    {
-      id: 'reality',
-      es: 'Ahora comparemos con la realidad. Quien estudió cinco horas sacó setenta y dos, pero la recta dice cincuenta y cinco. El error es lo real menos lo predicho: diecisiete.',
-      en: 'Now let’s compare with reality. The student who studied five hours scored seventy-two, but the line says fifty-five. The error is the real value minus the predicted one: seventeen.',
-      note: { es: 'Error de un punto: real − predicción.', en: 'Error of one point: real − prediction.' },
-    },
-    {
-      id: 'all-errors',
-      es: 'Cada estudiante tiene su propio error. Los que quedan por encima de la recta tienen error positivo; los que quedan por debajo, negativo.',
-      en: 'Every student has an error of their own. Points above the line have a positive error; points below it, a negative one.',
-    },
-    {
-      id: 'sum-problem',
-      es: '¿Cómo resumirlos en un solo número? Sumarlos falla: los positivos cancelan a los negativos. Esta recta plana, que ignora las horas, tiene una suma de errores igual a cero.',
-      en: 'How do we boil them down to a single number? Adding them fails: positives cancel negatives. This flat line, which ignores the hours, has a total error of exactly zero.',
-    },
-    {
-      id: 'absolute',
-      es: 'Hay que quitarles el signo. Una opción: el error absoluto, la distancia al punto sin importar de qué lado quede. Así nada se cancela, y la recta plana ya no obtiene cero.',
-      en: 'We have to remove the sign. One option: the absolute error, the distance to the point, whichever side it is on. Now nothing cancels, and the flat line no longer scores zero.',
-    },
-    {
-      id: 'square',
-      es: 'La otra opción es elevar cada error al cuadrado. Geométricamente, dibujamos un cuadrado cuyo lado es el error; su área es el error al cuadrado.',
-      en: 'The other option is to square each error. Geometrically, we draw a square whose side is the error; its area is the squared error.',
+      id: 'place',
+      es: 'Ubiquemos a quien estudió cinco horas y sacó setenta y dos: avanzamos hasta el cinco y, desde ahí, subimos hasta el setenta y dos. Ahí queda su punto.',
+      en: 'Let’s place the student who studied five hours and scored seventy-two: we move right to five and, from there, go up to seventy-two. That is where their point goes.',
       pad: 0.3,
     },
     {
-      id: 'big-weighs',
-      es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, 28.6 contra 7.4: casi cuatro veces el error y unas quince veces el área.',
-      en: 'Look at how much each point weighs. Twice the error gives a square with four times the area; four times, sixteen. Here, 28.6 against 7.4: almost four times the error and about fifteen times the area.',
-      tts: {
-        es: 'Fíjate en cuánto pesa cada punto. El doble de error da un cuadrado de cuatro veces el área; cuatro veces, dieciséis. Aquí, veintiocho coma seis contra siete coma cuatro: casi cuatro veces el error y unas quince veces el área.',
-        en: 'Look at how much each point weighs. Twice the error gives a square with four times the area; four times, sixteen. Here, twenty-eight point six against seven point four: almost four times the error and about fifteen times the area.',
-      },
+      id: 'all-points',
+      es: 'Hacemos lo mismo con los diez: cada estudiante es un punto. Y se ve un patrón: quien estudia más suele sacar más.',
+      en: 'We do the same with all ten: each student is a point. And a pattern shows up: those who study more tend to score higher.',
+    },
+    {
+      id: 'regression',
+      es: 'Queremos una regla que, dadas unas horas, prediga la nota; por ejemplo, con siete horas, que nadie estudió. Predecir un número, y no una categoría como «spam», se llama regresión.',
+      en: 'We want a rule that, given some hours, predicts the grade; for example, for seven hours, which nobody studied. Predicting a number, rather than a category like “spam,” is called regression.',
+      note: { es: 'Regresión: predecir un número a partir de datos.', en: 'Regression: predicting a number from data.' },
+    },
+    // ── la recta, pieza por pieza ──
+    {
+      id: 'line-idea',
+      es: 'El modelo más sencillo es una recta: una línea derecha que sube, o baja, siempre al mismo ritmo. Aquí hay una y, junto a ella, la nota que predice para cada hora.',
+      en: 'The simplest model is a straight line: a line that rises, or falls, always at the same pace. Here is one and, next to it, the grade it predicts for each hour.',
+    },
+    {
+      id: 'steps',
+      es: 'Mira sus escalones: cada vez que avanzas una hora a la derecha, la recta sube lo mismo, cinco puntos. Eso es subir a ritmo constante.',
+      en: 'Look at its steps: each time you move one hour to the right, the line rises by the same amount, five points. That is rising at a constant pace.',
+      pad: 0.3,
+    },
+    {
+      id: 'weight',
+      es: 'Ese ritmo, cuántos puntos sube la predicción por cada hora, se llama peso, o pendiente. En esta recta, el peso vale cinco.',
+      en: 'That pace, how many points the prediction rises for each hour, is called the weight, or slope. On this line, the weight is five.',
+      note: { es: 'Peso (pendiente): cuánto sube la predicción por cada hora.', en: 'Weight (slope): how much the prediction rises per hour.' },
+    },
+    {
+      id: 'weight-demo',
+      es: 'Si el peso crece, la recta se empina: con diez, sube diez puntos por hora. Con cero queda plana, y con un peso negativo bajaría.',
+      en: 'If the weight grows, the line gets steeper: with ten, it rises ten points per hour. With zero it goes flat, and with a negative weight it would go down.',
+      pad: 0.3,
+    },
+    {
+      id: 'bias',
+      es: 'La otra pieza es la altura de la recta cuando las horas valen cero, justo sobre el eje vertical. Se llama sesgo: aquí vale cuarenta, la nota que predice para quien no estudió nada.',
+      en: 'The other piece is the line’s height when hours are zero, right on the vertical axis. It is called the bias: here it is forty, the grade it predicts for someone who did not study.',
+      note: { es: 'Sesgo: la altura de la recta cuando la entrada vale cero.', en: 'Bias: the height of the line when the input is zero.' },
+    },
+    {
+      id: 'bias-demo',
+      es: 'Si cambiamos el sesgo, la recta entera sube o baja sin inclinarse: los escalones siguen siendo de cinco. El sesgo decide la altura.',
+      en: 'If we change the bias, the whole line moves up or down without tilting: the steps are still five points. The bias sets the height.',
+      pad: 0.3,
+    },
+    {
+      id: 'two-numbers',
+      es: 'Así, cada recta queda descrita por dos números: el peso, que la inclina, y el sesgo, que la sube o la baja. Son sus parámetros, los números que se ajustan.',
+      en: 'So every line is described by two numbers: the weight, which tilts it, and the bias, which moves it up or down. They are its parameters, the numbers that get adjusted.',
+    },
+    // ── la predicción y la fórmula ──
+    {
+      id: 'predict-read',
+      es: 'Ahora usémosla. ¿Qué nota predice para siete horas? Subimos desde el siete hasta tocar la recta y leemos su altura: setenta y cinco.',
+      en: 'Now let’s use it. What grade does it predict for seven hours? We go up from seven until we touch the line and read its height: seventy-five.',
+      pad: 0.3,
+    },
+    {
+      id: 'predict-calc',
+      es: 'La misma respuesta sale con una cuenta: el peso por las horas, cinco por siete, treinta y cinco; más el sesgo, cuarenta. Total: setenta y cinco. Eso es la predicción.',
+      en: 'The same answer comes from arithmetic: the weight times the hours, five times seven, thirty-five; plus the bias, forty. Total: seventy-five. That is the prediction.',
+      note: { es: 'Predicción: lo que el modelo responde para una entrada.', en: 'Prediction: what the model answers for an input.' },
+      pad: 0.3,
+    },
+    {
+      id: 'formula',
+      es: 'Con letras, esa cuenta es la fórmula de la recta: la predicción es w por x, más b. Es la suma ponderada de la primera lección, con una sola entrada.',
+      en: 'In letters, that arithmetic is the formula of the line: the prediction is w times x, plus b. It is the weighted sum from the first lesson, with a single input.',
+      tts: { es: 'Con letras, esa cuenta es la fórmula de la recta: la predicción es doble ve por equis, más be. Es la suma ponderada de la primera lección, con una sola entrada.' },
+    },
+    {
+      id: 'formula-letters',
+      es: 'Cada letra está en la gráfica: x son las horas, sobre el eje horizontal; w es el peso, la subida de cada escalón; y b es el sesgo, donde la recta corta el eje vertical.',
+      en: 'Each letter is on the graph: x is the hours, along the horizontal axis; w is the weight, the rise of each step; and b is the bias, where the line crosses the vertical axis.',
+      tts: { es: 'Cada letra está en la gráfica: equis son las horas, sobre el eje horizontal; doble ve es el peso, la subida de cada escalón; y be es el sesgo, donde la recta corta el eje vertical.' },
+      pad: 0.3,
+    },
+    // ── el error de un punto ──
+    {
+      id: 'reality',
+      es: 'Ahora comparemos con la realidad. Quien estudió cinco horas sacó setenta y dos, pero la recta le predice sesenta y cinco.',
+      en: 'Now let’s compare with reality. The student who studied five hours scored seventy-two, but the line predicts sixty-five.',
+    },
+    {
+      id: 'error-one',
+      es: 'La distancia vertical entre su punto y la recta es el error de ese punto: lo real menos lo predicho, setenta y dos menos sesenta y cinco. Siete puntos.',
+      en: 'The vertical distance between the point and the line is that point’s error: the real value minus the prediction, seventy-two minus sixty-five. Seven points.',
+      note: { es: 'Error de un punto: lo real menos la predicción.', en: 'Error of a point: the real value minus the prediction.' },
+    },
+    {
+      id: 'error-sign',
+      es: 'Si el punto queda arriba de la recta, el error es positivo. Si queda abajo, es negativo: este estudiante, de seis horas y media, tiene menos dieciséis punto cinco.',
+      en: 'If the point sits above the line, the error is positive. If it sits below, it is negative: this student, at six and a half hours, has minus sixteen point five.',
+    },
+    {
+      id: 'all-errors',
+      es: 'Cada estudiante tiene su propio error, unos positivos y otros negativos. ¿Cómo los resumimos en un solo número que diga qué tan mala es la recta?',
+      en: 'Every student has an error of their own, some positive and some negative. How do we sum them up in a single number that says how bad the line is?',
+    },
+    // ── de muchos errores a un número: el cuadrado y la pérdida ──
+    {
+      id: 'sum-flat',
+      es: 'Sumarlos no sirve: los positivos cancelan a los negativos. Esta recta plana siempre predice el promedio; es mala, y aun así sus errores suman cero.',
+      en: 'Adding them up does not work: the positives cancel the negatives. This flat line always predicts the average; it is a bad line, and yet its errors add up to zero.',
+      pad: 0.3,
+    },
+    {
+      id: 'square-idea',
+      es: 'La salida es elevar cada error al cuadrado, es decir, multiplicarlo por sí mismo. Un error de dos cuenta cuatro; uno de cuatro cuenta dieciséis.',
+      en: 'The way out is to square each error, that is, multiply it by itself. An error of two counts as four; an error of four counts as sixteen.',
+    },
+    {
+      id: 'square-neg',
+      es: 'Así, el doble de error cuenta cuatro veces más. Y un error de menos tres cuenta nueve, igual que uno de tres: menos por menos da más, y nada se cancela.',
+      en: 'So twice the error counts four times as much. And an error of minus three counts nine, just like three: minus times minus is plus, and nothing cancels.',
+    },
+    {
+      id: 'square-draw',
+      es: 'Por eso se dibuja así: sobre cada error, un cuadrado cuyo lado es el error. Su área es el error al cuadrado, y los errores grandes dan cuadrados enormes.',
+      en: 'That is why we draw it like this: on each error, a square whose side is the error. Its area is the squared error, and big errors make huge squares.',
+      pad: 0.4,
     },
     {
       id: 'loss',
-      es: 'La función de pérdida promedia esas áreas: suma de cuadrados entre número de puntos. Es el error cuadrático medio, o MSE. Cuanto menor, mejor se ajusta el modelo a los datos.',
-      en: 'The loss function averages those areas: the sum of the squares divided by the number of points. It is the mean squared error, or MSE. The lower, the better the model fits the data.',
+      es: 'Ahora sí, un solo número: sumamos las diez áreas y dividimos entre diez. Para la recta plana, ese promedio da doscientos cuarenta y cuatro.',
+      en: 'Now we have a single number: add up the ten areas and divide by ten. For the flat line, that average comes to two hundred forty-four.',
+      pad: 0.3,
+    },
+    {
+      id: 'loss-name',
+      es: 'Ese promedio se llama error cuadrático medio, o MSE por sus siglas en inglés. Es la pérdida del modelo: cuanto más baja, mejor se ajusta la recta a los datos.',
+      en: 'That average is called the mean squared error, or MSE. It is the model’s loss: the lower it is, the better the line fits the data.',
       tts: {
-        es: 'La función de pérdida promedia esas áreas: suma de cuadrados entre número de puntos. Es el error cuadrático medio, o eme ese e. Cuanto menor, mejor se ajusta el modelo a los datos.',
-        en: 'The loss function averages those areas: the sum of the squares divided by the number of points. It is the mean squared error, or M S E. The lower, the better the model fits the data.',
+        es: 'Ese promedio se llama error cuadrático medio, o eme ese e por sus siglas en inglés. Es la pérdida del modelo: cuanto más baja, mejor se ajusta la recta a los datos.',
+        en: 'That average is called the mean squared error, or M S E. It is the model’s loss: the lower it is, the better the line fits the data.',
       },
-      note: { es: 'Pérdida (MSE): promedio de los errores al cuadrado.', en: 'Loss (MSE): the average of the squared errors.' },
+      note: { es: 'Pérdida (MSE): el promedio de los errores al cuadrado.', en: 'Loss (MSE): the average of the squared errors.' },
+    },
+    // ── buscar la mejor recta ──
+    {
+      id: 'back-line',
+      es: 'Volvamos a la recta de peso cinco y sesgo cuarenta. Sus cuadrados son mucho más chicos, y su pérdida baja a cuarenta y cinco punto ocho.',
+      en: 'Back to the line with weight five and bias forty. Its squares are much smaller, and its loss drops to forty-five point eight.',
+      pad: 0.3,
+    },
+    {
+      id: 'demo-w',
+      es: 'Si la empinamos de más, los cuadrados crecen y la pérdida sube. Si la aplanamos, también sube. El mejor peso está en algún punto intermedio.',
+      en: 'If we make it too steep, the squares grow and the loss goes up. If we flatten it, it goes up too. The best weight is somewhere in between.',
+      pad: 0.4,
+    },
+    {
+      id: 'demo-b',
+      es: 'Con el sesgo pasa lo mismo: si subimos la recta de más, o la bajamos de más, la pérdida crece. Hay que dar con la combinación justa de los dos.',
+      en: 'The same goes for the bias: raise the line too much, or lower it too much, and the loss grows. We have to find the right combination of the two.',
+      pad: 0.4,
     },
     {
       id: 'goal',
-      es: 'Ahora «aprender» tiene un sentido preciso: encontrar los valores de w y b que dejan la pérdida lo más baja posible.',
-      en: 'Now “learning” has a precise meaning: finding the values of w and b that make the loss as low as possible.',
-      tts: { es: 'Ahora «aprender» tiene un sentido preciso: encontrar los valores de doble ve y be que dejan la pérdida lo más baja posible.' },
-      note: { es: 'Aprender: elegir w y b que minimicen la pérdida.', en: 'Learning: choosing the w and b that minimize the loss.' },
+      es: 'Ahora aprender tiene un sentido preciso: encontrar el peso y el sesgo que dejan la pérdida lo más baja posible.',
+      en: 'Now learning has a precise meaning: finding the weight and the bias that make the loss as low as possible.',
+      note: { es: 'Aprender: elegir el peso y el sesgo que minimizan la pérdida.', en: 'Learning: choosing the weight and bias that minimize the loss.' },
     },
     {
       id: 'try1',
-      es: 'Tu turno: arrastra las dos asas de la recta, o usa los botones, y baja la pérdida todo lo que puedas. Los cuadrados te muestran qué puntos fallan más.',
-      en: 'Your turn: drag the two handles on the line, or use the buttons, and push the loss down as far as you can. The squares show which points miss the most.',
+      es: 'Si quieres, mueve tú el peso y el sesgo con los deslizadores, y busca la pérdida más baja. Los cuadrados te muestran qué puntos fallan más.',
+      en: 'If you like, move the weight and the bias yourself with the sliders, and look for the lowest loss. The squares show which points miss the most.',
       gate: {
         id: 'fit',
-        prompt: {
-          es: 'Baja la pérdida todo lo que puedas; te avisaremos al llegar cerca del mínimo. Guíate por tu mejor marca.',
-          en: 'Push the loss down as far as you can; we will tell you when you are close to the minimum. Follow your best score.',
-        },
+        prompt: { es: 'mueve el peso y el sesgo hasta que la pérdida baje de 43.5.', en: 'move the weight and the bias until the loss drops below 43.5.' },
       },
       pad: 0.4,
     },
     {
       id: 'floor',
-      es: 'Si llegaste cerca, notaste que hay un fondo: un punto donde cualquier movimiento de la recta hace subir la pérdida. Ahí está la mejor recta.',
-      en: 'If you got close, you noticed there is a floor: a point where any move of the line pushes the loss up. That is where the best line sits.',
-      pad: 0.3,
+      es: 'Cerca del mejor valor, la pérdida deja de bajar: cualquier movimiento la hace subir. Ese fondo marca la mejor recta, con una pérdida de cuarenta y dos punto cinco.',
+      en: 'Near the best value, the loss stops going down: any move pushes it up. That floor marks the best line, with a loss of forty-two point five.',
     },
     {
       id: 'not-zero',
-      es: 'Ni siquiera la mejor recta acierta todo: su pérdida no es cero. Los datos reales traen ruido, y diez puntos así no caen sobre una misma recta.',
-      en: 'Even the best line does not hit everything: its loss is not zero. Real data carry noise, and ten points like these do not fall on a single straight line.',
+      es: 'Ni la mejor recta acierta todo: su pérdida no es cero, que sería acertarle a cada punto. Diez puntos así no caben sobre una misma línea.',
+      en: 'Not even the best line gets everything right: its loss is not zero, which would mean hitting every point. Ten points like these do not fit on a single line.',
     },
     {
       id: 'best-line',
-      es: 'Para una recta, la mejor tiene una fórmula directa: es el método de mínimos cuadrados. Legendre lo publicó en 1805, y Gauss afirmó que lo usaba desde 1795.',
-      en: 'For a straight line, the best fit has a direct formula: the method of least squares. Legendre published it in 1805, and Gauss claimed he had used it since 1795.',
-      tts: {
-        es: 'Para una recta, la mejor tiene fórmula: es el método de mínimos cuadrados. Legendre lo publicó en mil ochocientos cinco, y Gauss afirmó que lo usaba desde mil setecientos noventa y cinco.',
-        en: 'For a straight line, the best fit has a formula: the method of least squares. Legendre published it in eighteen oh five, and Gauss claimed he had used it since seventeen ninety-five.',
-      },
+      es: 'Para una recta, la mejor tiene fórmula: el método de mínimos cuadrados. Legendre lo publicó en mil ochocientos cinco, y Gauss dijo que lo usaba desde mil setecientos noventa y cinco.',
+      en: 'For a straight line, the best one has a formula: the method of least squares. Legendre published it in eighteen oh-five, and Gauss said he had used it since seventeen ninety-five.',
     },
+    // ── el estudiante atípico: el cuadrado es una decisión ──
     {
       id: 'outlier',
-      es: 'Mira el cuadrado más grande: es de un solo estudiante atípico, el que estudió seis horas y media y sacó cincuenta y seis. Aporta más de tres cuartas partes de la pérdida.',
-      en: 'Look at the biggest square: it belongs to one outlier, the student who studied six and a half hours and scored fifty-six. It contributes over three quarters of the loss.',
+      es: 'Mira el cuadrado más grande: es de un solo estudiante, el de seis horas y media que sacó cincuenta y seis. Él solo aporta más de tres cuartas partes de la pérdida.',
+      en: 'Look at the biggest square: it belongs to one student, the one who studied six and a half hours and scored fifty-six. That student alone adds over three quarters of the loss.',
     },
     {
-      id: 'why-big',
-      es: 'Con valores absolutos, ese mismo estudiante aportaría casi la mitad. Elevar al cuadrado es una decisión, no una ley natural: prefiere varios errores pequeños a uno enorme, y eso tiene sentido si un error grande cuesta mucho más.',
-      en: 'With absolute values, that same student would add almost half. Squaring is a design choice, not a law of nature: it prefers several small errors to one huge one, which makes sense when a big error costs far more.',
+      id: 'absolute',
+      es: 'Hay otra forma de quitar el signo: usar solo la distancia, sin elevarla al cuadrado. Se llama error absoluto, y con él ese estudiante aportaría casi la mitad.',
+      en: 'There is another way to drop the sign: use just the distance, without squaring it. It is called the absolute error, and with it that student would add almost half.',
     },
     {
       id: 'compare',
-      es: 'Pero tiene un costo: un punto atípico puede torcer la recta. Comparemos dos criterios: la recta que minimiza los cuadrados y la que minimiza los errores absolutos.',
-      en: 'But it has a cost: a single outlier can bend the line. Let’s compare two criteria: the line that minimizes the squares and the line that minimizes the absolute errors.',
+      es: 'Cada forma de medir tiene su propia mejor recta. La continua minimiza los cuadrados; la punteada, los errores absolutos. Por ahora se parecen.',
+      en: 'Each way of measuring has its own best line. The solid one minimizes the squares; the dashed one, the absolute errors. For now they look alike.',
+    },
+    {
+      id: 'outlier-demo',
+      es: 'Bajemos la nota del estudiante atípico. La recta de los cuadrados lo persigue y se tuerce; la de errores absolutos casi no se mueve.',
+      en: 'Let’s lower the outlier’s grade. The squares line chases it and bends; the absolute-error line barely moves.',
+      pad: 0.4,
     },
     {
       id: 'try2',
-      es: 'Tu turno: arrastra al estudiante atípico hacia arriba y hacia abajo. Antes de moverlo, predice: ¿cuál de las dos rectas lo va a seguir?',
-      en: 'Your turn: drag the outlier up and down. Before you move it, predict: which of the two lines will follow it?',
+      es: 'Si quieres, mueve tú la nota de ese estudiante, hacia arriba o hacia abajo, y mira cuál de las dos rectas lo sigue.',
+      en: 'If you like, move that student’s grade yourself, up or down, and watch which of the two lines follows it.',
       gate: {
         id: 'outlier',
-        prompt: {
-          es: 'Mueve al estudiante atípico al menos treinta puntos y observa cuál recta lo sigue.',
-          en: 'Move the outlier at least thirty points and watch which line follows.',
-        },
+        prompt: { es: 'mueve la nota del estudiante atípico al menos 30 puntos.', en: 'move the outlier’s grade at least 30 points.' },
       },
       pad: 0.4,
     },
     {
       id: 'after-try2',
-      es: 'La recta cuadrática persigue al atípico; la absoluta casi no se mueve. Gauss ya lo notó en 1809: con ese criterio, un dato puede cambiar de valor sin mover la recta, mientras siga del mismo lado.',
-      en: 'The squared line chases the outlier; the absolute one barely moves. Gauss noticed this in 1809: with that criterion, a point can change its value without moving the line, as long as it stays on the same side.',
-      tts: {
-        es: 'La recta cuadrática persigue al atípico; la absoluta casi no se mueve. Gauss ya lo notó en mil ochocientos nueve: con ese criterio, un dato puede cambiar de valor sin mover la recta, mientras siga del mismo lado.',
-        en: 'The squared line chases the outlier; the absolute one barely moves. Gauss noticed this in eighteen oh nine: with that criterion, a point can change its value without moving the line, as long as it stays on the same side.',
-      },
-      note: { es: 'Cuadrático: sensible a atípicos. Absoluto: más robusto.', en: 'Squared: sensitive to outliers. Absolute: more robust.' },
+      es: 'Elevar al cuadrado es una decisión, no una ley: castiga mucho los errores grandes. Conviene si un error grande cuesta caro, pero un solo dato raro puede torcer la recta.',
+      en: 'Squaring is a choice, not a law: it punishes big errors heavily. That helps when a big error is costly, but a single odd point can bend the line.',
+      note: { es: 'Elevar al cuadrado castiga los errores grandes y es sensible a los atípicos.', en: 'Squaring punishes big errors and is sensitive to outliers.' },
     },
-    {
-      id: 'gauss',
-      es: 'Gauss dio además una razón de probabilidad: si los errores de medición siguen una curva de campana, la normal, la recta de mínimos cuadrados es la más probable.',
-      en: 'Gauss also gave a reason from probability: if measurement errors follow a bell curve, the normal, the least-squares line is the most probable one.',
-    },
+    // ── límites y puente ──
     {
       id: 'limits',
-      es: 'Una advertencia: una pérdida baja no garantiza un buen modelo. Los datos llegan hasta nueve horas y la recta sigue sin doblarse: con doce horas predice más de cien puntos, más que la nota máxima.',
-      en: 'One warning: a low loss does not guarantee a good model. The data stop at nine hours and the line keeps going straight: with twelve hours it predicts more than a hundred points, above the top grade.',
+      es: 'Una advertencia: una pérdida baja no garantiza un buen modelo. Los datos llegan a nueve horas; con doce, la recta predeciría más de cien, más que la nota máxima.',
+      en: 'One warning: a low loss does not guarantee a good model. The data stop at nine hours; at twelve, the line would predict more than a hundred, above the top grade.',
     },
     {
       id: 'curve',
-      es: 'Dejemos b en su mejor valor y movamos solo w. Cada peso es una recta distinta, y cada recta tiene su pérdida. Juntas dibujan una parábola con un fondo.',
-      en: 'Let’s keep b at its best value and move only w. Each weight gives a different line, and each line has its own loss. Together they draw a parabola with a floor.',
-      tts: { es: 'Dejemos be en su mejor valor y movamos solo doble ve. Cada peso es una recta distinta, y cada recta tiene su pérdida. Juntas dibujan una parábola con un fondo.' },
+      es: 'Un último experimento: dejamos el sesgo fijo y movemos solo el peso. Cada peso da una recta distinta, y cada recta, su propia pérdida.',
+      en: 'One last experiment: we keep the bias fixed and move only the weight. Each weight gives a different line, and each line its own loss.',
       pad: 0.4,
     },
     {
+      id: 'valley',
+      es: 'Juntas, esas pérdidas dibujan un valle. En el fondo está el mejor peso: si te mueves a la izquierda o a la derecha, la pérdida sube.',
+      en: 'Together, those losses trace a valley. At the bottom sits the best weight: move left or right, and the loss goes up.',
+      pad: 0.3,
+    },
+    {
       id: 'bridge',
-      es: 'Con una recta basta una fórmula. Con miles de millones de pesos no existe ninguna. ¿Cómo encontrar el peso de menor pérdida sin probarlos todos? Esa es la siguiente lección.',
-      en: 'For a straight line, a formula is enough. With billions of weights there is none. How do we find the lowest-loss weight without trying them all? That is the next lesson.',
+      es: 'Con una recta basta una fórmula. Con miles de millones de pesos no existe ninguna. ¿Cómo bajar al fondo del valle sin probarlos todos? Es la siguiente lección.',
+      en: 'For one line, a formula is enough. With billions of weights, there is none. How do we reach the bottom of the valley without trying them all? That is the next lesson.',
     },
   ],
 
   keyIdeas: {
     es: [
-      'Un modelo lineal predice con ŷ = w·x + b: el peso w es la pendiente y el sesgo b es la altura en x = 0. Son sus parámetros.',
-      'El error de un punto es lo real menos lo predicho. Sumar los errores con signo falla: los positivos y los negativos se cancelan.',
-      'La pérdida (MSE) es el promedio de los errores al cuadrado: cada error se vuelve un cuadrado y la pérdida es el área media. Los errores grandes pesan mucho más.',
-      'Aprender es elegir los parámetros que minimizan la pérdida. Para una recta hay fórmula (mínimos cuadrados, Legendre y Gauss), pero ni así la pérdida llega a cero.',
+      'Una recta sube (o baja) a ritmo constante. Su peso w, la pendiente, es cuánto sube la predicción por cada unidad de la entrada; su sesgo b es la altura cuando la entrada vale cero. La predicción es w·x + b.',
+      'El error de un punto es lo real menos lo predicho: la distancia vertical entre el punto y la recta. Sumar los errores con su signo falla, porque los positivos y los negativos se cancelan.',
+      'Elevar cada error al cuadrado quita el signo y hace pesar más los errores grandes: un error de 2 cuenta 4; uno de 4, 16. La pérdida MSE es el promedio de esos cuadrados.',
+      'Aprender es elegir el peso y el sesgo que dejan la pérdida lo más baja posible. Para una recta hay fórmula (mínimos cuadrados, Legendre y Gauss), pero ni así la pérdida llega a cero.',
       'Elevar al cuadrado es una decisión: un punto atípico puede torcer la recta, mientras que el error absoluto casi no lo escucha.',
     ],
     en: [
-      'A linear model predicts with ŷ = w·x + b: the weight w is the slope and the bias b is the height at x = 0. They are its parameters.',
-      'The error of a point is the real value minus the predicted one. Adding errors with their signs fails: positives and negatives cancel.',
-      'The loss (MSE) is the average of the squared errors: each error becomes a square and the loss is the mean area. Big errors weigh far more.',
-      'Learning means choosing the parameters that minimize the loss. A straight line has a formula (least squares, Legendre and Gauss), but even then the loss does not reach zero.',
+      'A straight line rises (or falls) at a constant pace. Its weight w, the slope, is how much the prediction rises per unit of input; its bias b is the height when the input is zero. The prediction is w·x + b.',
+      'The error of a point is the real value minus the prediction: the vertical distance between the point and the line. Adding errors with their signs fails, because positives and negatives cancel.',
+      'Squaring each error removes the sign and makes big errors weigh more: an error of 2 counts 4; one of 4, 16. The MSE loss is the average of those squares.',
+      'Learning means choosing the weight and bias that make the loss as low as possible. A straight line has a formula (least squares, Legendre and Gauss), but even then the loss does not reach zero.',
       'Squaring is a decision: an unusual point can bend the line, whereas the absolute error barely listens to it.',
     ],
   },
@@ -244,15 +324,19 @@ export default defineLesson({
   },
 
   deeper: {
-    es: `## El modelo y la pérdida
+    es: `## La recta, pieza por pieza
 
-Para una entrada $x$, el modelo lineal predice $\\hat y = wx + b$. Con varias características (lección 2) la entrada es un vector $\\mathbf{x}$ y la predicción es $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: un peso por característica y un solo sesgo. Los diez estudiantes de la lección son inventados.
+Una recta es la gráfica de $\\hat y = wx + b$ (se lee «y gorro»: la predicción). El peso $w$ es la **pendiente**: si la entrada aumenta en $\\Delta x$, la predicción aumenta en $w\\,\\Delta x$, así que $w = \\Delta \\hat y / \\Delta x$, lo que sube entre lo que avanza. El sesgo $b$ es la **ordenada al origen**: $\\hat y(0) = b$. En la lección, $w = 5$ y $b = 40$: con 7 horas, $\\hat y = 5\\cdot 7 + 40 = 75$.
+
+## El modelo y la pérdida
+
+Con varias características (lección 2) la entrada es un vector $\\mathbf{x}$ y la predicción es $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: un peso por característica y un solo sesgo. Los diez estudiantes de la lección son inventados.
 
 El error de un punto es $e_i = y_i - \\hat y_i$. Con $n$ puntos, las dos pérdidas de la lección son
 
 $$\\mathrm{MAE}=\\frac1n\\sum_{i=1}^{n}|e_i| \\qquad\\qquad L(w,b)=\\mathrm{MSE}=\\frac1n\\sum_{i=1}^{n}\\bigl(y_i-wx_i-b\\bigr)^2$$
 
-El MSE se mide en puntos al cuadrado. Su raíz, $\\sqrt{L}$, vuelve a puntos: con la mejor recta de la lección, $\\sqrt{42{,}5}\\approx 6{,}5$ puntos de error típico.
+El MSE se mide en puntos al cuadrado. Su raíz, $\\sqrt{L}$, vuelve a puntos: con la mejor recta de la lección, $\\sqrt{42.5}\\approx 6.5$ puntos de error típico. La recta de ejemplo ($w = 5$, $b = 40$) tiene $L = 45.775$; la recta plana del promedio, $L = 244.04$.
 
 ## Por qué el cuadrado
 
@@ -265,19 +349,19 @@ El MSE se mide en puntos al cuadrado. Su raíz, $\\sqrt{L}$, vuelve a puntos: co
 
 Legendre presentó los mínimos cuadrados en 1805, en un apéndice, como el principio que, a su juicio, es el «más general, más exacto y de aplicación más fácil», y que establece entre los errores «una especie de equilibrio» que impide a los extremos prevalecer. Gauss escribió en 1809 que lo usaba desde 1795 (*Theoria motus*, art. 186) y que, de todas las potencias pares del error, el cuadrado era «el más simple»; la prioridad se discutió (Plackett, 1972; Stigler, 1981).
 
-En ese mismo artículo Gauss cuenta que Laplace usaba el error absoluto, propuesto antes por Boscovich. Observa que con él la recta pasa, en general, por dos de los puntos y que otro dato cualquiera podría haberse observado sin cambiar la solución, con tal de quedar del mismo lado: es lo que viste con el atípico. Entre los dos extremos existen pérdidas híbridas, como la de Huber (1964): cuadrática para errores pequeños y lineal para los grandes.
+En ese mismo artículo Gauss cuenta que Laplace usaba el error absoluto, propuesto antes por Boscovich. Observa que con él la recta pasa, en general, por dos de los puntos y que otro dato cualquiera podría haberse observado sin cambiar la solución, con tal de quedar del mismo lado: es lo que viste con el atípico, cuya recta absoluta no se movió al bajarle la nota. Entre los dos extremos existen pérdidas híbridas, como la de Huber (1964): cuadrática para errores pequeños y lineal para los grandes.
 
 ## La mejor recta
 
 $$w^*=\\frac{\\sum_i (x_i-\\bar x)(y_i-\\bar y)}{\\sum_i (x_i-\\bar x)^2}=\\frac{\\operatorname{cov}(x,y)}{\\operatorname{var}(x)}\\qquad\\qquad b^*=\\bar y-w^*\\bar x$$
 
-Con $\\bar x = 4{,}55$ y $\\bar y = 64{,}4$ resultan $w^*\\approx 5{,}26$ y $b^*\\approx 40{,}45$, con pérdida mínima $L_{\\min}\\approx 42{,}5$. La mejor recta siempre pasa por el punto promedio $(\\bar x,\\bar y)$. En forma matricial son las ecuaciones normales, $\\mathbf{w}^*=(X^\\top X)^{-1}X^\\top\\mathbf{y}$ (en $X$, una columna de unos se encarga del sesgo).
+Con $\\bar x = 4.55$ y $\\bar y = 64.4$ resultan $w^*\\approx 5.26$ y $b^*\\approx 40.45$, con pérdida mínima $L_{\\min}\\approx 42.5$. La mejor recta siempre pasa por el punto promedio $(\\bar x,\\bar y)$. En forma matricial son las ecuaciones normales, $\\mathbf{w}^*=(X^\\top X)^{-1}X^\\top\\mathbf{y}$ (en $X$, una columna de unos se encarga del sesgo).
 
 Si dejamos $b=b^*$ y movemos solo $w$, la pérdida es exactamente una parábola:
 
-$$L(w)=L_{\\min}+\\overline{x^2}\\,(w-w^*)^2,\\qquad \\overline{x^2}\\approx 28{,}0$$
+$$L(w)=L_{\\min}+\\overline{x^2}\\,(w-w^*)^2,\\qquad \\overline{x^2}\\approx 28.0$$
 
-Es la curva de la última escena. El nombre «regresión» viene de Galton. En su estudio de 1886 sobre la estatura (930 hijos adultos de 205 familias) halló que la desviación de estatura de los hijos es, en promedio, dos tercios de la de sus padres: los hijos de padres muy altos tienden a ser menos altos, y los de padres muy bajos, más altos. Lo llamó «regresión hacia la mediocridad», es decir, hacia el promedio.
+Es el valle de la última escena. El nombre «regresión» viene de Galton. En su estudio de 1886 sobre la estatura (930 hijos adultos de 205 familias) halló que la desviación de estatura de los hijos es, en promedio, dos tercios de la de sus padres: los hijos de padres muy altos tienden a ser menos altos, y los de padres muy bajos, más altos. Lo llamó «regresión hacia la mediocridad», es decir, hacia el promedio.
 
 ## En código
 
@@ -298,21 +382,25 @@ def perdida(w, b):  # error cuadrático medio (MSE)
 print(round(w, 2), round(b, 2))   # 5.26 40.45   (mejor peso y sesgo)
 print(round(perdida(w, b), 1))    # 42.5         (pérdida mínima)
 print(round(perdida(0, my), 1))   # 244.0        (recta plana: predecir el promedio)
-print(round(perdida(2, 45), 1))   # 226.1        (la recta con que arranca la lección)
+print(round(perdida(5, 40), 1))   # 45.8         (la recta de ejemplo: peso 5, sesgo 40)
 \`\`\`
 
 ## Lo que viene
 
 La fórmula cerrada sirve para una recta. En una red con miles de millones de pesos no existe, y el fondo se busca paso a paso: es el descenso del gradiente (lección 4). Y bajar la pérdida en los datos de entrenamiento no basta: hay que medirla con datos que el modelo no vio (lección 10).`,
-    en: `## The model and the loss
+    en: `## The line, piece by piece
 
-For an input $x$, the linear model predicts $\\hat y = wx + b$. With several features (lesson 2) the input is a vector $\\mathbf{x}$ and the prediction is $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: one weight per feature and a single bias. The ten students in the lesson are invented.
+A straight line is the graph of $\\hat y = wx + b$ (read “y-hat”: the prediction). The weight $w$ is the **slope**: if the input grows by $\\Delta x$, the prediction grows by $w\\,\\Delta x$, so $w = \\Delta \\hat y / \\Delta x$, rise over run. The bias $b$ is the **intercept**: $\\hat y(0) = b$. In the lesson, $w = 5$ and $b = 40$: with 7 hours, $\\hat y = 5\\cdot 7 + 40 = 75$.
+
+## The model and the loss
+
+With several features (lesson 2) the input is a vector $\\mathbf{x}$ and the prediction is $\\hat y = \\mathbf{w}\\cdot\\mathbf{x} + b$: one weight per feature and a single bias. The ten students in the lesson are invented.
 
 The error of a point is $e_i = y_i - \\hat y_i$. With $n$ points, the two losses in the lesson are
 
 $$\\mathrm{MAE}=\\frac1n\\sum_{i=1}^{n}|e_i| \\qquad\\qquad L(w,b)=\\mathrm{MSE}=\\frac1n\\sum_{i=1}^{n}\\bigl(y_i-wx_i-b\\bigr)^2$$
 
-The MSE is measured in squared points. Its root, $\\sqrt{L}$, goes back to points: with the best line in the lesson, $\\sqrt{42.5}\\approx 6.5$ points of typical error.
+The MSE is measured in squared points. Its root, $\\sqrt{L}$, goes back to points: with the best line in the lesson, $\\sqrt{42.5}\\approx 6.5$ points of typical error. The example line ($w = 5$, $b = 40$) has $L = 45.775$; the flat line at the average, $L = 244.04$.
 
 ## Why the square
 
@@ -325,7 +413,7 @@ The MSE is measured in squared points. Its root, $\\sqrt{L}$, goes back to point
 
 Legendre presented least squares in 1805, in an appendix, as the principle that in his judgment is the “most general, most exact and of easiest application”, and that sets up among the errors “a sort of equilibrium” that keeps the extremes from prevailing. Gauss wrote in 1809 that he had used it since 1795 (*Theoria motus*, art. 186) and that, among all even powers of the error, the square was “the most simple”; the priority was disputed (Plackett, 1972; Stigler, 1981).
 
-In the same article Gauss reports that Laplace used the absolute error, proposed earlier by Boscovich. He notes that with it the line generally passes through two of the points, and that any other value could have been observed for another point without changing the solution, provided it stays on the same side: it is what you saw with the outlier. Between the two extremes there are hybrid losses, such as Huber’s (1964): quadratic for small errors and linear for large ones.
+In the same article Gauss reports that Laplace used the absolute error, proposed earlier by Boscovich. He notes that with it the line generally passes through two of the points, and that any other value could have been observed for another point without changing the solution, provided it stays on the same side: it is what you saw with the outlier, whose absolute line did not move when its grade was lowered. Between the two extremes there are hybrid losses, such as Huber’s (1964): quadratic for small errors and linear for large ones.
 
 ## The best line
 
@@ -337,7 +425,7 @@ If we keep $b=b^*$ and move only $w$, the loss is exactly a parabola:
 
 $$L(w)=L_{\\min}+\\overline{x^2}\\,(w-w^*)^2,\\qquad \\overline{x^2}\\approx 28.0$$
 
-It is the curve in the last scene. The name “regression” comes from Galton. In his 1886 study of stature (930 adult children from 205 families) he found that the children’s height deviation is, on average, two thirds of their parents’: the children of very tall parents tend to be less tall, and those of very short parents, taller. He called it “regression towards mediocrity”, that is, towards the average.
+It is the valley in the last scene. The name “regression” comes from Galton. In his 1886 study of stature (930 adult children from 205 families) he found that the children’s height deviation is, on average, two thirds of their parents’: the children of very tall parents tend to be less tall, and those of very short parents, taller. He called it “regression towards mediocrity”, that is, towards the average.
 
 ## In code
 
@@ -358,7 +446,7 @@ def loss(w, b):  # mean squared error (MSE)
 print(round(w, 2), round(b, 2))   # 5.26 40.45   (best weight and bias)
 print(round(loss(w, b), 1))       # 42.5         (minimum loss)
 print(round(loss(0, my), 1))      # 244.0        (flat line: always predict the mean)
-print(round(loss(2, 45), 1))      # 226.1        (the line the lesson starts with)
+print(round(loss(5, 40), 1))      # 45.8         (the example line: weight 5, bias 40)
 \`\`\`
 
 ## What comes next
@@ -384,6 +472,24 @@ The closed formula works for a straight line. In a network with billions of weig
   quiz: [
     {
       kind: 'concept',
+      q: {
+        es: 'Una recta predice la nota con predicción = 4 · horas + 30. ¿Qué dice el 4?',
+        en: 'A line predicts the grade with prediction = 4 · hours + 30. What does the 4 tell you?',
+      },
+      options: [
+        { es: 'Que con cero horas predice una nota de 4.', en: 'That with zero hours it predicts a grade of 4.' },
+        { es: 'Que el error de la recta es de 4 puntos.', en: 'That the line’s error is 4 points.' },
+        { es: 'Que cada hora más suma 4 puntos a la predicción.', en: 'That each extra hour adds 4 points to the prediction.' },
+        { es: 'Que la recta corta el eje vertical en 4.', en: 'That the line crosses the vertical axis at 4.' },
+      ],
+      answer: 2,
+      why: {
+        es: 'El 4 es el peso (la pendiente): un escalón de una hora a la derecha sube 4 puntos. El 30 es el sesgo: la nota que predice con cero horas, donde la recta corta el eje vertical.',
+        en: 'The 4 is the weight (the slope): a one-hour step to the right rises 4 points. The 30 is the bias: the grade it predicts with zero hours, where the line crosses the vertical axis.',
+      },
+    },
+    {
+      kind: 'concept',
       q: { es: '¿Por qué no basta con sumar los errores con su signo para medir qué tan mal está una recta?', en: 'Why is it not enough to add up the errors with their signs to measure how bad a line is?' },
       options: [
         { es: 'Porque la suma siempre da un número demasiado grande.', en: 'Because the sum always comes out too large.' },
@@ -393,35 +499,20 @@ The closed formula works for a straight line. In a network with billions of weig
       ],
       answer: 1,
       why: {
-        es: 'Los errores por encima y por debajo de la recta se compensan: la recta plana del promedio suma exactamente cero y, sin embargo, ignora las horas. Por eso se usa el valor absoluto o el cuadrado, que no se cancelan.',
-        en: 'Errors above and below the line offset each other: the flat line at the average adds up to exactly zero and yet it ignores the hours. That is why we use the absolute value or the square, which do not cancel.',
-      },
-    },
-    {
-      kind: 'concept',
-      q: { es: 'Un estudiante atípico queda muy lejos de la tendencia. ¿Qué pasa con la recta de mínimos cuadrados frente a la de error absoluto?', en: 'One student, an outlier, sits far from the trend. What happens to the least-squares line compared with the absolute-error line?' },
-      options: [
-        { es: 'Las dos se mueven exactamente igual.', en: 'Both move by exactly the same amount.' },
-        { es: 'La de error absoluto se mueve más, porque suma distancias.', en: 'The absolute-error line moves more, because it adds up distances.' },
-        { es: 'Ninguna se mueve: una recta no depende de los datos.', en: 'Neither moves: a line does not depend on the data.' },
-        { es: 'La de mínimos cuadrados se mueve más, porque un error grande pesa al cuadrado.', en: 'The least-squares line moves more, because a big error counts squared.' },
-      ],
-      answer: 3,
-      why: {
-        es: 'Elevar al cuadrado hace que un error grande pese muchísimo: uno cuatro veces mayor cuenta dieciséis veces más. El error absoluto solo cuenta la distancia, así que el atípico lo mueve mucho menos.',
-        en: 'Squaring makes a big error weigh a lot: one four times larger counts sixteen times more. The absolute error only counts distance, so the outlier moves it far less.',
+        es: 'Los errores por encima y por debajo de la recta se compensan: la recta plana del promedio suma exactamente cero y, sin embargo, ignora las horas. Por eso se eleva al cuadrado (o se usa el valor absoluto), y así nada se cancela.',
+        en: 'Errors above and below the line offset each other: the flat line at the average adds up to exactly zero and yet it ignores the hours. That is why we square (or take the absolute value), so nothing cancels.',
       },
     },
     {
       kind: 'calc',
       q: { es: 'Un modelo predice 70 y 60 para dos estudiantes que sacaron 82 y 55. ¿Cuál es la pérdida (MSE)?', en: 'A model predicts 70 and 60 for two students who scored 82 and 55. What is the loss (MSE)?' },
       options: [
-        { es: '84.5', en: '84.5' },
         { es: '169', en: '169' },
         { es: '3.5', en: '3.5' },
         { es: '8.5', en: '8.5' },
+        { es: '84.5', en: '84.5' },
       ],
-      answer: 0,
+      answer: 3,
       why: {
         es: 'Los errores son 82 − 70 = 12 y 55 − 60 = −5. Al cuadrado: 144 y 25. Promedio: (144 + 25) / 2 = 84.5. El 169 es la suma sin dividir; el 3.5 es el promedio con signo, que se cancela; el 8.5 es el promedio de los valores absolutos.',
         en: 'The errors are 82 − 70 = 12 and 55 − 60 = −5. Squared: 144 and 25. Average: (144 + 25) / 2 = 84.5. The 169 is the sum without dividing; 3.5 is the signed average, which cancels; 8.5 is the average of the absolute values.',
@@ -447,8 +538,8 @@ The closed formula works for a straight line. In a network with billions of weig
   glossary: ['model', 'parameter', 'feature', 'training-data', 'weight', 'bias', 'prediction', 'loss', 'mse', 'regression'],
 
   terms: [
-    { id: 'weight', term: { es: 'Peso (w)', en: 'Weight (w)' }, def: { es: 'En un modelo lineal, el número que multiplica a la entrada: la pendiente de la recta. Indica cuánto cambia la predicción por cada unidad de la entrada.', en: 'In a linear model, the number that multiplies the input: the slope of the line. It tells how much the prediction changes per unit of input.' } },
-    { id: 'bias', term: { es: 'Sesgo (b)', en: 'Bias (b)' }, def: { es: 'El término que se suma al final del modelo: la predicción cuando la entrada vale cero, es decir, la altura de la recta. No es el sesgo de los datos o de un modelo injusto, que es otro concepto.', en: 'The term added at the end of the model: the prediction when the input is zero, that is, the height of the line. It is not the bias of data or of an unfair model, which is a different concept.' } },
+    { id: 'weight', term: { es: 'Peso (w)', en: 'Weight (w)' }, def: { es: 'En un modelo lineal, el número que multiplica a la entrada: la pendiente de la recta. Indica cuánto sube la predicción por cada unidad que aumenta la entrada.', en: 'In a linear model, the number that multiplies the input: the slope of the line. It tells how much the prediction rises for each unit the input grows.' } },
+    { id: 'bias', term: { es: 'Sesgo (b)', en: 'Bias (b)' }, def: { es: 'El término que se suma al final del modelo: la predicción cuando la entrada vale cero, es decir, la altura a la que la recta corta el eje vertical. No es el sesgo de los datos o de un modelo injusto, que es otro concepto.', en: 'The term added at the end of the model: the prediction when the input is zero, that is, the height at which the line crosses the vertical axis. It is not the bias of data or of an unfair model, which is a different concept.' } },
     { id: 'prediction', term: { es: 'Predicción (ŷ)', en: 'Prediction (ŷ)' }, def: { es: 'El número que el modelo entrega para una entrada dada. Al compararlo con el valor real se obtiene el error.', en: 'The number the model returns for a given input. Comparing it with the real value gives the error.' } },
     { id: 'loss', term: { es: 'Función de pérdida', en: 'Loss function' }, def: { es: 'Un único número que resume qué tan equivocado está un modelo con sus datos. Entrenar es buscar los parámetros que lo hacen lo más pequeño posible.', en: 'A single number that summarizes how wrong a model is on its data. Training is the search for the parameters that make it as small as possible.' } },
     { id: 'mse', term: { es: 'Error cuadrático medio (MSE)', en: 'Mean squared error (MSE)' }, def: { es: 'Pérdida que promedia los errores elevados al cuadrado. Castiga mucho más los errores grandes que los pequeños y se mide en las unidades de la salida, al cuadrado.', en: 'A loss that averages the squared errors. It punishes big errors far more than small ones and is measured in the units of the output, squared.' } },

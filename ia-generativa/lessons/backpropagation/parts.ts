@@ -196,7 +196,9 @@ export interface TableOpts {
 export function drawTable(S: Frame, r: Rect, o: TableOpts) {
   const { d, pal: p } = S, u = S.u, err = tone(S, 'err'), wt = tone(S, 'w');
   const sz = fz(S, 12.5), headH = Math.max(18 * u, 12.3 * 1.5) * K;
-  const rowH = Math.min(27 * u * K, Math.max(Math.max(20 * u, 12.3 * 1.55), (r.h - headH) / 6));
+  // filas de 20 u si caben; si no (teléfono pequeño) se aprietan hasta 1.32 veces la letra mínima antes que encimarse con el pie
+  const want = Math.max(20 * u, 12.3 * 1.55), fit = (r.h - headH) / 6;
+  const rowH = Math.min(27 * u * K, fit >= want ? fit : Math.max(12.3 * 1.32, fit));
   const nameW = 28 * u * K, valW = 50 * u * K, numW = 54 * u * K, newW = o.nw ? 70 * u * K : 0, arrW = o.arrows !== undefined ? 15 * u * K : 0;
   const xv = r.x + nameW + valW, xb0 = xv + 8 * u, xnum = r.x + r.w - newW - arrW, xb1 = xnum - numW - 6 * u;
   const mid = (xb0 + xb1) / 2, half = Math.max(8, (xb1 - xb0) / 2), sc = o.scale ?? 0.12;

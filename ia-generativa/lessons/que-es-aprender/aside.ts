@@ -10,9 +10,9 @@ export type Cell =
   | { k: 'legend'; fresh?: boolean; ring?: boolean; counts?: boolean }
   | { k: 'chips'; m: Model; hot?: number; lock?: boolean }
   | { k: 'lockText'; text: string; a?: number }
-  | { k: 'eq'; rev?: [number, number, number] }
+  | { k: 'eq'; rev?: [number, number, number]; blanks?: boolean; vals?: Model; hot?: [number, number, number] }
   | { k: 'bars'; rows: BarRow[]; seen: string; fresh: string }
-  | { k: 'arith'; m: Model; l: number; c: number; a?: number };
+  | { k: 'arith'; m: Model; l: number; c: number; a?: number; res?: number };
 
 /** Dibuja las celdas de arriba abajo. En vertical, las lecturas cortas (`ro`) se reparten en tres columnas. */
 export function flow(S: Frame, A: Rect, cells: Cell[], a = 1) {
@@ -38,7 +38,7 @@ export function flow(S: Frame, A: Rect, cells: Cell[], a = 1) {
         const cell = 2.4 * k;
         d.withAlpha(c.a ?? 1, () => { lock(S, A.x, y, cell); d.text(c.text, A.x + 8 * cell + 8 * k, y + 4 * cell, { size: fz(S, 13), weight: 700, color: p.ink2, base: 'middle' }); });
         y += 8 * cell + gap;
-      } else if (c.k === 'eq') y += equation(S, A.x, y, A.w, { reveal: c.rev }) + gap;
+      } else if (c.k === 'eq') y += equation(S, A.x, y, A.w, { reveal: c.rev, blanks: c.blanks, vals: c.vals, hot: c.hot }) + gap;
       else if (c.k === 'bars') y += groupBars(S, { x: A.x, y, w: A.w, h: 0 }, c.rows, { seenLabel: c.seen, freshLabel: c.fresh }) + gap * 0.5;
       else if (c.k === 'chips') {
         const lw = c.lock ? 30 * k : 0, cw = (A.w - lw - 2 * 6 * k) / 3, h = 44 * k;
@@ -50,10 +50,11 @@ export function flow(S: Frame, A: Rect, cells: Cell[], a = 1) {
         const line = `${num(S, c.m.w1)}×${c.l} + ${num(S, c.m.w2)}×${S.n(c.c, c.c % 1 ? 1 : 0)} ${c.m.b < 0 ? '−' : '+'} ${num(S, Math.abs(c.m.b))}`;
         const r1 = d.text(line, A.x, y, { size, weight: 600, font: 'mono', color: tone(S, 'w').ink, w: A.w, base: 'top', a: c.a });
         y += r1.h + 2 * k;
-        const t = tone(S, spam ? 'err' : 'dat');
-        d.text(`= ${signed(S, s)}`, A.x, y, { size: fz(S, 17), weight: 800, font: 'mono', color: p.ink, base: 'top', a: c.a });
+        const t = tone(S, spam ? 'err' : 'dat'), ra = (c.a ?? 1) * (c.res ?? 1);
+        if (ra < 0.01) { y += 30 * k; continue; }
+        d.text(`= ${signed(S, s)}`, A.x, y, { size: fz(S, 17), weight: 800, font: 'mono', color: p.ink, base: 'top', a: ra });
         const vx = A.x + d.measure(`= ${signed(S, s)}  `, { size: fz(S, 17), weight: 800, font: 'mono' });
-        d.withAlpha(c.a ?? 1, () => {
+        d.withAlpha(ra, () => {
           const label = spam ? 'spam' : S.l('normal', 'legit');
           const tw = d.measure(label, { size: fz(S, 14), weight: 800 }) + 14 * k;
           d.rect(vx, y - 1, tw, 24 * k, { fill: alpha(t.c, 0.16), stroke: t.c, lw: 1.5, r: 3 });

@@ -1,95 +1,87 @@
-// Estadística de la lección «Evaluar sistemas de IA». Todo es cálculo real, determinista y sin dependencias.
+// Estadística de la lección «Evaluar sistemas de IA». Todo es cálculo real, determinista y sin dependencias:
+// las cifras que dice la voz salen de aquí (compruébalo con `npx tsx src/content/courses/ia-generativa/lessons/evaluar/verify-data.ts`).
 //
-// Cómo se generan los datos de la comparación (turno 3):
-//  · Dos sistemas ficticios, A y B, con exactitud verdadera conocida: A acierta 78 % de los casos y B 74 % (supuesto editable, rotulado «ilustrativo»).
-//  · Sus aciertos están correlacionados, como pasa con dos modelos reales ante las mismas preguntas: la probabilidad conjunta de cada caso es
-//    ambos aciertan 0,66 · solo A acierta 0,12 · solo B acierta 0,08 · ninguno 0,14 (así A = 0,66 + 0,12 y B = 0,66 + 0,08).
-//  · Una «evaluación» es una muestra de n casos tomada con rng(semilla) del kit (PRNG determinista, sin generador aleatorio del navegador).
-//  · «Mismos casos»: una sola muestra de n casos que se califica con A y con B (la diferencia usa los pares).
-//    «Casos distintos»: dos muestras independientes de n casos, una para cada sistema.
-//  · «Repetir la evaluación» = 500 evaluaciones con semillas fijas; se cuenta cuántas veces A queda estrictamente por delante de B.
-// El mismo cálculo se verifica con `npx tsx src/content/courses/ia-generativa/lessons/evaluar/check-sim.ts`.
+// Cómo se generan los datos (simulación; la escena la rotula así):
+//  · Un sistema con exactitud real del 78 %: cada «evaluación» es una muestra de n casos tomada con rng(semilla) del kit.
+//    Tu evaluación (la primera) se fija en 78 de 100; las otras 99 son simuladas. Con 400 casos se repiten otras 100.
+//  · Dos sistemas, A (78 % real) y B (74 % real), calificados con LOS MISMOS casos. Sus aciertos están correlacionados, como
+//    pasa con dos modelos ante las mismas preguntas: en cada caso, ambos aciertan con probabilidad 0.66, solo A 0.12, solo B 0.08
+//    y ninguno 0.14 (así A = 0.66 + 0.12 y B = 0.66 + 0.08). Para la comparación con casos distintos, cada sistema tiene su muestra.
+//  · «Repetir la comparación» = 100 evaluaciones con semillas fijas; se cuenta en cuántas A queda estrictamente por delante.
+//  · Las semillas base (25574, 9511 y 49) se eligieron con una búsqueda para que los conteos mostrados sean típicos (iguales al valor
+//    esperado redondeado, calculado de forma exacta con la distribución multinomial en verify-data.ts) y la «montaña» de 100 resultados
+//    se parezca a la distribución binomial esperada; no cambian ninguna regla.
 import { rng } from '../../../../../theme/kit';
 
 export const Z95 = 1.959964;
-
-/** Intervalo de Wilson (1927) para una proporción k/n. */
-export function wilson(k: number, n: number, z = Z95): [number, number] {
-  if (n <= 0) return [0, 1];
-  const p = k / n, z2 = z * z, den = 1 + z2 / n;
-  const c = (p + z2 / (2 * n)) / den, h = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / den;
-  return [Math.max(0, c - h), Math.min(1, c + h)];
-}
-
-/** Margen aproximado (mitad del ancho) del intervalo al 95 % para una nota p con n casos. */
+/** Margen (mitad del intervalo de confianza al 95 %, aproximación normal) para una proporción p medida con n casos. */
 export const margin = (p: number, n: number) => Z95 * Math.sqrt((p * (1 - p)) / n);
 
-// ── los dos sistemas ────────────────────────────────────────────────────────
+// ── un sistema ───────────────────────────────────────────────────────────────────────────────────
+export const P_TRUE = 0.78;
+export const REPS = 100;
+const ONE_BASE = 25574;
+function countOk(n: number, p: number, seed: number) { const r = rng(seed); let k = 0; for (let i = 0; i < n; i++) if (r() < p) k++; return k; }
+const oneMemo = new Map<number, number[]>();
+/** Exactitud medida (en %) de 100 evaluaciones con n casos. Con n = 100 la primera es «tu evaluación»: 78 de 100. */
+export function oneRuns(n: number): number[] {
+  const hit = oneMemo.get(n); if (hit) return hit;
+  let out: number[];
+  if (n === 100) out = [78, ...Array.from({ length: REPS - 1 }, (_, k) => countOk(100, P_TRUE, ONE_BASE * 104729 + k * 31))];
+  else out = Array.from({ length: REPS }, (_, k) => (100 * countOk(n, P_TRUE, ONE_BASE * 104729 + k * 31 + 999331)) / n);
+  oneMemo.set(n, out);
+  return out;
+}
+/** Redondeo «a la par» (78.5 → 78, 79.5 → 80): agrupa los resultados de 400 casos en columnas de 1 punto sin sesgarlos hacia arriba. */
+export const roundHalfEven = (v: number) => { const f = Math.floor(v), d = v - f; return Math.abs(d - 0.5) < 1e-9 ? (f % 2 === 0 ? f : f + 1) : Math.round(v); };
+/** Qué casos acierta «tu evaluación» (78 de 100), en orden fijo: para dibujar la cuadrícula. */
+export const YOUR_CASES: boolean[] = (() => {
+  const idx = Array.from({ length: 100 }, (_, i) => i), r = rng(2718);
+  for (let i = 99; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  const ok = Array(100).fill(true); idx.slice(0, 22).forEach((i) => (ok[i] = false));
+  return ok;
+})();
+/** Una cuadrícula de 100 casos para la evaluación k (k ≥ 1): qué acierta. Se usa al repetir la evaluación en pantalla. */
+export function casesOf(k: number): boolean[] {
+  if (k === 0) return YOUR_CASES;
+  const r = rng(ONE_BASE * 104729 + (k - 1) * 31), out: boolean[] = [];
+  for (let i = 0; i < 100; i++) out.push(r() < P_TRUE);
+  return out;
+}
+
+// ── dos sistemas ─────────────────────────────────────────────────────────────────────────────────
 export const PA = 0.78, PB = 0.74;
-export const Q11 = 0.66, Q10 = 0.12, Q01 = 0.08;          // ambos · solo A · solo B  (ninguno = 0,14)
-export const TRUE_DIFF = PA - PB;                          // 0,04
-export const N_STEPS = [10, 20, 30, 50, 100, 150, 200, 300, 400, 500, 750, 1000, 1500, 2000, 3000];
-export const REPS = 500;
+export const Q_BOTH = 0.66, Q_ONLY_A = 0.12, Q_ONLY_B = 0.08;
+export const N_STEPS = [25, 50, 100, 200, 400, 1000, 2000];
+export const N_IDX_100 = 2;
+const PAIR_BASE = 9511, INDEP_BASE = 49;
 
-export interface Sample { n: number; a: number; b: number; n10: number; n01: number; paired: boolean }
-
-export function sample(n: number, paired: boolean, seed: number): Sample {
-  const r = rng(seed);
-  let a = 0, b = 0, n10 = 0, n01 = 0;
-  if (paired) {
-    for (let i = 0; i < n; i++) {
-      const u = r();
-      if (u < Q11) { a++; b++; } else if (u < Q11 + Q10) { a++; n10++; } else if (u < Q11 + Q10 + Q01) { b++; n01++; }
-    }
-  } else {
-    for (let i = 0; i < n; i++) if (r() < PA) a++;
-    for (let i = 0; i < n; i++) if (r() < PB) b++;
-  }
-  return { n, a, b, n10, n01, paired };
+export interface Run { a: number; b: number }
+function pairRun(n: number, seed: number): Run {
+  const r = rng(seed); let a = 0, b = 0;
+  for (let i = 0; i < n; i++) { const u = r(); if (u < Q_BOTH) { a++; b++; } else if (u < Q_BOTH + Q_ONLY_A) a++; else if (u < Q_BOTH + Q_ONLY_A + Q_ONLY_B) b++; }
+  return { a, b };
 }
+function indepRun(n: number, seed: number): Run { return { a: countOk(n, PA, seed), b: countOk(n, PB, seed + 7777) }; }
 
-/** Diferencia A − B (en proporción) con su intervalo al 95 %: por pares si son los mismos casos, independiente si no. */
-export function diffCI(s: Sample): { d: number; lo: number; hi: number; se: number } {
-  const n = s.n, d = (s.a - s.b) / n;
-  let se: number;
-  if (s.paired) { const m = (s.n10 + s.n01) / n; se = Math.sqrt(Math.max(0, (m - d * d) * (n / (n - 1))) / n); }
-  else { const pa = s.a / n, pb = s.b / n; se = Math.sqrt((pa * (1 - pa)) / n + (pb * (1 - pb)) / n); }
-  return { d, lo: d - Z95 * se, hi: d + Z95 * se, se };
-}
-
-export interface Repeated { n: number; paired: boolean; bins: Record<number, number>; winsA: number; ties: number; winsB: number; sig: number }
-
-const memo = new Map<string, Repeated>();
-/** 500 evaluaciones repetidas con n casos. Memoizado: es una función pura de (n, paired). */
-export function repeated(n: number, paired: boolean): Repeated {
-  const key = `${n}|${paired}`, hit = memo.get(key);
-  if (hit) return hit;
-  const bins: Record<number, number> = {};
-  let winsA = 0, ties = 0, winsB = 0, sig = 0;
-  for (let k = 0; k < REPS; k++) {
-    const s = sample(n, paired, 1000 + k * 7919 + n);
-    if (s.a > s.b) winsA++; else if (s.a === s.b) ties++; else winsB++;
-    const ci = diffCI(s);
-    if (ci.lo > 0) sig++;
-    const bin = Math.round(ci.d * 100);
-    bins[bin] = (bins[bin] ?? 0) + 1;
-  }
-  const out = { n, paired, bins, winsA, ties, winsB, sig };
+export interface Tally { n: number; runs: Run[]; winA: number; tie: number; winB: number; typical: number }
+const memo = new Map<string, Tally>();
+/** 100 comparaciones repetidas con n casos (mismos casos para A y B, o casos distintos). */
+export function tally(n: number, same = true): Tally {
+  const key = `${n}|${same}`, hit = memo.get(key); if (hit) return hit;
+  const runs = Array.from({ length: REPS }, (_, k) => (same ? pairRun(n, PAIR_BASE * 1000003 + k * 7919 + n) : indepRun(n, INDEP_BASE * 1000003 + k * 7919 + n)));
+  let winA = 0, tie = 0, winB = 0;
+  runs.forEach((r) => { if (r.a > r.b) winA++; else if (r.a === r.b) tie++; else winB++; });
+  // la evaluación «típica» que se dibuja con sus márgenes: la más cercana a lo esperado (A = 78 %, B = 74 %)
+  let typical = 0, best = Infinity;
+  runs.forEach((r, k) => { const dist = Math.abs(r.a - PA * n) + Math.abs(r.b - PB * n); if (dist < best - 1e-9) { best = dist; typical = k; } });
+  const out = { n, runs, winA, tie, winB, typical };
   memo.set(key, out);
   return out;
 }
 
-/** Una evaluación suelta (la que se resalta sobre el histograma). */
-// La semilla base (424259) se eligió para que la primera evaluación suelta de cada tamaño sea típica: diferencia cerca de +4 y, con 100 casos, un intervalo que incluye el 0.
-export const oneSample = (n: number, paired: boolean, draw: number) => sample(n, paired, 424259 + draw * 104729 + n);
-
-/** Tabla de la lección (calculada con el mismo código): para cada tamaño, % de evaluaciones con A por delante y con intervalo que excluye 0. */
-export function curveByN(paired: boolean) {
-  return N_STEPS.map((n) => { const r = repeated(n, paired); return { n, winsA: (100 * r.winsA) / REPS, sig: (100 * r.sig) / REPS }; });
-}
-
-/** Menor n de la cuadrícula con A por delante en al menos 95 de cada 100 evaluaciones (o null). */
-export function minNForClearWinner(paired: boolean): number | null {
-  for (const n of N_STEPS) if (repeated(n, paired).winsA / REPS >= 0.95) return n;
-  return null;
-}
+// ── contaminación (modelo simplificado, ilustrativo) ────────────────────────────────────────────
+/** A resuelve de verdad 70 de cada 100 preguntas; B, 76. Lo que A «vio» del examen lo acierta siempre (memoria). */
+export const ABILITY_A = 70, ABILITY_B = 76;
+/** Nota medida de A (de 100) si vio `seen` de las 100 preguntas: las vistas + el 70 % de las demás. */
+export const scoreA = (seen: number) => seen + (ABILITY_A * (100 - seen)) / 100;

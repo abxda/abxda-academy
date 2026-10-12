@@ -5,11 +5,11 @@ import type { Phi } from './toy';
 export interface Answer { es: string; en: string; phi: Phi }
 export interface Pair { id: string; es: string; en: string; A: Answer; B: Answer }
 
-/** Par de demostración de la narración (no entra en el entrenamiento del modelo de recompensa). La respuesta A es la preferida. */
+/** Pareja de la narración del paso dos (no entra en el entrenamiento del juez de juguete). La respuesta A es la preferida. */
 export const DEMO: Pair = {
   id: 'demo', es: '¿Cuál es la capital de España?', en: 'What is the capital of Spain?',
-  A: { es: 'Madrid.', en: 'Madrid.', phi: [1, 0, 0, 0] },
-  B: { es: 'Barcelona.', en: 'Barcelona.', phi: [0, 0, 0, 0] },
+  A: { es: 'Es Madrid.', en: 'It is Madrid.', phi: [1, 0, 0, 0] },
+  B: { es: 'Es Barcelona.', en: 'It is Barcelona.', phi: [0, 0, 0, 0] },
 };
 
 export const PAIRS: Pair[] = [

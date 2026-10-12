@@ -33,7 +33,7 @@ export const DOCS: Record<Lang, Doc[]> = {
     ] },
     { id: 'envios', title: 'Envíos', paras: [
       'Entregamos en 3 a 5 días hábiles en las ciudades principales y hasta en 10 días hábiles en el resto del país. Te enviamos el número de guía por correo al despachar el pedido.',
-      'El envío es gratis en compras mayores a $1,500. Por debajo de ese monto cuesta $250, sin importar el destino.',
+      'El envío es gratis en compras mayores a $1\u00A0500. Por debajo de ese monto cuesta $250, sin importar el destino.',
       'La bicicleta llega armada al 85 % y con una guía de montaje. Si prefieres, la armamos nosotros y la recoges en el taller sin costo adicional.',
     ] },
     { id: 'bateria', title: 'Batería y carga', paras: [

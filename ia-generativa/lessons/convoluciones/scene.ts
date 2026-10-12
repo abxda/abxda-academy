@@ -1,5 +1,6 @@
 // Escena: Convoluciones y visión. La convolución se calcula de verdad sobre una imagen de 16×16 píxeles:
 // ventana de 3×3 que recorre la imagen, kernels reales (Sobel, desenfoque, nitidez), mapas de características, pooling y la pila de capas.
+// La cuenta se explica con la ventana quieta, luego se recorre; la escena cambia sola de kernel (S.drive) y los «tu turno» son opcionales.
 import {
   alpha, badge, box, clamp, digitGrid, blur, inset, lerp, link, neu, regions, tone, upscale, type Frame, type Rect, type SceneFactory,
 } from '../../../../../theme/kit';
@@ -28,10 +29,12 @@ export const pool = (m: number[][]) => Array.from({ length: Math.floor(m.length 
 
 interface St { win?: { r: number; c: number }; lastPos?: number; seen: Record<string, boolean>; pick?: string }
 const stOf = (S: Frame): St => (S.st.s ??= { seen: {} });
+/** Progreso 0..1 entre las fracciones a y b del segmento k. */
+const fr = (S: Frame, k: string, a: number, b: number) => clamp(((S.t - S.start(k)) / Math.max(0.5, S.end(k) - S.start(k)) - a) / (b - a));
 
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'kern', kind: 'choice', label: { es: 'Kernel', en: 'Kernel' }, value: 'vert', from: 'try1', to: 'shared', options: KS.map((q) => ({ value: q.id, label: { es: q.es, en: q.en } })) },
+    { id: 'kern', kind: 'choice', label: { es: 'Kernel', en: 'Kernel' }, value: 'vert', from: 'kern-demo', to: 'shared', options: KS.map((q) => ({ value: q.id, label: { es: q.es, en: q.en } })) },
     { id: 'pos', kind: 'slider', label: { es: 'Posición de la ventana', en: 'Window position' }, min: 0, max: M * M - 1, step: 1, value: 20, from: 'try1', to: 'shared', fmt: (v) => `${Math.floor(v / M) + 1}, ${(v % M) + 1}` },
     { id: 'guess', kind: 'choice', label: { es: 'Mi predicción', en: 'My prediction' }, value: 'none', from: 'try2', to: 'history', options: [{ value: 'vert', label: { es: 'A · bordes verticales', en: 'A · vertical edges' } }, { value: 'horiz', label: { es: 'B · bordes horizontales', en: 'B · horizontal edges' } }, { value: 'blur', label: { es: 'C · desenfoque', en: 'C · blur' } }] },
   ],
@@ -39,15 +42,17 @@ const scene: SceneFactory = () => ({
 
   update(S) {
     const st = stOf(S);
+    // demostración: la misma ventana con otros pesos (desenfoque, nitidez) y de vuelta a los bordes
+    if (S.between('kern-demo', 'shared')) S.drive('kern', S.on('try1') ? 'vert' : ['blur', 'sharp', 'vert'][Math.min(2, Math.floor(fr(S, 'kern-demo', 0.15, 0.9) * 3))]);
     if (S.between('try1', 'shared')) {
       const pos = S.p.pos ?? 20;
       if (st.lastPos !== pos) { st.win = { r: Math.floor(pos / M), c: pos % M }; st.lastPos = pos; }
-      st.seen[S.p.kern ?? 'vert'] = true;
+      if (S.touched.has('kern')) st.seen[S.p.kern ?? 'vert'] = true;
       if (Object.keys(st.seen).length >= 3) S.complete('kernels');
     }
     if (S.between('try2', 'history')) {
       const g = S.p.guess; st.pick = g && g !== 'none' ? g : undefined;
-      if (st.pick === 'vert') S.complete('predict');
+      if (st.pick === 'vert' && S.touched.has('guess')) S.complete('predict');
     }
   },
 
@@ -87,10 +92,10 @@ function groupOf(S: Frame, seg = S.seg) {
   if (seg < id('shared')) return 'conv';
   if (seg < id('maps')) return 'shared';
   if (seg === id('maps')) return 'maps';
-  if (seg === id('pooling')) return 'pool';
+  if (seg >= id('pooling') && seg < id('hierarchy')) return 'pool';
   if (seg === id('hierarchy')) return 'hier';
   if (seg === id('cnn')) return 'cnn';
-  if (seg === id('try2')) return 'predict';
+  if (seg >= id('try2') && seg < id('history')) return 'predict';
   if (seg === id('history')) return 'history';
   if (seg === id('limits')) return 'limits';
   if (seg === id('recap')) return 'recap';
@@ -109,11 +114,12 @@ function layoutOf(S: Frame) {
 }
 
 const gray = (_S: Frame, v: number) => { const g = Math.round(255 * clamp(v)); return `rgb(${g},${g},${g})`; };   // brillo real: 0 = negro, 1 = blanco
-function drawImage(S: Frame, x: number, y: number, cs: number, data: number[][], o: { kind: 'gray' | 'signed'; scale?: number; a?: number; upto?: number } = { kind: 'gray' }) {
+function drawImage(S: Frame, x: number, y: number, cs: number, data: number[][], o: { kind: 'gray' | 'signed'; scale?: number; a?: number; upto?: number; only?: number } = { kind: 'gray' }) {
   const { d } = S, rows = data.length, cols = data[0].length;
   d.rect(x - 1, y - 1, cols * cs + 2, rows * cs + 2, { stroke: S.pal.lineStrong, lw: 1 });
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     if (o.upto !== undefined && r * cols + c >= o.upto) continue;
+    if (o.only !== undefined && r * cols + c !== o.only) continue;
     const v = data[r][c];
     const fill = o.kind === 'gray' ? gray(S, v) : v >= 0 ? alpha(tone(S, 'sig').c, clamp(v / (o.scale ?? 4)) * (o.a ?? 1)) : alpha(tone(S, 'err').c, clamp(-v / (o.scale ?? 4)) * (o.a ?? 1));
     d.rect(x + c * cs, y + r * cs, cs, cs, { fill });
@@ -153,17 +159,21 @@ function drawCost(S: Frame) {
 // ═════════ la convolución: imagen → kernel → salida ═════════
 function drawConv(S: Frame) {
   const { d, pal: p } = S, u = S.u, L = layoutOf(S), cs = L.cs;
-  const st = stOf(S), predict = S.is('try2');
-  const kid = predict ? (st.pick && st.pick !== 'none' ? st.pick : 'vert') : S.between('try1', 'shared') ? S.p.kern ?? 'vert' : S.is('horizontal') ? 'horiz' : 'vert';
+  const st = stOf(S), answer = S.is('predict-answer'), predict = S.is('try2') || answer;
+  const kid = answer ? 'vert' : predict ? (st.pick && st.pick !== 'none' ? st.pick : 'vert') : S.between('kern-demo', 'shared') ? S.p.kern ?? 'vert' : S.is('horizontal') ? 'horiz' : 'vert';
   const kd = kdef(kid), out = OUT[kid];
   const inOutputs = !S.between('idea', 'kernel') && !(predict && !st.pick);
-  // posición de la ventana
-  let win = { r: 0, c: 0 }, upto = M * M;
+  // posición de la ventana: quieta mientras se explica la cuenta, luego recorre la imagen
+  let win = { r: 0, c: 0 }, upto: number | undefined = M * M, only: number | undefined;
   if (S.is('idea')) { const k = S.at('idea', 0.4, 3.4, 'lin') * M * M; win = { r: Math.floor(k / M) % M, c: Math.floor(k) % M }; upto = 0; }
-  else if (S.is('kernel')) { const k = S.at('kernel', 1.2, 7.0, 'lin') * (M * M - 1); win = { r: Math.floor(k / M), c: Math.floor(k) % M }; upto = Math.floor(k) + 1; }
-  else if (S.between('try1', 'shared')) win = st.win ?? { r: 6, c: 6 };
-  else win = S.is('vertical') ? { r: 6, c: 1 } : S.is('horizontal') ? { r: 2, c: 7 } : { r: 6, c: 6 };
-  if (S.is('try2')) win = { r: 6, c: 1 };
+  else if (S.is('kernel')) { win = { r: 6, c: 1 }; upto = 0; }
+  else if (S.is('kernel-calc')) { win = { r: 6, c: 1 }; upto = undefined; only = fr(S, 'kernel-calc', 0.7, 0.8) > 0.5 ? 6 * M + 1 : -1; }
+  else if (S.is('kernel-slide')) { const k = fr(S, 'kernel-slide', 0.08, 0.92) * (M * M - 1); win = { r: Math.floor(k / M), c: Math.floor(k) % M }; upto = Math.floor(k) + 1; }
+  else if (S.is('vertical-weights')) win = { r: 0, c: 6 };   // zona pareja (fondo): la suma da 0
+  else if (S.is('vertical')) win = fr(S, 'vertical', 0.45, 0.5) < 0.5 ? { r: 0, c: 6 } : { r: 6, c: 1 };
+  else if (S.between('kern-demo', 'shared')) win = st.win ?? { r: 6, c: 6 };
+  else win = S.is('horizontal') ? { r: 2, c: 7 } : { r: 6, c: 6 };
+  if (predict) win = { r: 6, c: 1 };
   // etiquetas
   d.text(S.l('entrada (16×16)', 'input (16×16)'), L.img.x + cs, L.img.y - 6 * u, { size: 12, weight: 700, color: p.ink2 });
   d.text(S.l('salida (14×14)', 'output (14×14)'), L.out.x + cs, L.out.y - 6 * u, { size: 12, weight: 700, color: p.ink2 });
@@ -174,16 +184,16 @@ function drawConv(S: Frame) {
   d.rect(ix + win.c * cs, iy + win.r * cs, K * cs, K * cs, { stroke: hot, lw: 2.5, fill: alpha(hot, 0.12) });
   // salida
   const ox = L.out.x + cs, oy = L.out.y + cs;
-  const showOut = S.is('idea') ? false : S.is('kernel') ? true : !predict || !!st.pick;
+  const showOut = S.is('idea') ? false : answer || !predict || !!st.pick;
   if (showOut) {
-    drawImage(S, ox, oy, cs, out, { kind: kd.signed ? 'signed' : 'gray', scale: kd.scale, upto: S.is('kernel') ? upto : undefined });
+    drawImage(S, ox, oy, cs, out, { kind: kd.signed ? 'signed' : 'gray', scale: kd.scale, upto: S.between('kernel', 'vertical-weights') ? upto : undefined, only });
     d.rect(ox + win.c * cs, oy + win.r * cs, cs, cs, { stroke: hot, lw: 2.5 });
   } else d.rect(ox - 1, oy - 1, M * cs + 2, M * cs + 2, { stroke: p.line, lw: 1, dash: [4, 4] });
   void inOutputs;
   // kernel y cálculo
   const kx = L.ker.x, ky = L.ker.y, kc = (S.portrait ? 30 : 44) * u;
   if (!S.is('idea')) {
-    d.text(S.l('kernel', 'kernel') + (S.between('try1', 'shared') || predict ? ` · ${S.l(kd.es, kd.en)}` : ''), kx, ky - 8 * u, { size: 12, weight: 700, color: tone(S, 'w').ink });
+    d.text(S.l('kernel', 'kernel') + (S.between('kern-demo', 'shared') || predict ? ` · ${S.l(kd.es, kd.en)}` : ''), kx, ky - 8 * u, { size: 12, weight: 700, color: tone(S, 'w').ink });
     kd.k.forEach((row, r) => row.forEach((v, c) => {
       d.rect(kx + c * kc, ky + r * kc, kc - 3, kc - 3, { fill: alpha(tone(S, 'w').c, 0.08 + 0.3 * Math.min(1, Math.abs(v) / 2)), stroke: tone(S, 'w').c, lw: 1 });
       d.text(kd.id === 'blur' ? '1/9' : String(v), kx + c * kc + (kc - 3) / 2, ky + r * kc + (kc - 3) / 2, { size: 13, weight: 700, font: 'mono', color: tone(S, 'w').ink, align: 'center', base: 'middle' });
@@ -200,10 +210,11 @@ function drawConv(S: Frame) {
     void link; void box; void inset;
   }
   // mensajes de segmento
-  if (S.is('vertical') && S.at('vertical', 1.2, 2.0) > 0) d.withAlpha(S.at('vertical', 1.2, 2.0), () => { d.text(S.l('cian: borde que sube · rosa: borde que baja', 'cyan: rising edge · pink: falling edge'), L.R.x + L.R.w / 2, S.portrait ? L.ker.y + 3 * 30 * u + 14 * u + 6 * u + 66 * u + 26 * u : L.R.y + L.R.h - 6 * u, { size: 12, weight: 700, color: p.ink2, align: 'center', base: S.portrait ? 'top' : 'bottom', w: L.R.w }); });
-  if (S.is('try2')) {
+  if (S.is('vertical') && fr(S, 'vertical', 0.6, 0.72) > 0) d.withAlpha(fr(S, 'vertical', 0.6, 0.72), () => { d.text(S.l('cian: borde que sube · rosa: borde que baja', 'cyan: rising edge · pink: falling edge'), L.R.x + L.R.w / 2, S.portrait ? L.ker.y + 3 * 30 * u + 14 * u + 6 * u + 66 * u + 26 * u : L.R.y + L.R.h - 6 * u, { size: 12, weight: 700, color: p.ink2, align: 'center', base: S.portrait ? 'top' : 'bottom', w: L.R.w }); });
+  if (predict) {
     const R = L.R, y = R.y + R.h - (S.portrait ? 30 : 10) * u;
-    if (!st.pick) d.text(S.l('¿cuál resaltará mejor la franja vertical de la izquierda?', 'which will highlight the vertical stripe on the left best?'), R.x + R.w / 2, y, { size: 13, weight: 700, color: p.ink2, align: 'center', base: 'bottom', w: R.w });
+    if (answer) d.text(S.l('Los bordes verticales de la franja saltan a la vista.', 'The stripe’s vertical edges leap out.'), R.x + R.w / 2, y, { size: 13, weight: 700, color: tone(S, 'dat').ink, align: 'center', base: 'bottom', w: R.w });
+    else if (!st.pick) d.text(S.l('¿cuál resaltará mejor la franja vertical de la izquierda?', 'which will highlight the vertical stripe on the left best?'), R.x + R.w / 2, y, { size: 13, weight: 700, color: p.ink2, align: 'center', base: 'bottom', w: R.w });
     else d.text(st.pick === 'vert' ? S.l('Correcto: los bordes verticales de la franja saltan a la vista.', 'Correct: the stripe’s vertical edges leap out.') : st.pick === 'horiz' ? S.l('Casi no la resalta: solo responde en sus extremos. Prueba otro.', 'It barely highlights it: it only responds at its ends. Try another.') : S.l('No marca sus bordes: solo la suaviza. Prueba otro.', 'It does not mark its edges: it only smooths it. Try another.'), R.x + R.w / 2, y, { size: 13, weight: 700, color: st.pick === 'vert' ? tone(S, 'dat').ink : tone(S, 'err').ink, align: 'center', base: 'bottom', w: R.w });
   }
 }
@@ -255,7 +266,7 @@ function drawPool(S: Frame) {
   const x1 = S.portrait ? R.x + (R.w - pc * cs * 2) / 2 : R.x + R.w - pc * cs * 2 - 8 * u, y1 = S.portrait ? y0 + M * cs + 56 * u : y0;
   drawImage(S, x0, y0, cs, src.map((r) => r.map((v) => Math.abs(v) / 4)), { kind: 'gray' });
   d.text(S.l('mapa 14×14 (valor absoluto)', 'map 14×14 (absolute value)'), x0, y0 - 5 * u, { size: 12, weight: 700, color: p.ink2 });
-  const k = S.at('pooling', 0.6, 5.5, 'lin') * pc * pc, n = Math.floor(k);
+  const k = (S.is('pooling') ? fr(S, 'pooling', 0.15, 0.9) : 1) * pc * pc, n = Math.floor(k);
   drawImage(S, x1, y1, cs * 2, pl.map((r, i) => r.map((v, j) => (i * pc + j < n ? v / 4 : 0))), { kind: 'gray' });
   d.text(S.l('pooling 7×7 (máximo por bloque)', 'pooling 7×7 (max per block)'), x1, y1 - 5 * u, { size: 12, weight: 700, color: p.ink2 });
   const cur = Math.min(n, pc * pc - 1), pi = Math.floor(cur / pc), pj = cur % pc;

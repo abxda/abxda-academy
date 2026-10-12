@@ -2,6 +2,21 @@
 
 Para quien escriba una lección del curso (persona o agente). Lee antes: `docs/v2/CURRICULUM-MAP.md` (qué enseña cada lección y qué términos le pertenecen), `PRODUCT.md` (para quién es) y, sobre todo, la **lección de referencia**: `app/src/content/courses/ia-generativa/lessons/descenso-del-gradiente/` (`content.ts` y `scene.ts`). Copia su forma, no su contenido.
 
+## 0. Llevar de la mano (criterio vigente desde la revisión del 2026-10-11)
+
+Es lo primero y manda sobre todo lo demás. Nace de la revisión que hizo el autor de las lecciones 1–4 («enfócate en la claridad para usuarios novatos», «no abrumes, lleva de la mano», «un usuario que viene de TikTok difícilmente podrá interactuar de forma compleja; lo relevante es que aprenda»). La lección 1 (`que-es-aprender`) es el ejemplo de cómo se aplica.
+
+1. **Quien llega puede no haber visto nunca esto.** Ni un plano con dos ejes, ni una recta con pendiente, ni una fórmula. Nada se da por sabido: si se usa, se muestra y se nombra antes.
+2. **La lección enseña sola, como un video.** La escena hace cada demostración mientras la voz la explica (mueve el umbral, gira la recta, baja el punto) con `S.drive(id, valor)`: quien solo mira entiende todo. Interactuar es **opcional** («Si quieres, prueba…»), con uno o dos controles simples. Un «tu turno» nunca bloquea: si nadie toca nada, la lección sigue sola a los pocos segundos.
+3. **Una pieza por paso.** Si una idea tiene partes (los dos ejes de un plano; la pendiente y la ordenada de una recta; cada término de una fórmula), cada parte tiene su propio segmento y su propio cambio visible. Primero el eje horizontal y qué mide; luego el vertical; luego se ubica un punto avanzando y subiendo.
+4. **Concreto antes que general.** Un caso con números sencillos (peso uno, un medio, menos doce) antes de la regla general o del símbolo.
+5. **Nombrar cada cifra completa.** Nunca «tus dos cifras» ni «la segunda»: «aciertos con los treinta vistos» y «aciertos con los sesenta nuevos». La escena resalta la cifra de la que se habla.
+6. **No acelerar en lo nuevo.** Un término central (modelo, peso, pendiente, pérdida, gradiente) recibe 2–4 segmentos: qué es, cómo se ve, un ejemplo, para qué sirve. Ir rápido en lo conocido y despacio en lo nuevo.
+7. **Recordar lo que se mantiene.** Cuando un paso nuevo reutiliza algo anterior, decirlo («se mide con las mismas dos características»): el hilo se ve.
+8. **Palabras en inglés.** Se dice primero el término en español y, si aporta, el inglés («aprendizaje automático, en inglés machine learning»). La voz debe pronunciarlas bien: revisar el léxico de pronunciación.
+9. **Sin adornos.** Ningún recuadro, rótulo o animación que no enseñe algo. Si estorba a la vista o mueve la página, se quita.
+10. **Duración honesta.** Está bien pasar de 34 segmentos (hasta ~50) si cada uno enseña; la lección puede durar 10–13 min. Lo que no está bien es apretar.
+
 ## 1. A quién le hablas y cómo
 
 - Dos personas: **quien decide** (no es técnica, necesita criterio) y **quien estudia** (quiere la base, con fórmulas si las quiere). Ambas empiezan de cero *en el tema*; ninguna es tonta. Nunca condescender: sin «¡genial!», sin diminutivos, sin analogías infantiles. Sí: precisión, números reales, honestidad sobre límites.
@@ -13,7 +28,7 @@ Para quien escriba una lección del curso (persona o agente). Lee antes: `docs/v
 
 1. **Una frase, un cambio visible.** Cada segmento de narración (1–2 frases) provoca algo en pantalla. Nada aparece antes de que se explique. Si una frase no cambia nada en la imagen, probablemente es relleno.
 2. **De lo concreto a lo abstracto.** Primero un caso con números reales, luego la idea general, luego la fórmula (en «por dentro»).
-3. **Manipular para entender.** Cada lección tiene 1–3 *gates* «Tu turno»: la lección se detiene para que la persona mueva, arrastre o pulse algo y el resultado **enseñe** (no es decoración). Mejor «predice y comprueba» que «mira».
+3. **Mostrar y, si quiere, manipular.** Cada lección tiene 1–3 momentos «tu turno»: primero la escena muestra el efecto (demostración guiada con `S.drive`), luego invita a probar de forma opcional. El *gate* ya no detiene la lección: si nadie interactúa, sigue sola a los 6 s; si la persona toca un control, espera a «Continuar».
 4. **Construcción incremental.** La escena se arma pieza por pieza a lo largo de la lección. El último fotograma de cada segmento debe ser una buena imagen fija (la persona puede pausar ahí).
 5. **Honestidad.** Di lo que el método no puede hacer. Lo ilustrativo se rotula como tal («ilustrativo», «supuesto editable»). Cero cifras sin fuente.
 6. **Una sola idea central por lección**, con el hilo del curso: cada lección nace de la limitación de la anterior y termina con una pregunta que abre la siguiente (el puente).
@@ -27,7 +42,7 @@ Exporta `defineLesson({...})` (de `core/define`). Campos:
 |---|---|---|
 | `id` | id de la lección | igual al de la carpeta y al del currículo |
 | `objectives` | «Qué lograrás» | 3 por idioma, empiezan con verbo observable (explicar, predecir, calcular, reconocer) |
-| `segments` | la narración, por pasos | **22–34** segmentos; cada uno con `id` estable, `es`, `en`; opcionales `note`, `gate`, `pad`, `tts` |
+| `segments` | la narración, por pasos | **26–50** segmentos (los que haga falta para llevar de la mano); cada uno con `id` estable, `es`, `en`; opcionales `note`, `gate`, `pad`, `tts` |
 | `keyIdeas` | resumen | 4–5 por idioma |
 | `misconception` | «lo que mucha gente cree» | una creencia errónea común + su corrección |
 | `deeper` | «Por dentro» (Markdown + KaTeX + código) | secciones con `##`; fórmulas exactas; un fragmento de código **que funciona** con su salida esperada; qué viene después |
@@ -41,7 +56,8 @@ Exporta `defineLesson({...})` (de `core/define`). Campos:
 - **Longitud**: 12–32 palabras (≤ ~200 caracteres). Una idea. La voz dura ≈ caracteres/14 s.
 - **`id`**: kebab-case corto y estable. La escena depende de ellos.
 - **`note`** (5–8 por lección): una línea para el panel «Hasta ahora», solo donde **nace una idea** o regla.
-- **`gate`**: `{ id, prompt: {es,en} }`. El segmento anterior al gate **debe** invitar a actuar («Tu turno: …»). La escena llama `S.complete(id)` cuando la persona logró algo (o el gate queda abierto hasta «Continuar»). Pon `pad: 0.4` a los segmentos con gate para que su animación termine.
+- **`gate`**: `{ id, prompt: {es,en} }`. El segmento con gate invita **de forma opcional** («Si quieres, prueba…»); el `prompt` se muestra tras «Si quieres:» en el panel de controles, así que empieza en minúscula y es una acción concreta. La escena llama `S.complete(id)` cuando la persona logró algo. Si nadie interactúa, la lección sigue sola a los 6 s. Antes del gate, la escena ya mostró el efecto con `S.drive`. Pon `pad: 0.4` a los segmentos con gate para que su animación termine.
+- **Demostración guiada**: en `update(S)`, `S.drive('umbral', valor)` mueve un control (y su deslizador en pantalla) mientras la persona no lo haya tocado; `S.touched.has(id)` dice si ya lo tocó (cuenta solo lo que hizo la persona para completar un gate).
 - **`pad`**: segundos de silencio extra al final para que termine una animación larga.
 - **Pronunciación (voz sintética)**: escribe los números con letras en la narración («ciento setenta y cinco mil millones»). Símbolos y siglas: el léxico (`app/tools/tts/lexicon.json`) cubre las comunes (GPU, LLM, η, ∇…). Para algo especial usa `tts: { es: '...', en: '...' }` con el texto tal como debe sonar. Evita dígitos y símbolos sueltos en `es`/`en` si puedes: el validador te avisa.
 - **Puntuación = ritmo.** Usa comas y puntos para que la voz respire donde corresponde.

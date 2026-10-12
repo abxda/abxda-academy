@@ -1,14 +1,14 @@
 // Escena: El mundo hecho de números.
-// Una carita de 8×8 píxeles se convierte en grises, en matriz y en vector; la persona pinta, desenfoca (mezcla con el
-// promedio de los vecinos, 0–100 %), ve el color como tres canales (tensor), el sonido como muestras (con su reconstrucción
-// y el mínimo de muestreo) y el texto como códigos y vectores; cierra con MNIST, una foto de doce megapíxeles, la misma
-// foto reducida (AlexNet) y el puente hacia el primer modelo. Tres turnos interactivos: pintar, desenfocar y muestrear.
+// Una carita de 8×8 píxeles se convierte, paso a paso, en grises, en una tabla (matriz) y en una lista (vector); la escena
+// pinta, desenfoca y muestrea sola mientras la voz explica (S.drive), y quien quiera puede tomar los controles. Después: el
+// color como tres canales (tensor), el sonido como muestras y su reconstrucción, el texto como códigos y vectores, y la
+// escala real (MNIST, una foto de doce megapíxeles, la foto reducida). Todo se anima por fracciones de cada segmento.
 import {
   Plot, alpha, badge, box, callout, clamp, ease, inset, lerp, link, neu, regions, sprite, tone,
   type Frame, type PointerEvt, type Rect, type SceneFactory,
 } from '../../../../../theme/kit';
 import {
-  BLUR_LEVELS, BLUR_PCT, FACE_B, FEATURES, MIN_RATE, MNIST_LIKE, N, REC_N, SMILE_GRAY, SMILE_RGB, SND, WORDS,
+  BLUR_LEVELS, BLUR_PCT, FACE_B, FEATURES, HEART, MNIST_LIKE, N, REC_N, SMILE_GRAY, SMILE_RGB, SND, WORDS,
   boxBlur, clamp255, codesOf, colorOf, dist, grayCss, hood, mixRGB, sample, textOnGray, wave, type RGB,
 } from './helpers';
 
@@ -17,6 +17,22 @@ const NC = N * N;                                              // 64 píxeles
 const rowOf = (i: number) => Math.floor(i / N);
 const colOf = (i: number) => i % N;
 const sm = (x: number) => { const t = clamp(x); return t * t * (3 - 2 * t); };
+/** Duración (s) de un segmento: las voces y los idiomas duran distinto, así que se anima por fracciones de ella. */
+const dur = (S: Frame, k: string) => Math.max(1, S.end(k) - S.start(k));
+/** Progreso 0..1 entre las fracciones a y b del segmento k. */
+const fr = (S: Frame, k: string, a: number, b = a + 0.07, e: 'lin' | 'out' | 'io' = 'out') => S.at(k, a * dur(S, k), b * dur(S, k), e);
+/** Aparición estándar a una fracción del segmento. */
+const rv = (S: Frame, k: string, a: number, d = 0.07) => fr(S, k, a, a + d, 'out');
+/** El dibujo de ejemplo (un corazón) que la escena pinta sola, celda por celda. */
+const HEART_ORDER = HEART.map((v, i) => (v > 0 ? i : -1)).filter((i) => i >= 0);
+const demoPaint = (S: Frame): number[] => {
+  const k = S.on('paint-intro') ? HEART_ORDER.length : Math.round(fr(S, 'paint-demo', 0.12, 0.82, 'lin') * HEART_ORDER.length);
+  const v = Array(N * N).fill(0); HEART_ORDER.slice(0, k).forEach((i) => (v[i] = 255)); return v;
+};
+/** Paso de la ventana 3×3 que recorre la fila durante «blur-intro» (0..3). */
+const hoodStep = (S: Frame) => Math.min(3, Math.floor(fr(S, 'blur-intro', 0.1, 0.9, 'lin') * 4));
+/** Píxeles de ejemplo de «one-pixel»: uno del fondo (oscuro) y el brillo de la cara (claro). */
+const PX_DARK = 1, PX_LIGHT = 1 * 8 + 3;
 /** Tamaño de texto del lienzo: nunca menos de 12 px efectivos (size se multiplica por S.u). */
 const T = (S: Frame, px: number) => Math.max(px, 12 / S.u);
 /** Número grande con separador por idioma (espacio fino en español, coma en inglés), como en la lección de referencia. */
@@ -37,19 +53,23 @@ function win(S: Frame, a: string, b?: string, fi = 0.5, fo = 0.4) {
 
 // ── estado interactivo ────────────────────────────────────────────────────
 interface St {
-  paint: number[]; touched: boolean[]; cur: [number, number] | null; last: [number, number] | null; kb: [number, number] | null;
+  paint: number[]; touched: boolean[]; cur: [number, number] | null; last: [number, number] | null; kb: [number, number] | null; seeded: boolean;
   lv: number;          // nivel de desenfoque mostrado (suavizado)
   bad: boolean;        // ya se vio una onda que pierde su forma
 }
-const newSt = (): St => ({ paint: Array(NC).fill(0), touched: Array(NC).fill(false), cur: null, last: null, kb: null, lv: 0, bad: false });
+const newSt = (): St => ({ paint: Array(NC).fill(0), touched: Array(NC).fill(false), cur: null, last: null, kb: null, seeded: false, lv: 0, bad: false });
 const D = (S: Frame): St => (S.st.d ??= newSt());
-const paintOn = (S: Frame) => S.between('paint-intro', 'blur-intro');
+const paintOn = (S: Frame) => S.between('paint-demo', 'blur-intro');
+const userPainted = (S: Frame) => D(S).touched.some(Boolean);
 const brushOf = (S: Frame) => { const b = Number(S.p.brush); return Number.isFinite(b) ? b : 255; };
 const blurTarget = (S: Frame) => (S.on('blur-try') ? clamp(Math.round(Number(S.p.blur ?? 1)), 0, 4) : S.on('blur-numbers') ? 1 : 0);
 
 function paintCell(S: Frame, r: number, c: number) {
   if (r < 0 || r >= N || c < 0 || c >= N) return;
   const d = D(S), i = r * N + c;
+  // el primer trazo de la persona parte del dibujo de ejemplo que ya está en pantalla (no lo borra de golpe)
+  if (!d.seeded) { d.paint = demoPaint(S); d.seeded = true; }
+  S.touched.add('paint');
   d.paint[i] = brushOf(S); d.touched[i] = true; d.cur = [r, c];
 }
 function paintLine(S: Frame, a: [number, number], b: [number, number]) {
@@ -91,16 +111,16 @@ function gridState(S: Frame): GridState {
   else if (S.on('blur-intro')) {
     const lv = clamp(dd.lv, 0, 4), a = Math.floor(lv), b = Math.min(4, a + 1), f = lv - a;
     vals = BLUR_LEVELS[a].map((v, i) => lerp(v, BLUR_LEVELS[b][i], f)); smile = false;
-  } else if (S.on('paint-intro')) { vals = !dd.touched.some(Boolean) && S.on('neighbors') ? SMILE_GRAY : dd.paint; smile = false; }
+  } else if (S.on('paint-demo')) { vals = userPainted(S) ? dd.paint : S.on('neighbors') ? SMILE_GRAY : demoPaint(S); smile = false; }
   let picA = 1;
-  if (S.on('matrix')) picA = 1 - S.at('matrix', 0.2, 1.4);
-  if (S.on('paint-intro')) picA = S.at('paint-intro', 0, 0.6);
-  const grayK = S.at('brightness', 0, 1.2) * (1 - S.at('color-intro', 0, 1.0));
-  const numA = S.at('brightness', 1.8, 3.0, 'out') * (1 - S.at('color-intro', 0, 0.6));
+  if (S.on('matrix')) picA = 1 - fr(S, 'matrix', 0.5, 0.8);
+  if (S.on('paint-demo')) picA = fr(S, 'paint-demo', 0, 0.08);
+  const grayK = fr(S, 'brightness', 0.05, 0.25) * (1 - S.at('color-intro', 0, 1.0));
+  const numA = fr(S, 'matrix', 0.1, 0.35) * (1 - S.at('color-intro', 0, 0.6));
   let dip = 1;
-  for (const seg of ['paint-intro', 'blur-intro', 'color-intro']) if (S.on(seg) && S.since(seg) < 0.35) dip = 0.25 + 0.75 * (S.since(seg) / 0.35);
-  const hide = win(S, 'feature', 'paint-intro', 0.5, 0.15);   // en «feature» y «vector» el escenario es de la comparación
-  return { vals, smile, grayK, picA, numA, lines: S.reveal('pixels', 0, 0.8), alpha: dip * (1 - hide), idxA: S.reveal('matrix', 0.6, 0.6) };
+  for (const seg of ['paint-demo', 'blur-intro', 'color-intro']) if (S.on(seg) && S.since(seg) < 0.35) dip = 0.25 + 0.75 * (S.since(seg) / 0.35);
+  const hide = win(S, 'feature', 'paint-demo', 0.5, 0.15);   // en «feature» y «vector» el escenario es de la comparación
+  return { vals, smile, grayK, picA, numA, lines: rv(S, 'pixels', 0.35, 0.15), alpha: dip * (1 - hide), idxA: rv(S, 'grid-size', 0.3) };
 }
 const cellCss = (g: GridState, i: number) => {
   const v = clamp255(g.vals[i]);
@@ -144,7 +164,7 @@ function drawGrid(S: Frame, L: Lay, g: GridState, hl: Hl[] = []) {
 function gridTitle(S: Frame): string {
   if (S.on('color-intro')) return S.l('imagen en color', 'color image');
   if (S.on('blur-intro')) return S.l('matriz de brillos', 'brightness matrix');
-  if (S.on('paint-intro')) return S.on('neighbors') && !D(S).touched.some(Boolean) ? S.l('la carita: una matriz', 'the little face: a matrix') : S.l('tu dibujo: una matriz', 'your drawing: a matrix');
+  if (S.on('paint-demo')) return userPainted(S) ? S.l('tu dibujo: una matriz', 'your drawing: a matrix') : S.on('neighbors') ? S.l('la carita: una matriz', 'the little face: a matrix') : S.l('un dibujo: una matriz', 'a drawing: a matrix');
   if (S.on('matrix')) return S.l('matriz de números', 'matrix of numbers');
   if (S.on('brightness')) return S.l('imagen en grises', 'grayscale image');
   return S.l('imagen', 'image');
@@ -209,7 +229,12 @@ function brackets(S: Frame, x0: number, x1: number, y: number, h: number, c: str
 function stat(S: Frame, x: number, y: number, w: number, label: string, value: string, t: 'sig' | 'err' | 'w' | 'dat' | 'lat' | 'ink', a = 1) {
   const { d, pal: p } = S, tc = tone(S, t);
   d.withAlpha(a, () => {
-    d.text(label, x, y, { size: T(S, 13), weight: 600, color: p.ink2, base: 'middle' });
+    // si etiqueta y valor no caben juntos (teléfono pequeño), la etiqueta se achica y, si hace falta, se recorta con «…»
+    const vw = d.measure(value, { size: T(S, 15), weight: 700, font: 'mono' }), room = w - vw - 8 * S.u;
+    let ls = T(S, 13), lab = label;
+    while (ls > T(S, 12) && d.measure(lab, { size: ls, weight: 600 }) > room) ls -= 0.5;
+    while (lab.length > 4 && d.measure(lab, { size: ls, weight: 600 }) > room) lab = lab.slice(0, -2).trimEnd() + '…';
+    d.text(lab, x, y, { size: ls, weight: 600, color: p.ink2, base: 'middle' });
     d.text(value, x + w, y, { size: T(S, 15), weight: 700, font: 'mono', color: tc.ink, align: 'right', base: 'middle' });
     d.line(x, y + 11 * S.u, x + w, y + 11 * S.u, p.line, 1);
   });
@@ -247,14 +272,13 @@ const tagText = (S: Frame, text: string, x: number, y: number, t: 'sig' | 'err' 
 // ═════════════════════════════════════════════════════════════════════════
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'brush', kind: 'choice', label: { es: 'Pincel', en: 'Brush' }, value: 255, from: 'paint-intro', to: 'blur-intro',
+    { id: 'brush', kind: 'choice', label: { es: 'Pincel', en: 'Brush' }, value: 255, from: 'paint-intro', to: 'neighbors',
       options: [{ value: 255, label: { es: 'Blanco', en: 'White' } }, { value: 128, label: { es: 'Gris', en: 'Gray' } }, { value: 0, label: { es: 'Borrar', en: 'Erase' } }] },
-    { id: 'row', kind: 'slider', label: { es: 'Teclado: fila', en: 'Keyboard: row' }, min: 1, max: 8, step: 1, value: 4, from: 'paint-intro', to: 'blur-intro', fmt: (v) => String(v) },
-    { id: 'col', kind: 'slider', label: { es: 'Teclado: columna', en: 'Keyboard: column' }, min: 1, max: 8, step: 1, value: 4, from: 'paint-intro', to: 'blur-intro', fmt: (v) => String(v) },
-    { id: 'trail', kind: 'toggle', label: { es: 'Dejar rastro al mover fila y columna', en: 'Leave a trail when moving row and column' }, value: true, from: 'paint-intro', to: 'blur-intro' },
-    { id: 'clear', kind: 'button', label: { es: 'Limpiar', en: 'Clear' }, from: 'paint-intro', to: 'blur-intro' },
+    { id: 'row', kind: 'slider', label: { es: 'Teclado: fila', en: 'Keyboard: row' }, min: 1, max: 8, step: 1, value: 4, from: 'paint-intro', to: 'neighbors', fmt: (v) => String(v) },
+    { id: 'col', kind: 'slider', label: { es: 'Teclado: columna', en: 'Keyboard: column' }, min: 1, max: 8, step: 1, value: 4, from: 'paint-intro', to: 'neighbors', fmt: (v) => String(v) },
+    { id: 'clear', kind: 'button', label: { es: 'Limpiar', en: 'Clear' }, from: 'paint-intro', to: 'neighbors' },
     { id: 'blur', kind: 'slider', label: { es: 'Desenfoque', en: 'Blur' }, min: 0, max: 4, step: 1, value: 1, from: 'blur-try', to: 'color-intro', fmt: (v) => `${BLUR_PCT[Math.round(v)] ?? v} %` },
-    { id: 'rate', kind: 'slider', label: { es: 'Muestras por segundo', en: 'Samples per second' }, min: 200, max: 4000, step: 100, value: 2000, from: 'samples', to: 'text-codes', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US') },
+    { id: 'rate', kind: 'slider', label: { es: 'Muestras por segundo', en: 'Samples per second' }, min: 200, max: 4000, step: 100, value: 2000, from: 'sound-demo', to: 'sound-real', fmt: (v, l) => v.toLocaleString(l === 'es' ? 'es-MX' : 'en-US') },
     { id: 'word', kind: 'text', label: { es: 'Palabra', en: 'Word' }, value: 'Neu', maxLength: 8, placeholder: { es: 'escribe una palabra', en: 'type a word' }, from: 'text-codes', to: 'text-vectors' },
   ],
 
@@ -262,7 +286,7 @@ const scene: SceneFactory = () => ({
 
   action(S, id) {
     const d = D(S);
-    if (id === 'clear') { d.paint = Array(NC).fill(0); d.touched = Array(NC).fill(false); d.cur = null; d.last = null; }
+    if (id === 'clear') { d.paint = Array(NC).fill(0); d.touched = Array(NC).fill(false); d.seeded = true; d.cur = null; d.last = null; }
   },
 
   pointer(S, e: PointerEvt) {
@@ -279,18 +303,27 @@ const scene: SceneFactory = () => ({
   update(S) {
     const d = D(S);
     if (paintOn(S)) {
-      // teclado: mover fila y columna con el rastro activo pinta el camino recorrido
+      // teclado: mover fila y columna pinta el camino recorrido
       const kb: [number, number] = [clamp(Math.round(Number(S.p.row ?? 4)), 1, N) - 1, clamp(Math.round(Number(S.p.col ?? 4)), 1, N) - 1];
-      if (d.kb && (d.kb[0] !== kb[0] || d.kb[1] !== kb[1]) && S.p.trail !== false) paintLine(S, d.kb, kb);
+      if (d.kb && (d.kb[0] !== kb[0] || d.kb[1] !== kb[1]) && (S.touched.has('row') || S.touched.has('col'))) paintLine(S, d.kb, kb);
       d.kb = kb;
       if (d.touched.filter(Boolean).length >= 10) S.complete('paint');
+    }
+    // desenfoque: la escena lo sube sola del 25 % al 100 % mientras lo explica
+    if (S.between('blur-numbers', 'color-intro')) S.drive('blur', S.on('blur-try') ? Math.round(lerp(1, 4, fr(S, 'blur-try', 0.08, 0.6, 'io'))) : 1);
+    // muestreo: baja de 2 000 a 600 por segundo (la onda se deforma) y vuelve a 2 000
+    if (S.between('samples', 'sound-real')) {
+      let rate = 2000;
+      if (S.on('sound-demo')) rate = lerp(2000, 600, fr(S, 'sound-demo', 0.25, 0.6, 'io'));
+      if (S.on('sound-try')) rate = lerp(600, 2000, fr(S, 'sound-try', 0.04, 0.3, 'io'));
+      S.drive('rate', Math.round(rate / 100) * 100);
     }
     const tgt = blurTarget(S);
     d.lv += (tgt - d.lv) * (1 - Math.exp(-S.dt * 18));
     if (Math.abs(tgt - d.lv) < 0.004) d.lv = tgt;
-    if (S.between('blur-try', 'color-intro') && Number(S.p.blur ?? 1) >= 4) S.complete('blur');
-    // la compuerta del sonido se abre cuando la onda reconstruida ya no coincide con la original (≤ el doble del tono más rápido)
-    if (S.on('sound-try') && sample(Number(S.p.rate ?? 2000)).err > 0.05) { d.bad = true; S.complete('rate'); }
+    if (S.between('blur-try', 'color-intro') && S.touched.has('blur') && Number(S.p.blur ?? 1) >= 4) S.complete('blur');
+    // el «tu turno» del sonido se cumple cuando la persona baja tanto las muestras que la onda reconstruida ya no coincide
+    if (S.between('sound-try', 'sound-real') && S.touched.has('rate') && sample(Number(S.p.rate ?? 2000)).err > 0.05) { d.bad = true; S.complete('rate'); }
   },
 
   render(S) {
@@ -323,34 +356,27 @@ function drawWork(S: Frame, L: Lay) {
   const painting = paintOn(S);
 
   // marcas: resaltados según el segmento
-  if (S.between('brightness', 'matrix') && S.since('brightness') > 4.8) { hl.push({ i: 1 * N + 3, tone: 'err' }, { i: 2 * N + 2, tone: 'sig' }); }
+  if (S.between('one-pixel', 'matrix')) { if (rv(S, 'one-pixel', 0.15) > 0.5) hl.push({ i: PX_DARK, tone: 'w', lw: 3.5 }); if (rv(S, 'one-pixel', 0.55) > 0.5) hl.push({ i: PX_LIGHT, tone: 'sig', lw: 3.5 }); }
   if (S.between('color-intro', 'tensor')) hl.push({ i: FACE_PX, tone: 'sig' });
   if (S.between('blur-intro', 'blur-numbers')) {
-    const k = Math.min(3, Math.floor(S.since('blur-intro') / 1.3)), c = 2 + k;
+    const k = hoodStep(S), c = 2 + k;
     for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) hl.push({ i: (2 + dr) * N + c + dc, tone: 'sig', lw: dr === 0 && dc === 0 ? 3.5 : 1.6 });
   }
   // pintar: celda del teclado y celda bajo el puntero
-  if (painting) {
+  if (painting && S.on('paint-intro')) {
     const kr = clamp(Math.round(Number(S.p.row ?? 4)), 1, N) - 1, kc = clamp(Math.round(Number(S.p.col ?? 4)), 1, N) - 1;
     hl.push({ i: kr * N + kc, tone: 'sig', lw: 2, dash: [5, 3] });
     if (S.ptr.inside && !S.coarse) { const c = cellAt(L, S.ptr.x, S.ptr.y); if (c) hl.push({ i: c[0] * N + c[1], tone: 'ink', lw: 2 }); }
   }
   // vecindad: la última celda pintada y la de abajo
   const nb = neighborPair(S);
-  if (S.between('neighbors', 'blur-intro') && nb && S.since('neighbors') > 3.4) hl.push({ i: nb.a, tone: 'err', lw: 3.5 }, { i: nb.b, tone: 'dat', lw: 3.5 });
+  if (S.between('neighbors', 'blur-intro') && nb && rv(S, 'neighbors', 0.35) > 0.5) hl.push({ i: nb.a, tone: 'err', lw: 3.5 }, { i: nb.b, tone: 'dat', lw: 3.5 });
 
   drawGrid(S, L, g, hl);
 
-  // pista para empezar a pintar: desaparece con el primer trazo
-  if (painting && !S.on('neighbors') && !dd.touched.some(Boolean)) {
-    const hint = S.reveal('paint-intro', 0.8, 0.6) * (S.reduced ? 0.9 : 0.65 + 0.35 * Math.abs(Math.sin(S.clock * 2.2)));
-    d.withAlpha(hint * g.alpha, () => {
-      d.text(S.l('pinta aquí', 'paint here'), L.G.x + L.G.w / 2, L.G.y + L.G.h / 2, { size: Math.max(20, L.cell * 0.55 / u), weight: 800, color: p.ink, align: 'center', base: 'middle', halo: p.stage, haloW: 6 });
-    });
-  }
 
   // rótulo de la cuadrícula
-  d.withAlpha(S.reveal('hook', 0.2, 0.5) * g.alpha, () => {
+  d.withAlpha(rv(S, 'hook', 0.03) * g.alpha, () => {
     d.text(gridTitle(S), L.G.x, L.G.y - 28 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'bottom' });
   });
 
@@ -375,14 +401,16 @@ function drawAside(S: Frame, L: Lay, g: GridState, nb: { a: number; b: number } 
   if (aPix > 0) asidePixels(S, L, aPix);
   const aBr = win(S, 'brightness', 'matrix', 0.6, 0.4);
   if (aBr > 0) asideBrightness(S, A, aBr);
-  const aMat = win(S, 'matrix', 'flatten', 0.6, 0.4);
+  const aMat = win(S, 'matrix', 'flatten-why', 0.6, 0.4);
   if (aMat > 0) asideMatrix(S, A, aMat);
-  // la cinta (vector) vive desde «flatten» hasta «feature», y otra vez en el turno de pintar
-  const aFlat = win(S, 'flatten', 'feature', 0.2, 0.5) * (S.on('flatten') && !S.on('feature') ? S.at('flatten', 4.6, 5.4, 'out') : 1);
+  const aWhy = win(S, 'flatten-why', 'flatten', 0.6, 0.4);
+  if (aWhy > 0) asideWhy(S, A, aWhy);
+  // la cinta (vector) vive desde «flatten» hasta «feature», y otra vez en la parte de pintar
+  const aFlat = win(S, 'flatten', 'feature', 0.2, 0.5) * (S.on('flatten') && !S.on('feature') ? rv(S, 'flatten', 0.05) : 1);
   if (aFlat > 0) asideRibbon(S, L, g, aFlat, null, true);
-  const aFeat = win(S, 'feature', 'paint-intro', 0.6, 0.4);
+  const aFeat = win(S, 'feature', 'paint-demo', 0.6, 0.4);
   if (aFeat > 0) drawFeatureAct(S, L.all, aFeat);
-  const aPaint = win(S, 'paint-intro', 'blur-intro', 0.6, 0.4);
+  const aPaint = win(S, 'paint-demo', 'blur-intro', 0.6, 0.4);
   if (aPaint > 0) asideRibbon(S, L, g, aPaint, nb, false);
   const aHood = win(S, 'blur-intro', 'blur-numbers', 0.6, 0.4);
   if (aHood > 0) asideHood(S, L, aHood);
@@ -418,12 +446,12 @@ function asidePixels(S: Frame, L: Lay, a: number) {
   const anchorC = cellRect(L, (S.portrait ? 7 : 2) * N + 7), ax = anchorC.x + anchorC.w / 2, ay = anchorC.y + anchorC.h / 2;
   d.withAlpha(a, () => {
     if (S.portrait) {
-      d.withAlpha(S.reveal('pixels', 2.6, 0.6), () => d.text(S.l('8 × 8 = 64 píxeles', '8 × 8 = 64 pixels'), A.x + A.w / 2, A.y + A.h * 0.5, { size: 22, weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'middle' }));
+      d.withAlpha(rv(S, 'grid-size', 0.35), () => d.text(S.l('8 × 8 = 64 píxeles', '8 × 8 = 64 pixels'), A.x + A.w / 2, A.y + A.h * 0.5, { size: 22, weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'middle' }));
     } else {
-      d.withAlpha(S.reveal('pixels', 2.6, 0.6), () => d.text('8 × 8', A.x + A.w / 2, A.y + A.h * 0.42, { size: 48, weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'middle' }));
-      d.withAlpha(S.reveal('pixels', 2.6, 0.6), () => d.text(S.l('= 64 píxeles', '= 64 pixels'), A.x + A.w / 2, A.y + A.h * 0.42 + 46 * u, { size: 20, weight: 700, color: p.ink2, align: 'center', base: 'middle' }));
+      d.withAlpha(rv(S, 'grid-size', 0.35), () => d.text('8 × 8', A.x + A.w / 2, A.y + A.h * 0.42, { size: 48, weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'middle' }));
+      d.withAlpha(rv(S, 'grid-size', 0.7), () => d.text(S.l('= 64 píxeles', '= 64 pixels'), A.x + A.w / 2, A.y + A.h * 0.42 + 46 * u, { size: 20, weight: 700, color: p.ink2, align: 'center', base: 'middle' }));
     }
-    const s = S.reveal('pixels', 6.0, 0.6);
+    const s = rv(S, 'pixels', 0.55) * (1 - S.at('grid-size', 0, 0.4));
     d.withAlpha(s, () => {
       const tx = S.portrait ? A.x + A.w - 96 * u : A.x, ty = S.portrait ? A.y - 4 * u : ay - 22 * u;
       callout(S, S.l('un píxel', 'one pixel'), tx, ty, [ax, ay], { tone: 'sig', w: 92 * u, size: T(S, 13) });
@@ -431,36 +459,37 @@ function asidePixels(S: Frame, L: Lay, a: number) {
   });
 }
 
-// ── brightness: de 0 a 255 y un byte ──────────────────────────────────────
+// ── brightness / gray-mid / one-pixel: la escala de grises de 0 a 255 ─────
 function asideBrightness(S: Frame, A: Rect, a: number) {
   const { d, pal: p } = S, u = S.u;
-  const bw = Math.min(A.w - 8 * u, 440 * u), bx = A.x + (S.portrait ? 0 : 6 * u), by = A.y + (S.portrait ? 24 * u : Math.max(40 * u, (A.h - 240 * u) * 0.3)), bh = 20 * u;
-  d.withAlpha(a * S.reveal('brightness', 4.6, 0.7), () => {
+  const bw = Math.min(A.w - 8 * u, 440 * u), bx = A.x + (S.portrait ? 0 : 6 * u), by = A.y + (S.portrait ? 40 * u : Math.max(56 * u, (A.h - 160 * u) * 0.35)), bh = 20 * u;
+  d.withAlpha(a * rv(S, 'brightness', 0.3), () => {
     const n = 48;
     for (let k = 0; k < n; k++) d.rect(bx + (bw * k) / n, by, bw / n + 0.6, bh, { fill: grayCss(Math.round((255 * k) / (n - 1))) });
     d.rect(bx - 0.5, by - 0.5, bw + 1, bh + 1, { stroke: p.lineStrong, lw: 1.2 });
-    [[0, S.l('0 · negro', '0 · black'), 'left'], [0.5, S.l('128 · gris', '128 · gray'), 'center'], [1, S.l('255 · blanco', '255 · white'), 'right']].forEach(([f, lbl, al]) => {
-      const x = bx + bw * (f as number);
-      d.line(x, by + bh, x, by + bh + 5 * u, p.lineStrong, 1.5);
-      d.text(lbl as string, x, by + bh + 8 * u, { size: T(S, 13), weight: 700, font: 'mono', color: p.ink2, align: al as CanvasTextAlign, base: 'top' });
-    });
-    d.text(S.l('brillo de un píxel', 'brightness of a pixel'), bx, by - 8 * u, { size: T(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
-    // un byte: ocho bits
-    const s = S.reveal('brightness', 8.2, 0.7);
-    d.withAlpha(s, () => {
-      const yy = by + bh + 44 * u, bs = 20 * u, gap = 3 * u;
-      d.text(S.l('1 byte = 8 bits = 256 valores', '1 byte = 8 bits = 256 values'), bx, yy - 4 * u, { size: T(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
-      const rows: [number, string][] = [[0, '0'], [255, '255']];
-      rows.forEach(([v, lbl], r) => {
-        const y = yy + 4 * u + r * (bs + 6 * u);
-        const bits = v.toString(2).padStart(8, '0');
-        d.text(lbl, bx + 38 * u, y + bs / 2, { size: T(S, 13), weight: 700, font: 'mono', color: p.ink, align: 'right', base: 'middle' });
-        for (let k = 0; k < 8; k++) {
-          const x = bx + 48 * u + k * (bs + gap);
-          d.rect(x, y, bs, bs, { fill: bits[k] === '1' ? tone(S, 'dat').c : p.surface, stroke: p.lineStrong, lw: 1 });
-          d.text(bits[k], x + bs / 2, y + bs / 2, { size: T(S, 13), font: 'mono', weight: 700, color: bits[k] === '1' ? p.stage : p.ink2, align: 'center', base: 'middle' });
-        }
+    const marks: [number, string, CanvasTextAlign, number][] = [
+      [0, S.l('0 · negro', '0 · black'), 'left', rv(S, 'brightness', 0.45)],
+      [1, S.l('255 · blanco', '255 · white'), 'right', rv(S, 'brightness', 0.7)],
+      [128 / 255, S.l('128 · gris', '128 · gray'), 'center', rv(S, 'gray-mid', 0.6)],
+    ];
+    marks.forEach(([f, lbl, al, ma]) => {
+      if (ma < 0.01) return;
+      const x = bx + bw * f;
+      d.withAlpha(ma, () => {
+        d.line(x, by + bh, x, by + bh + 5 * u, p.lineStrong, 1.5);
+        d.text(lbl, x, by + bh + 8 * u, { size: T(S, 13), weight: 700, font: 'mono', color: p.ink2, align: al, base: 'top' });
       });
+    });
+    d.text(S.l('qué tan claro es un píxel', 'how light a pixel is'), bx, by - 34 * u, { size: T(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
+    // «gray-mid»: más grande = más claro
+    const gm = S.between('gray-mid', 'one-pixel') ? rv(S, 'gray-mid', 0.2) : 0;
+    if (gm > 0.01) { d.arrow(bx + bw * 0.2, by + bh + 40 * u, bx + bw * 0.8, by + bh + 40 * u, p.ink2, 2.5, 9, gm); d.text(S.l('número más grande = gris más claro', 'bigger number = lighter gray'), bx + bw / 2, by + bh + 48 * u, { size: T(S, 13), weight: 700, color: p.ink2, align: 'center', base: 'top', a: gm }); }
+    // «one-pixel»: dónde caen en la escala los dos píxeles señalados
+    if (S.on('one-pixel')) ([[PX_DARK, 0.15, 'w'], [PX_LIGHT, 0.55, 'sig']] as const).forEach(([i, f, t]) => {
+      const ma = rv(S, 'one-pixel', f + 0.05), v = SMILE_GRAY[i], x = bx + (bw * v) / 255, tc = tone(S, t);
+      if (ma < 0.01) return;
+      d.withAlpha(ma, () => { d.polygon([[x - 7 * u, by - 12 * u], [x + 7 * u, by - 12 * u], [x, by - 2 * u]], { fill: tc.c, stroke: p.stage, lw: 1 }); });
+      badge(S, String(v), x, by - 24 * u, { tone: t, a: ma, size: T(S, 13) });
     });
   });
 }
@@ -470,12 +499,31 @@ function asideMatrix(S: Frame, A: Rect, a: number) {
   const { d, pal: p } = S, u = S.u;
   d.withAlpha(a, () => {
     const cx = A.x + A.w / 2, ty = A.y + (S.portrait ? 14 * u : A.h * 0.3);
-    tagText(S, S.l('lo que recibe el modelo', 'what the model receives'), cx, ty, 'dat', S.reveal('matrix', 4.8, 0.5), 'center');
-    const s2 = S.reveal('matrix', 2.2, 0.6);
+    tagText(S, S.l('lo que recibe el modelo', 'what the model receives'), cx, ty, 'dat', rv(S, 'sees-numbers', 0.1), 'center');
+    const s2 = rv(S, 'matrix', 0.55);
     d.withAlpha(s2, () => {
       d.text(S.l('matriz de 8 filas y 8 columnas', 'matrix of 8 rows and 8 columns'), cx, ty + 32 * u, { size: T(S, 15), weight: 700, color: p.ink, align: 'center', base: 'top', w: A.w - 12 * u });
-      if (!S.portrait) neu(S, cx - 36 * u, ty + 90 * u, { scale: Math.max(3, Math.round(3.4 * u)), mood: 'wow', a: S.reveal('matrix', 6.0, 0.5) });
+      if (!S.portrait) neu(S, cx - 36 * u, ty + 90 * u, { scale: Math.max(3, Math.round(3.4 * u)), mood: 'wow', a: rv(S, 'sees-numbers', 0.45) });
     });
+  });
+}
+
+// ── flatten-why: en la lección 1 el modelo recibía una lista, no una tabla ──
+function asideWhy(S: Frame, A: Rect, a: number) {
+  const { d, pal: p } = S, u = S.u, tD = tone(S, 'dat');
+  const x = A.x + (S.portrait ? 4 : 12) * u, y = A.y + (S.portrait ? 14 * u : A.h * 0.28), cw = 64 * u, ch = 40 * u;
+  d.withAlpha(a, () => {
+    d.text(S.l('lección 1: un correo era una lista', 'lesson 1: an email was a list'), x, y, { size: T(S, 14), weight: 700, color: p.ink2, base: 'top', w: A.w - 16 * u });
+    const y1 = y + 30 * u;
+    [['4', S.l('enlaces', 'links')], ['22 %', S.l('mayúsculas', 'capitals')]].forEach(([v, l], k) => {
+      const bx = x + 10 * u + k * (cw + 8 * u);
+      d.rect(bx, y1, cw, ch, { fill: tD.soft, stroke: tD.c, lw: 1.5 });
+      d.text(v, bx + cw / 2, y1 + ch / 2, { size: T(S, 18), weight: 800, font: 'mono', color: tD.ink, align: 'center', base: 'middle' });
+      d.text(l, bx + cw / 2, y1 + ch + 4 * u, { size: T(S, 12), weight: 600, color: p.ink2, align: 'center', base: 'top' });
+    });
+    brackets(S, x + 2 * u, x + 18 * u + 2 * cw + 8 * u, y1 - 4 * u, ch + 8 * u, p.ink);
+    const t2 = rv(S, 'flatten-why', 0.6);
+    d.text(S.l('tabla de 8 × 8  →  una lista de 64', '8 × 8 table  →  one list of 64'), x, y1 + ch + 34 * u, { size: T(S, 15), weight: 800, color: p.ink, base: 'top', a: t2, w: A.w - 16 * u });
   });
 }
 
@@ -491,8 +539,9 @@ function asideRibbon(S: Frame, L: Lay, g: GridState, a: number, nb: { a: number;
   d.withAlpha(a, () => {
     d.text(S.l('vector: 64 números, fila tras fila', 'vector: 64 numbers, row after row'), A.x, hy, { size: T(S, 14), weight: 700, color: p.ink2, base: 'top' });
     // vuelo de las filas desde la cuadrícula
-    const t0 = S.since('flatten');
-    const fly = (i: number) => (S.on('flatten') && animate ? sm((t0 - 5.4 - rowOf(i) * 0.3 - colOf(i) * 0.02) / 1.0) : 1);
+    // las filas vuelan una tras otra entre el 10 % y el 85 % del segmento (en «unidades» de 3.6 de largo)
+    const t0 = fr(S, 'flatten', 0.1, 0.85, 'lin') * 3.6;
+    const fly = (i: number) => (S.on('flatten') && animate ? sm((t0 - rowOf(i) * 0.3 - colOf(i) * 0.02) / 1.0) : 1);
     d.withAlpha(0.35, () => { for (let i = 0; i < NC; i++) { const r = rCell(rg, rx, ry, i); d.rect(r.x, r.y, r.w, r.h, { stroke: p.line, lw: 1 }); } });
     for (let i = 0; i < NC; i++) if (fly(i) >= 0.999) ribbonCell(S, rg, rx, ry, i, vals[i], g.picA);
     ribbonFrame(S, rg, rx, ry);
@@ -508,7 +557,7 @@ function asideRibbon(S: Frame, L: Lay, g: GridState, a: number, nb: { a: number;
     if (reading && nb) {
       const ta = tone(S, 'err'), tb = tone(S, 'dat');
       const ra = rCell(rg, rx, ry, nb.a), rb = rCell(rg, rx, ry, nb.b);
-      const s = S.reveal('neighbors', 3.4, 0.7);
+      const s = rv(S, 'neighbors', 0.35);
       d.withAlpha(s, () => {
         d.rect(ra.x + 1, ra.y + 1, ra.w - 2, ra.h - 2, { stroke: ta.c, lw: 3 });
         d.rect(rb.x + 1, rb.y + 1, rb.w - 2, rb.h - 2, { stroke: tb.c, lw: 3 });
@@ -528,11 +577,11 @@ function asideRibbon(S: Frame, L: Lay, g: GridState, a: number, nb: { a: number;
       const lit = vals.filter((v) => v > 0).length, mean = vals.reduce((q, v) => q + v, 0) / NC;
       const c = dd.cur, w = S.portrait ? (A.w - 8 * u) / 2 : Math.min(A.w, 380 * u);
       const lines: [string, string, 'dat' | 'w' | 'sig'][] = [
-        [S.l('píxeles encendidos', 'lit pixels'), `${lit} / 64`, 'dat'],
+        [S.portrait ? S.l('encendidos', 'lit') : S.l('píxeles encendidos', 'lit pixels'), `${lit} / 64`, 'dat'],
         [S.l('brillo medio', 'mean brightness'), S.n(mean, 1), 'w'],
       ];
       if (c && !S.portrait) lines.push([S.l('último píxel (fila, columna)', 'last pixel (row, column)'), `(${c[0] + 1}, ${c[1] + 1}) = ${clamp255(vals[c[0] * N + c[1]])}`, 'sig']);
-      lines.forEach(([l, v, t], k) => stat(S, A.x + (S.portrait ? k * (w + 8 * u) : 0), by + (S.portrait ? 10 : 18) * u + (S.portrait ? 0 : k * 28 * u), w, l, v, t, S.reveal('paint-intro', 0.5, 0.5)));
+      lines.forEach(([l, v, t], k) => stat(S, A.x + (S.portrait ? k * (w + 8 * u) : 0), by + (S.portrait ? 10 : 18) * u + (S.portrait ? 0 : k * 28 * u), w, l, v, t, rv(S, 'paint-demo', 0.1)));
     }
   });
 }
@@ -540,11 +589,11 @@ function asideRibbon(S: Frame, L: Lay, g: GridState, a: number, nb: { a: number;
 // ── feature y vector: dos medidas frente a sesenta y cuatro (ocupa todo el escenario) ──
 function drawFeatureAct(S: Frame, all: Rect, a: number) {
   const { d, pal: p } = S, u = S.u, tD = tone(S, 'dat');
-  const showVec = S.on('vector') ? S.reveal('vector', 0.3, 0.7) : 0;
+  const showVec = S.on('vector') ? rv(S, 'vector', 0.05) : 0;
   const x0 = all.x + 12 * u, w = all.w - 24 * u, gx = x0 + 14 * u;
   d.withAlpha(a, () => {
     // fila 1: un correo con dos medidas (ilustrativo, como en la lección anterior); aparece cuando la narración llega a él
-    d.withAlpha(S.reveal('feature', 5.2, 0.7), () => {
+    d.withAlpha(rv(S, 'feature', 0.3), () => {
     const y1 = all.y + (S.portrait ? 40 : 54) * u, cw = clamp(w * 0.16, 62 * u, 96 * u), ch = 46 * u, gap = 8 * u;
     d.text(S.l('un correo', 'an email'), x0, y1 - 14 * u, { size: T(S, 15), weight: 700, color: p.ink2, base: 'bottom' });
     tagText(S, S.l('ilustrativo', 'illustrative'), x0 + w, y1 - 22 * u, 'mute', 1, 'right');
@@ -556,7 +605,7 @@ function drawFeatureAct(S: Frame, all: Rect, a: number) {
       d.text(lbl, x + cw / 2, y1 + ch + 6 * u, { size: T(S, 13), weight: 600, color: p.ink2, align: 'center', base: 'top' });
     });
     const fx = gx + 2 * cw + gap;
-    d.withAlpha(S.reveal('feature', 7.2, 0.6), () => d.text(S.l('2 características', '2 features'), fx + 22 * u, y1 + ch / 2, { size: T(S, 17), weight: 800, color: tD.ink, base: 'middle' }));
+    d.withAlpha(rv(S, 'feature', 0.6), () => d.text(S.l('2 características', '2 features'), fx + 22 * u, y1 + ch / 2, { size: T(S, 17), weight: 800, color: tD.ink, base: 'middle' }));
     brackets(S, gx - 9 * u, fx + 9 * u, y1 - 4 * u, ch + 8 * u, p.ink, showVec);
     d.withAlpha(showVec, () => tagText(S, S.l('vector de 2 números', 'vector of 2 numbers'), S.portrait ? x0 : fx + 22 * u + (S.lang === 'es' ? 150 : 120) * u, S.portrait ? y1 + ch + 36 * u : y1 + ch / 2 + 34 * u, 'w', 1, 'left'));
     });
@@ -572,10 +621,10 @@ function drawFeatureAct(S: Frame, all: Rect, a: number) {
     brackets(S, sx - 9 * u, sx + sw + 9 * u, sy - 4 * u, sh + 8 * u, p.ink, showVec);
     if (S.portrait) {
       const tx = gx + pw + 18 * u, tw = all.x + all.w - tx - 8 * u;
-      d.withAlpha(S.reveal('feature', 8.6, 0.6), () => d.text(S.l('64 características: una por píxel', '64 features: one per pixel'), tx, y2 + pw * 0.3, { size: T(S, 16), weight: 800, color: tD.ink, base: 'middle', w: tw }));
+      d.withAlpha(rv(S, 'feature', 0.8), () => d.text(S.l('64 características: una por píxel', '64 features: one per pixel'), tx, y2 + pw * 0.3, { size: T(S, 16), weight: 800, color: tD.ink, base: 'middle', w: tw }));
       d.withAlpha(showVec, () => tagText(S, S.l('vector de 64 números', 'vector of 64 numbers'), tx, y2 + pw * 0.78, 'w', 1, 'left'));
     } else {
-      d.withAlpha(S.reveal('feature', 8.6, 0.6), () => d.text(S.l('64 características: una por píxel', '64 features: one per pixel'), sx, sy + sh + 8 * u, { size: T(S, 17), weight: 800, color: tD.ink, base: 'top' }));
+      d.withAlpha(rv(S, 'feature', 0.8), () => d.text(S.l('64 características: una por píxel', '64 features: one per pixel'), sx, sy + sh + 8 * u, { size: T(S, 17), weight: 800, color: tD.ink, base: 'top' }));
       d.withAlpha(showVec, () => tagText(S, S.l('vector de 64 números', 'vector of 64 numbers'), sx, sy + sh + 42 * u, 'w', 1, 'left'));
     }
   });
@@ -584,7 +633,7 @@ function drawFeatureAct(S: Frame, all: Rect, a: number) {
 // ── blur-intro: la ventana 3×3 y su promedio ──────────────────────────────
 function asideHood(S: Frame, L: Lay, a: number) {
   const { d, pal: p } = S, A = L.A, u = S.u;
-  const k = Math.min(3, Math.floor(S.since('blur-intro') / 1.3)), c = 2 + k;
+  const k = hoodStep(S), c = 2 + k;
   const h = hood(SMILE_GRAY, 2, c), cs = clamp(Math.min(A.w * 0.2, A.h * 0.22), 28 * u, 44 * u);
   const x0 = A.x + (S.portrait ? 6 * u : A.w * 0.5 - cs * 1.5 - 60 * u), y0 = A.y + (S.portrait ? 32 * u : A.h * 0.28);
   d.withAlpha(a, () => {
@@ -659,7 +708,7 @@ function asideKernel(S: Frame, L: Lay, a: number) {
   const cs = clamp(Math.min(A.w * 0.12, A.h * 0.16), 24 * u, 40 * u), tcs = clamp(A.w * 0.012, 5, 8) * u;
   const x0 = A.x + 2 * u, y0 = A.y + (S.portrait ? 24 : 34) * u;
   const compact = S.portrait || A.w < 460 * u;   // teléfono vertical u horizontal: el demo va más junto y el rótulo debajo
-  const k0 = S.reveal('blur-reflect', 0.2, 0.6), kw = Math.max(cs * 3, compact ? 120 * u : 150 * u);
+  const k0 = rv(S, 'blur-reflect', 0.03), kw = Math.max(cs * 3, compact ? 120 * u : 150 * u);
   d.withAlpha(a, () => {
     // columna 1: la regla (promedio de la ventana completa)
     d.withAlpha(k0, () => {
@@ -673,7 +722,7 @@ function asideKernel(S: Frame, L: Lay, a: number) {
     });
     // columna 2: dos imágenes que difieren en seis píxeles y dan el mismo resultado
     const dx = x0 + kw + (compact ? 18 : 40) * u, dw = A.x + A.w - dx;
-    const ex = S.reveal('blur-reflect', 3.2, 0.6), rs = S.reveal('blur-reflect', 6.0, 0.6);
+    const ex = 0, rs = 0;   // (el ejemplo de dos imágenes con el mismo desenfoque se quitó: abrumaba)
     const th = tcs * N, gapy = (compact ? 24 : 30) * u, hlI = SMILE_GRAY.map((v, i) => (v !== FACE_B[i] ? i : -1)).filter((i) => i >= 0);
     const R = boxBlur(SMILE_GRAY), yB = y0 + th + gapy;
     const side = !compact, lblW = side ? 112 * u : 0;           // en horizontal el rótulo va a la derecha de la segunda imagen; en teléfono, debajo
@@ -693,7 +742,7 @@ function asideKernel(S: Frame, L: Lay, a: number) {
       thumb(S, rx, yr - th / 2, tcs, R, '');
       d.text(compact ? S.l('mismo resultado', 'same result') : S.l('con 100 %: el mismo resultado', 'at 100 %: the same result'), Math.min(rx + th / 2, A.x + A.w - 55 * u), yr + th / 2 + 4 * u, { size: T(S, 12), weight: 700, color: tone(S, 'dat').ink, align: 'center', base: 'top', w: compact ? 120 * u : 110 * u });
     });
-    tagText(S, S.l('esto es una convolución: la veremos', 'this is a convolution: coming up'), x0, A.y + A.h - 8 * u, 'mute', S.reveal('blur-reflect', 8.4, 0.6), 'left');
+    tagText(S, S.l('así trabaja una convolución', 'how a convolution works'), x0 + cs * 3 + 16 * u, y0 + cs * 1.5, 'mute', rv(S, 'blur-reflect', 0.45), 'left');
   });
 }
 
@@ -706,11 +755,11 @@ function asidePixelRGB(S: Frame, L: Lay, a: number) {
   d.withAlpha(a, () => {
     const bx0 = x0 + sw + 20 * u;   // el rótulo va sobre las barras: así el trazo de enlace con la cuadrícula no lo cruza
     d.text(S.l(`píxel (${rowOf(FACE_PX) + 1}, ${colOf(FACE_PX) + 1})`, `pixel (${rowOf(FACE_PX) + 1}, ${colOf(FACE_PX) + 1})`), S.portrait ? bx0 : x0, y0 - 12 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'bottom' });
-    d.withAlpha(S.reveal('color-intro', 1.4, 0.6), () => d.rect(x0, y0, sw, sw, { fill: colorOf(c[0], c[1], c[2]), stroke: tone(S, 'sig').c, lw: 3 }));
+    d.withAlpha(rv(S, 'color-intro', 0.15), () => d.rect(x0, y0, sw, sw, { fill: colorOf(c[0], c[1], c[2]), stroke: tone(S, 'sig').c, lw: 3 }));
     // enlace con la cuadrícula
-    d.withAlpha(S.reveal('color-intro', 1.4, 0.6), () => d.line(pr.x + pr.w, pr.y + pr.h / 2, x0, y0 + sw / 2, alpha(tone(S, 'sig').c, 0.7), 1.5, [4, 3]));
+    d.withAlpha(rv(S, 'color-intro', 0.15), () => d.line(pr.x + pr.w, pr.y + pr.h / 2, x0, y0 + sw / 2, alpha(tone(S, 'sig').c, 0.7), 1.5, [4, 3]));
     const bx = x0 + sw + 20 * u, bw = Math.max(60 * u, A.x + A.w - bx - 4 * u);
-    d.withAlpha(S.reveal('color-intro', 3.6, 0.8), () => CH_NAME.forEach((ch, k) => {
+    d.withAlpha(rv(S, 'color-intro', 0.45), () => CH_NAME.forEach((ch, k) => {
       const y = y0 + k * (sw / 3) + sw / 6, v = c[k];
       d.text(S.l(['rojo', 'verde', 'azul'][k], ['red', 'green', 'blue'][k]), bx, y, { size: T(S, 13), weight: 700, color: p.ink2, base: 'middle' });
       const lx = bx + 52 * u, bwid = Math.max(30 * u, bw - 52 * u - 40 * u);
@@ -720,7 +769,7 @@ function asidePixelRGB(S: Frame, L: Lay, a: number) {
       void ch;
     }));
     const ty = y0 + sw + 16 * u;
-    d.withAlpha(S.reveal('color-intro', 5.4, 0.6), () => {
+    d.withAlpha(rv(S, 'color-mix', 0.6), () => {
       d.text(`[ ${c[0]}, ${c[1]}, ${c[2]} ]`, x0, ty, { size: 22, weight: 800, font: 'mono', color: p.ink, base: 'top' });
       d.text(S.l('tres números: un vector de 3', 'three numbers: a vector of 3'), x0, ty + 32 * u, { size: T(S, 14), weight: 600, color: p.ink2, base: 'top' });
     });
@@ -745,7 +794,7 @@ function asideChannels(S: Frame, L: Lay, a: number) {
   const total = 3 * cs + 2 * gap, x0 = A.x + (A.w - total) / 2, y0 = A.y + (S.portrait ? 20 * u : Math.max(34 * u, (A.h - cs - 90 * u) * 0.4));
   d.withAlpha(a, () => {
     for (let k = 0; k < 3; k++) {
-      const s = S.reveal('channels', 0.2 + k * 0.45, 0.6);
+      const s = rv(S, 'channels', 0.1 + k * 0.08);
       const x = x0 + k * (cs + gap);
       d.withAlpha(s, () => {
         chanGrid(S, x, y0, cs, k);
@@ -753,7 +802,7 @@ function asideChannels(S: Frame, L: Lay, a: number) {
         d.text(String(SMILE_RGB[FACE_PX][k]), x + cs / 2, y0 + cs + 6 * u, { size: T(S, 15), weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'top' });
       });
     }
-    d.withAlpha(S.reveal('channels', 7.0, 0.6), () => {
+    d.withAlpha(rv(S, 'channels-count', 0.2), () => {
       d.text(S.l('8 × 8 × 3 = 192 números', '8 × 8 × 3 = 192 numbers'), A.x + A.w / 2, y0 + cs + 34 * u, { size: T(S, 17), weight: 800, font: 'mono', color: p.ink, align: 'center', base: 'top' });
     });
   });
@@ -767,10 +816,10 @@ function asideTensor(S: Frame, L: Lay, a: number) {
   const x0 = A.x + lblW + 2 * off, y0 = A.y + (S.portrait ? 26 * u : Math.max(60 * u, (A.h - cs) * 0.35)) + 2 * off;
   d.withAlpha(a, () => {
     for (let k = 2; k >= 0; k--) {
-      const f = S.reveal('tensor', 0.2, 0.7), x = x0 - k * off * f, y = y0 - k * off * f;
+      const f = rv(S, 'tensor', 0.02), x = x0 - k * off * f, y = y0 - k * off * f;
       chanGrid(S, x, y, cs, k, 1, false);
     }
-    const f = S.reveal('tensor', 0.6, 0.6);
+    const f = rv(S, 'tensor', 0.06);
     d.withAlpha(f, () => {
       d.text(S.l('ancho 8', 'width 8'), x0 + cs / 2, y0 + cs + 6 * u, { size: T(S, 13), weight: 700, color: p.ink2, align: 'center', base: 'top' });
       d.text(S.l('alto 8', 'height 8'), x0 - 2 * off - 6 * u, y0 + cs / 2, { size: T(S, 13), weight: 700, color: p.ink2, align: 'right', base: 'middle' });
@@ -783,7 +832,7 @@ function asideTensor(S: Frame, L: Lay, a: number) {
       [S.l('matriz', 'matrix'), S.l('2 ejes', '2 axes'), 'w'], [S.l('tensor', 'tensor'), S.l('3 o más', '3 or more'), 'lat'],
     ];
     items.forEach(([n, ax, t], k) => {
-      const s = S.reveal('tensor', 6.2 + k * 0.7, 0.5), y = ly + k * ls, tc = tone(S, t);
+      const s = rv(S, 'tensor', 0.5 + k * 0.07), y = ly + k * ls, tc = tone(S, t);
       d.withAlpha(s, () => {
         d.rect(lx, y, lw, ls - 8 * u, { fill: t === 'ink' ? p.surface2 : tc.soft, stroke: t === 'ink' ? p.lineStrong : tc.c, lw: k === 3 ? 2.5 : 1.5 });
         d.text(n, lx + 10 * u, y + (ls - 8 * u) / 2, { size: T(S, 15), weight: 800, color: t === 'ink' ? p.ink : tc.ink, base: 'middle' });
@@ -800,7 +849,7 @@ function drawSound(S: Frame) {
   const { d, pal: p } = S, u = S.u;
   const R = regions(S, S.portrait ? 0.62 : 0.7);
   const plot = new Plot(S, R.main, { xr: [0, SND.T], yr: [-1.3, 1.3], pad: { l: 14, b: 40, t: 22, r: 12 } });
-  const axA = S.reveal('sound-intro', 0, 0.8), rowY = plot.r.y + plot.r.h + 22 * u;   // fila bajo el eje: rótulos a la izquierda, «tiempo» a la derecha
+  const axA = rv(S, 'sound-intro', 0, 0.1), rowY = plot.r.y + plot.r.h + 22 * u;   // fila bajo el eje: rótulos a la izquierda, «tiempo» a la derecha
   plot.axes(axA);
   d.withAlpha(axA, () => {
     [0, 2, 4, 6, 8, 10].forEach((v) => { d.line(plot.X(v), plot.r.y + plot.r.h, plot.X(v), plot.r.y + plot.r.h + 4 * u, p.lineStrong, 1.5); d.text(String(v), plot.X(v), plot.r.y + plot.r.h + 7 * u, { size: T(S, 12), font: 'mono', color: p.mute, align: 'center', base: 'top' }); });
@@ -811,13 +860,13 @@ function drawSound(S: Frame) {
   const rate = clamp(Number(S.p.rate ?? 2000), 200, 4000);
   const sp = sample(rate);
   // la onda continua
-  const wv = S.at('sound-intro', 0.4, 3.2, 'io');
-  const faint = S.on('samples') && !S.on('sound-try') ? 0.4 : 1;
+  const wv = fr(S, 'sound-intro', 0.05, 0.4, 'io');
+  const faint = S.on('samples') && !S.on('sound-demo') ? 0.4 : 1;
   d.withAlpha(faint, () => plot.curve(wave, 'ink', 3, { to: SND.T * wv, n: 260 }));
   // las muestras: palitos y puntos (n = muestras por segundo / 100 en estos 10 ms)
-  const k = S.on('samples') ? S.at('samples', 0.2, 3.0, 'lin') : 0;
+  const k = S.on('samples') ? fr(S, 'samples', 0.1, 0.5, 'lin') : 0;
   if (k > 0) {
-    const nShow = Math.floor(k * sp.n + 0.0001), nUse = S.on('sound-try') ? sp.n : Math.max(1, nShow);
+    const nShow = Math.floor(k * sp.n + 0.0001), nUse = S.on('sound-demo') ? sp.n : Math.max(1, nShow);
     const dt = tone(S, 'w');
     const pts: [number, number][] = [];
     for (let i = 0; i < nUse; i++) {
@@ -826,7 +875,7 @@ function drawSound(S: Frame) {
       pts.push([x, y]);
     }
     // lo que reconstruiría un conversor ideal con esas muestras (la señal se repite cada 10 ms)
-    if (S.on('sound-try')) {
+    if (S.on('sound-demo')) {
       const at = (x: number) => { const f = clamp((x / SND.T) * REC_N, 0, REC_N), i0 = Math.min(REC_N - 1, Math.floor(f)); return clamp(lerp(sp.rec[i0], sp.rec[i0 + 1], f - i0), -1.27, 1.27); };
       plot.curve(at, 'err', 2.4, { dash: [6, 4], n: REC_N });
     }
@@ -836,9 +885,9 @@ function drawSound(S: Frame) {
     if (sp.n <= maxLbl) for (let i = 0; i < nUse; i++) d.text(String(Math.round(sp.v[i] * 100)), plot.X(sp.t[i]), plot.Y(sp.v[i]) + (sp.v[i] >= 0 ? -9 : 9) * u, { size: T(S, 12), font: 'mono', weight: 700, color: dt.ink, align: 'center', base: sp.v[i] >= 0 ? 'bottom' : 'top', halo: p.stage });
   }
   // rótulos de cada momento, en la fila bajo el eje (a la izquierda; no tapan la onda)
-  if (S.between('sound-intro', 'samples')) d.withAlpha(S.reveal('sound-intro', 1.0, 0.6), () => tagText(S, S.l('onda de presión', 'pressure wave'), plot.r.x, rowY + 7 * u, 'mute', 1, 'left'));
-  if (S.between('samples', 'sound-try')) d.withAlpha(S.reveal('samples', 3.4, 0.6), () => tagText(S, S.l('cada punto = una muestra', 'each dot = one sample'), plot.r.x, rowY + 7 * u, 'w', 1, 'left'));
-  if (S.on('sound-try')) d.withAlpha(S.reveal('sound-try', 0.6, 0.6), () => {
+  if (S.between('sound-intro', 'samples')) d.withAlpha(rv(S, 'sound-intro', 0.15), () => tagText(S, S.l('onda de presión', 'pressure wave'), plot.r.x, rowY + 7 * u, 'mute', 1, 'left'));
+  if (S.between('samples', 'sound-demo')) d.withAlpha(rv(S, 'samples', 0.6), () => tagText(S, S.l('cada punto = una muestra', 'each dot = one sample'), plot.r.x, rowY + 7 * u, 'w', 1, 'left'));
+  if (S.on('sound-demo')) d.withAlpha(rv(S, 'sound-demo', 0.2), () => {
     const fz = T(S, 13), lx = plot.r.x, ly = rowY + 7 * u, sw = 22 * u;
     d.line(lx, ly, lx + sw, ly, tone(S, 'ink').c, 3);
     d.text(S.l('original', 'original'), lx + sw + 6 * u, ly, { size: fz, weight: 700, color: p.ink2, base: 'middle' });
@@ -847,7 +896,7 @@ function drawSound(S: Frame) {
     d.text(S.l('reconstruida', 'rebuilt'), x2 + sw + 6 * u, ly, { size: fz, weight: 700, color: p.ink2, base: 'middle' });
   });
   // el micrófono (solo mientras se explica la señal)
-  const micA = win(S, 'sound-intro', 'samples', 0.6, 0.4) * S.reveal('sound-intro', 4.6, 0.6);
+  const micA = win(S, 'sound-intro', 'samples', 0.6, 0.4) * rv(S, 'sound-intro', 0.62);
   if (micA > 0) {
     const mc = Math.max(4, Math.round(5.5 * u)), mx = R.aside.x + (S.portrait ? R.aside.w * 0.5 - 5 * mc : 14 * u), my = R.aside.y + (S.portrait ? 6 * u : 40 * u);
     sprite(S, MIC, mx, my, mc, { a: micA });
@@ -858,7 +907,7 @@ function drawSound(S: Frame) {
 
 function drawSoundAside(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, sp: ReturnType<typeof sample>, rate: number) {
   const { d, pal: p } = S, A = R.aside, u = S.u;
-  const aSamp = win(S, 'samples', 'sound-reflect', 0.6, 0.5);
+  const aSamp = win(S, 'samples', 'sound-real', 0.6, 0.5);
   if (aSamp > 0) d.withAlpha(aSamp, () => {
     const lines: [string, string, 'w' | 'err' | 'dat'][] = [
       [S.l('muestras por s', 'samples per s'), big(S, rate), 'w'],
@@ -869,44 +918,17 @@ function drawSoundAside(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, sp:
     lines.forEach(([l, v, t], k) => stat(S, A.x, y + k * (S.portrait ? 22 : 28) * u, w, l, v, t));
     y += S.portrait ? 50 * u : 66 * u;
     // la lista de muestras (aparece cuando la narración dice «una lista»)
-    d.withAlpha(S.reveal('samples', 7.0, 0.6) + (S.on('sound-try') ? 1 : 0), () => {
+    d.withAlpha(S.on('samples-list') ? rv(S, 'samples-list', 0.25) : 0, () => {
       const nums = sp.v.slice(0, 9).map((v) => Math.round(v * 100)).join(', ');
       d.text(S.l('la lista que se guarda', 'the list that gets stored'), A.x, y, { size: T(S, 13), weight: 700, color: p.ink2, base: 'top' });
       d.text(`[ ${nums}${sp.n > 9 ? ', …' : ''} ]`, A.x, y + 20 * u, { size: T(S, 13), font: 'mono', weight: 600, color: p.ink, base: 'top', w: A.w - 4 * u });
     });
     y += (S.portrait ? 40 : 78) * u;
     // veredicto: ¿coincide la onda reconstruida con la original?
-    if (S.on('sound-try') && !S.on('sound-reflect')) {
+    if (S.on('sound-demo') && !S.on('sound-real')) {
       const lost = sp.err > 0.05, t = tone(S, lost ? 'err' : 'dat');
       d.text(lost ? S.l('Ya no coincide: se perdió información.', 'No longer matches: information was lost.') : S.l('Coincide con la original.', 'It matches the original.'), A.x, y, { size: T(S, S.portrait ? 14 : 15), weight: 800, color: t.ink, base: 'top', w: A.w - 4 * u });
     }
-    // sugerencia: el deslizador (se va al empezar el turno)
-    if (S.between('samples', 'sound-try')) d.withAlpha(S.reveal('samples', 4.2, 0.6) * 0.9, () => {
-      d.text(S.l('Prueba el deslizador de abajo ↓', 'Try the slider below ↓'), A.x, A.y + A.h - 2 * u, { size: T(S, 13), weight: 700, color: p.ink2, base: 'bottom' });
-    });
-  });
-  // la regla: más del doble de las veces por segundo que oscila el tono más rápido
-  const aRule = win(S, 'sound-reflect', 'sound-real', 0.7, 0.5);
-  if (aRule > 0) d.withAlpha(aRule, () => {
-    const bw = A.w - 10 * u, bx = A.x + 4 * u, by = A.y + (S.portrait ? 40 : 56) * u, bh = 14 * u, lo = 200, hi = 4000;
-    const X = (v: number) => bx + ((clamp(v, lo, hi) - lo) / (hi - lo)) * bw;
-    const ok = rate > MIN_RATE, tm = tone(S, ok ? 'dat' : 'err');
-    d.rect(bx, by, X(MIN_RATE) - bx, bh, { fill: tone(S, 'err').c, a: 0.75 });
-    d.rect(X(MIN_RATE), by, bx + bw - X(MIN_RATE), bh, { fill: tone(S, 'dat').c, a: 0.75 });
-    d.rect(bx - 0.5, by - 0.5, bw + 1, bh + 1, { stroke: p.lineStrong, lw: 1.2 });
-    d.line(X(MIN_RATE), by - 4 * u, X(MIN_RATE), by + bh + 5 * u, p.ink, 2);
-    d.text(big(S, MIN_RATE), X(MIN_RATE), by + bh + 8 * u, { size: T(S, 13), font: 'mono', weight: 700, color: p.ink, align: 'center', base: 'top' });
-    d.text(big(S, hi), bx + bw, by + bh + 8 * u, { size: T(S, 12), font: 'mono', weight: 600, color: p.mute, align: 'right', base: 'top' });
-    // marcador de la tasa actual y veredicto
-    const mx = X(rate), my = by - 6 * u;
-    d.polygon([[mx - 6 * u, my - 8 * u], [mx + 6 * u, my - 8 * u], [mx, my + 2 * u]], { fill: tm.c, stroke: p.stage, lw: 1 });
-    const mt = `${big(S, rate)} · ${ok ? S.l('se reconstruye', 'rebuilt') : S.l('se pierde', 'lost')}`, mw = d.measure(mt, { size: T(S, 14), weight: 800 });
-    d.text(mt, clamp(mx - mw / 2, A.x, A.x + A.w - mw), my - 12 * u, { size: T(S, 14), weight: 800, color: tm.ink, base: 'bottom' });
-    const y2 = by + bh + (S.portrait ? 34 : 40) * u, fz = T(S, 14);
-    const l1 = S.l(`tono más rápido: ${SND.f2} veces por segundo`, `fastest tone: ${SND.f2} times per second`), l2 = S.l(`mínimo: más de ${big(S, MIN_RATE)} muestras por segundo`, `minimum: more than ${big(S, MIN_RATE)} samples per second`);
-    const h1 = d.wrap(l1, A.w - 4 * u, { size: fz, weight: 700 }).length * 1.3 * fz * u;   // el segundo texto empieza donde acaba el primero, aunque el primero ocupe dos líneas
-    d.withAlpha(S.reveal('sound-reflect', 0.5, 0.6), () => d.text(l1, A.x, y2, { size: fz, weight: 700, color: p.ink2, base: 'top', w: A.w - 4 * u }));
-    d.withAlpha(S.reveal('sound-reflect', 4.3, 0.6), () => d.text(l2, A.x, y2 + h1 + 4 * u, { size: fz, weight: 800, color: p.ink, base: 'top', w: A.w - 4 * u }));
   });
   // el audio real: Whisper
   const aRef = win(S, 'sound-real', 'text-codes', 0.7, 0.5);
@@ -914,13 +936,13 @@ function drawSoundAside(S: Frame, R: { main: Rect; aside: Rect; all: Rect }, sp:
     const y = A.y + 8 * u, cx = A.x;
     d.text(S.l('un audio de voz para un modelo', 'a speech clip for a model'), cx, y, { size: T(S, 13), weight: 700, color: p.ink2, base: 'top', w: A.w - 4 * u });
     const y1 = y + (S.portrait ? 22 : 40) * u;
-    d.withAlpha(S.reveal('sound-real', 5.0, 0.6), () => { d.text(big(S, 16000), cx, y1, { size: S.portrait ? 24 : 32, weight: 800, font: 'mono', color: tone(S, 'w').ink, base: 'top' });
+    d.withAlpha(rv(S, 'sound-real', 0.46), () => { d.text(big(S, 16000), cx, y1, { size: S.portrait ? 24 : 32, weight: 800, font: 'mono', color: tone(S, 'w').ink, base: 'top' });
     d.text(S.l('muestras por segundo', 'samples per second'), cx, y1 + (S.portrait ? 28 : 40) * u, { size: T(S, 13), weight: 600, color: p.ink2, base: 'top' }); });
     const y2 = y1 + (S.portrait ? 54 : 84) * u;
-    d.withAlpha(S.reveal('sound-real', 8.4, 0.6), () => { d.text(big(S, 960000), cx, y2, { size: S.portrait ? 24 : 32, weight: 800, font: 'mono', color: tone(S, 'dat').ink, base: 'top' });
+    d.withAlpha(rv(S, 'sound-real', 0.78), () => { d.text(big(S, 960000), cx, y2, { size: S.portrait ? 24 : 32, weight: 800, font: 'mono', color: tone(S, 'dat').ink, base: 'top' });
     d.text(S.l('números en un minuto', 'numbers in one minute'), cx, y2 + (S.portrait ? 28 : 40) * u, { size: T(S, 13), weight: 600, color: p.ink2, base: 'top' }); });
-    if (!S.portrait) d.withAlpha(S.reveal('sound-real', 2.4, 0.6), () => tagText(S, S.l('Whisper (OpenAI, 2022)', 'Whisper (OpenAI, 2022)'), cx, y1 + 70 * u, 'mute', 1, 'left'));
-    else d.withAlpha(S.reveal('sound-real', 2.4, 0.6), () => tagText(S, 'Whisper (OpenAI, 2022)', A.x + A.w, y1 + 8 * u, 'mute', 1, 'right'));
+    if (!S.portrait) d.withAlpha(rv(S, 'sound-real', 0.22), () => tagText(S, S.l('Whisper (OpenAI, 2022)', 'Whisper (OpenAI, 2022)'), cx, y1 + 70 * u, 'mute', 1, 'left'));
+    else d.withAlpha(rv(S, 'sound-real', 0.22), () => tagText(S, 'Whisper (OpenAI, 2022)', A.x + A.w, y1 + 8 * u, 'mute', 1, 'right'));
   });
 }
 
@@ -953,15 +975,14 @@ function drawText(S: Frame) {
     const codeSz = clamp(h * 0.28, 16, 28), blockH = h + codeSz * 1.6 + 120 * u;
     const x0 = all.x + (all.w - total) / 2 + 2 * u, y0 = all.y + Math.max(8 * u, (all.h - blockH) * 0.4);
     if (!S.portrait) d.text(S.l('letras', 'letters'), all.x, y0 + h / 2, { size: T(S, 14), weight: 700, color: p.ink2, base: 'middle' });
-    letterRow(S, x0, y0, word, { cw, h, size: clamp(h * 0.5, 22, 46), codeSize: codeSz, codesA: S.reveal('text-codes', 3.0, 0.7) });
-    if (!S.portrait) d.withAlpha(S.reveal('text-codes', 3.0, 0.7), () => d.text(S.l('códigos', 'codes'), all.x, y0 + h + 3 * u + codeSz * 0.8 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'middle' }));
+    letterRow(S, x0, y0, word, { cw, h, size: clamp(h * 0.5, 22, 46), codeSize: codeSz, codesA: rv(S, 'text-codes', 0.3) });
+    if (!S.portrait) d.withAlpha(rv(S, 'text-codes', 0.3), () => d.text(S.l('códigos', 'codes'), all.x, y0 + h + 3 * u + codeSz * 0.8 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'middle' }));
     const codes = codesOf(word), ty = y0 + h + codeSz * 1.6 * u + 34 * u;
-    d.withAlpha(S.reveal('text-codes', 6.0, 0.7), () => {
+    d.withAlpha(rv(S, 'text-codes', 0.55), () => {
       d.text(S.l('la palabra, como lista de números', 'the word, as a list of numbers'), all.x + all.w / 2, ty, { size: T(S, 15), weight: 700, color: p.ink2, align: 'center', base: 'top' });
       d.text(`[ ${codes.join(', ')} ]`, all.x + all.w / 2, ty + 30 * u, { size: Math.min(40, 22 + all.w / 36), weight: 800, font: 'mono', color: tone(S, 'lat').ink, align: 'center', base: 'top', w: all.w });
     });
-    d.withAlpha(S.reveal('text-codes', 3.4, 0.6), () => tagText(S, S.l('código Unicode de cada letra', 'Unicode code of each letter'), all.x + all.w / 2, ty + 100 * u, 'mute', 1, 'center'));
-    d.withAlpha(S.reveal('text-codes', 4.2, 0.6) * 0.9, () => d.text(S.l('Prueba tu nombre abajo ↓', 'Try your name below ↓'), all.x + all.w, all.y + all.h - 2 * u, { size: T(S, 14), weight: 700, color: p.ink2, align: 'right', base: 'bottom' }));
+    d.withAlpha(rv(S, 'text-codes', 0.35), () => tagText(S, S.l('código Unicode de cada letra', 'Unicode code of each letter'), all.x + all.w / 2, ty + 100 * u, 'mute', 1, 'center'));
   });
   // 2 · un código es una etiqueta
   const aLim = win(S, 'text-limit', 'text-vectors', 0.7, 0.5);
@@ -975,17 +996,17 @@ function drawText(S: Frame) {
     const y0 = all.y + Math.max(6 * u, (all.h - totalH) / 2);
     const x0 = all.x + (S.portrait ? 2 * u : 10 * u);
     words.forEach((w, k) => {
-      const s = S.reveal('text-limit', [0.2, 3.0, 7.0][k], 0.6), y = y0 + rowTop(k);
+      const s = rv(S, 'text-limit', [0.02, 0.29, 0.62][k]), y = y0 + rowTop(k);
       d.withAlpha(s, () => letterRow(S, x0, y, w, { cw, h, size: clamp(h * 0.5, 18, 32), codeSize: codeSz, eq: k === 1 ? base : undefined, tone: k === 0 ? 'lat' : k === 1 ? 'err' : 'dat' }));
     });
     const nx = S.portrait ? all.x + 2 * u : x0 + 6 * cw + 36 * u, nw = S.portrait ? all.w : all.x + all.w - nx;
     const noteY = (k: number) => y0 + rowTop(k) + (S.portrait ? h + codeH + 4 * u : h * 0.15);
     const fz = S.portrait ? 14 : 17;
-    d.withAlpha(S.reveal('text-limit', 5.0, 0.6), () => {
+    d.withAlpha(rv(S, 'text-limit', 0.45), () => {
       tagText(S, S.l('casi mismos números', 'almost the same numbers'), nx, noteY(1) + 10 * u, 'err', 1, 'left');
       d.text(S.l('significado sin relación', 'unrelated meaning'), nx, noteY(1) + 28 * u, { size: T(S, fz), weight: 800, color: tone(S, 'err').ink, base: 'top', w: nw });
     });
-    d.withAlpha(S.reveal('text-limit', 9.2, 0.6), () => {
+    d.withAlpha(rv(S, 'text-limit', 0.85), () => {
       tagText(S, S.l('números sin relación', 'unrelated numbers'), nx, noteY(2) + 10 * u, 'dat', 1, 'left');
       d.text(S.l('significado cercano', 'close meaning'), nx, noteY(2) + 28 * u, { size: T(S, fz), weight: 800, color: tone(S, 'dat').ink, base: 'top', w: nw });
     });
@@ -1009,7 +1030,7 @@ function drawFeatureTable(S: Frame, all: Rect, sc: number) {
   const hy = y0 + headH - 6 * u;
   feats.forEach((f, k) => d.text(f, x0 + labW + k * cwv + cwv / 2, hy, { size: T(S, 14), weight: 700, color: p.ink2, align: 'center', base: 'middle' }));
   WORDS.forEach((w, r) => {
-    const s = S.reveal('text-vectors', 0.5 + r * 0.45, 0.5), y = hy + 16 * u + r * rh;
+    const s = rv(S, 'text-vectors', 0.05 + r * 0.045), y = hy + 16 * u + r * rh;
     d.withAlpha(s, () => {
       const hot = r === 0;
       if (hot && near) d.rect(x0 - 4 * u, y - 2 * u, labW + 4 * cwv + 8 * u, rh, { stroke: tone(S, 'sig').c, lw: 2.5, r: 3 });
@@ -1024,7 +1045,7 @@ function drawFeatureTable(S: Frame, all: Rect, sc: number) {
   const tableBottom = hy + 16 * u + WORDS.length * rh;
   const gatoVec = `${S.l('gato', 'cat')} = [ ${WORDS[0].f.map((v) => S.n(v, 1)).join(', ')} ]`;
   // vector de «gato»: a la derecha en horizontal; debajo en teléfono (y desaparece cuando entran las distancias)
-  const vecA = S.reveal('text-vectors', 3.2, 0.6) * (S.portrait ? 1 - S.at('text-near', 0, 0.5) : 1 - S.at('text-near', 0, 0.5));
+  const vecA = rv(S, 'text-vectors', 0.3) * (S.portrait ? 1 - S.at('text-near', 0, 0.5) : 1 - S.at('text-near', 0, 0.5));
   d.withAlpha(vecA, () => {
     if (S.portrait) d.text(gatoVec, x0, tableBottom + 14 * u, { size: Math.min(22, 13 + all.w / 40), weight: 800, font: 'mono', color: t.ink, base: 'top', w: all.w });
     else {
@@ -1041,8 +1062,8 @@ function drawFeatureTable(S: Frame, all: Rect, sc: number) {
     const bx = S.portrait ? all.x : x0 + labW + 4 * cwv + 40 * u, by = S.portrait ? tableBottom + 34 * u : y0 + headH + 26 * u;
     const bw = S.portrait ? all.w : all.x + all.w - bx;
     d.text(S.l('distancia a «gato»', 'distance to “cat”'), bx, by - 4 * u, { size: T(S, 15), weight: 700, color: p.ink2, base: 'bottom' });
-    hbars(S, { x: bx, y: by + 4 * u, w: bw, h: rest.length * rowBar }, rest.map((r, k) => ({ label: S.l(r.w.es, r.w.en), value: r.dd, tone: (k === 0 ? 'dat' : 'lat') as 'dat' | 'lat', hot: k === 0 })), { max: 2, fmt: (v) => S.n(v, 2), show: S.at('text-near', 0.3, 2.0, 'lin') * rest.length + 1, rowH: rowBar, labelW: 84 * u });
-    d.withAlpha(S.reveal('text-near', 2.4, 0.6), () => tagText(S, S.l('menos distancia = más parecido', 'less distance = more similar'), bx, by + 4 * u + rest.length * rowBar + 22 * u, 'dat', 1, 'left'));
+    hbars(S, { x: bx, y: by + 4 * u, w: bw, h: rest.length * rowBar }, rest.map((r, k) => ({ label: S.l(r.w.es, r.w.en), value: r.dd, tone: (k === 0 ? 'dat' : 'lat') as 'dat' | 'lat', hot: k === 0 })), { max: 2, fmt: (v) => S.n(v, 2), show: fr(S, 'text-near', 0.03, 0.17, 'lin') * rest.length + 1, rowH: rowBar, labelW: 84 * u });
+    d.withAlpha(rv(S, 'text-near', 0.2), () => tagText(S, S.l('menos distancia = más parecido', 'less distance = more similar'), bx, by + 4 * u + rest.length * rowBar + 22 * u, 'dat', 1, 'left'));
   });
 }
 
@@ -1053,21 +1074,21 @@ function drawMnist(S: Frame) {
   const { d, pal: p } = S, u = S.u, all = inset(S.full(), 16 * u);
   const cell = S.portrait ? Math.max(5, Math.min(Math.floor(all.w / 28), Math.floor((all.h * 0.44) / 28))) : Math.max(5, Math.min(Math.floor((all.h - 44 * u) / 28), Math.floor((all.w * 0.46) / 28)));
   const gs = cell * 28, gx = Math.round(S.portrait ? all.x + (all.w - gs) / 2 : all.x + 8 * u), gy = Math.round(S.portrait ? all.y + 8 * u : all.y + Math.max(4 * u, (all.h - gs - 36 * u) / 2));
-  d.withAlpha(S.reveal('mnist', 0, 0.8), () => {
+  d.withAlpha(rv(S, 'mnist', 0, 0.1), () => {
     for (let i = 0; i < 784; i++) d.rect(gx + (i % 28) * cell, gy + Math.floor(i / 28) * cell, cell, cell, { fill: grayCss(MNIST_LIKE[i]) });
     d.rect(gx - 0.5, gy - 0.5, gs + 1, gs + 1, { stroke: p.lineStrong, lw: 1.5 });
     tagText(S, S.l('ilustración con aspecto de MNIST', 'illustration in the style of MNIST'), gx, gy + gs + 18 * u, 'mute', 1, 'left');
   });
   const tx = S.portrait ? all.x + 4 * u : gx + gs + 40 * u, tw = S.portrait ? all.w - 8 * u : all.x + all.w - tx;
   const ty = S.portrait ? gy + gs + 34 * u : gy + 6 * u;
-  d.withAlpha(S.reveal('mnist', 3.0, 0.7), () => {
+  d.withAlpha(rv(S, 'mnist', 0.6), () => {
     d.text('28 × 28 = 784', tx, ty, { size: S.portrait ? 26 : 42, weight: 800, font: 'mono', color: tone(S, 'dat').ink, base: 'top' });
     d.text(S.l('números por imagen', 'numbers per image'), tx, ty + (S.portrait ? 34 : 56) * u, { size: T(S, S.portrait ? 15 : 18), weight: 700, color: p.ink2, base: 'top' });
   });
   const y2 = ty + (S.portrait ? 60 : 120) * u, rowGap = (S.portrait ? 50 : 70) * u;
   const rows: [number, string, 'dat' | 'sig', number][] = [[60000, S.l('para entrenar', 'for training'), 'dat', 1.0], [10000, S.l('para probar', 'for testing'), 'sig', 1.0 / 6]];
   rows.forEach(([n, lbl, t, f], k) => {
-    const s = S.reveal('mnist-sets', 0.8 + k * 2.2, 0.6);
+    const s = rv(S, 'mnist-sets', 0.1 + k * 0.33);
     d.withAlpha(s, () => {
       const y = y2 + k * rowGap, tc = tone(S, t), bw = Math.min(tw - 4 * u, 420 * u) * f;
       d.text(big(S, n), tx, y, { size: S.portrait ? 19 : 28, weight: 800, font: 'mono', color: tc.ink, base: 'top' });
@@ -1075,11 +1096,11 @@ function drawMnist(S: Frame) {
       d.rect(tx, y + (S.portrait ? 26 : 38) * u, Math.max(8 * u, bw), (S.portrait ? 12 : 16) * u, { fill: tc.c });
     });
   });
-  if (S.on('mnist-sets')) d.withAlpha(S.reveal('mnist-sets', 4.6, 0.6), () => {
+  if (S.on('mnist-sets')) d.withAlpha(rv(S, 'mnist-sets', 0.7), () => {
     const y = y2 + 2 * rowGap + (S.portrait ? 2 : 0) * u;
     d.text(S.l('las de prueba no se usan para entrenar: el modelo no las vio', 'the test ones are not used for training: the model did not see them'), tx, y, { size: T(S, S.portrait ? 13 : 15), weight: 600, color: p.ink2, base: 'top', w: tw - (S.portrait ? 0 : 84 * u) });
   });
-  if (!S.portrait) neu(S, all.x + all.w - 78 * u, all.y + all.h - 70 * u, { scale: Math.max(3, Math.round(3 * u)), mood: 'happy', a: S.reveal('mnist-sets', 5.0, 0.5) });
+  if (!S.portrait) neu(S, all.x + all.w - 78 * u, all.y + all.h - 70 * u, { scale: Math.max(3, Math.round(3 * u)), mood: 'happy', a: rv(S, 'mnist-sets', 0.75) });
 }
 
 function drawPhoto(S: Frame) {
@@ -1088,9 +1109,9 @@ function drawPhoto(S: Frame) {
   const pwid = S.portrait ? Math.min(all.w * 0.4, 120 * u) : Math.min(leftW - 100 * u, 340 * u), ph = { w: pwid, h: pwid * 0.75 };
   const off = (S.portrait ? 10 : 16) * u;
   const px = (S.portrait ? all.x + (all.w - ph.w) / 2 + off : all.x + 40 * u + 2 * off), py = all.y + (S.portrait ? 34 * u : Math.max(40 * u, (all.h - ph.h) / 2)) + 2 * off - (S.portrait ? 0 : 10 * u);
-  d.withAlpha(S.reveal('photo', 0, 0.8), () => {
+  d.withAlpha(rv(S, 'photo', 0, 0.1), () => {
     for (let k = 2; k >= 0; k--) {
-      const f = S.reveal('photo', 3.6, 0.7), x = px - k * off * f, y = py - k * off * f;
+      const f = rv(S, 'photo', 0.38), x = px - k * off * f, y = py - k * off * f;
       d.rect(x, y, ph.w, ph.h, { fill: colorOf(CH_COLOR[k][0] * 0.5, CH_COLOR[k][1] * 0.5, CH_COLOR[k][2] * 0.5), stroke: p.lineStrong, lw: 1.5 });
     }
     d.text(S.l('por ejemplo, 4000 × 3000 píxeles', 'for example, 4000 × 3000 pixels'), px + ph.w / 2 - (S.portrait ? off : 0), py + ph.h + 10 * u, { size: T(S, S.portrait ? 13 : 14), weight: 700, font: 'mono', color: p.ink2, align: 'center', base: 'top' });
@@ -1099,13 +1120,13 @@ function drawPhoto(S: Frame) {
   // escalera logarítmica: la carita, MNIST, la foto y la misma foto reducida (AlexNet)
   const R = S.portrait ? { x: all.x, y: all.y + 194 * u, w: all.w, h: all.h - 194 * u } : { x: all.x + all.w * 0.5, y: all.y, w: all.w * 0.5, h: all.h };
   const items: [number, string, 'dat' | 'w' | 'err' | 'lat', string, number][] = [
-    [64, S.l('carita 8 × 8', 'little face 8 × 8'), 'dat', 'photo', 1.2], [784, S.l('MNIST 28 × 28', 'MNIST 28 × 28'), 'w', 'photo', 1.9], [36000000, S.l('foto de 12 MP, en color', '12 MP color photo'), 'err', 'photo', 6.6],
-    [196608, S.l('reducida a 256 × 256 (AlexNet)', 'shrunk to 256 × 256 (AlexNet)'), 'lat', 'photo-shrink', 4.0],
+    [64, S.l('carita 8 × 8', 'little face 8 × 8'), 'dat', 'photo', 0.13], [784, S.l('MNIST 28 × 28', 'MNIST 28 × 28'), 'w', 'photo', 0.2], [36000000, S.l('foto de 12 MP, en color', '12 MP color photo'), 'err', 'photo', 0.7],
+    [196608, S.l('reducida a 256 × 256 (AlexNet)', 'shrunk to 256 × 256 (AlexNet)'), 'lat', 'photo-shrink', 0.4],
   ];
   const rowH = S.portrait ? 46 * u : clamp((R.h - 80 * u) / items.length, 40 * u, 84 * u), blockH = items.length * rowH + 40 * u, top = R.y + (S.portrait ? 28 * u : Math.max(40 * u, (R.h - blockH) / 2));
   const numW = (S.portrait ? 128 : 186) * u, bwMax = Math.max(60 * u, R.w - numW - 8 * u);
   const fOf = (n: number) => (Math.log10(n) - 0.5) / (7.7 - 0.5);
-  d.withAlpha(S.reveal('photo', 1.4, 0.6), () => {
+  d.withAlpha(rv(S, 'photo', 0.15), () => {
     d.text(S.l('números por ejemplo (escala logarítmica)', 'numbers per example (logarithmic scale)'), R.x, top - 18 * u, { size: T(S, 14), weight: 700, color: p.ink2, base: 'bottom', w: R.w });
     (bwMax * (3 / 7.2) < 78 * u ? [6] : S.portrait || bwMax * (2 / 7.2) < 84 * u ? [3, 6] : [2, 4, 6]).forEach((e) => {
       const x = R.x + bwMax * fOf(10 ** e);
@@ -1114,7 +1135,7 @@ function drawPhoto(S: Frame) {
     });
   });
   items.forEach(([n, lbl, t, seg, delay], k) => {
-    const s = S.reveal(seg, delay, 0.8), y = top + k * rowH, tc = tone(S, t), len = Math.max(6 * u, bwMax * fOf(n) * s);
+    const s = rv(S, seg, delay, 0.08), y = top + k * rowH, tc = tone(S, t), len = Math.max(6 * u, bwMax * fOf(n) * s);
     d.withAlpha(s, () => {
       d.text(lbl, R.x, y, { size: T(S, S.portrait ? 13 : 15), weight: 700, color: p.ink2, base: 'top', w: R.w });
       d.rect(R.x, y + (S.portrait ? 20 : 26) * u, len, (S.portrait ? 14 : 20) * u, { fill: tc.c });
@@ -1122,7 +1143,7 @@ function drawPhoto(S: Frame) {
     });
   });
   // cuántas veces menos números: 36 000 000 / 196 608 ≈ 183
-  const sh = S.reveal('photo-shrink', 9.4, 0.7);
+  const sh = rv(S, 'photo-shrink', 0.8);
   if (sh > 0) tagText(S, S.l('183 veces menos', '183× fewer'), R.x + R.w, top + 3 * rowH + (S.portrait ? 27 : 36) * u, 'lat', sh, 'right');
 }
 
@@ -1139,19 +1160,19 @@ function drawRecap(S: Frame) {
     : { x: all.x, y: all.y + 10 * u + i * ((all.h - 20 * u - bh) / 3), w: bw, h: bh }));
   const mid: Rect = S.portrait ? { x: all.x + all.w - bw * 0.95, y: all.y + 12 * u + 1.5 * (bh + 34 * u) + bh / 2 - 31 * u, w: bw * 0.95, h: 62 * u } : { x: all.x + all.w * 0.5 - bw * 0.5, y: all.y + all.h / 2 - 46 * u, w: bw, h: 92 * u };
   const out: Rect = S.portrait ? { x: mid.x + 6 * u, y: mid.y + mid.h + 44 * u, w: mid.w - 12 * u, h: 52 * u } : { x: all.x + all.w - bw * 0.85, y: all.y + all.h / 2 - 36 * u, w: bw * 0.85, h: 72 * u };
-  src.forEach((r, i) => { const s = S.reveal('recap', 0.2 + i * 0.4, 0.5); if (s > 0) box(S, r, labels[i], { tone: tones[i], a: s, size: T(S, S.portrait ? 14 : 17), active: !S.reduced && Math.floor(S.clock / 1.2) % 4 === i ? 1 : 0 }); });
-  const sm_ = S.reveal('recap', 5.0, 0.6);
+  src.forEach((r, i) => { const s = rv(S, 'recap', 0.02 + i * 0.035); if (s > 0) box(S, r, labels[i], { tone: tones[i], a: s, size: T(S, S.portrait ? 14 : 17), active: !S.reduced && Math.floor(S.clock / 1.2) % 4 === i ? 1 : 0 }); });
+  const sm_ = rv(S, 'recap', 0.43);
   if (sm_ > 0) box(S, mid, S.l('vector o tensor', 'vector or tensor'), { tone: 'dat', a: sm_, size: T(S, S.portrait ? 16 : 20) });
-  src.forEach((r, i) => { const a = S.at('recap', 5.0 + i * 0.1, 5.9 + i * 0.1); if (a > 0) link(S, r, mid, { tone: tones[i], progress: a, lw: 2 }); });
-  const so = S.reveal('recap', 8.0, 0.6);
-  if (so > 0) { box(S, out, S.l('modelo', 'model'), { tone: 'w', a: so, size: T(S, S.portrait ? 17 : 22) }); link(S, mid, out, { tone: 'ink', progress: S.at('recap', 8.0, 8.7), lw: 2.5 }); }
+  src.forEach((r, i) => { const a = fr(S, 'recap', 0.43 + i * 0.01, 0.51 + i * 0.01, 'io'); if (a > 0) link(S, r, mid, { tone: tones[i], progress: a, lw: 2 }); });
+  const so = rv(S, 'recap', 0.69);
+  if (so > 0) { box(S, out, S.l('modelo', 'model'), { tone: 'w', a: so, size: T(S, S.portrait ? 17 : 22) }); link(S, mid, out, { tone: 'ink', progress: fr(S, 'recap', 0.69, 0.75, 'io'), lw: 2.5 }); }
   void p;
 }
 
 function drawBridge(S: Frame) {
   const { d, pal: p } = S, u = S.u, cx = S.W / 2, cy = S.H / 2, sc = Math.max(5, Math.round(6 * u));
-  neu(S, cx - (24 * sc) / 2, cy - 100 * u, { scale: sc, mood: 'happy', a: S.reveal('bridge', 0.2, 0.6) });
-  d.withAlpha(S.reveal('bridge', 0.8, 0.6), () => {
+  neu(S, cx - (24 * sc) / 2, cy - 100 * u, { scale: sc, mood: 'happy', a: rv(S, 'bridge', 0.03) });
+  d.withAlpha(rv(S, 'bridge', 0.1), () => {
     d.text(S.l('Siguiente', 'Next'), cx, cy + 40 * u, { size: T(S, 13), weight: 700, color: p.mute, align: 'center' });
     d.text(S.l('Un modelo y su error', 'A model and its error'), cx, cy + 72 * u, { size: 24, weight: 800, align: 'center', w: S.W - 40 * u });
   });

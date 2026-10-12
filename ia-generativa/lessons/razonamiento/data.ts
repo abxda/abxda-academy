@@ -1,5 +1,5 @@
 // GENERADO por tools/build_data.py a partir de los resultados de tools/run_experiment.py. No editar a mano.
-// Qwen3.5-4B (Apache-2.0), fp8, vLLM; T = 0,7; presupuesto forzado. Ver los comentarios de esos guiones.
+// Qwen3.5-4B (Apache-2.0), fp8, vLLM; T = 0.7; presupuesto forzado. Ver los comentarios de esos guiones.
 export const BUDGETS = [0, 32, 64, 128, 256, 512, 1024, 2048, 4096] as const;
 /** lv: 0 = una operación, 1 = tres, 2 = siete, 3 = demostración (tren/tienda). L: longitud natural del pensamiento (-1 = más de 4096). A[s][b]: respuesta con el presupuesto b. */
 export interface Prob { id: string; lv: 0 | 1 | 2 | 3; expr: string; ans: number; L: number[]; A: (number | null)[][] }

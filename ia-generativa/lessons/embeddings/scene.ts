@@ -9,7 +9,7 @@ import { drawArith, drawLimits, drawTry2 } from './act-arith';
 import { drawBias } from './act-bias';
 import { drawBoard, drawMeasure, drawOrder, drawSearchAvg, drawSearchIntro, drawTry3 } from './act-search';
 import { drawBridge, drawRecap } from './act-close';
-import { actionArith, actionKnn, actionSearch, updateArith, updateKnn, updateSearch } from './logic';
+import { actionArith, actionKnn, actionSearch, arOf, knnOf, seOf, updateArith, updateKnn, updateSearch } from './logic';
 import { PRESETS, QUERIES } from './search';
 
 void PRESETS; void QUERIES;
@@ -32,6 +32,11 @@ const scene: SceneFactory = () => ({
 
   // El estado interactivo avanza siempre, aunque el escenario no se vea; render() solo dibuja.
   update(S) {
+    // mientras la persona no escriba ni pulse nada, la escena muestra sola tres ejemplos de la lista en cada «tu turno»
+    const cycle = (seg: string) => Math.min(2, Math.floor(((S.t - S.start(seg)) / Math.max(1, S.end(seg) - S.start(seg))) * 3));
+    if (S.is('try1') && !S.touched.has('w') && !S.touched.has('nextW')) knnOf(S).k = cycle('try1');
+    if (S.is('try2') && !S.touched.has('expr') && !S.touched.has('nextE') && !S.touched.has('excl')) arOf(S).k = cycle('try2');
+    if (S.is('try3') && !S.touched.has('qry') && !S.touched.has('nextQ')) seOf(S).k = cycle('try3');
     if (S.between('try1', 'polysemy')) updateKnn(S);
     if (S.between('try2', 'bias-intro')) updateArith(S);
     if (S.between('try3', 'order')) updateSearch(S);

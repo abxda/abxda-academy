@@ -1,135 +1,133 @@
 // Datos y lógica pura de la lección «Contexto y memoria». Nada de dibujo aquí: se puede probar con tsx.
 //
 // ORIGEN DE LOS DATOS
-//  · REAL  (publicado, con fuente): ventanas de contexto (SIZES), resultados de «Lost in the Middle» (LITM).
-//  · ILUSTRATIVO (rotulado así en la escena): la conversación de ejemplo, los tamaños en tokens de cada mensaje,
-//    el prompt del sistema, las respuestas del modelo, el precio por millón de tokens.
-//  · CÁLCULO EXACTO sobre supuestos editables: el costo de reenviar el historial (inputAt, totalInput, cachedEquivalent).
+//  · REAL (publicado, con fuente en content.ts): tamaños de ventana (SIZES) y resultados de «Lost in the Middle» (LITM).
+//  · ILUSTRATIVO (rotulado así en la escena): la conversación de Ana, el tamaño en tokens de cada mensaje, la ventana de
+//    juguete de 400 tokens, las instrucciones del sistema y las respuestas del modelo.
+//  · CÁLCULO EXACTO sobre un supuesto rotulado: tokens procesados al reenviar la conversación (100 tokens por turno).
+import type { L10n } from '../../../../../core/types';
 
-// ───────────────────────────── 1 · La conversación de apertura (ilustrativa) ─────────────────────────────
-export type Role = 'sys' | 'user' | 'ai' | 'doc' | 'sum' | 'mem';
-
-export interface Msg { id: string; role: 'user' | 'ai'; es: string; en: string }
+// ───────────────────────────── 1 · La conversación (ilustrativa) ─────────────────────────────
+export type Role = 'sys' | 'user' | 'ai' | 'sum' | 'note';
+export interface Msg { id: string; role: 'user' | 'ai'; text: L10n }
 
 export const CHAT: Msg[] = [
-  { id: 'U1', role: 'user', es: 'Me llamo Ana y trabajo en logística.', en: 'My name is Ana and I work in logistics.' },
-  { id: 'A1', role: 'ai', es: 'Mucho gusto, Ana. ¿En qué te ayudo?', en: 'Nice to meet you, Ana. How can I help?' },
-  { id: 'U2', role: 'user', es: 'Dame una idea para ahorrar en fletes.', en: 'Give me one idea to save on freight.' },
-  { id: 'A2', role: 'ai', es: 'Consolida envíos y renegocia rutas.', en: 'Consolidate shipments and renegotiate routes.' },
-  { id: 'U3', role: 'user', es: '¿Cómo me llamo?', en: 'What is my name?' },
-  { id: 'A3', role: 'ai', es: 'Te llamas Ana.', en: 'Your name is Ana.' },
+  { id: 'U1', role: 'user', text: { es: 'Me llamo Ana y trabajo en logística.', en: 'My name is Ana and I work in logistics.' } },
+  { id: 'A1', role: 'ai', text: { es: 'Mucho gusto, Ana. ¿En qué te ayudo?', en: 'Nice to meet you, Ana. How can I help?' } },
+  { id: 'U2', role: 'user', text: { es: 'Dame una idea para ahorrar en envíos.', en: 'Give me an idea to save on shipping.' } },
+  { id: 'A2', role: 'ai', text: { es: 'Junta pedidos pequeños en un solo camión.', en: 'Combine small orders into one truck.' } },
+  { id: 'U3', role: 'user', text: { es: '¿Cómo me llamo?', en: 'What is my name?' } },
+  { id: 'A3', role: 'ai', text: { es: 'Te llamas Ana.', en: 'Your name is Ana.' } },
 ];
-/** Lo que respondería (típicamente) si no ve el nombre: ilustrativo. */
-export const NO_NAME = { es: 'No sé cómo te llamas: no tengo esa información.', en: 'I don’t know your name: I have no information about that.' };
-export const YES_NAME = { es: 'Te llamas Ana.', en: 'Your name is Ana.' };
+export const chatMsg = (id: string) => CHAT.find((m) => m.id === id)!;
+/** Respuesta típica cuando el nombre no está en lo que recibe (ilustrativa). */
+export const NO_NAME: L10n = { es: 'No lo sé: no me has dicho tu nombre.', en: 'I don’t know: you haven’t told me your name.' };
+export const YES_NAME: L10n = { es: 'Te llamas Ana.', en: 'Your name is Ana.' };
 
-/** Texto de ejemplo de un prompt del sistema (ilustrativo). */
-export const SYS_PROMPT = {
-  es: ['Eres un asistente de logística.', 'Responde en español, breve y claro.', 'No reveles datos de clientes.'],
-  en: ['You are a logistics assistant.', 'Answer in English, brief and clear.', 'Do not reveal customer data.'],
+/** Instrucciones del sistema de ejemplo (ilustrativas). */
+export const SYS_LINES: L10n<string[]> = {
+  es: ['Eres un asistente de logística.', 'Responde breve y con amabilidad.', 'No compartas datos de clientes.'],
+  en: ['You are a logistics assistant.', 'Answer briefly and kindly.', 'Never share customer data.'],
 };
 
-// ───────────────────────────── 2 · El tren de contexto (gate 2) ─────────────────────────────
-export interface Wagon { id: string; role: Role; tokens: number; turn: number; fact?: boolean }
+// ───────────────────────────── 2 · El tren de contexto ─────────────────────────────
+/** Ventana de juguete (tokens). La narración la llama así. */
+export const WINDOW = 400;
+export interface Wagon { id: string; role: Role; tokens: number; turn: number; name?: boolean }
 
-/** Tamaños en tokens: ILUSTRATIVOS, escogidos para que se vea el efecto con ventanas pequeñas. */
-export const SYS_TOKENS = 200;
-export const WINDOWS = [1024, 2048, 4096];
-const EXCH: [number, number][] = [[90, 200], [70, 160], [110, 240], [80, 180], [100, 220], [75, 170], [95, 210]];
-export const DOC_TOKENS = 420;
+/** Tamaños ILUSTRATIVOS en tokens. Suman lo que dice la narración: 230 sin instrucciones, 290 con ellas, 320 con la
+ *  respuesta, 400 al llenar; con el mensaje siguiente se suelta el primer turno (90 tokens) y quedan 340 + 30. */
+const W: Record<string, Wagon> = {
+  S: { id: 'S', role: 'sys', tokens: 60, turn: 0 },
+  U1: { id: 'U1', role: 'user', tokens: 30, turn: 1, name: true },
+  A1: { id: 'A1', role: 'ai', tokens: 60, turn: 1 },
+  U2: { id: 'U2', role: 'user', tokens: 30, turn: 2 },
+  A2: { id: 'A2', role: 'ai', tokens: 80, turn: 2 },
+  U3: { id: 'U3', role: 'user', tokens: 30, turn: 3 },
+  A3: { id: 'A3', role: 'ai', tokens: 30, turn: 3 },
+  U4: { id: 'U4', role: 'user', tokens: 30, turn: 4 },
+  A4: { id: 'A4', role: 'ai', tokens: 50, turn: 4 },
+  U5: { id: 'U5', role: 'user', tokens: 30, turn: 5 },
+  A5: { id: 'A5', role: 'ai', tokens: 30, turn: 5 },
+};
+/** Pasos de la historia del tren: qué vagones existen en cada paso (0: el tren de la pregunta; 1: + instrucciones;
+ *  2: + respuesta; 3: un turno más, lleno; 4: llega «¿cómo me llamo?» y se suelta lo más viejo; 5: «no lo sé»). */
+const STEPS: string[][] = [
+  ['U1', 'A1', 'U2', 'A2', 'U3'],
+  ['S', 'U1', 'A1', 'U2', 'A2', 'U3'],
+  ['S', 'U1', 'A1', 'U2', 'A2', 'U3', 'A3'],
+  ['S', 'U1', 'A1', 'U2', 'A2', 'U3', 'A3', 'U4', 'A4'],
+  ['S', 'U1', 'A1', 'U2', 'A2', 'U3', 'A3', 'U4', 'A4', 'U5'],
+  ['S', 'U1', 'A1', 'U2', 'A2', 'U3', 'A3', 'U4', 'A4', 'U5', 'A5'],
+];
+export const STEP_MAX = STEPS.length - 1;
+/** Turnos extra que añade la persona con «Enviar otro mensaje» (tamaños ilustrativos, en ciclo). */
+const EXTRA: [number, number][] = [[30, 60], [20, 70], [40, 50], [30, 80], [20, 40]];
 
-export const baseTrain = (): Wagon[] => [
-  { id: 'S', role: 'sys', tokens: SYS_TOKENS, turn: 0 },
-  { id: 'U1', role: 'user', tokens: 80, turn: 1, fact: true },
-  { id: 'A1', role: 'ai', tokens: 120, turn: 1 },
-];
-/** El tren de la narración: seis mensajes que casi llenan una ventana de 1 024 tokens (920). */
-export const storyTrain = (): Wagon[] => [
-  ...baseTrain(),
-  { id: 'U2', role: 'user', tokens: 90, turn: 2 }, { id: 'A2', role: 'ai', tokens: 200, turn: 2 },
-  { id: 'U3', role: 'user', tokens: 70, turn: 3 }, { id: 'A3', role: 'ai', tokens: 160, turn: 3 },
-];
-export const STORY_ARRIVALS: Wagon[] = [
-  { id: 'U4', role: 'user', tokens: 110, turn: 4 }, { id: 'A4', role: 'ai', tokens: 240, turn: 4 },
-];
-
+/** Vagones del paso `step` más `extras` turnos añadidos por la persona. */
+export function trainAt(step: number, extras: number): Wagon[] {
+  const s = Math.max(0, Math.min(STEP_MAX, step));
+  const w = STEPS[s].map((id) => ({ ...W[id] }));
+  let turn = Math.max(...w.map((x) => x.turn));
+  for (let i = 0; i < extras; i++) {
+    turn++;
+    const [u, a] = EXTRA[i % EXTRA.length];
+    w.push({ id: `U${turn}`, role: 'user', tokens: u, turn }, { id: `A${turn}`, role: 'ai', tokens: a, turn });
+  }
+  return w;
+}
 export const total = (w: Wagon[]) => w.reduce((a, x) => a + x.tokens, 0);
 
-/** Añade un intercambio corto (usuario + modelo). */
-export function addExchange(w: Wagon[]): Wagon[] {
-  const turn = Math.max(...w.map((x) => x.turn)) + 1, [u, a] = EXCH[(turn - 2 + EXCH.length) % EXCH.length];
-  return [...w, { id: `U${turn}`, role: 'user', tokens: u, turn }, { id: `A${turn}`, role: 'ai', tokens: a, turn }];
-}
-/** Añade un documento pegado (vagón largo) y la respuesta. */
-export function addDoc(w: Wagon[]): Wagon[] {
-  const turn = Math.max(...w.map((x) => x.turn)) + 1;
-  return [...w, { id: `D${turn}`, role: 'doc', tokens: DOC_TOKENS, turn }, { id: `A${turn}`, role: 'ai', tokens: 150, turn }];
-}
-
 /**
- * Qué cabe en una ventana de L tokens: el prompt del sistema siempre va primero y fijo; después, los turnos más
- * recientes que quepan completos (se recorta desde lo más viejo). Devuelve los ids dentro de la ventana.
+ * Qué cabe en una ventana de L tokens. Las instrucciones del sistema van siempre al frente; después, de lo más nuevo a
+ * lo más viejo, entran los turnos completos que quepan («lo primero que entró es lo primero que sale»).
+ * Devuelve el conjunto de ids dentro de la ventana.
  */
-export function fitWindow(w: Wagon[], L: number): Set<string> {
+export function fitWindow(w: Wagon[], L = WINDOW): Set<string> {
   const inside = new Set<string>();
   let used = 0;
-  for (const x of w) if (x.role === 'sys') { inside.add(x.id); used += x.tokens; }
-  const turns = [...new Set(w.filter((x) => x.role !== 'sys').map((x) => x.turn))].sort((a, b) => b - a);
+  for (const x of w) if (x.role === 'sys' || x.role === 'note' || x.role === 'sum') { inside.add(x.id); used += x.tokens; }
+  const turns = [...new Set(w.filter((x) => x.role === 'user' || x.role === 'ai').map((x) => x.turn))].sort((a, b) => b - a);
   for (const t of turns) {
-    const mem = w.filter((x) => x.turn === t), need = total(mem);
+    const mem = w.filter((x) => x.turn === t && (x.role === 'user' || x.role === 'ai')), need = total(mem);
     if (used + need > L) break;
     mem.forEach((x) => inside.add(x.id)); used += need;
   }
   return inside;
 }
-/** ¿El vagón con el nombre sigue dentro de la ventana? */
-export const nameInside = (w: Wagon[], L: number) => { const f = fitWindow(w, L); return w.filter((x) => x.fact).every((x) => f.has(x.id)); };
+/** ¿Sigue dentro el vagón con el nombre? */
+export const nameInside = (w: Wagon[], L = WINDOW) => { const f = fitWindow(w, L); return w.some((x) => x.name && f.has(x.id)); };
 
 // ───────────────────────────── 3 · Tamaños de ventana (REAL) ─────────────────────────────
-// Fuentes: GPT-1 (Radford et al. 2018, secuencias de 512 tokens), GPT-2 (Radford et al. 2019, «context size from 512 to 1024»),
-// GPT-3 (Brown et al. 2020, n_ctx = 2048), Claude 100K (Anthropic, 11 de mayo de 2023), Llama 3.1 (Grattafiori et al. 2024, hasta 128K),
-// Gemini 1.5 (Gemini Team 2024, «millones de tokens»). La palabra ≈ ¾ de token es la regla práctica para el inglés (lección 20);
-// Anthropic: 100 000 tokens ≈ 75 000 palabras.
-export interface SizeRow { id: string; name: string; tokens: number; year: number; plus?: boolean; short: string }
+// GPT-3: Brown et al. 2020, «All models use a context window of nctx = 2048 tokens». Claude: Anthropic, 11 de mayo de 2023,
+// de 9K a 100K tokens, «around 75,000 words»; El gran Gatsby (72K tokens) cupo entero. Llama 3.1: Llama Team 2024, «context
+// window of up to 128K tokens». Gemini 1.5: Gemini Team 2024, recuperación casi perfecta «up to at least 10M tokens» en sus
+// pruebas: la escena dice «más de un millón». Palabras ≈ ¾ de los tokens en inglés (lección 20).
+export interface SizeRow { id: string; name: string; year: number; tokens: number; plus?: boolean }
 export const SIZES: SizeRow[] = [
-  { id: 'gpt1', name: 'GPT-1', year: 2018, tokens: 512, short: '512' },
-  { id: 'gpt2', name: 'GPT-2', year: 2019, tokens: 1024, short: '1 024' },
-  { id: 'gpt3', name: 'GPT-3', year: 2020, tokens: 2048, short: '2 048' },
-  { id: 'claude', name: 'Claude', year: 2023, tokens: 100000, short: '100 K' },
-  { id: 'llama', name: 'Llama 3.1', year: 2024, tokens: 128000, short: '128 K' },
-  { id: 'gemini', name: 'Gemini 1.5', year: 2024, tokens: 1000000, plus: true, short: '> 1 M' },
+  { id: 'gpt3', name: 'GPT-3', year: 2020, tokens: 2048 },
+  { id: 'claude', name: 'Claude', year: 2023, tokens: 100000 },
+  { id: 'llama', name: 'Llama 3.1', year: 2024, tokens: 128000 },
+  { id: 'gemini', name: 'Gemini 1.5', year: 2024, tokens: 1000000, plus: true },
 ];
 export const wordsOf = (tokens: number) => Math.round(tokens * 0.75);
 
-// ───────────────────────────── 4 · Costo de reenviar el historial ─────────────────────────────
-export interface CostIn { n: number; m: number; u: number; S: number }
-/** Tokens enviados en el turno k: prompt del sistema + historial previo (k−1 turnos de m tokens) + el mensaje nuevo (u). */
-export const inputAt = (k: number, c: CostIn) => c.S + (k - 1) * c.m + c.u;
-/** Total de tokens de entrada procesados en n turnos: n·S + m·n(n−1)/2 + n·u. */
-export const totalInput = (c: CostIn) => c.n * c.S + (c.m * c.n * (c.n - 1)) / 2 + c.n * c.u;
-/** Referencia: lo que costaría si cada token se procesara una sola vez (el texto de la conversación). */
-export const onceOnly = (c: CostIn) => c.S + c.n * c.m;
-/**
- * Con caché del prefijo (supuesto: acierta en cada turno): el turno 1 escribe todo (1,25×); después se lee el prefijo
- * anterior (0,1×) y se escriben los m tokens nuevos (1,25×). Multiplicadores: documentación de Anthropic (caché de 5 min).
- */
-export const CACHE_READ = 0.1, CACHE_WRITE = 1.25;
-export function cachedEquivalent(c: CostIn): number {
-  let eq = CACHE_WRITE * inputAt(1, c);
-  for (let k = 2; k <= c.n; k++) eq += CACHE_READ * inputAt(k - 1, c) + CACHE_WRITE * c.m;
-  return eq;
-}
-/** USD con un precio por millón de tokens de entrada (supuesto). */
-export const usd = (tokens: number, pricePerM: number) => (tokens * pricePerM) / 1e6;
+// ───────────────────────────── 4 · Costo de reenviar la conversación ─────────────────────────────
+/** Supuesto de la narración: cada turno agrega 100 tokens (tu mensaje y la respuesta). */
+export const PER_TURN = 100;
+/** Tokens que procesa el modelo en el turno k: todo lo anterior otra vez, más lo nuevo. */
+export const turnTokens = (k: number, m = PER_TURN) => k * m;
+/** Texto de la conversación tras n turnos (cada token una sola vez). */
+export const textTokens = (n: number, m = PER_TURN) => n * m;
+/** Tokens procesados en n turnos: m·n(n+1)/2. Con m = 100: 10 → 5 500; 20 → 21 000. */
+export const processed = (n: number, m = PER_TURN) => (m * n * (n + 1)) / 2;
 
-// ───────────────────────────── 5 · «Perdido en el medio» (REAL, tabla 6 del apéndice G) ─────────────────────────────
-// Liu et al. (2023), «Lost in the Middle: How Language Models Use Long Contexts», TACL 2024, arXiv:2307.03172.
-// Tarea: respuesta a preguntas con 20 documentos (~3–4 mil tokens), uno solo contiene la respuesta; se varía su posición.
-// Los valores de `acc` son EXACTOS: tabla 6 del apéndice G («Index 0, 4, 9, 14, 19» = posiciones 1.ª, 5.ª, 10.ª, 15.ª, 20.ª);
-// (una versión anterior de esta lección los había leído de la figura 5: coinciden al décimo). Los valores «sin documentos»
-// (`closed`) y «solo el documento correcto» (`oracle`) son de la tabla 1.
-export type LitmId = 'gpt' | 'claude' | 'longchat' | 'mpt';
-export interface LitmRow { id: LitmId; name: string; acc: number[]; closed: number; oracle: number }
+// ───────────────────────────── 5 · «Perdido en el medio» (REAL) ─────────────────────────────
+// Liu et al. (2023), «Lost in the Middle: How Language Models Use Long Contexts», arXiv:2307.03172 (TACL).
+// Preguntas con 20 documentos (unos 4 000 tokens); uno solo contiene la respuesta y se cambia de lugar.
+// Valores EXACTOS de la tabla 6 (apéndice G.2; «Index 0, 4, 9, 14, 19» = lugares 1, 5, 10, 15 y 20).
+// «Sin documentos» (closed-book) y «solo el documento correcto» (oracle): tabla 1. La escena muestra GPT-3.5-Turbo.
+export interface LitmRow { id: string; name: string; acc: number[]; closed: number; oracle: number }
 export const LITM_POS = [1, 5, 10, 15, 20];
 export const LITM: LitmRow[] = [
   { id: 'gpt', name: 'GPT-3.5-Turbo', acc: [75.8, 57.2, 53.8, 55.4, 63.2], closed: 56.1, oracle: 88.3 },
@@ -137,12 +135,6 @@ export const LITM: LitmRow[] = [
   { id: 'longchat', name: 'LongChat-13B (16K)', acc: [68.6, 57.4, 55.3, 52.5, 55.0], closed: 35.0, oracle: 83.4 },
   { id: 'mpt', name: 'MPT-30B-Instruct', acc: [53.7, 51.8, 52.2, 52.7, 56.3], closed: 31.5, oracle: 81.9 },
 ];
-export const litmRow = (id: string) => LITM.find((r) => r.id === id) ?? LITM[0];
-/** Acierto en la posición p (1–20): valor medido si p es 1, 5, 10, 15 o 20; interpolación lineal entre medidas en otro caso. */
-export function litmAt(row: LitmRow, p: number): { v: number; measured: boolean } {
-  const i = LITM_POS.indexOf(p);
-  if (i >= 0) return { v: row.acc[i], measured: true };
-  let k = 0; while (k < LITM_POS.length - 2 && p > LITM_POS[k + 1]) k++;
-  const t = (p - LITM_POS[k]) / (LITM_POS[k + 1] - LITM_POS[k]);
-  return { v: row.acc[k] + (row.acc[k + 1] - row.acc[k]) * t, measured: false };
-}
+export const GPT35 = LITM[0];
+/** Acierto medido (%) en un lugar de LITM_POS. */
+export const litmAcc = (pos: number, row = GPT35) => row.acc[Math.max(0, LITM_POS.indexOf(pos))];

@@ -1,111 +1,97 @@
-// Escena: Atención. La frase y el pronombre, consultas/claves/valores con números pequeños (calculados en vivo),
-// la raíz de d, el mapa de atención, varias cabezas (reales, de BERT), límites y puente hacia el transformer.
-import { clamp, type PointerEvt, type SceneFactory } from '../../../../../theme/kit';
-import { drawSentence } from './act-sentence';
-import { drawQKV, newQState, qLayout, qPlot, type QState } from './act-qkv';
-import { drawAll } from './act-map';
-import { drawCost, drawOrigin, drawParallel } from './act-flow';
-import { HEAD_ORDER, drawFew, drawFlip, drawHeadsMaps, drawHeadsWhy, headsLayout, newHeadsState, type HeadsState } from './act-heads';
-import { gridGeom } from './act-map';
-import { REAL } from './real-data';
-import { drawBridge, drawRecap } from './act-close';
-import { drawCausal, drawExplain, drawOrder } from './act-limits';
-import { drawSqrt, newSqrtState, updateSqrt } from './act-sqrt';
-import { DIMS, attend, I, snapQ, warmDemo, type V2 } from './data';
+// Escena: Atención. Dos frases con «banco» (el problema), a quién mirar y cuánto (sin símbolos), un buscador como
+// analogía de consulta/clave/valor, las cuentas con números pequeños (ejemplo hecho a mano, calculado en vivo), el mapa
+// de atención, la fórmula como resumen y la raíz de d, varias cabezas con mapas reales de BERT, todos a la vez frente a
+// la red recurrente, y el cierre. La escena hace sola cada demostración (recorre tokens y cabezas con setTok/setHead
+// mientras nadie toque); los «tu turno» son opcionales y solo cuentan lo que hace la persona (S.touched).
+// Todo se anima por fracciones de cada segmento (fr), así sigue a la voz en cualquier idioma. Cada vista se adapta al
+// teléfono vertical (S.portrait), al teléfono en horizontal (isShort) y al escritorio.
+import { type Frame, type PointerEvt, type SceneFactory } from '../../../../../theme/kit';
+import { A, type Lang } from './data';
+import { freshSt, setHead, setTok, stOf } from './state';
+import { dur, fr } from './ui';
+import { drawSent } from './v-sent';
+import { drawSearch } from './v-search';
+import { drawCalc } from './v-calc';
+import { drawMap, mapGeo } from './v-map';
+import { drawForm } from './v-form';
+import { drawHeads, hitThumb } from './v-heads';
+import { drawFlow } from './v-flow';
+import { drawClose } from './v-close';
 
-const qOf = (S: import('../../../../../theme/kit').Frame): QState => (S.st.q ??= newQState());
-const hdOf = (S: import('../../../../../theme/kit').Frame): HeadsState => (S.st.hd ??= newHeadsState());
-/** Cambia de cabeza (con un fundido corto del mapa grande). */
-function pickHead(S: import('../../../../../theme/kit').Frame, i: number) { const hd = hdOf(S); hd.touched = true; if (i === hd.head) return; hd.prev = hd.head; hd.head = i; hd.t0 = S.clock; }
-const inTry1 = (S: import('../../../../../theme/kit').Frame) => S.between('try1', 'sqrt-why');
+/** Vistas: cada una empieza en un segmento y dura hasta que empieza la siguiente. */
+const VIEWS: [string, (S: Frame) => void][] = [
+  ['hook', drawSent], ['search', drawSearch], ['three', drawCalc], ['all', drawMap],
+  ['formula', drawForm], ['heads', drawHeads], ['rnn', drawFlow], ['recap', drawClose],
+];
+
+/** Fracción transcurrida del segmento k (0..1). */
+const frac = (S: Frame, k: string) => Math.max(0, Math.min(1, (S.t - S.start(k)) / dur(S, k)));
+const inMap = (S: Frame) => S.between('map-demo', 'formula');
+const inHeads = (S: Frame) => S.between('head-others', 'rnn');
+
+/** Fila del mapa (o ficha de la frase) bajo el puntero. */
+function hitTok(S: Frame, x: number, y: number): number {
+  const M = mapGeo(S), G = M.G;
+  const row = Math.floor((y - G.y) / G.cs);
+  if (row >= 0 && row < G.n && x >= G.x - G.lw && x <= G.x + G.m * G.cs) return row;
+  return M.chips.findIndex((r) => x >= r.x - 3 && x <= r.x + r.w + 3 && y >= r.y - 6 && y <= r.y + r.h + 6);
+}
 
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'qL', kind: 'button', label: { es: 'Consulta ←', en: 'Query ←' }, from: 'try1', to: 'sqrt-why' },
-    { id: 'qR', kind: 'button', label: { es: 'Consulta →', en: 'Query →' }, from: 'try1', to: 'sqrt-why' },
-    { id: 'qU', kind: 'button', label: { es: 'Consulta ↑', en: 'Query ↑' }, from: 'try1', to: 'sqrt-why' },
-    { id: 'qD', kind: 'button', label: { es: 'Consulta ↓', en: 'Query ↓' }, from: 'try1', to: 'sqrt-why' },
-    { id: 'qReset', kind: 'button', label: { es: 'Reiniciar', en: 'Reset' }, from: 'try1', to: 'sqrt-why' },
-    { id: 'dIdx', kind: 'slider', label: { es: 'Dimensión d', en: 'Dimension d' }, min: 1, max: 9, step: 1, value: 3, from: 'try2', to: 'all', fmt: (v) => String(DIMS[Math.round(v) - 1]) },
-    { id: 'div', kind: 'toggle', label: { es: 'Dividir entre √d', en: 'Divide by √d' }, value: true, from: 'try2', to: 'all' },
-    { id: 'hPrev', kind: 'button', label: { es: '← Cabeza', en: '← Head' }, from: 'try3', to: 'real-flip' },
-    { id: 'hNext', kind: 'button', label: { es: 'Cabeza →', en: 'Head →' }, from: 'try3', to: 'real-flip' },
-    { id: 'wPrev', kind: 'button', label: { es: '← Palabra', en: '← Word' }, from: 'try3', to: 'real-flip' },
-    { id: 'wNext', kind: 'button', label: { es: 'Palabra →', en: 'Word →' }, from: 'try3', to: 'real-flip' },
+    { id: 'tok', kind: 'button', primary: true, label: { es: 'Otro token', en: 'Next token' }, from: 'map-demo', to: 'formula' },
+    { id: 'head', kind: 'button', primary: true, label: { es: 'Otra cabeza', en: 'Next head' }, from: 'head-others', to: 'rnn' },
   ],
 
-  init(S) { S.st.q = newQState(); S.st.sq = newSqrtState(); S.st.hd = newHeadsState(); warmDemo(); },
+  init(S) { S.st.a = freshSt(); },
 
   action(S, id) {
-    if (id === 'hPrev' || id === 'hNext' || id === 'wPrev' || id === 'wNext') {
-      const hd = hdOf(S);
-      if (id[0] === 'h') pickHead(S, (hd.head + (id === 'hNext' ? 1 : 3)) % 4); else { hd.word = (hd.word + (id === 'wNext' ? 1 : 11)) % 12; hd.touched = true; }
-      return;
-    }
-    const st = qOf(S);
-    if (id === 'qReset') { S.st.q = newQState(); return; }
-    const dx = id === 'qL' ? -0.5 : id === 'qR' ? 0.5 : 0, dy = id === 'qD' ? -0.5 : id === 'qU' ? 0.5 : 0;
-    st.q = snapQ(st.q[0] + dx, st.q[1] + dy); st.moved = true;
+    const st = stOf(S);
+    if (id === 'tok') { setTok(S, (st.tok + 1) % A[S.lang as Lang].tok.length); st.tokSeen.add(st.tok); }
+    if (id === 'head') { setHead(S, (st.head + 1) % 4); st.headSeen.add(st.head); }
   },
 
   pointer(S, e: PointerEvt) {
-    if (S.between('try3', 'real-flip')) {
-      if (e.type !== 'down') return;
-      const L = headsLayout(S), hd = hdOf(S), hit = L.thumbs.findIndex((r) => e.x >= r.x - 6 && e.x <= r.x + r.w + 6 && e.y >= r.y - 6 && e.y <= r.y + r.h + L.lab);
-      if (hit >= 0) { pickHead(S, hit); return; }
-      const G = gridGeom(S, L.map, REAL[S.lang].words.heavy), row = Math.floor((e.y - G.y) / G.cs);
-      if (e.x >= L.map.x && e.x <= G.x + G.n * G.cs + 4 && row >= 0 && row < G.n) { hd.word = row; hd.touched = true; }
-      return;
-    }
-    if (!inTry1(S)) return;
-    const st = qOf(S), plot = qPlot(S, qLayout(S));
-    if (e.type === 'down') {
-      if (plot.inside(e.x, e.y)) { st.drag = true; st.moved = true; st.q = snapQ(plot.iX(e.x), plot.iY(e.y)); }
-    } else if (e.type === 'move') {
-      if (st.drag) st.q = snapQ(plot.iX(clamp(e.x, plot.r.x, plot.r.x + plot.r.w)), plot.iY(clamp(e.y, plot.r.y, plot.r.y + plot.r.h)));
-    } else st.drag = false;
+    if (e.type !== 'down') return;
+    const st = stOf(S);
+    if (inMap(S)) { const i = hitTok(S, e.x, e.y); if (i >= 0) { S.touched.add('tok'); setTok(S, i); st.tokSeen.add(i); } }
+    if (inHeads(S)) { const i = hitThumb(S, e.x, e.y); if (i >= 0) { S.touched.add('head'); setHead(S, i); st.headSeen.add(i); } }
   },
 
   cursor(S, x, y) {
-    if (S.between('try3', 'real-flip')) {
-      const L = headsLayout(S), G = gridGeom(S, L.map, REAL[S.lang].words.heavy);
-      if (L.thumbs.some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h)) return 'pointer';
-      return x >= L.map.x && x <= G.x + G.n * G.cs && y >= G.y && y <= G.y + G.n * G.cs ? 'pointer' : undefined;
-    }
-    if (!inTry1(S)) return undefined;
-    const st = qOf(S), plot = qPlot(S, qLayout(S));
-    if (st.drag) return 'grabbing';
-    return plot.inside(x, y) ? (Math.hypot(x - plot.X(st.qs[0]), y - plot.Y(st.qs[1])) < S.hitR + 6 ? 'grab' : 'crosshair') : undefined;
+    if (inMap(S) && hitTok(S, x, y) >= 0) return 'pointer';
+    if (inHeads(S) && hitThumb(S, x, y) >= 0) return 'pointer';
+    return undefined;
   },
 
-  // El estado interactivo avanza siempre, aunque el escenario no se vea; render() solo dibuja.
+  // Demostraciones guiadas (la escena elige token y cabeza mientras la persona no toque) y comprobación de los «tu turno».
   update(S) {
-    const st = qOf(S);
-    const k = 1 - Math.exp(-S.dt * 14);
-    st.qs = [st.qs[0] + (st.q[0] - st.qs[0]) * k, st.qs[1] + (st.q[1] - st.qs[1]) * k] as V2;
-    if (inTry1(S) && attend(st.q).w[I.robot] > 0.5) S.complete('q');
-    updateSqrt(S);
-    const hd = hdOf(S);
-    if (S.between('try3', 'real-flip') && hd.word === REAL[S.lang].query && HEAD_ORDER[hd.head] === 'ref') S.complete('head');
+    const st = stOf(S);
+    if (S.between('all', 'formula') && !S.touched.has('tok')) {
+      let t = 4;   // «banco»
+      if (S.on('map-demo')) { const f = frac(S, 'map-demo'); t = f < 0.22 ? 4 : f < 0.47 ? 7 : f < 0.72 ? 0 : 1; }   // banco → jardín → me → senté
+      if (S.on('try-map')) t = 1;
+      setTok(S, t);
+    }
+    if (S.between('try-map', 'formula') && S.touched.has('tok') && st.tokSeen.size > 0) S.complete('tok');
+    if (S.between('heads', 'rnn') && !S.touched.has('head')) {
+      let h = 0;   // la cabeza de «banco»
+      if (S.on('head-others')) { const f = frac(S, 'head-others'); h = f < 0.12 ? 0 : f < 0.42 ? 1 : f < 0.7 ? 2 : 3; }   // anterior → siguiente → marcas
+      if (S.on('try-heads')) h = 3;
+      if (S.on('honest')) h = 0;
+      setHead(S, h);
+    }
+    if (S.between('try-heads', 'rnn') && S.touched.has('head') && st.headSeen.size > 0) S.complete('head');
   },
 
   render(S) {
-    drawSentence(S);
-    drawQKV(S);
-    drawSqrt(S);
-    drawAll(S);
-    drawOrigin(S);
-    drawParallel(S);
-    drawCost(S);
-    drawHeadsWhy(S);
-    drawHeadsMaps(S);
-    drawFlip(S);
-    drawFew(S);
-    drawExplain(S);
-    drawOrder(S);
-    drawCausal(S);
-    drawRecap(S);
-    drawBridge(S);
+    for (let i = 0; i < VIEWS.length; i++) {
+      const [start, draw] = VIEWS[i], next = VIEWS[i + 1]?.[0];
+      if (!S.on(start)) break;
+      const aIn = i === 0 ? 1 : fr(S, start, 0, 0.07), aOut = next ? 1 - fr(S, next, 0, 0.05) : 1;
+      const a = aIn * aOut;
+      if (a > 0.01) S.d.withAlpha(a, () => draw(S));
+    }
   },
 });
 

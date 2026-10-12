@@ -57,14 +57,15 @@ const mixW = (a: number[], b: number[], t: number) => a.map((v, i) => lerp(v, b[
 function lay(S: Frame) {
   const all = inset(S.full(), 16 * S.u);
   const gap = 12 * S.u;
-  const [net, led] = S.portrait ? split(all, 'v', 0.46, gap) : split(all, 'h', 0.54, gap);
+  // vertical casi cuadrado (teléfono pequeño): la red, que es ancha, cede alto a la ficha de abajo
+  const [net, led] = S.portrait ? split(all, 'v', S.H < S.W * 1.2 ? 0.4 : 0.46, gap) : split(all, 'h', 0.54, gap);
   return { all, net, led };
 }
 
 /** Pesos que muestra la red en cada momento de la lección. */
 function wShown(S: Frame): number[] {
-  if (S.between('try2', 'loop')) { const g = G2(S); return g.anim ? animW(g) : g.shown; }
-  if (S.between('try1', 'reset-ex')) return G1(S).shown;
+  if (S.between('train-demo', 'loop')) { const g = G2(S); return g.anim ? animW(g) : g.shown; }
+  if (S.between('hand-demo', 'reset-ex')) return G1(S).shown;
   if (S.between('reset-ex', 'who')) return mixW(G1(S).w, W0, S.at('reset-ex', 0.5, 1.9, 'io'));
   if (S.between('update', 'after')) return mixW(W0, W1, S.at('update', 1.8, 3.0, 'io'));
   if (S.on('after')) return W1;
@@ -109,7 +110,7 @@ const scene: SceneFactory = () => ({
       const chips = chipRects(S, NL, g.shown);
       let best = -1, bd = Infinity;
       chips.forEach((c, k) => { const dd = Math.hypot(e.x - c.cx, e.y - c.cy); if (dd < bd) { bd = dd; best = k; } });
-      if (best >= 0 && bd <= Math.max(S.hitR + 14 * S.u, chips[best].w / 2 + 10)) { g.drag = { k: best, x0: e.x, y0: e.y, w0: g.w[best] }; g.active = best; }
+      if (best >= 0 && bd <= Math.max(S.hitR + 14 * S.u, chips[best].w / 2 + 10)) { g.drag = { k: best, x0: e.x, y0: e.y, w0: g.w[best] }; g.active = best; S.touched.add('wdrag'); }
     } else if (e.type === 'move' && g.drag) {
       const dr = g.drag, delta = ((e.x - dr.x0) - (e.y - dr.y0)) / (110 * S.u);
       const nv = clampW(round2(dr.w0 + delta));
@@ -125,17 +126,28 @@ const scene: SceneFactory = () => ({
   // Estado interactivo: avanza siempre, aunque el escenario no se vea. render() solo dibuja.
   update(S) {
     const dt = Math.min(S.dt, 0.1);
-    if (S.between('try1', 'reset-ex')) {
+    const byHand = ['wup', 'wdown', 'wsel', 'wreset', 'wdrag'].some((k) => S.touched.has(k));
+    if (S.between('hand-demo', 'reset-ex')) {
       const g = G1(S);
-      if (S.p.wsel !== undefined && S.p.wsel !== g.lastSel) { g.active = S.p.wsel; g.lastSel = S.p.wsel; }
+      // demostración: el peso cinco (culpa negativa) sube dos pasos mientras nadie toque los pesos
+      if (S.is('hand-demo') && !byHand) {
+        const D = Math.max(1, S.end('hand-demo') - S.start('hand-demo')), k = Math.min(2, Math.floor(clamp((S.since('hand-demo') - 0.25 * D) / (0.5 * D)) * 2.999));
+        g.w = [...W0]; g.w[4] = round2(W0[4] + STEP_BTN * k); g.active = 4;
+      }
+      if (S.p.wsel !== undefined && S.p.wsel !== g.lastSel && S.touched.has('wsel')) { g.active = S.p.wsel; g.lastSel = S.p.wsel; }
       const k = 1 - Math.exp(-dt * 14);
       for (let i = 0; i < 6; i++) g.shown[i] += (g.w[i] - g.shown[i]) * k;
-      if (forward(g.w).L <= GOAL) { g.won = true; S.complete('hand'); }
+      if (byHand && forward(g.w).L <= GOAL) { g.won = true; S.complete('hand'); }
     }
-    if (S.between('try2', 'loop')) {
+    if (S.between('train-demo', 'loop')) {
       const g = G2(S);
+      // demostración: la regla da sola cuatro pasos mientras nadie use los botones
+      if (S.is('train-demo') && !S.touched.has('train') && !S.touched.has('train10') && !g.anim) {
+        const D = Math.max(1, S.end('train-demo') - S.start('train-demo')), want = Math.min(4, Math.floor(clamp((S.since('train-demo') - 0.1 * D) / (0.8 * D)) * 4.999));
+        if (g.steps < want) startStep(S, g);
+      }
       if (g.anim) { g.anim.t += dt; if (g.anim.t >= g.anim.dur) { finishStep(g); if (g.run > 0) { startStep(S, g); g.run--; } } }
-      if (g.steps >= 5 && !g.won) { g.won = true; S.complete('train'); }
+      if (g.steps >= 5 && !g.won && (S.touched.has('train') || S.touched.has('train10'))) { g.won = true; S.complete('train'); }
     }
   },
 
@@ -177,12 +189,12 @@ function drawMain(S: Frame, L: { all: Rect; net: Rect; led: Rect }) {
 
 function netView(S: Frame): NetView {
   const w = wShown(S), f = forward(w), b = backward(w, f);
-  const g1 = S.between('try1', 'reset-ex'), g2 = S.between('try2', 'loop');
+  const g1 = S.between('hand-demo', 'reset-ex'), g2 = S.between('train-demo', 'loop');
   // señal hacia delante
   let signal = 0;
   if (S.between('fwd-h', 'fwd-out')) signal = S.at('fwd-h', 0.2, 2.0, 'lin');
   else if (S.on('fwd-out')) signal = 1 + S.at('fwd-out', 0.2, 2.0, 'lin');
-  if (S.between('after', 'try2')) signal = 2 * S.at('after', 0.2, 3.0, 'lin');
+  if (S.between('after', 'train-demo')) signal = 2 * S.at('after', 0.2, 3.0, 'lin');
   // anillos de culpa (los pulsos de culpa de la narración se dibujan aparte)
   let blame = 0;
   if (S.between('back-err', 'all-six')) blame = 0.001;
@@ -262,8 +274,8 @@ function d_modes(S: Frame, r: Rect) {
   // 7 · quién hace qué, actualización, después
   a = win(S, 'who', 'update'); if (a > 0.01) mRoles(S, r, a);
   a = win(S, 'update', 'after'); if (a > 0.01) mUpdate(S, r, a);
-  a = win(S, 'after', 'try2'); if (a > 0.01) mAfter(S, r, a);
-  a = win(S, 'try2', 'loop'); if (a > 0.01) mTrain(S, r, a);
+  a = win(S, 'after', 'train-demo'); if (a > 0.01) mAfter(S, r, a);
+  a = win(S, 'train-demo', 'loop'); if (a > 0.01) mTrain(S, r, a);
 }
 
 const par = (S: Frame, v: number, dg: number) => (v < 0 ? '(' + num(S, v, dg) + ')' : num(S, v, dg));
@@ -496,7 +508,7 @@ function mStrip1(S: Frame, r: Rect, a: number) {
 // 6 · las seis culpas ────────────────────────────────────────────────────
 function mTable(S: Frame, r: Rect, a: number, w: number[], g: number[], L: number) {
   const { d, pal: p } = S, u = S.u * getK(), er = tone(S, 'err');
-  const g1 = S.between('try1', 'reset-ex');
+  const g1 = S.between('hand-demo', 'reset-ex');
   const y = title(S, r, g1 ? S.l('Mueve un peso y mira', 'Move a weight and watch') : S.l('Las seis culpas', 'All six blames'), 'err', a, g1 ? undefined : '∂L/∂w');
   const first = S.between('all-six', 'cost');
   const rowA = [0, 1, 2, 3, 4, 5].map((k) => (first ? S.at('all-six', 0.1 + 0.12 * k, 0.5 + 0.12 * k) : 1));
@@ -533,18 +545,26 @@ function mCost(S: Frame, r: Rect, a: number) {
   const { d, pal: p } = S, u = S.u * getK(), er = tone(S, 'err');
   const y = title(S, r, S.l('Costo de obtener las culpas', 'Cost of getting the blames'), 'err', a);
   const rows: [number, string][] = [[6, S.l('esta red', 'this network')], [1000, S.l('una red pequeña', 'a small network')], [175000000000, 'GPT-3']];
-  const lh = LH(S), rh = lh * 2.9;
+  // si los tres bloques de tres líneas no caben (teléfono pequeño), cada bloque usa dos: tantear y retroprop. en la misma línea
+  const lh = LH(S), compact = y + 12 * u + lh * 0.5 + 2 * lh * 2.9 + lh * 2.6 > r.y + r.h, rh = lh * (compact ? 2.15 : 2.9);
   rows.forEach(([n, tag], i) => {
     const ya = y + 12 * u + lh * 0.5 + i * rh, t = a * S.reveal('cost', 0.3 + 0.55 * i, 0.4);
     if (t <= 0.01) return;
     d.withAlpha(t, () => {
       rich(S, r.x, ya, [[big(S, n), 'ink', true], [' ' + S.l('pesos', 'weights'), 'ink2'], [' · ' + tag, 'ink2']], { maxW: r.w });
-      rich(S, r.x + 8 * u, ya + lh, [[S.l('tantear: ', 'probing: '), 'ink2'], [big(S, n), 'ink2', true], [S.l(' pases', ' passes'), 'ink2']], { maxW: r.w - 8 * u });
-      rich(S, r.x + 8 * u, ya + lh * 1.9, [[S.l('retroprop.: ', 'backprop: '), 'err'], ['≈ 2', 'err', true], [S.l(' pases', ' passes'), 'err']], { maxW: r.w - 8 * u });
-      if (i < rows.length - 1) d.line(r.x, ya + lh * 2.45, r.x + r.w, ya + lh * 2.45, p.line, 1);
+      const one = compact && d.measure(S.l('tantear: ', 'probing: ') + big(S, n) + '  ·  ' + S.l('retroprop.: ', 'backprop: ') + '≈ 2', { size: fz(S, 12.5), weight: 600, font: 'mono' }) <= r.w - 8 * u;
+      if (one) rich(S, r.x + 8 * u, ya + lh, [[S.l('tantear: ', 'probing: '), 'ink2'], [big(S, n), 'ink2', true], ['  ·  ', 'ink2'], [S.l('retroprop.: ', 'backprop: '), 'err'], ['≈ 2', 'err', true]], { maxW: r.w - 8 * u });
+      else if (compact) {   // la cifra enorme no deja sitio: tantear arriba a la derecha del bloque, retroprop. debajo
+        rich(S, r.x + 8 * u, ya + lh, [[S.l('tantear: ', 'probing: '), 'ink2'], [big(S, n), 'ink2', true]], { maxW: r.w - 8 * u });
+        rich(S, r.x + 8 * u, ya + lh * 1.85, [[S.l('retroprop.: ', 'backprop: '), 'err'], ['≈ 2', 'err', true]], { maxW: r.w - 8 * u });
+      } else {
+        rich(S, r.x + 8 * u, ya + lh, [[S.l('tantear: ', 'probing: '), 'ink2'], [big(S, n), 'ink2', true], [S.l(' pases', ' passes'), 'ink2']], { maxW: r.w - 8 * u });
+        rich(S, r.x + 8 * u, ya + lh * 1.9, [[S.l('retroprop.: ', 'backprop: '), 'err'], ['≈ 2', 'err', true], [S.l(' pases', ' passes'), 'err']], { maxW: r.w - 8 * u });
+      }
+      if (i < rows.length - 1) d.line(r.x, ya + rh - lh * 0.45, r.x + r.w, ya + rh - lh * 0.45, p.line, 1);
     });
   });
-  const rowsEnd = y + 12 * u + lh * 0.5 + 2 * rh + lh * 2.6, noteH = 2.4 * 12.3 * 1.2 * getK();
+  const rowsEnd = y + 12 * u + lh * 0.5 + 2 * rh + lh * (compact ? 1.6 : 2.6), noteH = 2.4 * 12.3 * 1.2 * getK();
   if (rowsEnd + noteH < r.y + r.h) d.withAlpha(a * S.reveal('cost', 2.2, 0.5), () => d.text(S.l('pases hacia delante extra para obtener las culpas (orden de magnitud)', 'extra forward passes to get the blames (order of magnitude)'), r.x, r.y + r.h - 6 * u, { size: fz(S, 12), weight: 500, color: p.mute, base: 'bottom', w: r.w, lh: 1.2 }));
   void er;
 }

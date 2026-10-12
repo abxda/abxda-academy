@@ -24,7 +24,7 @@ const GROUPS: [string, string[], Draw][] = [
   ['top5', ['top5'], drawTop5],
   ['matmul', ['matmul', 'parallel'], drawMatmul],
   ['cores', ['cores'], drawCores],
-  ['race', ['race-try'], drawRace],
+  ['race', ['race-demo', 'race-try'], drawRace],
   ['occ', ['race-lesson'], drawOccupancy],
   ['raina', ['race-real'], drawRaina],
   ['tricks', ['tricks'], drawTricks],
@@ -35,7 +35,7 @@ const GROUPS: [string, string[], Draw][] = [
   ['deep', ['deep-problem'], drawDeepProblem],
   ['toy', ['toy', 'vanish'], drawToy],
   ['skipblock', ['skip-idea', 'skip-grad'], drawSkipBlock],
-  ['skiptry', ['skip-try'], drawSkipTry],
+  ['skiptry', ['skip-demo', 'skip-try'], drawSkipTry],
   ['degr', ['degradation'], drawDegradation],
   ['resnet', ['resnet-win'], drawResnetWin],
   ['story', ['story-chart', 'human'], drawStory],
@@ -61,7 +61,14 @@ const scene: SceneFactory = () => ({
     { id: 'depth', kind: 'slider', label: { es: 'Profundidad (capas)', en: 'Depth (layers)' }, min: 1, max: 40, step: 1, value: 20, from: 'skip-try', to: 'degradation' },
   ],
   init() { /* el núcleo ya reinicia S.st; todo el estado interactivo vive ahí */ },
-  update(S) { raceUpdate(S); skipUpdate(S); },
+  update(S) {
+    // demostración de los atajos: 30 capas, primero la red simple y luego con atajos (mientras nadie toque los controles)
+    if (S.between('skip-demo', 'degradation')) {
+      const D = Math.max(1, S.end('skip-demo') - S.start('skip-demo'));
+      S.drive('depth', 30); S.drive('mode', S.on('skip-try') ? 'res' : S.since('skip-demo') < 0.5 * D ? 'plain' : 'res');
+    }
+    raceUpdate(S); skipUpdate(S);
+  },
   action(S, id) { raceAction(S, id); },
   render(S) {
     const g = groupOf(S, S.seg), prev = groupOf(S, Math.max(0, S.seg - 1));

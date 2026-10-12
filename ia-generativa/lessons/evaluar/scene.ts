@@ -1,112 +1,120 @@
-// Escena: Evaluar sistemas de IA. Benchmarks (escala, techo, protocolo, contaminación), evaluación propia (casos de oro y su mezcla),
-// calificación (reglas, rúbrica, LLM como juez y sus sesgos, personas), incertidumbre (intervalo de confianza, tamaño de muestra),
-// regresión, red teaming y métricas de negocio. Tres turnos interactivos; la estadística de stats.ts es cálculo real.
-// Cada acto vive en su archivo act-*.ts y se adapta al dispositivo con regions(S) y S.portrait; el texto del lienzo va con S.l(es, en).
+// Escena: Evaluar sistemas de IA. Vistas que se funden una en otra (cada una entra al empezar su segmento y sale al empezar
+// la siguiente):
+//  1 · la pregunta: el examen público frente a tus casos                                   (hook, recall)
+//  2 · qué es un benchmark; una pregunta real de MMLU                                      (bench … bench-a)
+//  3 · la línea de 0 a 100: azar, GPT-3, GPT-4, experto, techo                              (score … saturation)
+//  4 · contaminación: internet → entrenamiento → modelo                                    (contam, contam-name)
+//  5 · el examen de A y la tabla; «tu turno»: la parte del examen que vio A               (contam-demo … try-contam)
+//  6 · GSM1k (esquema) · 7 · Goodhart (ilustrativo)                                         (gsm1k; goodhart)
+//  8 · un caso de oro y el conjunto de evaluación · 9 · la mezcla y la nota por grupo     (gold … eval-set; mix … avg)
+// 10 · quién califica: programa, rúbrica, LLM como juez · 11 · cuánto coincide con expertos (grade … judge; judge-agree)
+// 12 · sesgo de orden · 13 · personas como referencia                                      (position, position-num; human)
+// 14 · tu nota y su margen: la montaña de 100 resultados, ± 8 y ± 4                        (one-eval … ci-400)
+// 15 · dos sistemas: márgenes que se enciman, 100 comparaciones; «tu turno»: los casos    (two … try-n)
+// 16 · la regla del empate · 17 · mismos casos o distintos                                 (tie; paired)
+// 18 · la nota caduca · 19 · regresión · 20 · red teaming · 21 · negocio · repaso y puente.
+// Cada «tu turno» va precedido de una demostración que mueve sola el control (S.drive); es opcional y solo cuenta lo que hizo
+// la persona (S.touched). Las animaciones van por fracciones de la duración de cada segmento (ui.ts: fr).
+//
+// REAL: MMLU (Hendrycks et al. 2020), GPT-4 (OpenAI 2023), Phan et al. 2025, GSM1k (Zhang et al. 2024), Zheng et al. 2023,
+//       Chen, Zaharia y Zou 2023, Ganguli et al. 2022.
+// SIMULACIÓN REAL con supuestos rotulados (stats.ts): exactitud real 78 % (A) y 74 % (B), mismos casos, 100 repeticiones.
+// ILUSTRATIVO (rotulado): la tabla del proveedor, el modelo A que memorizó, la mesa de ayuda de viáticos, la rúbrica, la
+// regresión, los ataques de ejemplo.
 import { clamp, type Frame, type SceneFactory } from '../../../../../theme/kit';
-import { COMPARE_N_DEFAULT, REAL_EASY, SCORE_B, mixPasses, scoreA } from './data';
-import { N_STEPS, REPS, repeated } from './stats';
-import { drawBench, drawClaim, drawHook, drawScale } from './act-bench';
-import { drawContam, drawContamGrids, drawGoodhart, drawGsm1k } from './act-contam';
-import { drawGold, drawMix } from './act-own';
-import { drawBias, drawBias2, drawGrade, drawHuman, drawJudge } from './act-judge';
-import { drawCI, drawCompare, drawNoise, drawProve } from './act-uncert';
-import { drawBridge, drawBusiness, drawDrift, drawRecap, drawRedTeam, drawRegress } from './act-ops';
+import { N_IDX_100, N_STEPS } from './stats';
+import { drawBench, drawIntro, drawScale } from './v-bench';
+import { drawGoodhart, drawGsm, drawLeak, drawSeen } from './v-contam';
+import { drawGold, drawMix } from './v-gold';
+import { drawAgree, drawGrade, drawHuman, drawPosition } from './v-judge';
+import { drawOne, drawPaired, drawTie, drawTwo } from './v-uncert';
+import { drawBridge, drawBusiness, drawDrift, drawRecap, drawRedteam, drawRegress } from './v-ops';
+import { fr, provenance, win } from './ui';
 
-const nIdx = (S: Frame) => clamp(Math.round(S.p.nidx ?? COMPARE_N_DEFAULT), 0, N_STEPS.length - 1);
+interface St { lastT: number; seenNow: number; seenPrev: number; seenK: number; idx: number; prevIdx: number; idxK: number }
+const fresh = (): St => ({ lastT: -1, seenNow: 0, seenPrev: 0, seenK: 1, idx: N_IDX_100, prevIdx: N_IDX_100, idxK: 1 });
+const st = (S: Frame): St => (S.st.ev ??= fresh()) as St;
+
+interface View { from: string; to?: string; draw: (S: Frame) => void; src?: (S: Frame) => string }
+const VIEWS: View[] = [
+  { from: 'hook', to: 'bench', draw: drawIntro, src: (S) => S.l('Ilustrativo', 'Illustrative') },
+  { from: 'bench', to: 'score', draw: drawBench, src: (S) => (S.on('bench-q') ? S.l('MMLU: Hendrycks y colaboradores (2020), figura 1', 'MMLU: Hendrycks and colleagues (2020), figure 1') : S.l('Esquema', 'Diagram')) },
+  { from: 'score', to: 'contam', draw: drawScale, src: (S) => (S.on('saturation') ? S.l('Hendrycks et al. (2020) · OpenAI (2023) · Phan et al. (2025)', 'Hendrycks et al. (2020) · OpenAI (2023) · Phan et al. (2025)') : S.l('Hendrycks et al. (2020) · OpenAI (2023)', 'Hendrycks et al. (2020) · OpenAI (2023)')) },
+  { from: 'contam', to: 'contam-demo', draw: drawLeak, src: (S) => S.l('Esquema', 'Diagram') },
+  { from: 'contam-demo', to: 'gsm1k', draw: (S) => { const s = st(S); drawSeen(S, s.seenNow, s.seenPrev, s.seenK); }, src: (S) => S.l('Ejemplo ilustrativo: lo que A vio lo acierta siempre', 'Illustrative example: whatever A saw, it always gets right') },
+  { from: 'gsm1k', to: 'goodhart', draw: drawGsm, src: (S) => S.l('Esquema · cifras: Zhang et al. (2024), GSM1k', 'Diagram · figures: Zhang et al. (2024), GSM1k') },
+  { from: 'goodhart', to: 'gold', draw: drawGoodhart, src: (S) => S.l('Curvas ilustrativas', 'Illustrative curves') },
+  { from: 'gold', to: 'mix', draw: drawGold, src: (S) => S.l('Ejemplo ilustrativo', 'Illustrative example') },
+  { from: 'mix', to: 'grade', draw: drawMix, src: (S) => S.l('Ilustrativo · mezcla real: 70, 20, 7 y 3 de cada 100', 'Illustrative · real mix: 70, 20, 7, and 3 of every 100') },
+  { from: 'grade', to: 'judge-agree', draw: drawGrade, src: (S) => S.l('Ejemplo ilustrativo', 'Illustrative example') },
+  { from: 'judge-agree', to: 'position', draw: drawAgree, src: (S) => S.l('Zheng et al. (2023), tabla 5', 'Zheng et al. (2023), table 5') },
+  { from: 'position', to: 'human', draw: drawPosition, src: (S) => (S.on('position-num') ? S.l('Zheng et al. (2023), tabla 2: respuestas casi idénticas', 'Zheng et al. (2023), table 2: nearly identical answers') : S.l('Ejemplo ilustrativo', 'Illustrative example')) },
+  { from: 'human', to: 'one-eval', draw: drawHuman, src: (S) => S.l('Ejemplo ilustrativo', 'Illustrative example') },
+  { from: 'one-eval', to: 'two', draw: drawOne, src: (S) => S.l('Simulación: exactitud real del 78 %', 'Simulation: true accuracy of 78%') },
+  { from: 'two', to: 'tie', draw: (S) => { const s = st(S); drawTwo(S, { idx: s.idx, prev: s.prevIdx, k: s.idxK }); }, src: (S) => S.l('Simulación: A 78 % y B 74 % reales, mismos casos', 'Simulation: A 78% and B 74% true, same cases') },
+  { from: 'tie', to: 'paired', draw: drawTie, src: (S) => S.l('Margen del intervalo de confianza al 95 %', 'Margin of the 95% confidence interval') },
+  { from: 'paired', to: 'drift', draw: drawPaired, src: (S) => S.l('Simulación: 100 comparaciones de 400 casos', 'Simulation: 100 comparisons of 400 cases') },
+  { from: 'drift', to: 'regress', draw: drawDrift, src: (S) => S.l('Chen, Zaharia y Zou (2023): 500 primos y 500 compuestos', 'Chen, Zaharia, and Zou (2023): 500 primes, 500 composites') },
+  { from: 'regress', to: 'redteam', draw: drawRegress, src: (S) => S.l('Ejemplo ilustrativo', 'Illustrative example') },
+  { from: 'redteam', to: 'business', draw: drawRedteam, src: (S) => (S.on('redteam-case') ? S.l('Ganguli et al. (2022) · ataques de ejemplo ilustrativos', 'Ganguli et al. (2022) · illustrative example attacks') : S.l('Ataques de ejemplo ilustrativos', 'Illustrative example attacks')) },
+  { from: 'business', to: 'recap', draw: drawBusiness, src: (S) => S.l('Ilustrativo', 'Illustrative') },
+  { from: 'recap', to: 'bridge', draw: drawRecap },
+  { from: 'bridge', draw: drawBridge },
+];
+
+/** Parte del examen que vio A durante la demostración: 0 → 10 → 20 (empate) → 30 → 40. */
+function demoSeen(S: Frame): number {
+  if (S.on('try-contam')) return 40;
+  return fr(S, 'contam-more', 0.72, 0.73) > 0 ? 40 : fr(S, 'contam-more', 0.6, 0.61) > 0 ? 30 : fr(S, 'contam-more', 0.36, 0.37) > 0 ? 20 : fr(S, 'contam-more', 0.2, 0.21) > 0 ? 10 : 0;
+}
+/** Casos por comparación durante la demostración: 100 → 200 → 400 → 1 000 (índices de N_STEPS). */
+function demoIdx(S: Frame): number {
+  if (S.on('try-n')) return 5;
+  return fr(S, 'demo-n', 0.74, 0.75) > 0 ? 5 : fr(S, 'demo-n', 0.5, 0.51) > 0 ? 4 : fr(S, 'demo-n', 0.22, 0.23) > 0 ? 3 : N_IDX_100;
+}
 
 const scene: SceneFactory = () => ({
   controls: [
-    { id: 'seen', kind: 'slider', label: { es: 'Parte del examen que A vio al entrenarse', en: 'Share of the exam A saw in training' }, min: 0, max: 40, step: 5, value: 0, from: 'try1', to: 'goodhart', fmt: (v) => `${v} %` },
-    { id: 'mix', kind: 'slider', label: { es: 'Casos fáciles en tu conjunto', en: 'Easy cases in your set' }, min: 0, max: 100, step: 5, value: 50, from: 'try2', to: 'grade', fmt: (v) => `${v} %` },
-    { id: 'nidx', kind: 'slider', label: { es: 'Casos en la evaluación', en: 'Cases in the evaluation' }, min: 0, max: N_STEPS.length - 1, step: 1, value: COMPARE_N_DEFAULT, from: 'try3', to: 'prove', fmt: (v, l) => N_STEPS[v].toLocaleString(l === 'es' ? 'es-MX' : 'en-US') },
-    { id: 'paired', kind: 'toggle', label: { es: 'Los dos sistemas, con los mismos casos', en: 'Both systems on the same cases' }, value: true, from: 'try3', to: 'prove' },
-    { id: 'draw', kind: 'button', primary: true, label: { es: 'Otra evaluación', en: 'Another evaluation' }, from: 'try3', to: 'prove' },
+    { id: 'seen', kind: 'slider', label: { es: 'Parte del examen que vio A', en: 'Share of the exam A saw' }, min: 0, max: 40, step: 10, value: 0, from: 'contam-more', to: 'gsm1k', fmt: (v, l) => (l === 'es' ? `${v} %` : `${v}%`) },
+    { id: 'nidx', kind: 'slider', label: { es: 'Casos en cada comparación', en: 'Cases in each comparison' }, min: 0, max: N_STEPS.length - 1, step: 1, value: N_IDX_100, from: 'demo-n', to: 'tie', fmt: (v, l) => { const n = N_STEPS[clamp(Math.round(v), 0, N_STEPS.length - 1)]; return l === 'es' ? n.toLocaleString('en-US').replace(/,/g, ' ') : n.toLocaleString('en-US'); } },
   ],
 
-  init(S) { S.st.mixHit = false; S.st.warm = 0; },
+  init(S) { S.st.ev = fresh(); },
 
+  // Estado interactivo: avanza siempre, aunque el escenario no se vea. render() solo dibuja.
   update(S) {
-    const st = S.st;
-    // turno 1: A aparece por encima de B sin ser mejor
-    if (S.between('try1', 'goodhart') && scoreA(clamp(Math.round(S.p.seen ?? 0), 0, 40)) > SCORE_B) S.complete('contam');
-    // turno 2: llegar a 93 % con casos fáciles y volver a la mezcla real
-    if (S.between('try2', 'grade')) {
-      const e = clamp((S.p.mix ?? 50) / 100);
-      if (mixPasses(e)) st.mixHit = true;
-      if (st.mixHit && Math.abs(e - REAL_EASY) <= 0.051) S.complete('mix');
+    const s = st(S), dt = Math.min(S.dt || 0.016, 0.1);
+    const jump = s.lastT < 0 || Math.abs(S.t - s.lastT) > 0.35;   // salto (o captura): sin transición
+    s.lastT = S.t;
+
+    // ── contaminación: la parte del examen que vio A ──
+    let seen = 0;
+    if (S.between('contam-more', 'gsm1k')) {
+      seen = clamp(Math.round(Number(S.drive('seen', demoSeen(S))) / 10) * 10, 0, 40);
+      if (S.touched.has('seen')) S.complete('contam');
     }
-    // turno 3: tamaño de muestra con el que A gana en ≥ 95 de cada 100 evaluaciones
-    if (S.between('try3', 'prove')) {
-      const r = repeated(N_STEPS[nIdx(S)], (S.p.paired ?? true) !== false);
-      if (r.winsA / REPS >= 0.95) S.complete('samplesize');
+    if (seen !== s.seenNow) { s.seenPrev = s.seenNow; s.seenNow = seen; s.seenK = jump ? 1 : 0; }
+    s.seenK = jump ? 1 : Math.min(1, s.seenK + dt / 0.35);
+
+    // ── dos sistemas: casos en cada comparación ──
+    let idx = N_IDX_100;
+    if (S.between('demo-n', 'tie')) {
+      idx = clamp(Math.round(Number(S.drive('nidx', demoIdx(S)))), 0, N_STEPS.length - 1);
+      if (S.touched.has('nidx')) S.complete('samplesize');
     }
-    // precalienta las simulaciones (una por fotograma) para que mover el control sea instantáneo
-    if (S.on('compare') && (st.warm ?? 0) < N_STEPS.length) repeated(N_STEPS[st.warm++], true);
+    if (idx !== s.idx) { s.prevIdx = s.idx; s.idx = idx; s.idxK = jump ? 1 : 0; }
+    s.idxK = jump ? 1 : Math.min(1, s.idxK + dt / 0.45);
   },
 
   render(S) {
-    const g = groupOf(S), prev = groupOf(S, Math.max(0, S.seg - 1));
-    const fade = g !== prev && S.seg > 0 ? clamp(S.segT / 0.5) : 1;
-    S.d.withAlpha(fade, () => {
-      switch (g) {
-        case 'hook': return drawHook(S);
-        case 'claim': return drawClaim(S);
-        case 'bench': return drawBench(S);
-        case 'scale': return drawScale(S);
-        case 'contam': return drawContam(S);
-        case 'gsm1k': return drawGsm1k(S);
-        case 'grids': return drawContamGrids(S);
-        case 'goodhart': return drawGoodhart(S);
-        case 'gold': return drawGold(S);
-        case 'mix': return drawMix(S);
-        case 'grade': return drawGrade(S);
-        case 'judge': return drawJudge(S);
-        case 'bias': return drawBias(S);
-        case 'bias2': return drawBias2(S);
-        case 'human': return drawHuman(S);
-        case 'noise': return drawNoise(S);
-        case 'ci': return drawCI(S);
-        case 'compare': return drawCompare(S);
-        case 'prove': return drawProve(S);
-        case 'drift': return drawDrift(S);
-        case 'regress': return drawRegress(S);
-        case 'redteam': return drawRedTeam(S);
-        case 'business': return drawBusiness(S);
-        case 'recap': return drawRecap(S);
-        default: return drawBridge(S);
-      }
-    });
+    const d = S.d;
+    for (const v of VIEWS) {
+      const a = win(S, v.from, v.to);
+      if (a <= 0.004) continue;
+      d.withAlpha(a, () => v.draw(S));
+      if (v.src) provenance(S, v.src(S), a);
+    }
   },
 });
-
-/** A qué acto pertenece cada segmento (varios segmentos pueden compartir escenario). */
-function groupOf(S: Frame, seg = S.seg): string {
-  const i = (k: string) => S.segIndex(k);
-  if (seg < i('claim')) return 'hook';
-  if (seg < i('bench')) return 'claim';
-  if (seg < i('saturation')) return 'bench';
-  if (seg < i('contam')) return 'scale';
-  if (seg < i('gsm1k')) return 'contam';
-  if (seg < i('try1')) return 'gsm1k';
-  if (seg < i('goodhart')) return 'grids';
-  if (seg < i('gold')) return 'goodhart';
-  if (seg < i('mix')) return 'gold';
-  if (seg < i('grade')) return 'mix';
-  if (seg < i('judge')) return 'grade';
-  if (seg < i('bias')) return 'judge';
-  if (seg < i('bias2')) return 'bias';
-  if (seg < i('human')) return 'bias2';
-  if (seg < i('noise')) return 'human';
-  if (seg < i('ci')) return 'noise';
-  if (seg < i('compare')) return 'ci';
-  if (seg < i('prove')) return 'compare';
-  if (seg < i('drift')) return 'prove';
-  if (seg < i('regress')) return 'drift';
-  if (seg < i('redteam')) return 'regress';
-  if (seg < i('business')) return 'redteam';
-  if (seg < i('recap')) return 'business';
-  if (seg < i('bridge')) return 'recap';
-  return 'bridge';
-}
 
 export default scene;

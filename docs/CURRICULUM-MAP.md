@@ -320,7 +320,7 @@ Referencia de calidad: la lección 4 (`descenso-del-gradiente`) está completa y
 ### 35 · `riesgos-y-gobernanza` ⭐ — Riesgos y gobernanza
 - **Asume**: 31, 32, 33.
 - **Contenido**: privacidad y fuga de datos; inyección de instrucciones y *jailbreaks*; sesgo; propiedad intelectual; desinformación y suplantación; seguridad de agentes; huella ambiental; regulación y estándares; responsabilidad.
-- **Introduce**: `prompt-injection`, `jailbreak`, `bias`, `ai-act`, `governance`, `data-leakage`.
+- **Introduce**: `prompt-injection`, `jailbreak`, `ai-bias`, `ai-act`, `governance`, `info-leak` (`bias` y `data-leakage` ya los definen las lecciones 3 y 10).
 - **Interactivo**: matriz de riesgo (probabilidad × impacto): clasificar escenarios y ver qué controles aplican.
 - **Hechos (verificar)**: Reglamento de IA de la UE (en vigor desde el 1 de agosto de 2024, con aplicación escalonada); NIST AI RMF 1.0 (enero de 2023); ISO/IEC 42001 (2023).
 - **Lente**: política de uso, inventario de sistemas, responsables, registro de incidentes.

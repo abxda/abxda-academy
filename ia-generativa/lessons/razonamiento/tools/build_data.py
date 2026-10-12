@@ -27,7 +27,7 @@ def main():
         A = [[r["ans"].get(str(b)) for b in BUDGETS] for r in ss]
         out.append({"id": pid, "lv": LV[p["level"]], "expr": p["expr"], "ans": p["answer"], "L": L, "A": A})
     print("// GENERADO por tools/build_data.py a partir de los resultados de tools/run_experiment.py. No editar a mano.")
-    print("// Qwen3.5-4B (Apache-2.0), fp8, vLLM; T = 0,7; presupuesto forzado. Ver los comentarios de esos guiones.")
+    print("// Qwen3.5-4B (Apache-2.0), fp8, vLLM; T = 0.7; presupuesto forzado. Ver los comentarios de esos guiones.")
     print("export const BUDGETS = " + json.dumps(BUDGETS) + " as const;")
     print("/** lv: 0 = una operación, 1 = tres, 2 = siete, 3 = demostración (tren/tienda). L: longitud natural del pensamiento (-1 = más de 4096). A[s][b]: respuesta con el presupuesto b. */")
     print("export interface Prob { id: string; lv: 0 | 1 | 2 | 3; expr: string; ans: number; L: number[]; A: (number | null)[][] }")

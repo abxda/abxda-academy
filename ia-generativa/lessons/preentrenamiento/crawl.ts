@@ -37,10 +37,10 @@ const RECIPE_PARAPHRASE = lines(
 
 export const PAGES: Page[] = [
   { id: 'news', lang: 'en', tag: { es: 'Noticia', en: 'News' }, text: lines('City council approves plan to plant trees', NEWS_BODY) },
-  { id: 'news-copy', lang: 'en', tag: { es: 'Copia exacta', en: 'Exact copy' }, text: lines('Two thousand new trees for the river path', NEWS_BODY, 'Posted by Metro Daily.') },
-  { id: 'news-edit', lang: 'en', tag: { es: 'Copia editada', en: 'Edited copy' }, text: lines('City council approves plan to plant trees', NEWS_EDIT) },
+  { id: 'news-copy', lang: 'en', tag: { es: 'Otro título', en: 'New title' }, text: lines('Two thousand new trees for the river path', NEWS_BODY, 'Posted by Metro Daily.') },
+  { id: 'news-edit', lang: 'en', tag: { es: 'Editada', en: 'Edited' }, text: lines('City council approves plan to plant trees', NEWS_EDIT) },
   { id: 'recipe', lang: 'es', tag: { es: 'Receta', en: 'Recipe' }, text: lines('Pan de maíz casero', RECIPE_BODY) },
-  { id: 'recipe-copy', lang: 'es', tag: { es: 'Copia, otro pie', en: 'Copy, new footer' }, text: lines('Pan de maíz casero', RECIPE_BODY, 'Recetas de la abuela. Todos los derechos reservados.') },
+  { id: 'recipe-copy', lang: 'es', tag: { es: 'Otro pie', en: 'New footer' }, text: lines('Pan de maíz casero', RECIPE_BODY, 'Recetas de la abuela. Todos los derechos reservados.') },
   { id: 'recipe-para', lang: 'es', tag: { es: 'Reescrita', en: 'Rewritten' }, text: lines('Un pan de maíz fácil', RECIPE_PARAPHRASE) },
   {
     id: 'garden', lang: 'en', tag: { es: 'Artículo', en: 'Article' },
@@ -59,7 +59,7 @@ export const PAGES: Page[] = [
     ),
   },
   {
-    id: 'french', lang: 'fr', tag: { es: 'En francés', en: 'In French' },
+    id: 'french', lang: 'fr', tag: { es: 'Francés', en: 'French' },
     text: lines(
       'Le marché du dimanche',
       'Chaque dimanche matin, les habitants du quartier se retrouvent sur la place pour acheter des fruits, du fromage et du pain frais. Les vendeurs connaissent presque tous leurs clients par leur prénom, et personne ne semble pressé.',
@@ -67,7 +67,7 @@ export const PAGES: Page[] = [
     ),
   },
   {
-    id: 'menu', lang: 'en', tag: { es: 'Menú web', en: 'Web menu' },
+    id: 'menu', lang: 'en', tag: { es: 'Menú', en: 'Menu' },
     text: lines('Home', 'Products', 'Sale!', 'New arrivals', 'Login', 'Cart (0)', 'Search', 'Contact us', 'About', 'Terms of use', 'Privacy policy', '© 2019 All rights reserved'),
   },
   {
@@ -82,7 +82,7 @@ export const PAGES: Page[] = [
     ),
   },
   {
-    id: 'lorem', lang: 'en', tag: { es: 'Texto de relleno', en: 'Filler text' },
+    id: 'lorem', lang: 'en', tag: { es: 'Relleno', en: 'Filler' },
     text: lines(
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
       'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.',
@@ -111,11 +111,11 @@ export interface Quality { ok: boolean; rule?: QualityRule; stats: { punct: numb
 export function checkQuality(text: string): Quality {
   const ls = text.split('\n').map((l) => l.trim()).filter(Boolean);
   const n = Math.max(1, ls.length);
-  const punct = ls.filter((l) => /[.!?»”"]$/.test(l)).length / n;                                       // FineWeb: ≤ 0,12 → se descarta
-  const short = ls.filter((l) => l.length < 30).length / n;                                              // FineWeb: ≥ 0,67 → se descarta
+  const punct = ls.filter((l) => /[.!?»”"]$/.test(l)).length / n;                                       // FineWeb: ≤ 0.12 → se descarta
+  const short = ls.filter((l) => l.length < 30).length / n;                                              // FineWeb: ≥ 0.67 → se descarta
   const counts = new Map<string, number>(); ls.forEach((l) => counts.set(l, (counts.get(l) ?? 0) + 1));
   const total = ls.reduce((a, l) => a + l.length, 0);
-  const dupChars = ls.filter((l) => (counts.get(l) ?? 0) > 1).reduce((a, l) => a + l.length, 0) / Math.max(1, total); // FineWeb: ≥ 0,1 → se descarta
+  const dupChars = ls.filter((l) => (counts.get(l) ?? 0) > 1).reduce((a, l) => a + l.length, 0) / Math.max(1, total); // FineWeb: ≥ 0.1 → se descarta
   const stats = { punct, short, dup: dupChars };
   if (/lorem ipsum/i.test(text)) return { ok: false, rule: 'lorem', stats };                           // C4: páginas con «lorem ipsum»
   if (text.includes('{')) return { ok: false, rule: 'brace', stats };                                   // C4: llaves = código
@@ -189,9 +189,3 @@ export function stageCounts(rows: Row[]) {
   return out;
 }
 
-/** Umbral de partida de la escena y rango en el que el resultado es el «correcto» (copias fuera, textos distintos dentro). */
-export const T0 = 1;
-export const isGoodThreshold = (rows: Row[]) => {
-  const dropped = new Set(rows.filter((r) => r.dup).map((r) => r.page.id));
-  return dropped.size === 3 && dropped.has('news-copy') && dropped.has('news-edit') && dropped.has('recipe-copy');
-};
