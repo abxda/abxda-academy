@@ -12,10 +12,9 @@ Lo que escribas aquí es público (este repositorio está abierto). Escribe con 
 
 ## 1. Antes de empezar (una sola vez)
 
-1. **Entra a GitHub** con tu cuenta personal: <https://github.com/login>.
-2. **Acepta la invitación** al repositorio. Te llega por correo («abxda has invited you to collaborate») o aparece en <https://github.com/abxda/abxda-academy/invitations>. Pulsa **Accept invitation**.
-3. **Activa los avisos** para enterarte cuando alguien responda tus comentarios: en <https://github.com/abxda/abxda-academy> pulsa **Watch → Participating and @mentions**.
-4. **Enciende el modo revisión del curso.** Abre este enlace una vez en cada navegador o teléfono que vayas a usar:
+1. **Entra a GitHub** con tu cuenta personal: <https://github.com/login>. El repositorio es público: no necesitas invitación ni permisos especiales para comentar.
+2. **Activa los avisos** para enterarte cuando alguien responda tus comentarios: en <https://github.com/abxda/abxda-academy> pulsa **Watch → Participating and @mentions**.
+3. **Enciende el modo revisión del curso.** Abre este enlace una vez en cada navegador o teléfono que vayas a usar:
 
    **<https://abxda.com/academy/es/ia-generativa/?revision=1>**
 
