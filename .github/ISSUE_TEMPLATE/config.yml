@@ -3,3 +3,6 @@ contact_links:
   - name: Guía para revisar el curso
     url: https://github.com/abxda/abxda-academy/blob/main/REVISION.md
     about: Paso a paso para revisar las lecciones y dejar comentarios.
+  - name: How to review the course (English)
+    url: https://github.com/abxda/abxda-academy/blob/main/REVIEWING.md
+    about: Step-by-step guide to review the lessons and leave comments.

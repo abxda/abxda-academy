@@ -14,7 +14,7 @@ Todas las lecciones se escribieron para quien **nunca ha visto estos temas**: un
 
 ## Revisión humana
 
-El curso lo revisan personas que están aprendiendo estos temas, y la revisión es pública: cada comentario queda como un *issue* en este repositorio, ligado a la lección y al paso exacto donde surgió, y cada corrección entra como un cambio que el autor revisa y acepta. **Cómo revisar:** [REVISION.md](REVISION.md).
+El curso lo revisan personas que están aprendiendo estos temas, y la revisión es pública: cada comentario queda como un *issue* en este repositorio, ligado a la lección y al paso exacto donde surgió, y cada corrección entra como un cambio que el autor revisa y acepta. **Cómo revisar:** [REVISION.md](REVISION.md) (español) · [REVIEWING.md](REVIEWING.md) (English).
 
 ## Cómo está organizado
 
