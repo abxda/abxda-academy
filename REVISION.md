@@ -13,7 +13,7 @@ Todo lo que escribas es **público** (el repositorio está abierto). Escribe con
 ## Así funciona, de un vistazo
 
 ```mermaid
-flowchart LR
+flowchart TD
   A["👀 Ves una lección<br/>en abxda.com"] --> B{"¿Algo no se<br/>entendió?"}
   B -- "sí" --> C["💬 Pausa y pulsa<br/>«Comentar este paso»"]
   C --> D["📝 Llenas el formulario<br/>en GitHub y pulsas Create"]
