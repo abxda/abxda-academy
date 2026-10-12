@@ -53,7 +53,7 @@ Lo de «con tus palabras» es importante: no busques la respuesta en la lección
 
 - **Tus comentarios:** <https://github.com/abxda/abxda-academy/issues?q=author%3A%40me>
 - Cuando respondamos o corrijamos algo, te llegará un aviso. Si la corrección te convence, puedes escribir «Listo, ya se entiende» en el comentario.
-- **El avance de la revisión** (qué lecciones ya revisó cada quien) está en la pestaña **Projects** del repositorio.
+- **El avance de la revisión** (qué lecciones ya terminó cada quien): <https://github.com/abxda/abxda-academy/issues?q=label%3A%22lecci%C3%B3n+terminada%22>
 
 ## 6. Orden y ritmo sugeridos
 
@@ -89,7 +89,6 @@ Si un día quieres proponer una redacción concreta, puedes hacerlo sin instalar
 | **Issue** | Un comentario o reporte. Cada «Comentar este paso» crea uno. |
 | **Label** (etiqueta) | Una marca para ordenar los comentarios (por ejemplo «revisión»). |
 | **Pull request** | Una propuesta de cambio que el autor acepta o rechaza. |
-| **Project** | El tablero donde se ve el avance de la revisión. |
 | **Watch** | Seguir el repositorio para recibir avisos. |
 
 ¿Dudas sobre la revisión misma? Escribe a [academy@abxda.com](mailto:academy@abxda.com).
