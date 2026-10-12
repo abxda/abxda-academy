@@ -1,4 +1,4 @@
-name: "Comentario de revisión (un paso de una lección)"
+name: "Comentario de revisión · Review comment"
 description: "Algo no se entendió, se ve mal o suena mal en un paso concreto. Se abre solo desde el botón «Comentar este paso» del modo revisión."
 title: "[lección · paso] "
 labels: ["revisión"]
@@ -11,31 +11,31 @@ body:
   - type: input
     id: leccion
     attributes:
-      label: Lección
+      label: Lección · Lesson
       description: Viene llena desde el curso.
     validations:
       required: true
   - type: input
     id: paso
     attributes:
-      label: Paso
+      label: Paso · Step
       description: Viene lleno desde el curso (número de paso e identificador).
   - type: dropdown
     id: idioma
     attributes:
-      label: Idioma
+      label: Idioma · Language
       options: ["Español", "Inglés"]
     validations:
       required: true
   - type: dropdown
     id: dispositivo
     attributes:
-      label: ¿Dónde lo viste?
+      label: ¿Dónde lo viste? · Where did you see it?
       options: ["Computadora", "Teléfono", "Tableta"]
   - type: dropdown
     id: tipo
     attributes:
-      label: ¿Qué pasó? (elige lo más parecido)
+      label: ¿Qué pasó? · What happened?
       options:
         - "No lo entendí / me perdí"
         - "Va demasiado rápido"
@@ -50,17 +50,17 @@ body:
   - type: textarea
     id: comentario
     attributes:
-      label: Cuéntalo con tus palabras
+      label: Cuéntalo con tus palabras · In your own words
       description: "¿Qué esperabas entender y qué entendiste? Si puedes, pega una captura de pantalla aquí (arrástrala o pégala)."
     validations:
       required: true
   - type: textarea
     id: sugerencia
     attributes:
-      label: ¿Qué te habría ayudado? (opcional)
+      label: ¿Qué te habría ayudado? · What would have helped? (opcional · optional)
       description: "Un ejemplo, ir más despacio, otra palabra, un dibujo… Cualquier idea sirve."
   - type: textarea
     id: texto
     attributes:
-      label: Lo que decía la voz en ese paso
+      label: Lo que decía la voz · What the voice said
       description: Viene lleno desde el curso; no hace falta tocarlo.

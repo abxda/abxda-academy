@@ -1,4 +1,4 @@
-name: "Terminé una lección"
+name: "Terminé una lección · I finished a lesson"
 description: "Al final de cada lección: qué tan clara fue y qué te llevas. Se abre desde el botón «Terminé la lección» del modo revisión."
 title: "[lección] Terminé la lección"
 labels: ["lección terminada"]
@@ -6,24 +6,24 @@ body:
   - type: input
     id: leccion
     attributes:
-      label: Lección
+      label: Lección · Lesson
       description: Viene llena desde el curso.
     validations:
       required: true
   - type: dropdown
     id: idioma
     attributes:
-      label: Idioma
+      label: Idioma · Language
       options: ["Español", "Inglés"]
   - type: dropdown
     id: dispositivo
     attributes:
-      label: ¿Dónde la viste?
+      label: ¿Dónde la viste? · Where did you watch it?
       options: ["Computadora", "Teléfono", "Tableta"]
   - type: dropdown
     id: claridad
     attributes:
-      label: ¿Qué tan clara te pareció?
+      label: ¿Qué tan clara te pareció? · How clear was it?
       options:
         - "5 · La entendí completa"
         - "4 · Casi toda"
@@ -35,20 +35,20 @@ body:
   - type: textarea
     id: idea
     attributes:
-      label: Explica con tus palabras la idea principal
+      label: La idea principal con tus palabras · The main idea in your own words
       description: "Como se la contarías a un amigo, en dos o tres frases. No busques la respuesta: lo que importa es qué te quedó."
     validations:
       required: true
   - type: textarea
     id: dificil
     attributes:
-      label: ¿Qué parte fue la más difícil?
+      label: ¿Qué parte fue la más difícil? · What was the hardest part?
   - type: dropdown
     id: interaccion
     attributes:
-      label: ¿Usaste algún «Si quieres» (tu turno)?
+      label: ¿Usaste algún «Si quieres»? · Did you try any «If you like»?
       options: ["Sí, y me ayudó", "Sí, pero no entendí qué hacer", "No, lo dejé pasar"]
   - type: input
     id: minutos
     attributes:
-      label: ¿Cuántos minutos te tomó, más o menos?
+      label: ¿Cuántos minutos te tomó? · About how many minutes?
