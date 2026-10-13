@@ -137,6 +137,7 @@ export default defineLesson({
       id: 'count-gb',
       es: 'Recuerda: un gigabyte son mil millones de bytes. Así que ciento cuarenta mil millones de bytes son ciento cuarenta gigabytes.',
       en: 'Remember: a gigabyte is a billion bytes. So one hundred forty billion bytes is one hundred forty gigabytes.',
+      tts: { es: 'Recuerda: un gigabyte son mil millones de bytes. Así que, ciento cuarenta mil millones de bytes, son ciento cuarenta gigabytes.' },
       pad: 0.3,
     },
     {

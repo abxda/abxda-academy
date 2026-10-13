@@ -223,6 +223,7 @@ export default defineLesson({
       id: 'one-eval',
       es: 'Ahora, el número que sale. Tu sistema contesta cien casos de oro y acierta setenta y ocho. Su exactitud medida es setenta y ocho por ciento.',
       en: 'Now, the number that comes out. Your system answers a hundred gold cases and gets seventy-eight right. Its measured accuracy is seventy-eight percent.',
+      tts: { es: 'Ahora, el número que sale. Tu sistema contesta cien casos de oro, y acierta setenta y ocho de ellos. Su exactitud medida es, entonces, setenta y ocho por ciento.' },
       pad: 0.4,
     },
     {
