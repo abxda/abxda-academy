@@ -14,7 +14,7 @@ Todas las lecciones se escribieron para quien **nunca ha visto estos temas**: un
 
 ## Revisión humana
 
-El curso lo revisan personas que están aprendiendo estos temas, y la revisión es pública: cada comentario queda como un *issue* en este repositorio, ligado a la lección y al paso exacto donde surgió, y cada corrección entra como un cambio que el autor revisa y acepta. **Cómo revisar:** [REVISION.md](REVISION.md) (español) · [REVIEWING.md](REVIEWING.md) (English).
+El curso lo revisan personas que están aprendiendo estos temas, y la revisión es pública. Cada lección tiene su hilo de comentarios en [Discussions](https://github.com/abxda/abxda-academy/discussions), el mismo que aparece al final de la lección en el sitio; los revisores convierten en *issue* lo que vale la pena corregir, y el autor revisa y acepta cada cambio. **Cómo revisar:** [REVISION.md](REVISION.md) (español) · [REVIEWING.md](REVIEWING.md) (English).
 
 ## Cómo está organizado
 
@@ -35,7 +35,7 @@ docs/
 
 ## Cómo ayudar
 
-Se agradece que se señalen errores, se propongan mejores explicaciones o se aporten fuentes. Para comentar mientras ves una lección, sigue **[REVISION.md](REVISION.md)**; para proponer cambios, lee **[CONTRIBUTING.md](CONTRIBUTING.md)**: explica qué se puede cambiar, cómo citar fuentes y qué cambios implican regenerar la voz.
+Se agradece que se señalen errores, se propongan mejores explicaciones o se aporten fuentes. Para comentar, usa la sección **Comentarios** al final de cada lección (guía: **[REVISION.md](REVISION.md)**); para proponer cambios, lee **[CONTRIBUTING.md](CONTRIBUTING.md)**: explica qué se puede cambiar, cómo citar fuentes y qué cambios implican regenerar la voz.
 
 ## Licencia
 
