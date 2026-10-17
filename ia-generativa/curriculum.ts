@@ -33,7 +33,7 @@ const ROWS: Row[] = [
     '¿Cómo ve una máquina una imagen, un sonido o un texto?', 'How does a machine see an image, a sound, or a text?'],
   ['modelo-y-error', 1, 11, false, 'un-modelo-y-su-error', 'a-model-and-its-error', 'Un modelo y su error', 'A model and its error',
     '¿Cómo se mide qué tan equivocado está un modelo?', 'How do you measure how wrong a model is?'],
-  ['descenso-del-gradiente', 1, 10, true, 'descenso-del-gradiente', 'gradient-descent', 'Descenso del gradiente', 'Gradient descent',
+  ['descenso-del-gradiente', 1, 11, true, 'descenso-del-gradiente', 'gradient-descent', 'Descenso del gradiente', 'Gradient descent',
     '¿Cómo encuentra una máquina los números correctos sin que nadie se los diga?', 'How does a machine find the right numbers without being told?'],
   // ── Módulo 2 · Redes neuronales
   ['neurona', 2, 11, true, 'la-neurona-artificial', 'the-artificial-neuron', 'La neurona artificial', 'The artificial neuron',

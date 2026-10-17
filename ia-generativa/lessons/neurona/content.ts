@@ -565,9 +565,33 @@ A single neuron can only separate with a line; lesson 6 shows a case it cannot h
     },
   ],
 
-  glossary: ['neuron', 'activation', 'decision-boundary', 'perceptron', 'sigmoid', 'weight', 'bias', 'parameter', 'feature', 'prediction', 'gradient-descent', 'gradient', 'learning-rate'],
+  glossary: ['neuron', 'dendrite', 'cell-body', 'axon', 'activation', 'decision-boundary', 'perceptron', 'sigmoid', 'weight', 'bias', 'parameter', 'feature', 'prediction', 'gradient-descent', 'gradient', 'learning-rate'],
 
   terms: [
+    {
+      id: 'dendrite',
+      term: { es: 'Dendrita', en: 'Dendrite' },
+      def: {
+        es: 'En una neurona biológica, cada una de las ramificaciones que reciben señales de otras neuronas. En la neurona artificial equivalen a las entradas.',
+        en: 'In a biological neuron, each of the branches that receive signals from other neurons. In the artificial neuron they correspond to the inputs.',
+      },
+    },
+    {
+      id: 'cell-body',
+      term: { es: 'Cuerpo celular', en: 'Cell body' },
+      def: {
+        es: 'La parte central de una neurona biológica, donde se combinan las señales que llegan por las dendritas. En la neurona artificial equivale a la suma ponderada.',
+        en: 'The central part of a biological neuron, where the signals arriving through the dendrites are combined. In the artificial neuron it corresponds to the weighted sum.',
+      },
+    },
+    {
+      id: 'axon',
+      term: { es: 'Axón', en: 'Axon' },
+      def: {
+        es: 'La prolongación por la que una neurona biológica envía su pulso a otras neuronas cuando las señales combinadas son suficientes. En la neurona artificial equivale a la salida.',
+        en: 'The long extension through which a biological neuron sends its pulse to other neurons when the combined signals are strong enough. In the artificial neuron it corresponds to the output.',
+      },
+    },
     {
       id: 'neuron',
       term: { es: 'Neurona artificial', en: 'Artificial neuron' },

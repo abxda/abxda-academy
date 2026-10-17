@@ -54,8 +54,8 @@ export default defineLesson({
     // ── la pendiente, desde cero ──
     {
       id: 'slope-what',
-      es: '¿Hacia dónde mover el peso para que el error baje? Lo dice la pendiente de la curva: qué tan inclinada está justo en ese punto, y hacia qué lado.',
-      en: 'Which way should we move the weight so the error drops? The slope of the curve tells us: how steep it is right at that point, and which way it tilts.',
+      es: '¿Hacia dónde mover el peso para que el error baje? Lo dice la pendiente de la curva: qué tan inclinada está justo en ese punto, y hacia qué lado. Pasa lo mismo en una calle: si está empinada, cada paso te sube o te baja mucho; si es plana, casi nada.',
+      en: 'Which way should we move the weight so the error drops? The slope of the curve tells us: how steep it is right at that point, and which way it tilts. It is the same on a street: if it is steep, each step takes you up or down a lot; if it is flat, hardly at all.',
     },
     {
       id: 'slope-nudge',
@@ -131,8 +131,8 @@ export default defineLesson({
     },
     {
       id: 'first-step',
-      es: 'Hagamos la cuenta: menos uno, menos un medio por menos cuatro. Eso da menos uno más dos: el peso nuevo es uno, y el error baja de nueve a tres.',
-      en: 'Let’s do the math: minus one, minus one half times minus four. That gives minus one plus two: the new weight is one, and the error drops from nine to three.',
+      es: 'Hagamos la cuenta: menos uno, menos un medio por menos cuatro. Primero va la multiplicación, como siempre en aritmética: un medio por menos cuatro es menos dos. Luego la resta: menos uno, menos menos dos, da uno. El peso nuevo es uno, y el error baja de nueve a tres.',
+      en: 'Let’s do the math: minus one, minus one half times minus four. Multiplication comes first, as always in arithmetic: one half times minus four is minus two. Then the subtraction: minus one, minus minus two, gives one. The new weight is one, and the error drops from nine to three.',
       pad: 0.3,
     },
     {
@@ -234,8 +234,8 @@ export default defineLesson({
     },
     {
       id: 'gradient',
-      es: 'La lista de esas pendientes, una por peso, se llama gradiente. Juntas forman esta flecha, que apunta hacia donde el error sube más rápido.',
-      en: 'The list of those slopes, one per weight, is called the gradient. Together they form this arrow, which points to where the error rises fastest.',
+      es: 'La lista de esas pendientes, una por peso, se llama gradiente. Juntas forman esta flecha, que apunta hacia donde el error sube más rápido. Es como estar parado en un cerro: hacia el norte sube un poco, hacia el este sube mucho; juntas, esas dos pendientes dicen dónde está la subida más fuerte.',
+      en: 'The list of those slopes, one per weight, is called the gradient. Together they form this arrow, which points to where the error rises fastest. It is like standing on a hill: northward it rises a little, eastward it rises a lot; together, those two slopes tell you where the steepest climb is.',
       note: { es: 'Gradiente: la lista de pendientes, una por peso. Apunta cuesta arriba.', en: 'Gradient: the list of slopes, one per weight. It points uphill.' },
       pad: 0.3,
     },

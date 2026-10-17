@@ -67,8 +67,8 @@ export default defineLesson({
     },
     {
       id: 'weight',
-      es: 'Ese ritmo, cuántos puntos sube la predicción por cada hora, se llama peso, o pendiente. En esta recta, el peso vale cinco.',
-      en: 'That pace, how many points the prediction rises for each hour, is called the weight, or slope. On this line, the weight is five.',
+      es: 'Ese ritmo, cuántos puntos sube la predicción por cada hora, se llama peso, o pendiente. En esta recta, el peso vale cinco. Es la misma idea que un taxímetro: cuánto sube la cuenta por cada kilómetro.',
+      en: 'That pace, how many points the prediction rises for each hour, is called the weight, or slope. On this line, the weight is five. It is the same idea as a taxi meter: how much the fare rises for each kilometer.',
       note: { es: 'Peso (pendiente): cuánto sube la predicción por cada hora.', en: 'Weight (slope): how much the prediction rises per hour.' },
     },
     {
